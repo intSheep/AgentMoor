@@ -1,26 +1,24 @@
 # AgentMoor
 
-**v0.1 技术预览 · [MIT 许可证](LICENSE)**。欢迎用自己的 SaaS 任务试跑。当前验收使用本地 kind 集群、真实 Agent CLI 和模拟模型端点，覆盖任务交付、运行中取消、连续两次换 Pod 后续聊。接入真实模型时，请记录所用的 CLI 和模型版本，方便复现。[验收记录](docs/mvp.md) · [参与贡献](CONTRIBUTING.md)
+AgentMoor lets a SaaS application run tasks with native agent CLIs on Kubernetes and keep the conversation going after the Pod is gone. It stores each agent's session, workspace, skills, and output files independently of the Pod that did the work.
 
-AgentMoor 是业务 SaaS 和原生 Agent 之间的中间件。它能接收任务并把 Agent 的会话、Skill、交付文件和工作区保存到平台。一个运行实例销毁后，可以在新实例恢复工作区，再用原来的会话 ID 继续工作。
+For example, your app can ask an agent to total a CSV, download the report, and delete the Pod. If a user later asks how the agent calculated a number, the app sends the question with the same session ID. With follow-up scheduling enabled, AgentMoor starts a new Pod, restores the workspace and native session, and makes the answer available for download.
 
-首批支持 Claude Code、Codex CLI、Gemini CLI 和 OpenCode。每个适配器负责读懂对应 Agent 的数据，平台统一处理归属、版本、校验和及访问权限。会话以原始格式保存。
+Codex CLI, Gemini CLI, OpenCode, and Claude Code share one HTTPS API for submitting tasks, checking progress, cancelling work, and downloading a specific version of a result. Each adapter handles its agent's native formats. AgentMoor manages ownership, versions, checksums, and access. [SaaS API and Kubernetes setup](docs/task-contract.md)
 
-四种 Agent 共用一套 SaaS 任务接口。SaaS 通过 HTTPS 提交、查询、取消任务，按固定版本下载交付物。一次性 Kubernetes Pod 负责执行。启用续聊调度后，原 Pod 删除也可以追问。SaaS 提交新问题，AgentMoor 自动拉起新 Pod 恢复会话，再把答案作为可下载的交付物交回。运行 `make test-k8s` 可重现完整流程。接口和示例见 [SaaS 任务契约](docs/task-contract.md)。
+**v0.1 technical preview** · [MIT license](LICENSE). The acceptance tests run real agent CLIs against a simulated model endpoint in a local kind cluster. They cover task delivery, cancellation during execution, and two consecutive follow-ups in fresh Pods. If you try your own SaaS workflow with a live model, include the CLI and model versions when sharing results. [Test results](docs/mvp.md) · [Contributing](CONTRIBUTING.md)
 
-## 跑通第一个例子
+## Quick start
 
-在 macOS 或 Linux 上准备 Go 1.27.4、C 编译器、Make 和 Python 3，然后在仓库根目录运行。
+On macOS or Linux, install Go 1.27.4, a C compiler, Make, and Python 3. Run the local asset recovery demo from the repository root.
 
 ```sh
 make demo
 ```
 
-已有构建好的 `bin/agentmoor` 时，可以直接运行 `sh examples/demo.sh`。
+The demo starts a local server, saves one asset of each type, and repeats the sync. It then restores the workspace and compares the restored file with the original. You should see four `v1` records followed by `Workspace restored and verified.` The demo cleans up its temporary directory on exit. If you already have `bin/agentmoor`, you can run `sh examples/demo.sh` directly.
 
-演示会在临时目录启动本地平台，保存四类示例资产，重复同步一次，再恢复工作区并比较文件内容。成功时会看到四条 `v1` 记录和 `Workspace restored and verified.`。演示退出时会清理临时数据。
-
-要查看你自己的项目有哪些 Agent 和 Skill，可以直接运行。
+To list the available adapters and inspect the sample Codex workspace, run the commands below. To inspect your own workspace, replace `testdata/codex` with its path.
 
 ```sh
 ./bin/agentmoor adapters
@@ -28,32 +26,36 @@ make demo
 ./bin/agentmoor skills codex testdata/codex
 ```
 
-## 可以保存什么
+## What gets saved
 
-| 资产 | 保存与恢复 |
+| Asset | What AgentMoor saves and how it restores it |
 | --- | --- |
-| Session | 保留原始 Transcript、会话 ID 和适配器能识别的关联文件。文件型 Agent 可一次恢复整批会话。OpenCode 还能调用原生 CLI 导出、导入。 |
-| Skill | 发现项目 Skill，把清单及同目录脚本、参考文件一起保存。登记名称、声明版本、依赖和管理来源，恢复到指定的新路径。 |
-| Artifact | 扫描控制面指定的交付目录。每次内容修改发布一个新版本，历史版本可单独下载。 |
-| Workspace | 保存目录树、普通文件、常规权限和受支持的相对符号链接。恢复时先校验 SHA-256，目标已存在时报告冲突。 |
+| Session | Preserves the native transcript, session ID, and related files the adapter recognizes. File-based agents support bulk session recovery. The OpenCode adapter uses the native CLI to export and import sessions. |
+| Skill | Packages the manifest with scripts and reference files from the skill directory. Records the name, declared version, dependencies, and management source. Restores the package to a new path. |
+| Artifact | Scans the output directory assigned by the control plane. Each content change produces a new version, and earlier versions remain available for download. |
+| Workspace | Snapshots the directory tree, regular files, standard permissions, and supported relative symlinks. Verifies the SHA-256 checksum during restore and reports a conflict if the destination already exists. |
 
-同步可由运行时 Hook 调用 `sync`，也可运行 `watch` 监听变化并定期补扫。每个 Worker 只获得分配给自己的短期平台凭据。默认存储是 SQLite 与本地磁盘，也可使用 PostgreSQL 与 S3 兼容对象存储。
+A runtime hook can invoke `sync` once. For continuous sync, `watch` listens for changes and rescans periodically. Each worker receives short-lived credentials scoped to its assignment. By default, AgentMoor uses SQLite and local disk. It also supports PostgreSQL and S3-compatible object storage.
 
-## 开发与验证
+## Development and testing
 
 ```sh
-make check          # 格式、go vet、竞态检测、所有常规测试、编译
-make demo           # 使用本地平台走通上传、重复同步、恢复
-make test-k8s       # 用独立 kind 集群验证 SaaS、原生执行、取消和跨 Pod 恢复
-make test-services  # 用 Docker Compose 验证 PostgreSQL 与 S3 兼容服务
+make check          # Check formatting, run go vet and tests with the race detector, then build
+make demo           # Upload, sync again, and restore assets using the local server
+make test-k8s       # Test delivery, cancellation, and cross-Pod follow-ups in a disposable kind cluster
+make test-services  # Test PostgreSQL and S3-compatible storage with Docker Compose
 ```
 
-真实 CLI 续聊测试需要对应版本的可执行文件。测试启动本机模拟模型，创建会话、移除源目录、恢复，再检查第二次模型请求是否包含首轮的随机标记。复现步骤见[运行手册](docs/operations.md)。
+To try the Kubernetes workflow with a single adapter, run `make test-k8s AGENT=codex`. The native CLI recovery tests can also run outside Kubernetes. They require the matching CLI version and start a local model endpoint. Each test creates a conversation, removes the original directories, restores the session, and checks that the next model request contains a random marker from the first turn. [Reproduction steps](docs/operations.md)
 
-| 从这里开始 | 内容 |
+## Project documentation
+
+The linked guides are in Chinese.
+
+| Guide | What's inside |
 | --- | --- |
-| [运行手册](docs/operations.md) | 启动平台、配置 Worker、恢复各 Agent、处理版本冲突 |
-| [v0.1 验收矩阵](docs/mvp.md) | PRD 条目、实测版本、测试范围和当前边界 |
-| [适配调研](docs/research.md) | Magpie、CC Switch 和四种 Agent 的设计依据 |
-| [AGENTS.md](AGENTS.md) | 仓库结构、扩展适配器的方法和提交前检查 |
-| [原始 PRD](docs/PRD-v0.1.md) | 初稿归档，首批名单按本项目约定调整 |
+| [Operations guide](docs/operations.md) | Start the platform, configure workers, restore sessions, and resolve version conflicts. |
+| [v0.1 acceptance results](docs/mvp.md) | Tested CLI versions, product requirements, test coverage, and known limits. |
+| [Adapter research](docs/research.md) | Design references from Magpie, CC Switch, and the four supported agents. |
+| [Repository guide](AGENTS.md) | Code layout, adapter conventions, and checks to run before submitting a change. |
+| [Original product requirements](docs/PRD-v0.1.md) | Archived first draft. The acceptance results list the agents included in this preview. |
