@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: task-catalog
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agentmoor
+spec:
+  selector: {app: agentmoor}
+  ports: [{port: 7401}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agentmoor
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app: agentmoor}
+  template:
+    metadata:
+      labels: {app: agentmoor}
+    spec:
+      serviceAccountName: agentmoor-dispatch
+      securityContext: {runAsNonRoot: true, runAsUser: 65532, fsGroup: 65532}
+      initContainers:
+      - name: key
+        image: CONTRACT_IMAGE
+        imagePullPolicy: Never
+        command: ["python3", "-c", "import shutil; shutil.copyfile('/keys/signing.key','/store/signing.key')"]
+        volumeMounts:
+        - {name: store, mountPath: /store}
+        - {name: signing, mountPath: /keys, readOnly: true}
+      containers:
+      - name: api
+        image: CONTRACT_IMAGE
+        imagePullPolicy: Never
+        command: ["agentmoor", "serve", "--data", "/store", "--listen", "0.0.0.0:7401",
+                  "--turn-jobs", "/dispatch/profiles.json", "--tls-cert", "/tls/cert.pem", "--tls-key", "/tls/key.pem"]
+        ports: [{containerPort: 7401}]
+        readinessProbe: {tcpSocket: {port: 7401}, periodSeconds: 1}
+        volumeMounts:
+        - {name: store, mountPath: /store}
+        - {name: tls, mountPath: /tls, readOnly: true}
+        - {name: profiles, mountPath: /dispatch, readOnly: true}
+      volumes:
+      - {name: store, persistentVolumeClaim: {claimName: task-catalog}}
+      - {name: signing, secret: {secretName: signing}}
+      - {name: tls, secret: {secretName: tls}}
+      - {name: profiles, configMap: {name: turn-profiles}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: model
+spec:
+  selector: {app: model}
+  ports: [{port: 8080}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: model}
+  template:
+    metadata:
+      labels: {app: model}
+    spec:
+      automountServiceAccountToken: false
+      securityContext: {runAsNonRoot: true, runAsUser: 65532}
+      containers:
+      - name: fixture
+        image: CONTRACT_IMAGE
+        imagePullPolicy: Never
+        command: ["python3", "/opt/test/model.py"]
+        ports: [{containerPort: 8080}]
+        readinessProbe: {tcpSocket: {port: 8080}, periodSeconds: 1}

@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: JOB_NAME
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 300
+  template:
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      securityContext: {runAsNonRoot: true, runAsUser: 65532, fsGroup: 65532}
+      containers:
+      - name: worker
+        image: CONTRACT_IMAGE
+        imagePullPolicy: Never
+        command: JOB_COMMAND
+        env:
+        - {name: AGENTMOOR_TOKEN_FILE, value: /access/token}
+        - {name: WORKER_CONFIG, value: /config/worker.json}
+        - {name: SSL_CERT_FILE, value: /config/cert.pem}
+        - {name: HOME, value: /run/task}
+NATIVE_ENV
+        volumeMounts:
+        - {name: private-work, mountPath: /run/task}
+        - {name: access, mountPath: /access, readOnly: true}
+        - {name: config, mountPath: /config, readOnly: true}
+      volumes:
+      - {name: private-work, emptyDir: {}}
+      - {name: access, secret: {secretName: JOB_CREDENTIAL}}
+      - {name: config, configMap: {name: JOB_CONFIG}}
