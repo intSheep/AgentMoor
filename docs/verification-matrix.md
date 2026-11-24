@@ -7,6 +7,7 @@
 | 本机资产恢复 | `make demo` | 已有入口；重传及文件恢复，不运行原生 Agent。 |
 | 四个原生 CLI 的 SaaS 文本回合 | `make test-k8s [AGENT=codex]`，详见[任务契约](task-contract.md#一条命令复验) | [已记录](mvp.md#kubernetes-任务验收)：Codex、Gemini、OpenCode、Claude Code 在 kind + 确定性模拟模型上交付、取消、连续两次换 Pod 续聊。模型端点[从请求取出并直接汇总 CSV](../tests/kubernetes/model.py)，不是 CLI 用工具读 CSV 和写报告。 |
 | PostgreSQL + S3 兼容存储 | `make test-services` | [已记录](mvp.md#prd-验收对应表)：验证资产发布、读回和回收。不是同一次跨 Pod 任务端到端测试。 |
+| 本机从 CSV 生成报告 | [文件工具样例](../examples/file-report/README.md) | 可用 `make test-file-report` 直接调用工具，或指定本机 Codex CLI，由回环脚本模型请求执行工具。独立验算读取磁盘上的实际文件。此入口只覆盖例 1 的本机文件生成步骤。 |
 | Codex 文件工具、文件恢复后再编辑 | 例 1–2 | 计划。分别记录真实 CLI + 脚本模型、真实 CLI + 真实模型的结果。 |
 | Codex 文件任务取消、失联及重试 | 例 3 | 计划。当前文本取消测试不能替代工具生命周期验证。 |
 | PostgreSQL + 对象存储下的完整 Kubernetes 契约 | V2 退出门槛 | 计划。不据后端测试推断跨 Pod 端到端已过。 |
@@ -16,6 +17,8 @@
 各例使用合成数据和一次性临时目录；由独立的 SaaS 客户端通过公开接口轮询与下载。Kubernetes 操作仅用于准备测试和注入故障；不让测试客户端用 shell 偷读平台数据库或工作区来代替 API 验证。文件输入的供给方式可先由部署方挂载或放入工作区，不假装现有 `text-turn.v1` 已支持 SaaS 上传通用输入文件。
 
 ### 例 1：文件到文件（Codex）
+
+2026-11-24 在 macOS arm64 上运行了[本机样例](../examples/file-report/README.md)。Python 3.15.2 直接执行通过 4 项；Codex CLI `0.171.0-alpha.13.2` 经本机脚本模型调用同一工具也通过 4 项。原生回合的成功样本为 east 98 分、west 343359 分，共 43 字节，SHA-256 为 `84d0c25662e0eb031f1926fcf229ba37a270ace2393cf040a86c10fcd63c0eae`。其余三项分别验证缺文件、错误金额及已有报告。下列 SaaS 下载和集群验收仍待完成。
 
 部署方提供只读 `sales.csv`，含重复地区、退款和每次运行重新生成的一条随机记录。任务仅引用路径，金额及随机值不进入初始指令。要求 Codex 用工具读取文件并生成 `out/report.json`；即使最终文本仅为 “done”，SaaS 下载的文件也要能独立验算。
 

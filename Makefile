@@ -1,6 +1,6 @@
-.PHONY: check fmt build demo test-services test-k8s check-kind-prereqs test-report-consumer
+.PHONY: check fmt build demo test-services test-k8s check-kind-prereqs test-report-consumer test-file-report
 
-check:
+check: test-file-report
 	sh tests/check-kind-prereqs.sh
 	@unformatted=$$(gofmt -l cmd internal) && test -z "$$unformatted" || { echo "Run make fmt"; exit 1; }
 	go vet ./...
@@ -28,3 +28,6 @@ test-k8s: check-kind-prereqs
 
 test-report-consumer:
 	python3 examples/report-consumer/test_ingest.py -v
+
+test-file-report:
+	python3 tests/codex_file_report.py -v
