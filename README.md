@@ -48,7 +48,16 @@ make test-k8s       # Test delivery, cancellation, and cross-Pod follow-ups in a
 make test-services  # Test PostgreSQL and S3-compatible storage with Docker Compose
 ```
 
-To try the Kubernetes workflow with a single adapter, run `make test-k8s AGENT=codex`. The native CLI recovery tests can also run outside Kubernetes. They require the matching CLI version and start a local model endpoint. Each test creates a conversation, removes the original directories, restores the session, and checks that the next model request contains a random marker from the first turn. [Reproduction steps](docs/operations.md)
+To try the Kubernetes workflow with Codex:
+
+```sh
+make check-kind-prereqs  # Check host tools and Docker without building or creating a cluster
+make test-k8s AGENT=codex
+```
+
+The second command also runs the preflight before it builds. The kind test uses a deterministic model endpoint and needs no model API key. It does need network access for first-time image and CLI downloads. See the [prerequisites and expected results](docs/task-contract.md#一条命令复验).
+
+The native CLI recovery tests can also run outside Kubernetes. They require the matching CLI version and start a local model endpoint. Each test creates a conversation, removes the original directories, restores the session, and checks that the next model request contains a random marker from the first turn. [Reproduction steps](docs/operations.md)
 
 ## Project documentation
 

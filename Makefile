@@ -1,6 +1,7 @@
-.PHONY: check fmt build demo test-services test-k8s test-report-consumer
+.PHONY: check fmt build demo test-services test-k8s check-kind-prereqs test-report-consumer
 
 check:
+	sh tests/check-kind-prereqs.sh
 	@unformatted=$$(gofmt -l cmd internal) && test -z "$$unformatted" || { echo "Run make fmt"; exit 1; }
 	go vet ./...
 	go test -race ./...
@@ -18,7 +19,11 @@ demo: build
 test-services:
 	sh tests/services.sh
 
-test-k8s: build
+check-kind-prereqs:
+	sh scripts/check-kind-prereqs.sh
+
+test-k8s: check-kind-prereqs
+	$(MAKE) build
 	sh tests/kubernetes/run.sh
 
 test-report-consumer:
