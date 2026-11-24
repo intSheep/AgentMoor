@@ -8,6 +8,8 @@ Codex CLI, Gemini CLI, OpenCode, and Claude Code share one HTTPS API for submitt
 
 **v0.1 technical preview** · [MIT license](LICENSE). The acceptance tests run real agent CLIs against a simulated model endpoint in a local kind cluster. They cover task delivery, cancellation during execution, and two consecutive follow-ups in fresh Pods. If you try your own SaaS workflow with a live model, include the CLI and model versions when sharing results. [Test results](docs/mvp.md) · [Contributing](CONTRIBUTING.md)
 
+For a consumer-side example, see [Import a verified report](examples/report-consumer/README.md).
+
 ## Quick start
 
 On macOS or Linux, install Go 1.27.4, a C compiler, Make, and Python 3. Run the local asset recovery demo from the repository root.
