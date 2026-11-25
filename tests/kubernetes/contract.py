@@ -16,6 +16,7 @@ import uuid
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 from saas_contract import ReportClient
+from file_delivery import accept, verify_stored
 from runtimes import BINARIES, environment
 
 
@@ -33,6 +34,10 @@ def main(opts, temp):
     config = {"endpoint": "https://agentmoor:7401", "scope": scope,
               "workspace": "/run/task/work", "state_dir": "/run/task/state",
               "runtime_cli": "/usr/local/bin/" + BINARIES[opts.adapter]}
+    if opts.file_report:
+        if opts.adapter != "codex":
+            raise ValueError("the file report contract requires Codex")
+        config["file_tool"] = "/opt/test/report_tool.py"
     cfg = temp / "worker.json"
     cfg.write_text(json.dumps(config))
     platform = temp / "platform"
@@ -78,13 +83,19 @@ def main(opts, temp):
         profiles = temp / "profiles.json"
         profiles.write_text(json.dumps([{"scope": scope, "pod_spec": template["spec"]["template"]["spec"]}]))
         kube("create", "configmap", "turn-profiles", "--from-file=" + str(profiles))
-        kube("apply", "-f", "-", data=(HERE / "workloads.yaml").read_text().replace("CONTRACT_IMAGE", opts.image))
+        workloads = (HERE / "workloads.yaml").read_text().replace("CONTRACT_IMAGE", opts.image)
+        if opts.file_report:
+            workloads = workloads.replace("/opt/test/model.py", "/opt/test/file_model.py")
+        kube("apply", "-f", "-", data=workloads)
         for deploy in ("agentmoor", "model"):
             kube("rollout", "status", "deployment/" + deploy, "--timeout=150s")
         with forward(base, ns) as endpoint:
             client = ReportClient(endpoint, issue("--submit"), scope["runtime"],
                                   ssl.create_default_context(cafile=str(cert)))
             apply_job("produce", "executor", ["agentmoor", "run-task", "--config", "/config/worker.json"])
+            if opts.file_report:
+                run_file_report(client, kube, temp, cert)
+                return
             client.submit()
             try:
                 first = client.await_result()
@@ -163,6 +174,49 @@ def main(opts, temp):
         check(*base, "delete", "namespace", ns, "--wait=false")
 
 
+def run_file_report(client, kube, temp, cert):
+    client.region = "east"
+    client.spec.update(mode="file-turn.v1", instruction="Produce the file report from input.txt.",
+                       input=f"region,amount_cents\neast,{client.amount}\nwest,31\neast,-7\n")
+    client.submit()
+    def retire(job):
+        wait_job(kube, job)
+        query = ("get", "pods", "-l", "job-name=" + job, "-o", "json")
+        pod, = json.loads(kube(*query))["items"]
+        uid = pod["metadata"]["uid"]
+        assert any(v["name"] == "private-work" and "emptyDir" in v for v in pod["spec"]["volumes"])
+        kube("delete", "job", job, "--cascade=foreground", "--wait=true")
+        assert not json.loads(kube(*query))["items"]
+        return uid
+    try:
+        client.await_result()
+        uid_a = retire("produce")
+        first = json.loads(client.request("GET", client.route))
+        cp = json.loads(client.request("GET", client.route + "/checkpoint"))
+        session = cp["session_id"]
+        initial = accept(client, first, session, 31, "", temp, cert)
+        verify_stored(client, [("", initial)], temp)
+        turn = client.ask(session, "Revise the saved report by subtracting 9 cents from west.")
+        second, _ = client.answer(turn)
+        assert second["parent"] == cp
+        jobs = json.loads(kube("get", "jobs", "-l", "agentmoor.io/turn=" + turn, "-o", "json"))["items"]
+        job, = jobs
+        uid_b = retire(job["metadata"]["name"])
+        assert uid_a != uid_b
+        revised = accept(client, second, session, 22, turn, temp, cert)
+        verify_stored(client, [("", initial), (turn, revised)], temp)
+        assert json.loads(client.request("GET", client.route + "/checkpoint"))["session_id"] == session
+        print(json.dumps(dict(pod_uids=[uid_a, uid_b], session=session, task=first["id"], turn=turn,
+                              first=initial[0], revised=revised[0], tool_reports=[json.loads(initial[1]), json.loads(revised[1])],
+                              business_rows=2), sort_keys=True), flush=True)
+    except Exception:
+        print(kube("logs", "deployment/model")[-1500:], file=sys.stderr)
+        for pod in json.loads(kube("get", "pods", "-o", "json"))["items"]:
+            if "job-name" in pod["metadata"].get("labels", {}):
+                print(kube("logs", "pod/" + pod["metadata"]["name"])[-1500:], file=sys.stderr)
+        raise
+
+
 def await_model(kube, marker):
     deadline = time.monotonic() + 65
     while time.monotonic() < deadline:
@@ -209,6 +263,7 @@ def forward(base, ns):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--adapter", choices=BINARIES, required=True)
+    parser.add_argument("--file-report", action="store_true")
     for key in ("context", "kubeconfig", "image"):
         parser.add_argument("--" + key, required=True)
     with tempfile.TemporaryDirectory(prefix="agentmoor-saas-") as tmp:

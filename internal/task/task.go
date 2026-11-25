@@ -25,6 +25,7 @@ const ReplyFile = "reply.txt"
 
 const TextTurn = "text-turn.v1"
 const ContinueTurn = "continue-turn.v1"
+const FileTurn = "file-turn.v1"
 
 // Prompt contains only the two SaaS fields passed to the native CLI on stdin.
 func (s Spec) Prompt() []byte {
@@ -39,13 +40,14 @@ const Timeout = 15 * time.Minute
 
 // Spec is immutable within a task. A new logical runtime id allocates a new task.
 type Spec struct {
+	Mode        string `json:"mode,omitempty"`
 	Instruction string `json:"instruction"`
 	Input       string `json:"input"`
 	Output      string `json:"output"`
 }
 
 func (s Spec) Valid() bool {
-	return strings.TrimSpace(s.Instruction) != "" && len(s.Instruction) <= 8192 && len(s.Input) <= 65536 && asset.SafePath(s.Output) && path.Base(s.Output) == s.Output && len(s.Output) <= 128
+	return (s.Mode == "" || s.Mode == TextTurn || s.Mode == FileTurn) && strings.TrimSpace(s.Instruction) != "" && len(s.Instruction) <= 8192 && len(s.Input) <= 65536 && asset.SafePath(s.Output) && path.Base(s.Output) == s.Output && len(s.Output) <= 128
 }
 
 // Executor implements one non-interactive text turn and reports its native history.
@@ -53,6 +55,12 @@ type Executor interface {
 	ExecuteTask(context.Context, Environment, Spec) (Execution, error)
 }
 type Environment struct{ Executable, Workspace, Home string }
+
+// FileExecutor invokes an operator-assigned tool. The result is a fresh path in
+// the workspace. A continuation receives the immutable parent session.
+type FileExecutor interface {
+	ExecuteFile(ctx context.Context, env Environment, spec Spec, tool, result, session string, restore RestoreHistory) (Execution, error)
+}
 type Execution struct{ Text, SessionID, HistoryDir string }
 
 // Continuation restores the pinned native transcript into the adapter's private layout.

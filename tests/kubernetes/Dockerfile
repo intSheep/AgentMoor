@@ -12,6 +12,8 @@ COPY tests/kubernetes/install_native.py /opt/test/install_native.py
 RUN python3 /opt/test/install_native.py "$AGENT"
 COPY --from=build /agentmoor /usr/local/bin/agentmoor
 COPY tests/fixture_provider.py tests/kubernetes/model.py /opt/test/
+COPY tests/kubernetes/file_model.py examples/file-report/summarize.py /opt/test/
+COPY tests/kubernetes/report_tool.py /opt/test/
 ENV PYTHONDONTWRITEBYTECODE=1
 USER 65532:65532
 CMD ["agentmoor", "--help"]

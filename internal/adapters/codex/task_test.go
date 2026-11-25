@@ -24,7 +24,7 @@ func TestDecodeTurnRequiresCompletedTextAndNativeIdentity(t *testing.T) {
 		{"conflicting identity", start + start + msg + done, false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			result, err := decodeTurn(strings.NewReader(tc.events))
+			result, err := decodeTurn(strings.NewReader(tc.events), false)
 			if (err == nil) != tc.valid || (tc.valid && result.Text != "report") {
 				t.Fatalf("turn = %+v, err = %v", result, err)
 			}

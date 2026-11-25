@@ -41,6 +41,9 @@ func (a *API) taskRoutes(handle func(string, string, apiHandler)) {
 		if !decodeInput(w, r, &spec, 128<<10) || !spec.Valid() {
 			return task.Record{}, errBadRequest
 		}
+		if spec.Mode == task.FileTurn && !a.FileTaskAdapters[s.Adapter] {
+			return task.Record{}, errUnsupported
+		}
 		return a.Catalog.submitTask(r.Context(), s, spec)
 	})
 	bind("PUT /v1/tasks/{id}/turns/{turn}", "submit", func(w http.ResponseWriter, r *http.Request, s taskAddress) (task.Record, error) {

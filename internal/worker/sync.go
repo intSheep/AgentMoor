@@ -38,6 +38,7 @@ func (e *Engine) authorize(ctx context.Context) (platform.Grant, error) {
 
 type scan struct {
 	turnID         string // follow-up checkpoints have independent keys within the allocation
+	taskOutput     string // publish just the allocated output for task runs
 	engine         *Engine
 	journal        *Journal
 	heads          map[asset.Key]asset.Revision
@@ -45,9 +46,9 @@ type scan struct {
 	runtimeVersion string
 }
 
-func (e *Engine) Sync(ctx context.Context) error { return e.sync(ctx, "") }
+func (e *Engine) Sync(ctx context.Context) error { return e.sync(ctx, "", "") }
 
-func (e *Engine) sync(ctx context.Context, turn string) (err error) {
+func (e *Engine) sync(ctx context.Context, turn, taskOutput string) (err error) {
 	c := e.Config
 	if err = c.Validate(); err != nil {
 		return err
@@ -93,7 +94,7 @@ func (e *Engine) sync(ctx context.Context, turn string) (err error) {
 	if d.ID != c.Scope.Adapter || (c.AdapterVersion != "" && d.Version != c.AdapterVersion) {
 		return fmt.Errorf("adapter ID or version mismatch")
 	}
-	s := scan{engine: e, turnID: turn, journal: &j, heads: map[asset.Key]asset.Revision{}, seen: map[asset.Key]bool{}}
+	s := scan{engine: e, turnID: turn, taskOutput: taskOutput, journal: &j, heads: map[asset.Key]asset.Revision{}, seen: map[asset.Key]bool{}}
 	// Blobs are disposable until referenced by a durable pending operation.
 	leftovers, err := os.ReadDir(c.StateDir)
 	if err != nil {
@@ -247,8 +248,8 @@ func (s *scan) workspace(ctx context.Context, root *os.Root) error {
 		return err
 	}
 	c := s.engine.Config
-	if s.turnID != "" {
-		output := path.Join(c.Artifacts, task.ReplyFile)
+	if s.taskOutput != "" {
+		output := path.Join(c.Artifacts, s.taskOutput)
 		return s.file(ctx, root, asset.Key{Kind: "artifact", ID: output}, "file.v1", output, c.ArtifactSession)
 	}
 	if finder, ok := s.engine.Adapter.(adapter.SkillDiscoverer); ok {

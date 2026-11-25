@@ -205,11 +205,37 @@ func (e *Engine) execute(ctx context.Context, executor task.Executor, record tas
 	}
 	// Keep the private native history available for inspection after a failed publication.
 	env := task.Environment{Executable: c.RuntimeCLI, Workspace: c.Workspace, Home: home}
-	output, err := e.runText(ctx, executor, env, record)
-	if err != nil {
-		return "", err
+	var output task.Execution
+	target := filepath.Join("out", spec.Output)
+	if spec.Mode == task.FileTurn {
+		files, ok := e.Adapter.(task.FileExecutor)
+		if !ok || c.FileTool == "" {
+			return "", fmt.Errorf("file turn requires an allocated file tool")
+		}
+		staged := ".result-" + uuid.NewString()
+		var session string
+		var history task.RestoreHistory
+		if cp := record.Parent; cp != nil {
+			session, history = cp.SessionID, pinnedHistory{ctx: ctx, engine: e, ref: cp.Session}
+		}
+		output, err = files.ExecuteFile(ctx, env, spec, c.FileTool, staged, session, history)
+		if err == nil && session != "" && output.SessionID != session {
+			return "", fmt.Errorf("native session changed on continuation")
+		}
+		if err == nil {
+			info, statErr := root.Lstat(staged)
+			if statErr != nil || !info.Mode().IsRegular() {
+				return "", fmt.Errorf("file tool did not produce a new regular file")
+			}
+			err = root.Rename(staged, target)
+		}
+	} else {
+		output, err = e.runText(ctx, executor, env, record)
+		if err == nil {
+			err = root.WriteFile(target, []byte(output.Text), 0600)
+		}
 	}
-	if err = root.WriteFile(filepath.Join("out", spec.Output), []byte(output.Text), 0600); err != nil {
+	if err != nil {
 		return "", err
 	}
 	// The journal must remain outside both the workspace and the history root.
@@ -218,7 +244,11 @@ func (e *Engine) execute(ctx context.Context, executor task.Executor, record tas
 	c.Sessions = output.HistoryDir
 	c.ArtifactSession = output.SessionID
 	publisher := Engine{Config: c, Client: e.Client, Adapter: e.Adapter}
-	if err = publisher.sync(ctx, record.TurnID); err != nil {
+	publishedOutput := ""
+	if record.TurnID != "" || spec.Mode == task.FileTurn {
+		publishedOutput = spec.Output
+	}
+	if err = publisher.sync(ctx, record.TurnID, publishedOutput); err != nil {
 		return "", err
 	}
 	_ = os.RemoveAll(home)

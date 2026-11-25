@@ -1,4 +1,5 @@
 .PHONY: check fmt build demo test-services test-k8s check-kind-prereqs test-report-consumer test-file-report
+.PHONY: test-k8s-file-report
 
 check: test-file-report
 	sh tests/check-kind-prereqs.sh
@@ -25,6 +26,10 @@ check-kind-prereqs:
 test-k8s: check-kind-prereqs
 	$(MAKE) build
 	sh tests/kubernetes/run.sh
+
+test-k8s-file-report: check-kind-prereqs
+	$(MAKE) build
+	AGENT=codex sh tests/kubernetes/run.sh --file-report
 
 test-report-consumer:
 	python3 examples/report-consumer/test_ingest.py -v
