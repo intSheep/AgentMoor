@@ -1,5 +1,5 @@
 .PHONY: check fmt build demo test-services test-k8s check-kind-prereqs test-report-consumer test-file-report
-.PHONY: test-k8s-file-report
+.PHONY: test-worker-file-report
 
 check: test-file-report
 	sh tests/check-kind-prereqs.sh
@@ -27,12 +27,11 @@ test-k8s: check-kind-prereqs
 	$(MAKE) build
 	sh tests/kubernetes/run.sh
 
-test-k8s-file-report: check-kind-prereqs
-	$(MAKE) build
-	AGENT=codex sh tests/kubernetes/run.sh --file-report
-
 test-report-consumer:
 	python3 examples/report-consumer/test_ingest.py -v
 
 test-file-report:
 	python3 tests/codex_file_report.py -v
+
+test-worker-file-report:
+	go test -count=1 -run '^TestWorkerFileDelivery$$' -v ./cmd/agentmoor

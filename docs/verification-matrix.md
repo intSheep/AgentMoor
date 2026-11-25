@@ -8,6 +8,7 @@
 | 四个原生 CLI 的 SaaS 文本回合 | `make test-k8s [AGENT=codex]`，详见[任务契约](task-contract.md#一条命令复验) | [已记录](mvp.md#kubernetes-任务验收)：Codex、Gemini、OpenCode、Claude Code 在 kind + 确定性模拟模型上交付、取消、连续两次换 Pod 续聊。模型端点[从请求取出并直接汇总 CSV](../tests/kubernetes/model.py)，不是 CLI 用工具读 CSV 和写报告。 |
 | PostgreSQL + S3 兼容存储 | `make test-services` | [已记录](mvp.md#prd-验收对应表)：验证资产发布、读回和回收。不是同一次跨 Pod 任务端到端测试。 |
 | 本机从 CSV 生成报告 | [文件工具样例](../examples/file-report/README.md) | 可用 `make test-file-report` 直接调用工具，或指定本机 Codex CLI，由回环脚本模型请求执行工具。独立验算读取磁盘上的实际文件。此入口只覆盖例 1 的本机文件生成步骤。 |
+| Worker 交付工具文件，业务端下载并去重 | `make test-worker-file-report` | 本地真实 HTTP 平台、两个独立 Worker 进程、SQLite 导入器通过。测试适配器提供会话及最终文本。[本次证据](#2026-11-25worker-文件交付) |
 | Codex 文件工具、文件恢复后再编辑 | 例 1–2 | 计划。分别记录真实 CLI + 脚本模型、真实 CLI + 真实模型的结果。 |
 | Codex 文件任务取消、失联及重试 | 例 3 | 计划。当前文本取消测试不能替代工具生命周期验证。 |
 | PostgreSQL + 对象存储下的完整 Kubernetes 契约 | V2 退出门槛 | 计划。不据后端测试推断跨 Pod 端到端已过。 |
@@ -29,6 +30,28 @@
 先跑例 1，并让工具写入一份只进工作区、不进入最终回复的 `state.json`，包含一枚新生成的随机标记。生成工具只返回文件路径，不回显标记；确认首轮回复和首轮模型消息中没有标记。删除 Pod A 及其临时卷。用同一原生会话 ID 发起第一次追问，新 Pod B 读取状态文件，追加一笔退款并生成新版本；再删除 B，Pod C 在同一会话中输出基于修改后文件的审计结果。后续请求不重发原始文件或标记，并用各自的 UUID 原样重复提交一次。
 
 **通过：** 三次 Pod UID 不同，临时工作卷未共享；原生会话 ID 不变；可关联事件表明 Pod B/C 确实读取恢复后的文件，新结果包含工作区中的随机标记和更新后的汇总。原始交付物仍能按原版本下载且字节不变，后续每轮各一个 Job。负对照：禁用工作区恢复后，不能得到相同的成功结果。若 API 只交付文本或偷偷重放输入，不能通过。
+
+#### 2026-11-25：Worker 文件交付
+
+`make test-worker-file-report` 启动临时 HTTP 平台，使用 SQLite 元数据和本地对象存储。两个独立进程通过 `run-task --config` 和 `run-task --config … --turn …` 运行真实 Worker。测试程序只在自己的注册表中增加 `local-report-fixture` 适配器。该适配器调用已有 CSV 工具，并将最终文本的 east 写为 99 分。第一轮结束后删除整个分配目录，第二个 Worker 恢复会话、CSV 和原报告，追加 west 的 9 分退款，再生成报告。
+
+| 本地任务 `file-report` | 实际工具文件（分） | 固定版本 HTTP 路径 | SHA-256 |
+| --- | --- | --- | --- |
+| 首份 | east 98，west 31 | `/v1/content?id=out%2Freport.json&kind=artifact&version=1` | `f72401084eda1ff431cf23833d909e242747c3ac0a641e90abf16db6183c9836` |
+| 修订 | east 98，west 22 | `/v1/content?id=turns%2F3d0aca2f-b8d7-4813-bc14-685013fc49aa%2Fout%2Freport.json&kind=artifact&version=1` | `270255c78b6a7c4a3aba2222aee63729527db768191c281351a6505d4be3c96b` |
+
+这次运行的测试会话为 `06bdd842-9539-43db-ba12-9f95fc05f213`。现有 `ingest.py` 拒绝了两次以最终文本作为预期的导入。按独立验算的金额导入时，每份依次返回 `imported`、`already-imported`。数据库共两行，两个 Worker 均退出后，两条引用均能下载原字节。每次复验生成新的会话和追问 ID。
+
+同日，提交 `9c573b9` 的 `make test-k8s-file-report` 在一次性 kind v0.31.0 集群运行，使用独立 kubeconfig、OrbStack Docker 29.8.2 和 Codex `0.171.0-alpha.13`。首轮调用 `report.render` 需要审批，非交互 CLI 返回 `MCP tool call requires approval, but approval policy is never`，任务失败。没有生成首份集群报告，也没有触发修订 Pod。该提交保留诊断入口，当前内置适配器只声明已验证的文本模式。
+
+本次集群命令使用的 `kind` 位于工作树临时目录，Darwin ARM64 可执行文件的 SHA-256 与官方 v0.31.0 release 记录一致，为 `88bf554fe9da6311c9f8c2d082613c002911a476f6b5090e9420b35d84e70c5c`。下面是实际入口，`tool_dir` 表示该临时目录。验收结束后移除了临时集群、kubeconfig 和工具。
+
+```sh
+# 9c573b9，文件回合停在首轮审批
+PATH="$tool_dir:/Applications/OrbStack.app/Contents/MacOS/xbin:$PATH" DOCKER_CONTEXT=orbstack make test-k8s-file-report
+# 当前分支，本地文件交付通过
+make test-worker-file-report
+```
 
 ### 例 3：取消、失联与重试
 

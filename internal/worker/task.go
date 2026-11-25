@@ -36,10 +36,6 @@ func (e *Engine) runTask(ctx context.Context, wait time.Duration, turn string) e
 	if err := c.Validate(); err != nil {
 		return err
 	}
-	executor, ok := e.Adapter.(task.Executor)
-	if !ok {
-		return fmt.Errorf("%s has no task executor", c.Scope.Adapter)
-	}
 	if c.RuntimeCLI == "" || c.Sessions != "" || c.NativeSessions || (c.Artifacts != "" && c.Artifacts != "out") {
 		return fmt.Errorf("run-task requires runtime_cli and manages its own sessions and out directory")
 	}
@@ -92,7 +88,7 @@ func (e *Engine) runTask(ctx context.Context, wait time.Duration, turn string) e
 	defer cancel()
 	stopped := make(chan struct{})
 	go func() { defer close(stopped); e.monitorTask(runCtx, route, cancel) }()
-	session, runErr := e.execute(runCtx, executor, record)
+	session, runErr := e.execute(runCtx, record)
 	cancel()
 	<-stopped
 	// A failed acknowledgement can be retried without starting another turn.
@@ -164,7 +160,7 @@ func (e *Engine) monitorTask(ctx context.Context, route string, stop context.Can
 	}
 }
 
-func (e *Engine) execute(ctx context.Context, executor task.Executor, record task.Record) (string, error) {
+func (e *Engine) execute(ctx context.Context, record task.Record) (string, error) {
 	c := e.Config
 	spec := record.Spec
 	var err error
@@ -209,16 +205,19 @@ func (e *Engine) execute(ctx context.Context, executor task.Executor, record tas
 	target := filepath.Join("out", spec.Output)
 	if spec.Mode == task.FileTurn {
 		files, ok := e.Adapter.(task.FileExecutor)
-		if !ok || c.FileTool == "" {
-			return "", fmt.Errorf("file turn requires an allocated file tool")
+		if !ok {
+			return "", fmt.Errorf("adapter does not support file turns")
 		}
 		staged := ".result-" + uuid.NewString()
+		if _, err := root.Lstat(staged); !errors.Is(err, os.ErrNotExist) {
+			return "", fmt.Errorf("file turn needs a fresh result path")
+		}
 		var session string
 		var history task.RestoreHistory
 		if cp := record.Parent; cp != nil {
 			session, history = cp.SessionID, pinnedHistory{ctx: ctx, engine: e, ref: cp.Session}
 		}
-		output, err = files.ExecuteFile(ctx, env, spec, c.FileTool, staged, session, history)
+		output, err = files.ExecuteFile(ctx, env, spec, staged, session, history)
 		if err == nil && session != "" && output.SessionID != session {
 			return "", fmt.Errorf("native session changed on continuation")
 		}
@@ -230,6 +229,10 @@ func (e *Engine) execute(ctx context.Context, executor task.Executor, record tas
 			err = root.Rename(staged, target)
 		}
 	} else {
+		executor, ok := e.Adapter.(task.Executor)
+		if !ok {
+			return "", fmt.Errorf("adapter does not support text turns")
+		}
 		output, err = e.runText(ctx, executor, env, record)
 		if err == nil {
 			err = root.WriteFile(target, []byte(output.Text), 0600)

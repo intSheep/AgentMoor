@@ -24,7 +24,6 @@ type Config struct {
 	StateDir        string      `json:"state_dir"`
 	AdapterVersion  string      `json:"adapter_version,omitempty"`
 	RuntimeCLI      string      `json:"runtime_cli,omitempty"`
-	FileTool        string      `json:"file_tool,omitempty"` // Trusted stdio tool executable for file tasks.
 	RuntimeVersion  string      `json:"runtime_version,omitempty"`
 	NativeSessions  bool        `json:"native_sessions,omitempty"`
 }
@@ -95,11 +94,8 @@ func (c Config) Validate() error {
 	if c.Workspace == "" {
 		return fmt.Errorf("workspace required")
 	}
-	for _, executable := range []string{c.RuntimeCLI, c.FileTool} {
-		if executable == "" {
-			continue
-		}
-		exe, err := resolve(executable)
+	if c.RuntimeCLI != "" {
+		exe, err := resolve(c.RuntimeCLI)
 		if err != nil {
 			return err
 		}
@@ -108,7 +104,7 @@ func (c Config) Validate() error {
 			return err
 		}
 		if inside(root, exe) {
-			return fmt.Errorf("configured executable must be outside the agent workspace")
+			return fmt.Errorf("runtime_cli must be outside the agent workspace")
 		}
 	}
 	if c.NativeSessions && (c.RuntimeCLI == "" || c.Sessions != "") {

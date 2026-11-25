@@ -22,6 +22,6 @@ func New() Adapter {
 
 func (a Adapter) Descriptor() adapter.Descriptor {
 	d := a.Layout.Descriptor()
-	d.TaskModes = []string{task.TextTurn, task.ContinueTurn, task.FileTurn}
+	d.TaskModes = []string{task.TextTurn, task.ContinueTurn}
 	return d
 }

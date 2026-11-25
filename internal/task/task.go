@@ -56,10 +56,10 @@ type Executor interface {
 }
 type Environment struct{ Executable, Workspace, Home string }
 
-// FileExecutor invokes an operator-assigned tool. The result is a fresh path in
-// the workspace. A continuation receives the immutable parent session.
+// FileExecutor writes the delivery to a fresh workspace-relative result path.
+// A continuation receives the immutable parent session and restored workspace.
 type FileExecutor interface {
-	ExecuteFile(ctx context.Context, env Environment, spec Spec, tool, result, session string, restore RestoreHistory) (Execution, error)
+	ExecuteFile(ctx context.Context, env Environment, spec Spec, result, session string, restore RestoreHistory) (Execution, error)
 }
 type Execution struct{ Text, SessionID, HistoryDir string }
 

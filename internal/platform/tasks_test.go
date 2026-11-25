@@ -61,6 +61,7 @@ func TestTaskHTTPContract(t *testing.T) {
 	other.Adapter = "unimplemented"
 	req("PUT", route, token(other, true, false), spec, 422)
 	req("PUT", route, submit, task.Spec{Instruction: "x", Output: "../escape"}, 400)
+	req("PUT", route, submit, task.Spec{Mode: task.FileTurn, Instruction: "x", Output: "report.json"}, 422)
 	req("PUT", route, submit, spec, 200)
 	req("PUT", route, submit, spec, 200)
 	changed := spec

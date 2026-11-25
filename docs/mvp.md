@@ -35,6 +35,8 @@
 
 ## Kubernetes 任务验收
 
+2026-11-25 单独复验了 Codex 的文本交付、换 Pod 续聊和取消，以及同版本 Linux CLI 的 `tests/native_roundtrip.py`。另一次文件交付尝试停在首轮工具审批。本地两个真实 Worker 进程已完成文件发布、恢复和 SQLite 去重，所用会话由测试适配器提供。[命令、固定版本引用和哈希](verification-matrix.md#2026-11-25worker-文件交付)
+
 同一个 SaaS 客户端提交随机 CSV、验算金额并追问。初次交付后，测试删除原 Pod。SaaS 每发一个新问题，平台自动拉起一个新 Job；SaaS 按回合下载答案。测试在第二次追问前也会删除第一次追问的 Pod。[SaaS 客户端](../tests/saas_contract.py) · [集群验收](../tests/kubernetes/contract.py)
 
 | 适配器 | 首轮报告交付并验算 | 连续两次由 SaaS 追问，每次换新 Pod 并取回答案 | 在运行中取消首轮和追问 |

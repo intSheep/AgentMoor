@@ -35,13 +35,13 @@ func (a *API) taskRoutes(handle func(string, string, apiHandler)) {
 	}
 	bind("PUT /v1/tasks/{id}", "submit", func(w http.ResponseWriter, r *http.Request, s taskAddress) (task.Record, error) {
 		var spec task.Spec
-		if !a.TaskAdapters[s.Adapter] {
+		if !a.TaskAdapters[s.Adapter] && !a.FileTaskAdapters[s.Adapter] {
 			return task.Record{}, errUnsupported
 		}
 		if !decodeInput(w, r, &spec, 128<<10) || !spec.Valid() {
 			return task.Record{}, errBadRequest
 		}
-		if spec.Mode == task.FileTurn && !a.FileTaskAdapters[s.Adapter] {
+		if (spec.Mode == task.FileTurn && !a.FileTaskAdapters[s.Adapter]) || (spec.Mode != task.FileTurn && !a.TaskAdapters[s.Adapter]) {
 			return task.Record{}, errUnsupported
 		}
 		return a.Catalog.submitTask(r.Context(), s, spec)
