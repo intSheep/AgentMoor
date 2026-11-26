@@ -29,7 +29,7 @@ func (c *Catalog) submitTurn(ctx context.Context, a taskAddress, q task.Question
 	}
 	var seq int64
 	var latest string
-	err = c.writer.QueryRowContext(ctx, "SELECT seq,id FROM turns WHERE scope=$1 ORDER BY seq DESC LIMIT 1", a.Prefix()).Scan(&seq, &latest)
+	err = c.db.QueryRowContext(ctx, "SELECT seq,id FROM turns WHERE scope=$1 ORDER BY seq DESC LIMIT 1", a.Prefix()).Scan(&seq, &latest)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return task.Record{}, err
 	}
@@ -76,7 +76,7 @@ func (c *Catalog) submitTurn(ctx context.Context, a taskAddress, q task.Question
 // Ensure must identify the Job by (scope, turn), even after an ambiguous create.
 func (c *Catalog) DispatchQueued(ctx context.Context, s asset.Scope, ensure func(context.Context, asset.Scope, string) (bool, error)) error {
 	var id string
-	err := c.writer.QueryRowContext(ctx, "SELECT id FROM turns WHERE scope=$1 AND state=$2 ORDER BY seq DESC LIMIT 1", s.Prefix(), task.Queued).Scan(&id)
+	err := c.db.QueryRowContext(ctx, "SELECT id FROM turns WHERE scope=$1 AND state=$2 ORDER BY seq DESC LIMIT 1", s.Prefix(), task.Queued).Scan(&id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil
 	}
@@ -109,7 +109,7 @@ func (c *Catalog) DispatchQueued(ctx context.Context, s asset.Scope, ensure func
 
 func (c *Catalog) latestCheckpoint(ctx context.Context, scope asset.Scope) (task.Checkpoint, error) {
 	var previous string
-	err := c.writer.QueryRowContext(ctx, "SELECT id FROM turns WHERE scope=$1 AND state=$2 ORDER BY seq DESC LIMIT 1", scope.Prefix(), task.Succeeded).Scan(&previous)
+	err := c.db.QueryRowContext(ctx, "SELECT id FROM turns WHERE scope=$1 AND state=$2 ORDER BY seq DESC LIMIT 1", scope.Prefix(), task.Succeeded).Scan(&previous)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return task.Checkpoint{}, err
 	}
