@@ -5,6 +5,7 @@
 .PHONY: test-k8s-v2
 
 check: test-file-report
+	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p test_forward.py -v
 	sh tests/check-kind-prereqs.sh
 	@unformatted=$$(gofmt -l cmd internal) && test -z "$$unformatted" || { echo "Run make fmt"; exit 1; }
 	go vet ./...

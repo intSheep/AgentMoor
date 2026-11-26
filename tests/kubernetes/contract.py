@@ -2,10 +2,10 @@
 import argparse
 import contextlib
 import json
+import os
 from pathlib import Path
 import re
 import secrets
-import select
 import ssl
 import subprocess
 import sys
@@ -285,32 +285,50 @@ class ForwardedEndpoint(str):
 
 @contextlib.contextmanager
 def forward(base, ns, service="agentmoor", port=7401, scheme="https"):
-    errors = tempfile.TemporaryFile(mode="w+")
+    output = tempfile.TemporaryFile(mode="w+b")
+    errors = tempfile.TemporaryFile(mode="w+b")
     proc = None
 
-    def start(local=""):
-        process = subprocess.Popen([*base, "-n", ns, "port-forward", "svc/" + service, str(local) + ":" + str(port),
-                                    "--address", "127.0.0.1"], stdout=subprocess.PIPE, stderr=errors, text=True)
+    def stop_process(process):
+        if process.poll() is None:
+            process.terminate()
         try:
-            if not select.select([process.stdout], [], [], 15)[0]:
-                raise TimeoutError("port-forward did not start")
-            match = re.search(r"127\.0\.0\.1:(\d+)", process.stdout.readline())
-            if not match:
-                raise RuntimeError("no forwarded port")
-            return process, match[1]
-        except Exception:
-            if process.poll() is None:
-                process.terminate()
             process.wait(timeout=10)
-            process.stdout.close()
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=10)
+
+    def start(local=""):
+        offset = os.fstat(output.fileno()).st_size
+        process = subprocess.Popen([*base, "-n", ns, "port-forward", "svc/" + service, str(local) + ":" + str(port),
+                                    "--address", "127.0.0.1"], stdout=output, stderr=errors)
+        try:
+            until = time.monotonic() + 15
+            pending = b""
+            while time.monotonic() < until:
+                # kubectl logs every new connection. A PIPE whose readiness
+                # line is its only consumed output eventually stalls kubectl.
+                # pread leaves the child's shared file position untouched.
+                data = os.pread(output.fileno(), 64 << 10, offset)
+                offset += len(data)
+                pending += data
+                lines = pending.split(b"\n")
+                pending = lines.pop()
+                for line in lines:
+                    match = re.search(rb"^Forwarding from 127\.0\.0\.1:(\d+) -> ", line)
+                    if match and process.poll() is None:
+                        return process, match[1].decode("ascii")
+                if process.poll() is not None:
+                    raise RuntimeError("port-forward exited before readiness")
+                time.sleep(.02)
+            raise TimeoutError("port-forward did not start")
+        except Exception:
+            stop_process(process)
             raise
 
     def stop():
         if proc is not None:
-            if proc.poll() is None:
-                proc.terminate()
-            proc.wait(timeout=10)
-            proc.stdout.close()
+            stop_process(proc)
 
     try:
         proc, local = start()
@@ -325,11 +343,17 @@ def forward(base, ns, service="agentmoor", port=7401, scheme="https"):
         endpoint.reconnect = reconnect
         yield endpoint
     finally:
-        stop()
-        if sys.exc_info()[0] is not None:
-            errors.seek(0)
-            print(errors.read()[-1200:], file=sys.stderr)
-        errors.close()
+        try:
+            stop()
+        finally:
+            if sys.exc_info()[0] is not None:
+                for stream in (output, errors):
+                    offset = max(0, os.fstat(stream.fileno()).st_size - 1200)
+                    tail = os.pread(stream.fileno(), 1200, offset)
+                    if tail:
+                        print(tail.decode("utf-8", errors="replace"), file=sys.stderr)
+            output.close()
+            errors.close()
 
 
 if __name__ == "__main__":
