@@ -46,6 +46,7 @@ make check          # Check formatting, run go vet and tests with the race detec
 make demo           # Upload, sync again, and restore assets using the local server
 make test-k8s       # Test delivery, cancellation, and cross-Pod follow-ups in a disposable kind cluster
 make test-k8s-file-report # Test Codex file tools and edits across fresh Pods
+make test-k8s-skills # Test pinned native Skills, their scripts, and cross-Pod loading
 make test-services  # Test PostgreSQL and S3-compatible storage with Docker Compose
 ```
 
@@ -66,6 +67,11 @@ Pods with the same native session. The SaaS client downloads pinned versions,
 checks their bytes and amounts, and imports reports into its own SQLite database.
 It also checks database failure retries and cancellation during a tool call.
 No model account or API key is needed. [File task contract](docs/task-contract.md#文件交付和多份产物)
+
+`make test-k8s-skills` adds a versioned Skill package to that workflow. It checks
+native Skill body loading, execution of the restored package's script and
+reference file, and retention of the selected version after a newer version is
+published. It also verifies that the same input fails without the required Skill.
 
 ## Project documentation
 

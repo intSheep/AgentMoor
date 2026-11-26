@@ -1,0 +1,141 @@
+{
+  "implementation_commit": "6ae64d24890b2f574d82927c00ec26abf88cc527",
+  "verification_commit": "e5c0fc5995af3ac946d5b6938fcf82a2977affbc",
+  "recorded_at_utc": "2026-11-26T13:04:48Z",
+  "host": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "go": "1.27.4",
+    "docker": "29.8.2",
+    "kind": "0.33.0",
+    "kubernetes": "v1.35.0"
+  },
+  "adapter_version": "0.5.0",
+  "backends": "SQLite and local immutable objects in Kubernetes; PostgreSQL/S3 tested separately",
+  "checks": {
+    "make fmt": "passed",
+    "make check": "passed",
+    "make demo": "passed",
+    "make test-services": "passed",
+    "make test-k8s-skills": "passed",
+    "native_roundtrip codex": "passed with macOS codex-cli 0.171.0-alpha.13.2",
+    "make test-k8s": {
+      "passed": [
+        "codex",
+        "gemini-cli",
+        "opencode",
+        "claude-code"
+      ]
+    },
+    "Codex file contract (contract.py --file-report)": "passed on an independent namespace in the dedicated kind fault-test cluster"
+  },
+  "skill_report": {
+    "artifacts": [
+      {
+        "content_path": "/v1/content?id=out%2Freport.json&kind=artifact&version=1",
+        "id": "out/report.json",
+        "kind": "artifact",
+        "sha256": "cab12b5f5b03e74b56e198e8d86b7ec19c206d2a98e0b1120a01bdfd80693da4",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2Fd3415516-111d-4fed-845b-4d780559780c%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/d3415516-111d-4fed-845b-4d780559780c/out/report.json",
+        "kind": "artifact",
+        "sha256": "5f46451df560fd8907950295866953eea6f92d251687573467b9e1671d228a7a",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2Fe8fcd5b7-c4c0-408d-b067-f9d9541ff1b4%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/e8fcd5b7-c4c0-408d-b067-f9d9541ff1b4/out/report.json",
+        "kind": "artifact",
+        "sha256": "b56210485e5bba6d8fb8f28eb286579d4c76a938c130e907dece19369d9f4f82",
+        "version": 1
+      }
+    ],
+    "business_rows": 2,
+    "cli": "codex-cli 0.171.0-alpha.13",
+    "member_sha256": {
+      "SKILL.md": "6df4b6b827c1dd518bebdca639cf576042d01f0cd76f394fe6b6efdb667d43c9",
+      "references/rule.json": "87d80a8acc152b52b1d3f34c93205df240f342397930678e873c6f38c2f2da76",
+      "scripts/check.py": "69fbf32f2d1319c7111d4cacb8290f3b0226ec3bd8e1de27af6ac0d2a40b07ab"
+    },
+    "model": "scripted-responses",
+    "native_skill_rule": "verified-by-installed-script-and-reference",
+    "newer_unselected_skill": {
+      "content_path": "/v1/content?id=catalog%2Fskills%2Fpinned-report&kind=skill&version=2",
+      "id": "catalog/skills/pinned-report",
+      "kind": "skill",
+      "sha256": "6c4bf1fe43bf6dd242a95c276f95f916ab975eacedbcf1d30dbcea0d9970abf5",
+      "version": 2
+    },
+    "no_skill_control": "failed-without-assets",
+    "pod_uids": [
+      "1042997f-9218-466d-a97a-7e5a832db74d",
+      "852a4711-fe1e-4990-8ae1-aaffb4437eeb",
+      "d60bbcb2-f507-439d-a853-1221d63fd8eb"
+    ],
+    "session_sha256": "c4183ea8b0dae6b3ef617f41952a34dcad92f0348f2467b8bea2678b06e16732",
+    "skill_pin": {
+      "name": "pinned-report",
+      "source": {
+        "content_path": "/v1/content?id=catalog%2Fskills%2Fpinned-report&kind=skill&version=1",
+        "id": "catalog/skills/pinned-report",
+        "kind": "skill",
+        "sha256": "cd4c51c1efc04319fa32c2480cf35593f1ab7670bff857e010b747c4d89ce26a",
+        "version": 1
+      }
+    }
+  },
+  "limitations": [
+    "Scripted model; live-model smoke not run.",
+    "Task Skill installation currently supports Codex and skill-tar.v1 packages.",
+    "PostgreSQL/S3 full cross-Pod workflow not tested in this run."
+  ],
+  "base_file_report": {
+    "active_mcp_cancel": "cancelled-with-checkpoint-preserved",
+    "artifacts": [
+      {
+        "content_path": "/v1/content?id=out%2Freport.json&kind=artifact&version=1",
+        "id": "out/report.json",
+        "kind": "artifact",
+        "sha256": "fed4b91cc2dadfd607fc35d8dca7f51b4d66bd459f5746d6758e61443e420682",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2F5f5aef1b-c892-48de-939d-5fcd05518b6c%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/5f5aef1b-c892-48de-939d-5fcd05518b6c/out/report.json",
+        "kind": "artifact",
+        "sha256": "18621d193927cc81accf2ec9556eecbe8e8553c0e056f31a98d2e87c044d8d73",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2F2add8add-6759-4a69-9b8e-105405fc6437%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/2add8add-6759-4a69-9b8e-105405fc6437/out/report.json",
+        "kind": "artifact",
+        "sha256": "43fa8b2a4f0fcc24d2225083ce47e6b8e6842841ece60bc6d03bbdbf7b85bb3f",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2Fac21f587-4602-47f6-983c-95ef98f154ce%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/ac21f587-4602-47f6-983c-95ef98f154ce/out/report.json",
+        "kind": "artifact",
+        "sha256": "43fa8b2a4f0fcc24d2225083ce47e6b8e6842841ece60bc6d03bbdbf7b85bb3f",
+        "version": 1
+      }
+    ],
+    "business_rows": 2,
+    "cli": "codex-cli 0.171.0-alpha.13",
+    "database_write_retry": "trigger-failure-then-imported-and-already-imported",
+    "missing_input": "failed-without-assets",
+    "model": "scripted-responses",
+    "pod_uids": [
+      "e9dc1efa-28ad-4529-879b-9a5a0c1b6bd6",
+      "4c537816-6eaa-4d07-8257-45eca34c6e95",
+      "5138df22-ddff-4127-8494-7e58f883a7b9"
+    ],
+    "recovery_pod_uid": "fd1ab2a8-c1b6-4b55-b3d0-ea003be4e978",
+    "session_sha256": "8b6ee37c5d2efad0263f5a4b43964fd0a91bcbc6ea0969e38939a3b7c340e8c5",
+    "workspace_loss_simulation": "same-session-required-files-removed-before-tool"
+  }
+}

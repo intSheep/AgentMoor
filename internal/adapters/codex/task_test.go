@@ -2,6 +2,7 @@ package codex
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"slices"
@@ -220,6 +221,185 @@ func TestFileTurnAuthorizesOnlyAllocatedRenderAndKeepsPrivateHome(t *testing.T) 
 	for _, variable := range vars {
 		if strings.HasPrefix(variable, "AGENTMOOR_TOKEN=") || strings.HasPrefix(variable, "AWS_SECRET_ACCESS_KEY=") || strings.HasPrefix(variable, "CODEX_FILE_TOOL=") {
 			t.Errorf("unexpected inherited credential or tool setting: %q", variable)
+		}
+	}
+}
+
+type skillHistory struct{ destination string }
+
+func (h *skillHistory) Files(destination string) error {
+	h.destination = destination
+	return os.Mkdir(destination, 0700)
+}
+
+func (h *skillHistory) NativeDatabase(string) error { return os.ErrInvalid }
+
+func TestPinnedSkillsUseCanonicalNativeMentionsForEveryTurn(t *testing.T) {
+	for _, mode := range []string{"text", "file", "continue"} {
+		t.Run(mode, func(t *testing.T) {
+			base := t.TempDir()
+			work, home := filepath.Join(base, "work"), filepath.Join(base, "home")
+			for _, dir := range []string{work, home} {
+				if err := os.Mkdir(dir, 0700); err != nil {
+					t.Fatal(err)
+				}
+			}
+			alias := filepath.Join(base, "home-link")
+			if err := os.Symlink(home, alias); err != nil {
+				t.Fatal(err)
+			}
+			env := task.Environment{Home: alias, Workspace: work}
+			dir, err := New().SkillDirectory(env, "report-style")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err = os.MkdirAll(dir, 0700); err != nil {
+				t.Fatal(err)
+			}
+			manifest := filepath.Join(dir, "SKILL.md")
+			body := []byte("---\nname: report-style\ndescription: A pinned report rule\n---\noriginal-body-must-be-loaded-by-codex\n")
+			if err = os.WriteFile(manifest, body, 0600); err != nil {
+				t.Fatal(err)
+			}
+			canonical, err := filepath.EvalSymlinks(manifest)
+			if err != nil {
+				t.Fatal(err)
+			}
+			env.Skills = []task.LoadedSkill{{Name: "report-style", Manifest: manifest}}
+			argsPath, promptPath := filepath.Join(base, "args"), filepath.Join(base, "prompt")
+			quote := func(s string) string { return "'" + strings.ReplaceAll(s, "'", "'\"'\"'") + "'" }
+			env.Executable = filepath.Join(base, "fake-codex")
+			events := `{"type":"thread.started","thread_id":"7d65d0f5-5c08-467b-b022-97cfff41e16a"}` + "\n" + `{"type":"turn.started"}` + "\n"
+			if mode == "file" {
+				events += `{"type":"item.completed","item":{"type":"mcp_tool_call","server":"report","tool":"render","status":"completed","result":{"isError":false}}}` + "\n"
+			}
+			events += `{"type":"item.completed","item":{"type":"agent_message","text":"done"}}` + "\n" + `{"type":"turn.completed"}` + "\n"
+			script := "#!/bin/sh\nprintf '%s\\n' \"$@\" > " + quote(argsPath) + "\n/bin/cat > " + quote(promptPath) + "\n/bin/cat <<'EVENTS'\n" + events + "EVENTS\n"
+			if err = os.WriteFile(env.Executable, []byte(script), 0700); err != nil {
+				t.Fatal(err)
+			}
+			spec := task.Spec{Instruction: "Produce the report", Input: "workspace input", Output: "report.json"}
+			original := spec.Instruction
+			var history skillHistory
+			switch mode {
+			case "text":
+				original = string(spec.Prompt())
+				_, err = New().ExecuteTask(t.Context(), env, spec)
+			case "continue":
+				_, err = New().ContinueTask(t.Context(), env, "7d65d0f5-5c08-467b-b022-97cfff41e16a", spec.Instruction, &history)
+				if history.destination != filepath.Join(alias, ".codex", "sessions") {
+					t.Fatalf("restored history to %q", history.destination)
+				}
+			case "file":
+				tool := filepath.Join(base, "trusted-tool")
+				if err = os.WriteFile(tool, []byte("#!/bin/sh\nexit 99\n"), 0700); err != nil {
+					t.Fatal(err)
+				}
+				t.Setenv("CODEX_FILE_TOOL", tool)
+				spec.Mode = task.FileTurn
+				_, err = New().ExecuteFile(t.Context(), env, spec, ".result-worker", "", nil)
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			prompt, err := os.ReadFile(promptPath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			mention := "[$report-style](" + canonical + ")"
+			if !strings.HasPrefix(string(prompt), original+"\n\n") || strings.Count(string(prompt), mention) != 1 || strings.Contains(string(prompt), "original-body-must-be-loaded-by-codex") {
+				t.Fatalf("expected canonical native selection without rewritten Skill contents: %s", prompt)
+			}
+			args, err := os.ReadFile(argsPath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(string(args), "--sandbox\nread-only\n") || !strings.Contains(string(args), "--disable\nshell_tool\n") || strings.Contains(string(args), "danger") {
+				t.Fatalf("native skill selection changed runtime restrictions: %s", args)
+			}
+			if mode == "file" {
+				raw, err := json.Marshal(map[string]string{"report-style": canonical})
+				if err != nil {
+					t.Fatal(err)
+				}
+				if !strings.Contains(string(args), "mcp_servers.report.env.AGENTMOOR_SKILLS="+strconv.Quote(string(raw))) {
+					t.Fatalf("trusted tool did not receive the verified Skill path: %s", args)
+				}
+			} else if strings.Contains(string(args), "AGENTMOOR_SKILLS") {
+				t.Fatal("text mode supplied MCP-only Skill environment")
+			}
+		})
+	}
+}
+
+func TestPinnedSkillsRejectUnassignedOrEscapingManifests(t *testing.T) {
+	for _, scenario := range []string{"outside home", "workspace", "wrong package", "relative manifest", "duplicate", "invalid name", "symlink manifest", "symlink skill root", "directory manifest"} {
+		t.Run(scenario, func(t *testing.T) {
+			base := t.TempDir()
+			home, work := filepath.Join(base, "home"), filepath.Join(base, "work")
+			root := filepath.Join(home, ".codex", "skills")
+			manifest := filepath.Join(root, "demo", "SKILL.md")
+			if err := os.MkdirAll(filepath.Dir(manifest), 0700); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.Mkdir(work, 0700); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(manifest, []byte("original Skill"), 0600); err != nil {
+				t.Fatal(err)
+			}
+			outside := filepath.Join(base, "SKILL.md")
+			if err := os.WriteFile(outside, []byte("unassigned Skill"), 0600); err != nil {
+				t.Fatal(err)
+			}
+			env := task.Environment{Home: home, Workspace: work, Skills: []task.LoadedSkill{{Name: "demo", Manifest: manifest}}}
+			switch scenario {
+			case "outside home":
+				env.Skills[0].Manifest = outside
+			case "workspace":
+				env.Skills[0].Manifest = filepath.Join(work, "SKILL.md")
+				if err := os.WriteFile(env.Skills[0].Manifest, []byte("workspace Skill"), 0600); err != nil {
+					t.Fatal(err)
+				}
+			case "wrong package":
+				env.Skills[0].Name = "other"
+			case "relative manifest":
+				env.Skills[0].Manifest = ".codex/skills/demo/SKILL.md"
+			case "duplicate":
+				env.Skills = append(env.Skills, env.Skills[0])
+			case "invalid name":
+				env.Skills[0].Name = "../demo"
+			case "symlink manifest":
+				if err := os.Remove(manifest); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.Symlink(outside, manifest); err != nil {
+					t.Fatal(err)
+				}
+			case "symlink skill root":
+				moved := filepath.Join(base, "moved-skills")
+				if err := os.Rename(root, moved); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.Symlink(moved, root); err != nil {
+					t.Fatal(err)
+				}
+			case "directory manifest":
+				if err := os.Remove(manifest); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.Mkdir(manifest, 0700); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if _, err := loadedSkills(env); err == nil {
+				t.Fatal("accepted an unassigned native Skill")
+			}
+		})
+	}
+	for _, name := range []string{"", "../demo", "demo/name", "UPPER", "demo)\nother"} {
+		if _, err := New().SkillDirectory(task.Environment{Home: t.TempDir()}, name); err == nil {
+			t.Fatalf("accepted invalid native Skill name %q", name)
 		}
 	}
 }

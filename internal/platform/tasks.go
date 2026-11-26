@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -91,16 +92,43 @@ func (c *Catalog) submitTask(ctx context.Context, s taskAddress, spec task.Spec)
 	})
 }
 func (c *Catalog) claimTask(ctx context.Context, s taskAddress, claim task.Claim) (task.Record, error) {
-	if uuid.Validate(claim.Attempt) != nil {
+	if uuid.Validate(claim.Attempt) != nil || task.ValidSkillPins(claim.Skills) != nil {
 		return task.Record{}, errBadRequest
 	}
 	return c.changeTask(ctx, s, false, func(slot *taskSlot) error {
 		if slot.State == task.Running && slot.attempt == claim.Attempt {
+			if !slices.Equal(slot.Skills, claim.Skills) {
+				return ErrConflict
+			}
 			return nil
 		}
 		if slot.State != task.Queued {
 			return ErrConflict
 		}
+		// Continuations inherit the successful checkpoint's exact choices. A
+		// replacement worker cannot upgrade or omit a pin via changed config.
+		if slot.Parent != nil && !slices.Equal(slot.Skills, claim.Skills) {
+			return ErrConflict
+		}
+		for _, pin := range claim.Skills {
+			var raw string
+			ref := pin.Source
+			err := c.writer.QueryRowContext(ctx, "SELECT metadata FROM revisions WHERE scope=$1 AND kind=$2 AND asset_id=$3 AND version=$4", s.Prefix(), ref.Kind, ref.ID, ref.Version).Scan(&raw)
+			if errors.Is(err, sql.ErrNoRows) {
+				return ErrNotReady
+			}
+			if err != nil {
+				return err
+			}
+			var m asset.Metadata
+			if err = json.Unmarshal([]byte(raw), &m); err != nil {
+				return err
+			}
+			if m.SHA256 != ref.SHA256 {
+				return ErrConflict
+			}
+		}
+		slot.Skills = slices.Clone(claim.Skills)
 		slot.State = task.Running
 		slot.attempt = claim.Attempt
 		slot.Deadline = time.Now().UTC().Add(task.Timeout)

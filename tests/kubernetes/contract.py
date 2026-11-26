@@ -18,6 +18,7 @@ sys.path.insert(0, str(HERE.parent))
 from saas_contract import ReportClient
 from saas_file_contract import FileReportClient
 from file_report_contract import run as run_file_report
+from skill_report_contract import SkillCatalog, SkillReportClient, run as run_skill_report
 from runtimes import BINARIES, environment
 
 
@@ -26,6 +27,8 @@ def check(*args, data=None):
 
 
 def main(opts, temp):
+    if opts.skill_report:
+        opts.file_report = True
     ns = "agentmoor-contract-" + uuid.uuid4().hex[:10]
     base = ["kubectl", "--context", opts.context, "--kubeconfig", opts.kubeconfig]
     def kube(*args, data=None):
@@ -57,7 +60,7 @@ def main(opts, temp):
         manifest = manifest.replace("JOB_CONFIG", config_name).replace("JOB_NAME", name).replace("JOB_CREDENTIAL", credential)
         native_env = environment(opts.adapter)
         if opts.file_report:
-            native_env["CODEX_FILE_TOOL"] = "/opt/test/report_tool.py"
+            native_env["CODEX_FILE_TOOL"] = "/opt/test/skill_tool.py" if opts.skill_report else "/opt/test/report_tool.py"
         extra = [{"name": key, "value": value} for key, value in native_env.items()]
         manifest = manifest.replace("NATIVE_ENV", "\n".join("        - " + json.dumps(var) for var in extra))
         return manifest.replace("JOB_COMMAND", json.dumps(command))
@@ -87,15 +90,29 @@ def main(opts, temp):
         kube("create", "configmap", "turn-profiles", "--from-file=" + str(profiles))
         workloads = (HERE / "workloads.yaml").read_text().replace("CONTRACT_IMAGE", opts.image)
         if opts.file_report:
-            workloads = workloads.replace("/opt/test/model.py", "/opt/test/file_model.py")
+            workloads = workloads.replace("/opt/test/model.py", "/opt/test/skill_model.py" if opts.skill_report else "/opt/test/file_model.py")
         kube("apply", "-f", "-", data=workloads)
         for deploy in ("agentmoor", "model"):
             kube("rollout", "status", "deployment/" + deploy, "--timeout=150s")
         with forward(base, ns) as endpoint:
-            client_class = FileReportClient if opts.file_report else ReportClient
-            client = client_class(endpoint, issue("--submit"), scope["runtime"],
-                                  ssl.create_default_context(cafile=str(cert)))
+            context = ssl.create_default_context(cafile=str(cert))
+            if opts.skill_report:
+                catalog = SkillCatalog(endpoint, issue("--write"), context)
+                config["skill_pins"] = [catalog.pin]
+                kube("patch", "configmap", "configuration", "--type=merge", "-p",
+                     json.dumps({"data": {"worker.json": json.dumps(config)}}))
+                client = SkillReportClient(endpoint, issue("--submit"), scope["runtime"], context, catalog=catalog)
+            else:
+                client_class = FileReportClient if opts.file_report else ReportClient
+                client = client_class(endpoint, issue("--submit"), scope["runtime"], context)
             apply_job("produce", "executor", ["agentmoor", "run-task", "--config", "/config/worker.json"])
+            if opts.skill_report:
+                negative = (issue("--submit", allocation=cancellation_scope),
+                            lambda: apply_job("no-skill", "cancel-executor",
+                                              ["agentmoor", "run-task", "--config", "/config/worker.json"],
+                                              config_name="cancel-configuration"))
+                run_skill_report(client, catalog, kube, temp, cert, wait_job, negative)
+                return
             if opts.file_report:
                 negative = (issue("--submit", allocation=cancellation_scope),
                             lambda: apply_job("missing-input", "cancel-executor",
@@ -228,6 +245,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--adapter", choices=BINARIES, required=True)
     parser.add_argument("--file-report", action="store_true")
+    parser.add_argument("--skill-report", action="store_true")
     for key in ("context", "kubeconfig", "image"):
         parser.add_argument("--" + key, required=True)
     with tempfile.TemporaryDirectory(prefix="agentmoor-saas-") as tmp:
