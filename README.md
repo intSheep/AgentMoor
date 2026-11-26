@@ -87,5 +87,5 @@ The linked guides are in Chinese.
 | [Repository guide](AGENTS.md) | Code layout, adapter conventions, and checks to run before submitting a change. |
 | [Workspace upload baseline](docs/workspace-upload-baseline.md) | Measure actual upload bytes for large synthetic workspaces and check fixed-version recovery. |
 | [Incremental workspace uploads](docs/workspace-incremental.md) | Enable content reuse while preserving complete tar downloads, and measure transfer and storage costs. |
-| [Persistent publication faults and Pod loss](docs/persistent-faults-acceptance.md) | Run the explicit 15-minute PostgreSQL/S3 fault combination and inspect its recorded acceptance scope. |
+| [Persistent publication faults and Pod loss](docs/persistent-faults-acceptance.md) | Run the PostgreSQL/S3 V2 suite or the explicit 15-minute fault combination, with recorded acceptance scopes. |
 | [Original product requirements](docs/PRD-v0.1.md) | Archived first draft. The acceptance results list the agents included in this preview. |

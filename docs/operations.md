@@ -40,9 +40,11 @@ make test-k8s-persistent
 
 ```sh
 make test-k8s-persistent-faults
+# 同一集群和 CLI 镜像依次运行文件、固定 Skill、故障/失联三场景：
+make test-k8s-v2
 ```
 
-这是独立的长入口：在同一命名空间、数据库与 S3 桶中组合文件块发布前后故障、queued 追问控制面重启，以及 SIGKILL 后等待生产 900 秒 deadline。普通短入口保持原行为。双 TLS 故障代理、固定内容和单次原生执行的检查，以及当前已观察结果与未完成阶段，见[组合验收说明](persistent-faults-acceptance.md)。
+两条命令各自独立运行，按需选择。前者在同一命名空间、数据库与 S3 桶中组合文件块发布前后故障、queued 追问控制面重启，以及 SIGKILL 后等待生产 900 秒 deadline。后者先跑文件和固定 Skill，再跑该组合；三个场景使用隔离命名空间和各自 PG/S3，同时验证 API 重启后合法外租户凭据无法读取旧固定版本。普通短入口保持原行为。双 TLS 故障代理、固定内容和单次原生执行的检查，以及各次实际结果和边界，见[组合验收说明](persistent-faults-acceptance.md)。
 
 ## 2. 给 Worker 分配身份和目录
 
