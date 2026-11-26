@@ -38,6 +38,7 @@ func TestPostgresAndS3(t *testing.T) {
 	}
 	defer c.Close()
 	checkTurnQueue(t, c, scope("followup"))
+	checkHistoricalReferencesSurviveGC(t, c, objects, scope("history-integration"))
 	s := scope("integration")
 	spec := task.Spec{Instruction: "summarize rows", Input: "one,two", Output: "summary.txt"}
 	if _, err := c.submitTask(t.Context(), taskAddress{Scope: s}, spec); err != nil {

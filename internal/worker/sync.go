@@ -4,12 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"mime"
+	"net"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	"agentmoor/internal/adapter"
@@ -173,7 +177,24 @@ func (s *scan) flush(ctx context.Context) error {
 	p := s.journal.Pending
 	dir := s.engine.Config.StateDir
 	file := filepath.Join(dir, p.Blob)
-	v, err := s.engine.Client.Publish(ctx, p.Change, file)
+	var v int64
+	var err error
+	for attempt := 0; ; attempt++ {
+		if err = ctx.Err(); err != nil {
+			return err
+		}
+		v, err = s.engine.Client.Publish(ctx, p.Change, file)
+		// Task execution must finish the frozen operation without rerunning the
+		// Agent. Ordinary Sync keeps its one-attempt, journal-on-next-scan behavior.
+		if err == nil || s.artifacts == nil || attempt >= 2 || !transientPublication(err) {
+			break
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(time.Duration(attempt+1) * 100 * time.Millisecond):
+		}
+	}
 	if err != nil {
 		return err
 	}
@@ -184,6 +205,39 @@ func (s *scan) flush(ctx context.Context) error {
 		return err
 	}
 	return os.Remove(file)
+}
+
+func transientPublication(err error) bool {
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return false
+	}
+	var status *platform.HTTPError
+	if errors.As(err, &status) {
+		switch status.StatusCode {
+		case http.StatusRequestTimeout, http.StatusTooManyRequests, http.StatusInternalServerError,
+			http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout:
+			return true
+		default:
+			return false
+		}
+	}
+	// A dropped acknowledgement may fail before headers or during JSON framing.
+	// Syntax/type errors, local filesystem errors, and TLS validation errors are
+	// not transport retries.
+	if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
+		return true
+	}
+	var network net.Error
+	if errors.As(err, &network) && network.Timeout() {
+		return true
+	}
+	for _, interrupted := range []error{syscall.ECONNRESET, syscall.ECONNREFUSED, syscall.ECONNABORTED,
+		syscall.EPIPE, syscall.ENETDOWN, syscall.ENETRESET, syscall.ENETUNREACH, syscall.EHOSTDOWN, syscall.EHOSTUNREACH} {
+		if errors.Is(err, interrupted) {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *scan) publish(ctx context.Context, m asset.Metadata, b snapshot.Blob) error {
