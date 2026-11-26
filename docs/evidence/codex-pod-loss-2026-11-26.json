@@ -175,5 +175,15 @@
     "Scripted Responses model only; no live model account was used.",
     "Pinned Skill installation was not part of this Pod-loss run.",
     "PostgreSQL/S3 and control-plane loss were not covered by this run."
-  ]
+  ],
+  "integration_checks": {
+    "merged_main_commit": "6018f61628660a58f4f83a9bfe7eeb876b465559",
+    "make fmt": "passed",
+    "make check": "passed",
+    "make demo": "passed",
+    "python3 -m py_compile tests/kubernetes/*.py tests/saas_file_contract.py": "passed",
+    "sh -n tests/kubernetes/run.sh": "passed",
+    "production_go_changes_relative_to_main": false,
+    "long_run_repeated_on_integration_tree": false
+  }
 }

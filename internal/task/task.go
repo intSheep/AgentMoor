@@ -4,7 +4,9 @@ package task
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"path"
+	"regexp"
 	"strings"
 	"time"
 
@@ -29,6 +31,34 @@ const FileTurn = "file-turn.v1"
 
 // MaxArtifacts bounds the delivery receipt carried by the Worker finish call.
 const MaxArtifacts = 128
+
+// MaxSkills bounds the deployment-selected Skill set frozen at claim time.
+const MaxSkills = 16
+
+var skillName = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{0,63}$`)
+var skillDigest = regexp.MustCompile(`^[a-f0-9]{64}$`)
+
+// SkillPin identifies original bytes, not a mutable head or model-selected path.
+// The adapter maps Name into its native Skill layout.
+type SkillPin struct {
+	Source Ref    `json:"source"`
+	Name   string `json:"name"`
+}
+
+func ValidSkillPins(pins []SkillPin) error {
+	if len(pins) > MaxSkills {
+		return fmt.Errorf("at most %d pinned skills are allowed", MaxSkills)
+	}
+	seen := make(map[string]bool, len(pins))
+	for _, pin := range pins {
+		ref := pin.Source
+		if !skillName.MatchString(pin.Name) || seen[pin.Name] || ref.Kind != "skill" || !ref.Key.Valid() || ref.Version <= 0 || !skillDigest.MatchString(ref.SHA256) || ref.ContentPath != ref.Key.ContentPath(ref.Version) {
+			return fmt.Errorf("invalid or duplicate pinned skill")
+		}
+		seen[pin.Name] = true
+	}
+	return nil
+}
 
 // Prompt contains only the two SaaS fields passed to the native CLI on stdin.
 func (s Spec) Prompt() []byte {
@@ -57,7 +87,19 @@ func (s Spec) Valid() bool {
 type Executor interface {
 	ExecuteTask(context.Context, Environment, Spec) (Execution, error)
 }
-type Environment struct{ Executable, Workspace, Home string }
+type Environment struct {
+	Executable, Workspace, Home string
+	Skills                      []LoadedSkill
+}
+
+// LoadedSkill points at a verified, privately restored native manifest.
+type LoadedSkill struct{ Name, Manifest string }
+
+// SkillInstaller keeps the runtime's native private installation layout in its
+// adapter. The Worker verifies that this fresh directory stays inside Home.
+type SkillInstaller interface {
+	SkillDirectory(Environment, string) (string, error)
+}
 
 // FileExecutor writes the delivery to a fresh workspace-relative result path.
 // A continuation receives the immutable parent session and restored workspace.
@@ -83,9 +125,10 @@ type Question struct {
 }
 
 type Checkpoint struct {
-	SessionID string `json:"session_id"`
-	Session   Ref    `json:"session"`
-	Workspace Ref    `json:"workspace"`
+	SessionID string     `json:"session_id"`
+	Session   Ref        `json:"session"`
+	Workspace Ref        `json:"workspace"`
+	Skills    []SkillPin `json:"skills,omitempty"`
 }
 
 func TurnKey(turn string, key asset.Key) asset.Key {
@@ -109,10 +152,12 @@ type Record struct {
 	Spec     Spec        `json:"spec"`
 	Deadline time.Time   `json:"deadline,omitempty,omitzero"`
 	Assets   []Ref       `json:"assets,omitempty"`
+	Skills   []SkillPin  `json:"skills,omitempty"`
 	Error    string      `json:"error,omitempty"`
 }
 type Claim struct {
-	Attempt string `json:"attempt"`
+	Attempt string     `json:"attempt"`
+	Skills  []SkillPin `json:"skills,omitempty"`
 }
 type Finish struct {
 	Attempt   string `json:"attempt"`

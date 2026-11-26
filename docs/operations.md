@@ -58,6 +58,27 @@ export AGENTMOOR_TOKEN_FILE=/run/agentmoor/primary.token
 
 `runtime_cli` 可指定工作区外受信可执行文件的绝对路径。提供它时，平台会记录实测版本。`runtime_version` 可要求该程序的 `--version` 输出精确匹配，`adapter_version` 可固定适配器实现版本。使用 `agentmoor inspect <adapter> <workspace> <绝对可执行文件>` 查看两者。
 
+### 可选：固定任务 Skill
+
+任务执行可通过受信 Worker 配置的 `skill_pins` 固定 Skill。以下示例中的引用应从该作用域的资产 API 取得，替换为真实 ID、固定版本、SHA-256 及对应 content_path；不能写 `version: 0` 或指向可变 head。
+
+```json
+{
+  "skill_pins": [{
+    "name": "report-policy",
+    "source": {
+      "kind": "skill",
+      "id": "catalog/skills/report-policy",
+      "version": 1,
+      "sha256": "<资产 API 返回的 64 位小写 SHA-256>",
+      "content_path": "/v1/content?id=catalog%2Fskills%2Freport-policy&kind=skill&version=1"
+    }
+  }]
+}
+```
+
+此片段合并进原 Worker 配置，不是独立配置。首轮及追问 Job 必须携带相同的 pins。仅 Codex 已实现任务 Skill 安装：每轮下载并校验 `skill-tar.v1`，恢复到私有 HOME，使用原生 Skill 加载正文。来源包的 `SKILL.md` 名称必须与 `name` 相同，安装保留附属脚本、参考文件及权限。更新来源 Skill 的 head 不会更新原任务；配置漂移会在 claim 返回 409。已有目录、摘要不符、错误包格式或不支持此能力的适配器都会失败，不会覆盖旧内容。[任务中的固定版本规则](task-contract.md#固定版本-skill)
+
 ## 3. 同步并查看结果
 
 ```sh

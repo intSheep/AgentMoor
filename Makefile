@@ -1,5 +1,5 @@
 .PHONY: check fmt build demo test-services test-k8s check-kind-prereqs test-report-consumer test-file-report
-.PHONY: test-worker-file-report test-k8s-file-report test-k8s-pod-loss
+.PHONY: test-worker-file-report test-k8s-file-report test-k8s-skills test-k8s-pod-loss
 
 check: test-file-report
 	sh tests/check-kind-prereqs.sh
@@ -39,6 +39,10 @@ test-worker-file-report:
 test-k8s-file-report: check-kind-prereqs
 	$(MAKE) build
 	AGENT=codex sh tests/kubernetes/run.sh --file-report
+
+test-k8s-skills: check-kind-prereqs
+	$(MAKE) build
+	AGENT=codex sh tests/kubernetes/run.sh --skill-report
 
 # Uses the production 15-minute deadline. Keep this separate from the short smoke.
 test-k8s-pod-loss: check-kind-prereqs

@@ -76,7 +76,7 @@ func (a *API) taskRoutes(handle func(string, string, apiHandler)) {
 		})
 		bind("POST "+route+"/claim", "execute", func(w http.ResponseWriter, r *http.Request, s taskAddress) (task.Record, error) {
 			var claim task.Claim
-			if !decodeInput(w, r, &claim, 1024) {
+			if !decodeInput(w, r, &claim, 1<<20) {
 				return task.Record{}, errBadRequest
 			}
 			return a.Catalog.claimTask(r.Context(), s, claim)

@@ -10,6 +10,7 @@
 | 本机从 CSV 生成报告 | [文件工具样例](../examples/file-report/README.md) | 可用 `make test-file-report` 直接调用工具，或指定本机 Codex CLI，由回环脚本模型请求执行工具。独立验算读取磁盘上的实际文件。此入口只覆盖例 1 的本机文件生成步骤。 |
 | Worker 交付工具文件，业务端下载并去重 | `make test-worker-file-report` | 本地真实 HTTP 平台、两个独立 Worker 进程、SQLite 导入器通过。测试适配器提供会话及最终文本。[本次证据](#2026-11-25worker-文件交付) |
 | Codex 文件工具、文件恢复后再编辑 | `make test-k8s-file-report`，例 1–2 | 2026-11-26：固定 Linux CLI + 脚本模型通过；三个全新 Pod 接续、多文件下载、旧版不变。真实模型未跑。[证据](#2026-11-26codex-文件工具集群验收通过) |
+| 固定版本 Skill 安装与原生加载 | `make test-k8s-skills` | 2026-11-26：Linux Codex + 脚本模型、三个新 Pod 使用同一 v1，发布 v2 不漂移；相同输入无 Skill 负例失败。[证据](#2026-11-26固定-skill-版本与原生加载) |
 | Codex 文件任务取消、失联及重试 | 例 3、`make test-k8s-pod-loss` | 活跃 MCP 工具取消、SIGKILL 后等待原生产期限进入 interrupted、原 UUID 重投和新 UUID 恢复、业务数据库失败重试均已通过。[Pod 丢失验收](pod-loss-acceptance.md) |
 | PostgreSQL + 对象存储下的完整 Kubernetes 契约 | V2 退出门槛 | 计划。不据后端测试推断跨 Pod 端到端已过。 |
 
@@ -83,7 +84,17 @@ python3 tests/kubernetes/diagnose_file_report.py --check
 
 同会话负例在合成工具开始前移除恢复出的 CSV/state 后执行修订，明确失败且 checkpoint 不变。这是在恢复后模拟所需文件缺失，不是关闭生产 Worker 恢复的实测。另在真实 MCP 进程写出启动标志并进入阻塞后取消，观察到 cancelling/cancelled，25 秒内 Job 退出，没有成功资产；新 UUID 和 Pod `9c82006c-4aca-4e77-9e2d-c86beffcca10` 从最近成功版本继续审计，未归档草稿没有混入。这次短验收没有跑直接杀掉活跃 Worker Pod 的场景；后续保留生产 15 分钟期限的独立[Pod 丢失验收](pod-loss-acceptance.md)已通过。
 
-同一代码的 `make fmt`、`make check`（含 race）、`make demo`、`make test-services` 与四 CLI `make test-k8s` 全部通过。后者仍是四个 CLI 的文本交付、连续新 Pod 追问及运行中取消；本节文件能力仅声明 Codex 已测。真实模型 smoke、固定版本 Skill 注入和 PostgreSQL/S3 下完整跨 Pod 流程均未验收，不据本次通过推断支持。
+同一代码的 `make fmt`、`make check`（含 race）、`make demo`、`make test-services` 与四 CLI `make test-k8s` 全部通过。后者仍是四个 CLI 的文本交付、连续新 Pod 追问及运行中取消；本节文件能力仅声明 Codex 已测。上述短验收未覆盖真实模型 smoke、固定版本 Skill 注入和 PostgreSQL/S3 下完整跨 Pod 流程，不据本次通过推断支持；固定 Skill 的后续独立结果见下一节，真实模型和后端组合仍未验收。
+
+### 2026-11-26：固定 Skill 版本与原生加载
+
+实现提交 `6ae64d2`，相同输入负对照提交 `e5c0fc5`；Codex Adapter `0.5.0`。`make test-k8s-skills` 在固定 Linux Codex `0.171.0-alpha.13`、kind 0.33.0 / Kubernetes v1.35.0、脚本 Responses 模型上通过。[结构化证据](evidence/codex-pinned-skills-2026-11-26.json)。
+
+受信测试配置经公开 HTTP 发布完整 `skill-tar.v1` 并选择 v1；SaaS 指令只含报告任务和 CSV，不带 Skill 规则。每个新 Pod 都将原清单、脚本与参考文件恢复到私有 `CODEX_HOME/skills/pinned-report`。Codex 通过当前私有目录的规范路径原生加载正文；脚本模型只有在当前路径对应的原生 `<skill>` 片段中找到独有规则，才能请求正确的工具参数。MCP 工具实际运行包内 `scripts/check.py`，脚本读取 `references/rule.json`，并发布三个成员摘要的 `out/skill-proof.json`。最终文本仍仅为 `done`。没有把正文由 Worker 人工拼成模型指令。
+
+三个成功 Pod UID 分别为 `1042997f-9218-466d-a97a-7e5a832db74d`、`852a4711-fe1e-4990-8ae1-aaffb4437eeb`、`d60bbcb2-f507-439d-a853-1221d63fd8eb`；每轮后都删除前一 Pod 与 emptyDir。原生会话 ID 摘要保持 `c4183ea8b0dae6b3ef617f41952a34dcad92f0348f2467b8bea2678b06e16732`。任务、Parent 和成功 checkpoint 均携带同一 v1 pin，其包 SHA-256 为 `cd4c51c1efc04319fa32c2480cf35593f1ab7670bff857e010b747c4d89ce26a`。首轮后发布 v2，后续两轮仍遵循 v1，原包与旧报告字节不变。相同 CSV 和指令、未安装 Skill 的独立任务明确 failed，成功资产为空。
+
+平台测试另验证摘要、版本、权限、重复名称、过多 pins、同 attempt 幂等、配置漂移拒绝、取消后继承及控制面重启保留；Worker 测试验证完整包恢复、权限保留、已有目标冲突、私有路径边界和来源/原生 Skill 不被改写。`make fmt/check/demo/test-services`、四 CLI 的 `make test-k8s` 文本矩阵与本机 Codex `.13.2` 的 native roundtrip 通过；同一新版适配器的普通文件专项（含活跃工具取消、数据库重试和失败后恢复）也通过。真实模型、其他 CLI 的任务 Skill 安装，以及 PostgreSQL/S3 完整集群流程仍未验收。
 
 ### 例 3：取消、失联与重试
 

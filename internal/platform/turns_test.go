@@ -3,6 +3,7 @@ package platform
 import (
 	"context"
 	"errors"
+	"reflect"
 	"testing"
 
 	"agentmoor/internal/asset"
@@ -80,7 +81,7 @@ func checkTurnQueue(t *testing.T, c *Catalog, s asset.Scope) {
 		t.Fatal(err)
 	}
 	rebound, err := c.submitTurn(ctx, next, q)
-	if err != nil || *rebound.Parent != *accepted.Parent {
+	if err != nil || !reflect.DeepEqual(rebound.Parent, accepted.Parent) {
 		t.Fatal(rebound, err)
 	}
 	if err := c.DispatchQueued(ctx, s, func(context.Context, asset.Scope, string) (bool, error) { return true, nil }); err != nil {

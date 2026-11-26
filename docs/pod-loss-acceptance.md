@@ -40,3 +40,7 @@ Kubernetes 和节点容器操作只承担准备、同步启动标志和故障注
 | 中断后新 UUID 恢复成功 | `ce6324ed-7481-4b11-be33-ae9c0c66cf9c` |
 
 原生会话 ID 的 SHA-256 为 `6cf8e459b9d80b5b5e4265c305e3314d46120c7c4370fb017258518597cb5de9`。源提交的 `make fmt`、`make check`（含 race）、`make demo` 与 Python/Shell 离线检查均通过。此次长验收没有指定 Skill；后续合并固定 Skill 功能的主分支时，仍保留此原始实测提交和范围，不把新的合并提交当作又跑过一次 15 分钟验收。
+
+### 与固定 Skill 功能集成
+
+此分支随后合并主分支 `6018f61`，保留 `c911986` 的原始历史和证据；同时保留 `make test-k8s-skills` 与独立的 `make test-k8s-pod-loss`。特殊验收参数 `--skill-report` 和 `--pod-loss` 互斥，普通文件 smoke 不增加 15 分钟等待。集成树再次通过 `make fmt`、`make check`（含 race）、`make demo`、Python 编译和 Shell 语法检查，相对主分支没有生产 Go 改动。没有在这个新的集成树上重复长验收，前述 15 分钟结果只对应 `c911986`。
