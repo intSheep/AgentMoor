@@ -36,6 +36,14 @@ make test-k8s-persistent
 
 退出时自动删除专属集群、应用镜像标签和临时 kubeconfig；服务镜像保留在主机缓存。Docker 使用 containerd 镜像存储时，夹具只导出本机架构的缓存镜像，避免 kind 导入多架构索引时追索未下载的架构。本入口未组合 15 分钟 Worker Pod 突然丢失用例，也不代表真实模型或生产高可用验收。
 
+### PostgreSQL/S3 发布故障与真实 Worker 丢失
+
+```sh
+make test-k8s-persistent-faults
+```
+
+这是独立的长入口：在同一命名空间、数据库与 S3 桶中组合文件块发布前后故障、queued 追问控制面重启，以及 SIGKILL 后等待生产 900 秒 deadline。普通短入口保持原行为。双 TLS 故障代理、固定内容和单次原生执行的检查，以及当前已观察结果与未完成阶段，见[组合验收说明](persistent-faults-acceptance.md)。
+
 ## 2. 给 Worker 分配身份和目录
 
 在平台侧签发短期凭据，并通过挂载文件或密钥管理系统把它交给对应 Worker。以下命令的凭据文件父目录应已存在，且仅平台和获授权的 Worker 可访问。
