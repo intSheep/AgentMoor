@@ -91,7 +91,7 @@ class SkillReportClient(FileReportClient):
         return result
 
 
-def run(client, catalog, kube, temp, cert, wait_job, negative):
+def run(client, catalog, kube, temp, cert, wait_job, negative, queued_restart=None):
     def retire(name, failed=False):
         if not failed:
             wait_job(kube, name)
@@ -117,7 +117,7 @@ def run(client, catalog, kube, temp, cert, wait_job, negative):
         newer = catalog.advance()
         for operation, message in (("revise", "Revise the saved report by appending a west refund of 9 cents."),
                                    ("audit", "Audit the saved report and the restored workspace marker.")):
-            turn = client.ask(session, message)
+            turn = queued_restart(client, session, message) if queued_restart and operation == "revise" else client.ask(session, message)
             row, _ = client.answer(turn)
             assert row["parent"] == cp
             jobs = json.loads(kube("get", "jobs", "-l", "agentmoor.io/turn=" + turn, "-o", "json"))["items"]

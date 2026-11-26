@@ -22,6 +22,20 @@
 
 服务集成测试自建临时 PostgreSQL 与 S3 兼容容器，验证写入、读取、回收，退出后清理。运行 `make test-services` 需要 Docker Compose。[测试配置](../tests/services.compose.yml)
 
+### PostgreSQL / S3 下的集群工作流
+
+```sh
+make test-k8s-persistent
+```
+
+此入口另要求 Docker CLI 支持 `docker image save --platform`，服务端 API 至少 **1.48**；设置了 `DOCKER_API_VERSION` 时也不能低于 1.48。创建 kind 集群前会检查，不影响普通集群入口。[Docker 官方参数说明](https://docs.docker.com/reference/cli/docker/image/save/#save-a-specific-platform---platform)。
+
+此入口复用一个专属 kind 集群和一份固定 Codex 镜像，依次用 PostgreSQL 元数据、MinIO S3 对象存储跑文件交付和固定版本 Skill 工作流。每个场景使用独立命名空间、数据库/对象卷及测试桶；服务镜像与 `tests/services.compose.yml` 一致。无需模型密钥，首次仍需下载依赖。测试使用真实原生 CLI 和脚本 Responses 模型。
+
+基础设施夹具在正常 HTTP 接受追问前，用命名空间 Job 配额暂缓调度。控制面 Pod 更换后，SaaS 按原 UUID 重投，再恢复调度；验收要求仍只有一个 Job、原 checkpoint 和固定版本下载不变。转发器重连原本的回环端口，业务数据库中的服务身份不因 Pod 重启而改变。夹具另外核对 PostgreSQL 表、S3 版本对象，以及平台目录中不存在 SQLite / 本地对象，避免误把默认后端的通过当作组合后端通过。
+
+退出时自动删除专属集群、应用镜像标签和临时 kubeconfig；服务镜像保留在主机缓存。Docker 使用 containerd 镜像存储时，夹具只导出本机架构的缓存镜像，避免 kind 导入多架构索引时追索未下载的架构。本入口未组合 15 分钟 Worker Pod 突然丢失用例，也不代表真实模型或生产高可用验收。
+
 ## 2. 给 Worker 分配身份和目录
 
 在平台侧签发短期凭据，并通过挂载文件或密钥管理系统把它交给对应 Worker。以下命令的凭据文件父目录应已存在，且仅平台和获授权的 Worker 可访问。
