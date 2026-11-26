@@ -1,5 +1,5 @@
 .PHONY: check fmt build demo test-services test-k8s check-kind-prereqs test-report-consumer test-file-report
-.PHONY: test-worker-file-report test-k8s-file-report test-k8s-skills
+.PHONY: test-worker-file-report test-k8s-file-report test-k8s-skills test-k8s-persistent
 
 check: test-file-report
 	sh tests/check-kind-prereqs.sh
@@ -43,3 +43,7 @@ test-k8s-file-report: check-kind-prereqs
 test-k8s-skills: check-kind-prereqs
 	$(MAKE) build
 	AGENT=codex sh tests/kubernetes/run.sh --skill-report
+
+test-k8s-persistent: check-kind-prereqs
+	$(MAKE) build
+	AGENT=codex sh tests/kubernetes/run.sh --persistent

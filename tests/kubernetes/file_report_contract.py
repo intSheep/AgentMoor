@@ -7,7 +7,7 @@ import time
 from saas_file_contract import FileReportClient
 
 
-def run(client, kube, temp, cert, wait_job, negative):
+def run(client, kube, temp, cert, wait_job, negative, queued_restart=None):
     def retire(job, failed=False):
         if failed:
             deadline = time.monotonic() + 30
@@ -74,7 +74,7 @@ def run(client, kube, temp, cert, wait_job, negative):
         deliveries.append(("", initial))
         for operation, message in (("revise", "Revise the saved report by appending a west refund of 9 cents."),
                                    ("audit", "Audit the saved report and the restored workspace marker.")):
-            turn = client.ask(session, message)
+            turn = queued_restart(client, session, message) if queued_restart and operation == "revise" else client.ask(session, message)
             row, _ = client.answer(turn)
             assert row["parent"] == cp
             pod_uids.append(retire(job_for(turn)))
