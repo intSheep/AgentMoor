@@ -100,6 +100,8 @@ print(json.dumps([{"scope":scope,"pod_spec":job["spec"]["template"]["spec"]}]))
 
 Worker 调用 `POST /v1/tasks/{id}/claim`，传入随机 `attempt`。并发争抢只有一个执行者获准，相同 attempt 可安全重发。它以相同 attempt 调用 `POST /v1/tasks/{id}/finish`，成功时提交 `session_id` 和 `artifacts` 固定版本引用数组，失败时提交 `error`。`finish` 请求体最多 1 MiB，清单最多 128 项，不允许重复路径。平台检查清单及工作区、会话版本后，才对外发布成功记录。旧 Worker 省略 `artifacts` 时，仍按原协议仅交付 `out/<output>`。成功应答丢失后重发 `finish` 返回已冻结的成功记录，不读取更新的资产 head。SaaS 客户端使用提交凭据，不持有执行权限。
 
+任务的每份冻结资产发布最多尝试三次（100、200 毫秒退避），覆盖 Begin、Upload、Commit 的瞬态失败和成功后应答丢失。HTTP 408/429/500/502/503/504、EOF、连接重置/拒绝与网络超时可重试；任务上下文取消或到期优先停止。HTTP 自己较短的响应头超时与任务期限分别判断：任务仍有效时可以重试前者。重试不重新执行 Agent、不重扫工作目录，也不改变冻结 blob、元数据、base 或操作键。永久错误及耗尽仍报告失败，保留待发文件和 journal，未提交内容的游标不会前进；最近成功 checkpoint 与旧引用继续可读。普通 `sync` 仍在首次错误时退出，由下一次扫描使用 journal 恢复。[故障边界验证](verification-matrix.md#2026-11-26任务冻结发布重试与历史引用回收)
+
 Worker 每秒检查一次取消请求。运行中失联且未确认结束时，15 分钟执行期限后查询显示 `interrupted`。这时重新执行业务需要显式分配新任务。取消与中断不会撤销已产生的外部动作。当前执行模式只在完成回合后归档，任务中途丢失 Pod 时，未发布的本地字节仍会丢失。
 
 ## 一条命令复验

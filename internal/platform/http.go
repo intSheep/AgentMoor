@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -59,6 +60,11 @@ func (a *API) Handler() http.Handler {
 				case errors.Is(err, errBadRequest):
 					status = 400
 					message = "invalid request or checksum"
+				}
+				if status == http.StatusInternalServerError {
+					// Keep the public response generic. Server diagnostics include
+					// the cause, but never the credential, request body or query.
+					log.Printf("platform request failed: method=%s path=%s error=%v", r.Method, r.URL.Path, err)
 				}
 				http.Error(w, message, status)
 			}

@@ -31,7 +31,9 @@ type taskSlot struct {
 func (c *Catalog) readTask(ctx context.Context, s taskAddress) (taskSlot, error) {
 	var slot taskSlot
 	var raw string
-	row := c.writer.QueryRowContext
+	// HTTP polling may overlap or be cancelled independently of a mutation.
+	// Keep those reads off the connection owning the exclusive writer lease.
+	row := c.db.QueryRowContext
 	var res *sql.Row
 	if s.turn == "" {
 		res = row(ctx, "SELECT record,attempt FROM tasks WHERE scope=$1", s.Prefix())

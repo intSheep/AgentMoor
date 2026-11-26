@@ -13,6 +13,8 @@
 | 固定版本 Skill 安装与原生加载 | `make test-k8s-skills` | 2026-11-26：Linux Codex + 脚本模型、三个新 Pod 使用同一 v1，发布 v2 不漂移；相同输入无 Skill 负例失败。[证据](#2026-11-26固定-skill-版本与原生加载) |
 | Codex 文件任务取消、失联及重试 | 例 3、`make test-k8s-pod-loss` | 活跃 MCP 工具取消、SIGKILL 后等待原生产期限进入 interrupted、原 UUID 重投和新 UUID 恢复、业务数据库失败重试均已通过。[Pod 丢失验收](pod-loss-acceptance.md) |
 | PostgreSQL + 对象存储下的 Kubernetes 文件/Skill 契约 | `make test-k8s-persistent` | 2026-11-26：同一次命令中两场景均通过，含 queued 追问的控制面 Pod 重启和原 UUID 重投；V2 的 Pod 丢失组合、发布边界故障注入仍待验收。[证据](#2026-11-26postgresql--s3-联合集群与队列恢复) |
+| 任务冻结资产的发布重试 | `go test -race ./internal/worker` | SQLite + 真实 HTTP/Worker 故障矩阵通过：Begin/Upload/Commit 前后、真实元数据失败恢复、取消/期限、永久错误与重试耗尽。Agent 每轮只执行一次，冻结字节和操作身份不变；PG/S3 同一边界故障组合尚未注入。[证据](#2026-11-26任务冻结发布重试与历史引用回收) |
+| 非 head 历史 Artifact/Skill 的 GC 保护 | `TestHistoricalArtifactAndSkillReferencesSurviveGC`、`make test-services` | SQLite 与 PostgreSQL/S3 均通过：v1 被 v2 替代为历史后仍保留完整字节；同次 GC 确实删除孤儿对象，旧版本经 HTTP 下载并核 SHA-256。 |
 
 ## 待落地的可运行示例
 
@@ -120,6 +122,26 @@ python3 tests/kubernetes/diagnose_file_report.py --check
 此后合并 `main@a315958`，保留独立 Pod 丢失入口和参数互斥；集成提交 `a3ed8de` 的 `make fmt/check/demo`、Python/Shell/JSON 离线检查再次通过。persistent 专属入口在创建集群前检查 Docker CLI 平台导出能力、服务端 API 及 `DOCKER_API_VERSION` 均支持 API 1.48+，旧版本和缺参数情形有离线验证；普通入口不新增此限制。
 
 这是 P1.1 后端组合与队列恢复的验收，不关闭整个 V2 门槛。尚未在 PostgreSQL/S3 下组合活跃 Worker Pod 突然丢失，或对象上传/数据库发布边界的故障注入；真实模型、多控制面副本和生产 HA 也未验证。独立 P0 Pod 丢失证据不能代替这些组合。
+
+### 2026-11-26：任务冻结发布重试与历史引用回收
+
+源码 `84461ddaf072d3dc26d4115b335e7b8559c378f9` 的 `make fmt`、`make check`（含 race）、`make demo` 通过。真实 HTTP 平台和真实 Worker 使用一个明确命名的测试适配器，调用独立子进程生成文件并计数；不是伪装成供应商 CLI 的测试。[结构化证据](evidence/task-publication-retries-2026-11-26.json)
+
+在 Begin、Upload、Commit 前分别返回瞬态错误，并在各操作实际成功后关闭 TCP 连接丢弃应答，六个场景都在同一回合完成。每轮原生执行计数为 1；首次失败后修改活动报告文件，重复上传和成功交付仍为原先冻结字节。所有重试的 metadata、base 与操作指纹相同，只有一个成功版本和一个对应已提交操作。另用真实 SQLite BEFORE INSERT Trigger 阻止元数据写入，实际 Commit 返回 500；移除 Trigger 后同一冻结操作恢复，不重新执行 Agent。
+
+HTTP 400/401/403/404/409/422/425/501 和 JSON 语法错误只尝试一次。三次 Commit 均失败时，pending 元数据和 blob 保留，目标游标不前进，失败回合无成功资产，最近成功 checkpoint 和旧版文件不变。实际 SaaS 取消及 caller context deadline 都能中断正在等待的发布请求。真实 httptest 的 20ms 响应头超时复现了“错误也匹配 DeadlineExceeded，但任务 context 尚有效”的边界，分类现在允许重试这个传输超时；任务 context 到期则停止。错误文本以及 404/409 的 errors.Is 身份保持原样。
+
+普通 `sync` 没有新增本轮自动重试，原四运行时 `TestFourRuntimeRecovery` 仍先返回首次失败，再在下一次 Sync 从 journal 恢复。历史 GC 新测试先把 Artifact 与完整 Skill 包的 head 从 v1 变成不同字节的 v2，再让 GC 真正删除一个孤儿对象；v1/v2 四份固定版本仍能经真实 HTTP 下载并核对字节、SHA-256、作用域。该历史引用测试在 SQLite/本地对象和 `make test-services` 的 PostgreSQL/S3 都通过。服务测试第一次记录于祖先源码 `3c497396`；后续超时分类及 PG 查询隔离的回归分别另列。
+
+完整 `make test-k8s` 在 `3c497396` 通过：Codex `0.171.0-alpha.13`、Gemini CLI `0.70.0`、OpenCode `1.19.6`、Claude Code `2.1.330` 均完成报告、两个新 Pod 连续追问，以及原生执行和追问取消。活跃原生回合取消约为 3.1、3.0、3.1、3.9 秒。这是后续超时分类和 PG 查询隔离修改之前的矩阵，不标成最新头提交重新跑过。
+
+PG/S3 专项先在 `84461dd`、诊断增强后的 `852166d` 各失败一次，两次均保留为失败记录。第二次收集到调度器的 `pq: unexpected Parse response "(D) DataRow"`，但不能据此确定第一次 HTTP 500 的具体底层错误。`64045e2` 把任务轮询、checkpoint 和待调度查询放到连接池，写入继续绑定独占租约连接。真实 PostgreSQL 测试验证 8 个读者各读 1000 次、SQL 已进入锁等待后取消 HTTP 读取、随后仍返回正确记录和冲突 409、新写入仍成功；主动终止自有租约连接后，写入必须失败且不落新任务。`make test-services` 通过。`62106e5` 另为未知 HTTP 500 记录不含凭据、请求体或查询串的服务端诊断。
+
+最终 `62106e5` 的 `make test-k8s-persistent` 两场景全部通过并清理集群。PostgreSQL 实测 `18.7`、MinIO `RELEASE.2026-04-17T00-00-00Z`；文件场景有 16 份版本、14 个引用对象，Skill 场景有 17 份版本、17 个引用对象，均检查没有 SQLite/本地对象回退。文件交付、两个新 Pod 追问、缺输入/缺工作区、活跃 MCP 取消后恢复、业务数据库失败重试、旧引用以及固定 Skill v1 在来源升级 v2 后不漂移均通过。两场景都完成 queued 追问时重建控制面和同 UUID 重投。具体 Pod、摘要、镜像身份见结构化证据。本次最终修改后没有再单独运行 SQLite 的原生文件/Skill 集群入口；对应业务路径由最终 PG/S3 专项覆盖，SQLite 故障与恢复由单元测试验证。
+
+保留历史合入 `origin/main@ab6c72a` 后，集成源码 `ef8855ed22565b2ffe1f96feea2aae07c4d4faca` 的 `make fmt`、`make check`（含 race、真实 HTTP 头超时回归）和 `make demo` 再次通过；与 `62106e5` 相比没有生产 Go 差异。此处不宣称又重跑过集群矩阵。
+
+发布边界故障矩阵仍限 SQLite/本地对象；不据独立存储服务测试推断 PostgreSQL/S3 同一故障组合已过。真实模型和剩余 V2 组合仍单独记录。
 
 ## V2 退出门槛
 
