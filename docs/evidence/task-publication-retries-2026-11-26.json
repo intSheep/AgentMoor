@@ -1,0 +1,387 @@
+{
+  "source_commit": "62106e50a0dbfb143524aac645a39892c167ef0d",
+  "recorded_at_utc": "2026-11-26T14:28:31.782885+00:00",
+  "runtime_fixture": "test-only publication-fixture adapter invoking a real child process, not a vendor CLI",
+  "local_fault_backend": "SQLite metadata and local immutable objects",
+  "publication_policy": {
+    "mode": "task delivery only; ordinary Sync still reports the first failure",
+    "maximum_attempts": 3,
+    "backoff_milliseconds": [
+      100,
+      200
+    ],
+    "same_frozen_blob": true,
+    "same_metadata_base_and_operation_identity": true,
+    "native_executions_per_turn": 1,
+    "rescan_between_attempts": false
+  },
+  "checks": {
+    "make fmt": {
+      "status": "passed",
+      "source_commit": "ef8855ed22565b2ffe1f96feea2aae07c4d4faca",
+      "scope": "after history-preserving origin/main merge; production Go unchanged from final persistent contract source 62106e5; documentation-only changes pending"
+    },
+    "make check (race)": {
+      "status": "passed",
+      "source_commit": "ef8855ed22565b2ffe1f96feea2aae07c4d4faca",
+      "scope": "after history-preserving origin/main merge; production Go unchanged from final persistent contract source 62106e5; documentation-only changes pending",
+      "includes": [
+        "real HTTP ResponseHeaderTimeout regression",
+        "task publication fault matrix",
+        "historical GC and ordinary Sync recovery"
+      ]
+    },
+    "make demo": {
+      "status": "passed",
+      "source_commit": "ef8855ed22565b2ffe1f96feea2aae07c4d4faca",
+      "scope": "after history-preserving origin/main merge; production Go unchanged from final persistent contract source 62106e5; documentation-only changes pending"
+    },
+    "targeted HTTP/Worker/classification/ordinary Sync/GC -race": {
+      "status": "passed",
+      "source_commit": "84461ddaf072d3dc26d4115b335e7b8559c378f9"
+    },
+    "make test-services": {
+      "status": "passed",
+      "source_commit": "3c497396e58c292e6b95660ee1a96c15bd810769",
+      "scope": "PostgreSQL + S3 asset persistence and GC, including old Artifact/Skill references; the subsequent source change only distinguished HTTP transport timeout from the task context deadline"
+    },
+    "PostgreSQL readers and writer lease regression": {
+      "status": "passed",
+      "source_commit": "64045e2a6ae9aa317b56b4bc6607f74a350fe6ab",
+      "entrypoint": "make test-services",
+      "assertions": [
+        "eight concurrent readers each read 1000 times",
+        "real HTTP GET cancelled only after pg_stat_activity confirmed its SQL lock wait",
+        "subsequent read and conflicting PUT still return expected record and HTTP 409",
+        "fresh write after read cancellation succeeds",
+        "owned writer backend terminated; mutation fails without silently replacing the leased writer and no task row appears"
+      ],
+      "working_tree_note": "The run at base 64045e2 also included the server-only HTTP 500 diagnostic subsequently committed as 62106e5; final integrated check/race/demo ran at ef8855ed."
+    }
+  },
+  "publication_faults_passed": [
+    "begin-before",
+    "begin-after-real-TCP-acknowledgement-loss",
+    "upload-before",
+    "upload-after-real-TCP-acknowledgement-loss",
+    "commit-before",
+    "commit-after-real-TCP-acknowledgement-loss",
+    "actual-SQLite-BEFORE-INSERT-trigger-failure-removed-before-retry",
+    "permanent-HTTP-400-401-403-404-409-422-425-501",
+    "malformed-JSON-response",
+    "three-commit-attempts-exhausted-pending-retained",
+    "actual-SaaS-cancellation-interrupts-publication-request",
+    "caller-context-deadline-interrupts-publication-request"
+  ],
+  "assertions": [
+    "real native fixture child executed once in each initial/follow-up turn",
+    "live report changed after freeze; retried Upload and delivered content kept original frozen bytes",
+    "every retry retained identical metadata/base and one operation fingerprint",
+    "one successful immutable target version, no duplicate operation",
+    "partial/failed/cancelled publication did not change previous checkpoint or old version bytes",
+    "exhaustion kept pending metadata/blob and did not advance the target cursor",
+    "ordinary Sync preserved next-invocation journal recovery behavior"
+  ],
+  "timeout_regression": {
+    "fixture": "real httptest with 20ms ResponseHeaderTimeout",
+    "http_timeout_matches_context_deadline_exceeded": true,
+    "task_context_still_active": true,
+    "classification": "retry transport timeout while owning task context is active; stop when task context is cancelled/expired"
+  },
+  "historical_gc": {
+    "backends": [
+      "SQLite/local objects",
+      "PostgreSQL/S3 via make test-services"
+    ],
+    "heads_advanced_to_version": 2,
+    "retained_versions": [
+      1,
+      2
+    ],
+    "asset_kinds": [
+      "artifact",
+      "skill-tar.v1 full package"
+    ],
+    "positive_control": "one actual unreferenced uploaded object removed; repeated collection removed zero",
+    "verification": "all four fixed references downloaded through authenticated real HTTP with exact bytes, SHA-256, version and scope"
+  },
+  "cluster_regressions": {
+    "full_four_cli_matrix": {
+      "status": "passed",
+      "source_commit": "3c497396e58c292e6b95660ee1a96c15bd810769",
+      "entrypoint": "make test-k8s",
+      "runtimes": [
+        "codex",
+        "gemini-cli",
+        "opencode",
+        "claude-code"
+      ],
+      "assertions": [
+        "report delivery",
+        "two sequential follow-ups in independent fresh Pods",
+        "native execution cancellation",
+        "follow-up cancellation"
+      ],
+      "cancellation_seconds_approximate": {
+        "codex": 3.1,
+        "gemini-cli": 3.0,
+        "opencode": 3.1,
+        "claude-code": 3.9
+      },
+      "cluster_cleanup_completed": true,
+      "scope": "before the subsequent HTTP header-timeout classification and PostgreSQL reader-isolation fixes; their affected paths have separate real HTTP/PG regression and final persistent contract coverage",
+      "pinned_cli_versions": {
+        "codex": "0.171.0-alpha.13",
+        "gemini-cli": "0.70.0",
+        "opencode": "1.19.6",
+        "claude-code": "2.1.330"
+      }
+    },
+    "persistent_file_and_skill_contracts": {
+      "status": "passed",
+      "source_commit": "62106e50a0dbfb143524aac645a39892c167ef0d",
+      "attempts": [
+        {
+          "entrypoint": "make test-k8s-persistent",
+          "source_commit": "84461ddaf072d3dc26d4115b335e7b8559c378f9",
+          "status": "failed",
+          "failure": "missing-input negative task conflicting submit expected HTTP 409 but received HTTP 500; exception-time Pod logs then failed for a ContainerCreating Pod",
+          "api_logs_available": false,
+          "cluster_cleanup_completed": true,
+          "completed_before_failure": [
+            "file produce/revise/audit",
+            "queued control-plane restart",
+            "lost-workspace negative case",
+            "active MCP cancellation and checkpoint recovery"
+          ],
+          "acceptance": "not passed; rerun with non-masking API/model/Job diagnostics required"
+        },
+        {
+          "entrypoint": "make test-k8s-persistent",
+          "source_commit": "852166ddbdc6926c9508d80d933e9cf6d3d5d3bb",
+          "status": "failed",
+          "failure": "HTTP 500 before completion; improved diagnostics retained the original exception",
+          "observed_dispatch_log": "pq: unexpected Parse response \"(D) DataRow\"",
+          "scope": "This log came from dispatch during the second run and does not establish the exact cause of the first run's HTTP 500.",
+          "cluster_cleanup_completed": true
+        },
+        {
+          "entrypoint": "make test-k8s-persistent",
+          "source_commit": "62106e50a0dbfb143524aac645a39892c167ef0d",
+          "status": "passed",
+          "cluster_cleanup_completed": true
+        }
+      ],
+      "backends": [
+        {
+          "images": {
+            "postgres": [
+              {
+                "image": "docker.io/library/postgres:18-alpine",
+                "image_id": "sha256:d4e55489302f9c75af116f3b3147f613e712f07e5eb8dabec82d9147dd0a00e5"
+              }
+            ],
+            "s3": [
+              {
+                "image": "docker.io/pgsty/minio:RELEASE.2026-04-17T00-00-00Z",
+                "image_id": "sha256:c007f271acf939425e3b553813c2c4531069cd467a59f84ec96121937ff414d9"
+              }
+            ]
+          },
+          "limitations": [
+            "No abrupt Worker Pod-loss combination on PostgreSQL/S3; separate P0 acceptance covers it.",
+            "No live model; fixed real Codex CLI uses a scripted Responses endpoint."
+          ],
+          "metadata_backend": "postgresql",
+          "minio_version": "minio version RELEASE.2026-04-17T00-00-00Z (commit-id=f48dbe777d0e066d2e74d5e671a8ca21c2ec1664)",
+          "object_backend": "s3-compatible-minio",
+          "postgres_rows": {
+            "operations": 16,
+            "revisions": 16,
+            "tasks": 2,
+            "turns": 5
+          },
+          "postgres_version": "18.7",
+          "queued_restart": {
+            "accepted_state": "queued",
+            "api_pod_uids": [
+              "167959f1-4b3e-4543-947f-ade7a116feee",
+              "e300dba5-f430-4948-9692-75a9597a60e3"
+            ],
+            "restored_state": "queued",
+            "same_uuid_replays": 2,
+            "turn_id": "3105d10b-4199-4cb0-b9b5-31c1912a70b2"
+          },
+          "scenario": "file-report",
+          "sqlite_or_local_objects_present": false,
+          "verified_object_count": 14
+        },
+        {
+          "images": {
+            "postgres": [
+              {
+                "image": "docker.io/library/postgres:18-alpine",
+                "image_id": "sha256:d4e55489302f9c75af116f3b3147f613e712f07e5eb8dabec82d9147dd0a00e5"
+              }
+            ],
+            "s3": [
+              {
+                "image": "docker.io/pgsty/minio:RELEASE.2026-04-17T00-00-00Z",
+                "image_id": "sha256:c007f271acf939425e3b553813c2c4531069cd467a59f84ec96121937ff414d9"
+              }
+            ]
+          },
+          "limitations": [
+            "No abrupt Worker Pod-loss combination on PostgreSQL/S3; separate P0 acceptance covers it.",
+            "No live model; fixed real Codex CLI uses a scripted Responses endpoint."
+          ],
+          "metadata_backend": "postgresql",
+          "minio_version": "minio version RELEASE.2026-04-17T00-00-00Z (commit-id=f48dbe777d0e066d2e74d5e671a8ca21c2ec1664)",
+          "object_backend": "s3-compatible-minio",
+          "postgres_rows": {
+            "operations": 17,
+            "revisions": 17,
+            "tasks": 2,
+            "turns": 2
+          },
+          "postgres_version": "18.7",
+          "queued_restart": {
+            "accepted_state": "queued",
+            "api_pod_uids": [
+              "2cfa9142-1f39-46d5-a352-d0dee8058018",
+              "7e7d67fa-dc3d-40bc-8df2-7c78575a4dc9"
+            ],
+            "restored_state": "queued",
+            "same_uuid_replays": 2,
+            "turn_id": "296382dc-5fc2-41ec-9ca0-4b866acc545b"
+          },
+          "scenario": "skill-report",
+          "sqlite_or_local_objects_present": false,
+          "verified_object_count": 17
+        }
+      ],
+      "contract_results": {
+        "file_report_result": {
+          "active_mcp_cancel": "cancelled-with-checkpoint-preserved",
+          "artifacts": [
+            {
+              "content_path": "/v1/content?id=out%2Freport.json&kind=artifact&version=1",
+              "id": "out/report.json",
+              "kind": "artifact",
+              "sha256": "4e9c78c7714152f4105570105d1a67d7d154bbe202c6b594688d1b9bfba69350",
+              "version": 1
+            },
+            {
+              "content_path": "/v1/content?id=turns%2F3105d10b-4199-4cb0-b9b5-31c1912a70b2%2Fout%2Freport.json&kind=artifact&version=1",
+              "id": "turns/3105d10b-4199-4cb0-b9b5-31c1912a70b2/out/report.json",
+              "kind": "artifact",
+              "sha256": "3972fa0b90f60ad3f84e82ddbd431670fb9758a24213fdaf766c2c5380a8f23f",
+              "version": 1
+            },
+            {
+              "content_path": "/v1/content?id=turns%2Fe9009637-47e9-4fd8-847f-42764e01a81e%2Fout%2Freport.json&kind=artifact&version=1",
+              "id": "turns/e9009637-47e9-4fd8-847f-42764e01a81e/out/report.json",
+              "kind": "artifact",
+              "sha256": "dac4084a64113047cf0e7a011c7172cb6de544bde8c164f6c95d190eed9ba628",
+              "version": 1
+            },
+            {
+              "content_path": "/v1/content?id=turns%2F17f837df-999d-4503-95b6-ea01dc9c3cf4%2Fout%2Freport.json&kind=artifact&version=1",
+              "id": "turns/17f837df-999d-4503-95b6-ea01dc9c3cf4/out/report.json",
+              "kind": "artifact",
+              "sha256": "dac4084a64113047cf0e7a011c7172cb6de544bde8c164f6c95d190eed9ba628",
+              "version": 1
+            }
+          ],
+          "business_rows": 2,
+          "cli": "codex-cli 0.171.0-alpha.13",
+          "database_write_retry": "trigger-failure-then-imported-and-already-imported",
+          "missing_input": "failed-without-assets",
+          "model": "scripted-responses",
+          "pod_uids": [
+            "3566c28c-fb81-4753-b120-704791d8951f",
+            "a8cdaab3-8d7f-4070-8402-a791127fdf81",
+            "3af924f6-1e9b-4c01-b678-690eed548234"
+          ],
+          "recovery_pod_uid": "9cd4c2dd-4b30-40d6-9be5-5457596035cc",
+          "session_sha256": "0f4f72137de2a332d3d65c5f77ce3f75dd1778aabc27a14d8eaaa2ba3a3d25b8",
+          "workspace_loss_simulation": "same-session-required-files-removed-before-tool"
+        },
+        "skill_report_result": {
+          "artifacts": [
+            {
+              "content_path": "/v1/content?id=out%2Freport.json&kind=artifact&version=1",
+              "id": "out/report.json",
+              "kind": "artifact",
+              "sha256": "82e56793522c5c595572bc339066ac49cd5e57f49768118c8c2b7330584c0d26",
+              "version": 1
+            },
+            {
+              "content_path": "/v1/content?id=turns%2F296382dc-5fc2-41ec-9ca0-4b866acc545b%2Fout%2Freport.json&kind=artifact&version=1",
+              "id": "turns/296382dc-5fc2-41ec-9ca0-4b866acc545b/out/report.json",
+              "kind": "artifact",
+              "sha256": "e2f6cab03c5b61723e255caa16422983be89988daa82134a24309b828cf6c5e2",
+              "version": 1
+            },
+            {
+              "content_path": "/v1/content?id=turns%2F2cf4f9aa-b49a-47e3-be62-7250626920f7%2Fout%2Freport.json&kind=artifact&version=1",
+              "id": "turns/2cf4f9aa-b49a-47e3-be62-7250626920f7/out/report.json",
+              "kind": "artifact",
+              "sha256": "266bf3df3fb9f322b3a34cb0dc3f9fbbf483c2035fe562ccf1671f8a56b5a9aa",
+              "version": 1
+            }
+          ],
+          "business_rows": 2,
+          "cli": "codex-cli 0.171.0-alpha.13",
+          "member_sha256": {
+            "SKILL.md": "95014c8dc7e93fbb758b9c6f74ce8a4d008835db6948c7089d874180adc2e800",
+            "references/rule.json": "0ba982ad0e88a459f278dfa9969984196aba285e218769f6b069be44f62c7069",
+            "scripts/check.py": "69fbf32f2d1319c7111d4cacb8290f3b0226ec3bd8e1de27af6ac0d2a40b07ab"
+          },
+          "model": "scripted-responses",
+          "native_skill_rule": "verified-by-installed-script-and-reference",
+          "newer_unselected_skill": {
+            "content_path": "/v1/content?id=catalog%2Fskills%2Fpinned-report&kind=skill&version=2",
+            "id": "catalog/skills/pinned-report",
+            "kind": "skill",
+            "sha256": "f1d3acce25b1fc599d757ade0415980bed76e48f1a7aed0537f2abe722e4fe7b",
+            "version": 2
+          },
+          "no_skill_control": "failed-without-assets",
+          "pod_uids": [
+            "b0d0ca5f-e8b7-4637-ab73-6a614b2207f1",
+            "e4f39c13-8d26-422f-b2c7-1e00524728d5",
+            "c22cd2c9-cae0-47f1-9e97-0acae0e81eb6"
+          ],
+          "session_sha256": "428eea70388a391aa736d6b6e39fd4b3525b6bd69e4e50fd3ac3de32f21bb80f",
+          "skill_pin": {
+            "name": "pinned-report",
+            "source": {
+              "content_path": "/v1/content?id=catalog%2Fskills%2Fpinned-report&kind=skill&version=1",
+              "id": "catalog/skills/pinned-report",
+              "kind": "skill",
+              "sha256": "552942324b9384f5d291b94d8fcd3ab056e3272cfb3db2e5620c1f19c045ca6d",
+              "version": 1
+            }
+          }
+        }
+      },
+      "local_native_file_and_skill_rerun": "not repeated after the final fixes; final PostgreSQL/S3 run covered both business contracts, and SQLite publication/recovery unit coverage passed separately"
+    }
+  },
+  "limitations": [
+    "Publication fault injection used SQLite/local objects. PostgreSQL/S3 were not subjected to the same Begin/Upload/Commit fault matrix.",
+    "No live model or model API key was used.",
+    "No new guarantee of replaying an already-failed native task: a new follow-up UUID starts from the last successful checkpoint.",
+    "This does not close the remaining combined V2 failure scenarios."
+  ],
+  "integration_source_commit": "ef8855ed22565b2ffe1f96feea2aae07c4d4faca",
+  "merged_main_commit": "ab6c72a95f3a8297f8fa77c5cbc25fe5f00bc2ed",
+  "postgres_reader_isolation": {
+    "fix_commit": "64045e2a6ae9aa317b56b4bc6607f74a350fe6ab",
+    "behavior": "Read-only task polling, checkpoint and queued-turn lookups use pooled connections; mutations remain bound to the exclusive writer lease.",
+    "server_diagnostic_commit": "62106e50a0dbfb143524aac645a39892c167ef0d",
+    "server_diagnostic_scope": "Unexpected HTTP 500 causes are logged with method and URL path, without credentials, request body or query."
+  },
+  "initial_publication_retry_source_commit": "84461ddaf072d3dc26d4115b335e7b8559c378f9"
+}
