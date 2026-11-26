@@ -84,4 +84,5 @@ The linked guides are in Chinese.
 | [v0.1 acceptance results](docs/mvp.md) | Tested CLI versions, product requirements, test coverage, and known limits. |
 | [Adapter research](docs/research.md) | Design references from Magpie, CC Switch, and the four supported agents. |
 | [Repository guide](AGENTS.md) | Code layout, adapter conventions, and checks to run before submitting a change. |
+| [Workspace upload baseline](docs/workspace-upload-baseline.md) | Measure actual upload bytes for large synthetic workspaces and check fixed-version recovery. |
 | [Original product requirements](docs/PRD-v0.1.md) | Archived first draft. The acceptance results list the agents included in this preview. |

@@ -1,0 +1,95 @@
+{
+  "recorded_at_utc": "2026-11-26T13:41:49.437411+00:00",
+  "source_commit": "0da7be8a5133d91601f4b334ed2a707a72614ce1",
+  "platform_revision": "0da7be8a5133d91601f4b334ed2a707a72614ce1",
+  "binary_sha256": "9334f5681e9577b2575705a0a62ed27c91b8b70f9a6ec3ad17d94ce9bd29d4c0",
+  "go_toolchain": "go1.27.4",
+  "host": {
+    "platform": "macOS-27.2.1-arm64-arm-64bit-Mach-O",
+    "python": "3.15.2"
+  },
+  "storage": {
+    "metadata": "sqlite",
+    "objects": "local-disk"
+  },
+  "adapter_version": "0.5.0",
+  "input": {
+    "files": 10000,
+    "file_bytes": 4096,
+    "seed": 0,
+    "source_payload_bytes": 40960000
+  },
+  "timing_scope": "CLI sync wall time through the loopback proxy; excludes input generation and download/restore checks",
+  "run_elapsed_seconds": 47.817511,
+  "sync_total_elapsed_seconds": 4.374328,
+  "stages": [
+    {
+      "phase": "initial",
+      "source_file_count": 10000,
+      "source_payload_bytes": 40960000,
+      "changed_payload_bytes": 40960000,
+      "upload_requests": 1,
+      "upload_payload_bytes": 46133248,
+      "sync_elapsed_seconds": 1.092525,
+      "workspace_version": 1,
+      "workspace_format": "workspace-tar.v1",
+      "workspace_sha256": "86c452c1a261e88e41674cfd16832fd0ceb3b53c11a557c26a768b4e871ac15d",
+      "workspace_archive_bytes": 46133248
+    },
+    {
+      "phase": "unchanged",
+      "source_file_count": 10000,
+      "source_payload_bytes": 40960000,
+      "changed_payload_bytes": 0,
+      "upload_requests": 0,
+      "upload_payload_bytes": 0,
+      "sync_elapsed_seconds": 1.012525,
+      "workspace_version": 1,
+      "workspace_format": "workspace-tar.v1",
+      "workspace_sha256": "86c452c1a261e88e41674cfd16832fd0ceb3b53c11a557c26a768b4e871ac15d",
+      "workspace_archive_bytes": 46133248
+    },
+    {
+      "phase": "single_file_update",
+      "source_file_count": 10000,
+      "source_payload_bytes": 40960000,
+      "changed_payload_bytes": 4096,
+      "upload_requests": 1,
+      "upload_payload_bytes": 46133248,
+      "sync_elapsed_seconds": 1.151902,
+      "workspace_version": 2,
+      "workspace_format": "workspace-tar.v1",
+      "workspace_sha256": "abb0b258ab4b7f333180cd2c8c07548f43036cfa9e1076c6ec72d7af7c3abd5e",
+      "workspace_archive_bytes": 46133248
+    },
+    {
+      "phase": "single_file_delete",
+      "source_file_count": 9999,
+      "source_payload_bytes": 40955904,
+      "changed_payload_bytes": 4096,
+      "upload_requests": 1,
+      "upload_payload_bytes": 46128640,
+      "sync_elapsed_seconds": 1.117376,
+      "workspace_version": 3,
+      "workspace_format": "workspace-tar.v1",
+      "workspace_sha256": "29f199da926843f04d555e1a015e50f744abb194c5383b72e7d12a3a5f02ddb3",
+      "workspace_archive_bytes": 46128640
+    }
+  ],
+  "verification": {
+    "fixed_version_tar_sha256": {
+      "1": "86c452c1a261e88e41674cfd16832fd0ceb3b53c11a557c26a768b4e871ac15d",
+      "2": "abb0b258ab4b7f333180cd2c8c07548f43036cfa9e1076c6ec72d7af7c3abd5e",
+      "3": "29f199da926843f04d555e1a015e50f744abb194c5383b72e7d12a3a5f02ddb3"
+    },
+    "old_version_cli_restore": "all original file hashes matched",
+    "unchanged_workspace": "zero upload requests",
+    "single_file_mutations": "complete workspace tar uploaded"
+  },
+  "limitations": [
+    "This measures workspace-tar.v1; it does not implement incremental workspace transfers.",
+    "Upload counts measure HTTP request-body bytes, excluding HTTP headers and transport overhead.",
+    "Synthetic local files, SQLite/local objects and a loopback proxy; not a production performance SLO.",
+    "No runtime CLI or model is executed. Only the real AgentMoor sync/restore CLI runs."
+  ]
+}
