@@ -51,3 +51,7 @@
 ## 2026-11-26：Codex 文件工作流补充验收
 
 Codex CLI `0.171.0-alpha.13` 在 kind 0.33.0 / Kubernetes v1.35.0 中，经脚本模型请求受信 MCP 工具，完成真实 CSV 文件读写、三次不同 Pod 的同会话接续、两份 Artifact 的固定版本交付、旧版下载、业务数据库写入失败后重试及活跃工具取消。`make test-k8s-file-report` 通过；四 CLI 的 `make test-k8s` 文本矩阵、`make check`、`make demo`、`make test-services` 和本机 Codex `.13.2` 的 native roundtrip 也通过。[完整结果与边界](verification-matrix.md#2026-11-26codex-文件工具集群验收通过) · [结构化证据](evidence/codex-file-report-2026-11-26.json)。真实模型、Skill 固定版本注入及活跃工具中 Pod 突然丢失仍未验收。
+
+## 2026-11-26：活跃 Worker Pod 丢失补充验收
+
+测试提交 `c91198683ef002f211e0bc1a032a308b44432579` 在真实 MCP 工具进入阻塞后，对专属 Worker 容器发 SIGKILL（退出码 137）并删除 Job/Pod，保留生产 15 分钟期限。公开 API 在期限前保持 running、期限后约 0.09 秒显示 interrupted；原 UUID 重投两次没有新 Job，新 UUID 在新 Pod 按同一原生会话恢复审计。checkpoint、旧版摘要与两条业务记录保持不变，未归档草稿没有恢复。`make test-k8s-pod-loss`、`make fmt/check/demo` 和 Python/Shell 离线检查通过。本次使用固定 Codex 0.171.0-alpha.13、脚本模型、SQLite/本地对象存储，没有指定 Skill。[复验与边界](pod-loss-acceptance.md) · [结构化证据](evidence/codex-pod-loss-2026-11-26.json)。

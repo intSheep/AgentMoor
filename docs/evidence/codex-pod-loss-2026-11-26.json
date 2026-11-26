@@ -1,0 +1,179 @@
+{
+  "source_commit": "c91198683ef002f211e0bc1a032a308b44432579",
+  "source_base_commit": "942eac4",
+  "recorded_at_utc": "2026-11-26T13:19:05.497470+00:00",
+  "command": "PATH=\"/Applications/OrbStack.app/Contents/MacOS/xbin:$PATH\" DOCKER_CONTEXT=orbstack make test-k8s-pod-loss",
+  "host": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "go": "1.27.4",
+    "python": "3.15.2",
+    "docker": "29.8.2",
+    "kind": "0.33.0"
+  },
+  "cluster_image": "kindest/node:v1.35.0",
+  "backends": "SQLite metadata and local immutable objects",
+  "checks": {
+    "python3 -m py_compile": "passed",
+    "sh -n tests/kubernetes/run.sh": "passed",
+    "git diff --check": "passed",
+    "make fmt": "passed",
+    "make check": "passed",
+    "make demo": "passed",
+    "make test-k8s-pod-loss": "passed"
+  },
+  "result": {
+    "artifacts": [
+      {
+        "content_path": "/v1/content?id=out%2Freport.json&kind=artifact&version=1",
+        "id": "out/report.json",
+        "kind": "artifact",
+        "sha256": "b5dcc25c7f19d8fc4b6b80f88a85cf0d2bc8712718296712db4f98c803f21403",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2F67eb260f-6b00-4c32-9b93-66e7dc0a5086%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/67eb260f-6b00-4c32-9b93-66e7dc0a5086/out/report.json",
+        "kind": "artifact",
+        "sha256": "711ae48517bb285cfec22387311f7d57e03fb8dfd0ec77da4a48d6db5385d82d",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2Fcbe0cc17-cc10-4cc6-b70f-8825259f332a%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/cbe0cc17-cc10-4cc6-b70f-8825259f332a/out/report.json",
+        "kind": "artifact",
+        "sha256": "771f3081b1dc80c32f718c36bea0f1f3e6a2a1aedac8d8ebed9b4960135d550f",
+        "version": 1
+      }
+    ],
+    "business_rows": 2,
+    "checkpoint_preserved": true,
+    "cli": "codex-cli 0.171.0-alpha.13",
+    "deadline": "2026-11-26T13:17:41.78629072Z",
+    "interrupted_observed_at": "2026-11-26T13:17:41.876412+00:00",
+    "lost_pod_uid": "73af4a5d-8f6d-4333-878f-e630ecbb5438",
+    "model": "scripted-responses",
+    "original_uuid_recreated_jobs": 0,
+    "original_uuid_replays": 2,
+    "production_timeout_seconds": 900,
+    "recovery_pod_uid": "ce6324ed-7481-4b11-be33-ae9c0c66cf9c",
+    "session_sha256": "6cf8e459b9d80b5b5e4265c305e3314d46120c7c4370fb017258518597cb5de9",
+    "successful_pod_uids": [
+      "8bac1a7a-281a-4cec-8ddc-e14b18f2f232",
+      "8c147b37-6899-4649-be22-cf5e0900153b"
+    ],
+    "unpublished_files_restored": false,
+    "worker_exit_code": 137
+  },
+  "deadline_to_observed_seconds": 0.090122,
+  "stages": [
+    {
+      "pod_uid": "8bac1a7a-281a-4cec-8ddc-e14b18f2f232",
+      "stage": "initial_report_verified"
+    },
+    {
+      "pod_uid": "8c147b37-6899-4649-be22-cf5e0900153b",
+      "stage": "revised_checkpoint_verified"
+    },
+    {
+      "deadline": "2026-11-26T13:17:41.78629072Z",
+      "pod_uid": "73af4a5d-8f6d-4333-878f-e630ecbb5438",
+      "stage": "tool_active"
+    },
+    {
+      "deadline": "2026-11-26T13:17:41.78629072Z",
+      "exit_code": 137,
+      "stage": "worker_lost_without_acknowledgement"
+    },
+    {
+      "remaining_seconds": 897,
+      "stage": "waiting_for_production_deadline",
+      "state": "running"
+    },
+    {
+      "remaining_seconds": 841,
+      "stage": "waiting_for_production_deadline",
+      "state": "running"
+    },
+    {
+      "remaining_seconds": 784,
+      "stage": "waiting_for_production_deadline",
+      "state": "running"
+    },
+    {
+      "remaining_seconds": 727,
+      "stage": "waiting_for_production_deadline",
+      "state": "running"
+    },
+    {
+      "remaining_seconds": 671,
+      "stage": "waiting_for_production_deadline",
+      "state": "running"
+    },
+    {
+      "remaining_seconds": 614,
+      "stage": "waiting_for_production_deadline",
+      "state": "running"
+    },
+    {
+      "remaining_seconds": 558,
+      "stage": "waiting_for_production_deadline",
+      "state": "running"
+    },
+    {
+      "remaining_seconds": 501,
+      "stage": "waiting_for_production_deadline",
+      "state": "running"
+    },
+    {
+      "remaining_seconds": 444,
+      "stage": "waiting_for_production_deadline",
+      "state": "running"
+    },
+    {
+      "remaining_seconds": 388,
+      "stage": "waiting_for_production_deadline",
+      "state": "running"
+    },
+    {
+      "remaining_seconds": 331,
+      "stage": "waiting_for_production_deadline",
+      "state": "running"
+    },
+    {
+      "remaining_seconds": 275,
+      "stage": "waiting_for_production_deadline",
+      "state": "running"
+    },
+    {
+      "remaining_seconds": 218,
+      "stage": "waiting_for_production_deadline",
+      "state": "running"
+    },
+    {
+      "remaining_seconds": 162,
+      "stage": "waiting_for_production_deadline",
+      "state": "running"
+    },
+    {
+      "remaining_seconds": 105,
+      "stage": "waiting_for_production_deadline",
+      "state": "running"
+    },
+    {
+      "remaining_seconds": 48,
+      "stage": "waiting_for_production_deadline",
+      "state": "running"
+    },
+    {
+      "observed_at": "2026-11-26T13:17:41.876412+00:00",
+      "stage": "interrupted"
+    }
+  ],
+  "limitations": [
+    "The tested source is c911986 on the pre-pinned-Skill base. A later merge of main does not mean this exact 15-minute run was repeated on that new head.",
+    "Scripted Responses model only; no live model account was used.",
+    "Pinned Skill installation was not part of this Pod-loss run.",
+    "PostgreSQL/S3 and control-plane loss were not covered by this run."
+  ]
+}
