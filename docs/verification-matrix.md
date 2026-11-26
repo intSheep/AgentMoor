@@ -117,6 +117,8 @@ python3 tests/kubernetes/diagnose_file_report.py --check
 
 完整保留 P0 的文件三 Pod 接续、两份交付物、旧版不变、真实业务 SQLite 写入失败后重试、活跃 MCP 工具取消及成功 checkpoint 恢复。Skill 场景的三个新 Pod 仍固定同一 v1，源包发布 v2 后不会升级；相同输入但未安装 Skill 的负例明确失败、没有成功产物。两份业务报告各导入一次且迟到重放不覆盖新结果。`make fmt`、`make check`（race）和 `make demo` 也通过。
 
+此后合并 `main@a315958`，保留独立 Pod 丢失入口和参数互斥；集成提交 `a3ed8de` 的 `make fmt/check/demo`、Python/Shell/JSON 离线检查再次通过。persistent 专属入口在创建集群前检查 Docker CLI 平台导出能力、服务端 API 及 `DOCKER_API_VERSION` 均支持 API 1.48+，旧版本和缺参数情形有离线验证；普通入口不新增此限制。
+
 这是 P1.1 后端组合与队列恢复的验收，不关闭整个 V2 门槛。尚未在 PostgreSQL/S3 下组合活跃 Worker Pod 突然丢失，或对象上传/数据库发布边界的故障注入；真实模型、多控制面副本和生产 HA 也未验证。独立 P0 Pod 丢失证据不能代替这些组合。
 
 ## V2 退出门槛

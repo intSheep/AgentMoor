@@ -207,5 +207,18 @@
     "No live-model smoke.",
     "No PostgreSQL/S3 combination of abrupt active Worker Pod loss or publication-boundary failure injection.",
     "No claim of multiple control-plane replicas or production HA."
-  ]
+  ],
+  "integrated_main_commit": "a315958c7b304d39c73a59078256a07bea856057",
+  "integration_checked_commit": "a3ed8de",
+  "integration_checked_at_utc": "2026-11-26T13:30:25+00:00",
+  "integration_checks": {
+    "make fmt": "passed",
+    "make check": "passed including race",
+    "make demo": "passed",
+    "python_compile": "passed",
+    "shell_syntax": "passed",
+    "json_parse": "passed",
+    "pod_loss_argument_exclusion": "passed",
+    "persistent_docker_preflight": "current Docker passed; offline mocks reject old server API, old DOCKER_API_VERSION, missing --platform before kind create"
+  }
 }
