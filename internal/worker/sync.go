@@ -183,7 +183,7 @@ func (s *scan) flush(ctx context.Context) error {
 		if err = ctx.Err(); err != nil {
 			return err
 		}
-		v, err = s.engine.Client.Publish(ctx, p.Change, file)
+		v, err = s.publishFrozen(ctx, p, file)
 		// Task execution must finish the frozen operation without rerunning the
 		// Agent. Ordinary Sync keeps its one-attempt, journal-on-next-scan behavior.
 		if err == nil || s.artifacts == nil || attempt >= 2 || !transientPublication(ctx, err) {
@@ -269,7 +269,10 @@ func (s *scan) publish(ctx context.Context, m asset.Metadata, b snapshot.Blob) e
 		s.journal.Cursors[asset.Fingerprint(m.Key)] = cursor{head.Version, fp}
 		return s.journal.save(s.engine.Config.StateDir)
 	}
-	p := &pending{asset.Change{Metadata: m, Base: previous.Version}, filepath.Base(b.Path)}
+	p := &pending{Change: asset.Change{Metadata: m, Base: previous.Version}, Blob: filepath.Base(b.Path)}
+	if m.Kind == "workspace" && m.Format == "workspace-tar.v1" {
+		p.Transfer = s.engine.Config.WorkspaceTransfer
+	}
 	s.journal.Pending = p
 	if err := s.journal.save(s.engine.Config.StateDir); err != nil {
 		return err

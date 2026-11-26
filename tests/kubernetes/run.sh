@@ -8,8 +8,8 @@ persistent=0
 if [ "${1:-}" = "--persistent" ]; then
     persistent=1
     shift
-    if [ "$#" -ne 0 ] || [ "$agents" != "codex" ]; then
-        echo "Persistent contract requires AGENT=codex and no extra flags" >&2
+    if [ "$agents" != "codex" ] || [ "$#" -gt 1 ] || { [ "$#" -eq 1 ] && [ "$1" != "--workspace-parts" ]; }; then
+        echo "Persistent contract requires AGENT=codex and optionally --workspace-parts" >&2
         exit 1
     fi
     sh tests/kubernetes/check_persistent_prereqs.sh
@@ -44,7 +44,7 @@ for agent in $agents; do
     kind load docker-image "$image" --name "$name"
     if [ "$persistent" -eq 1 ]; then
         for scenario in --file-report --skill-report; do
-            python3 tests/kubernetes/contract.py --adapter "$agent" --context "kind-$name" --kubeconfig "$KUBECONFIG" --image "$image" --backend postgres-s3 "$scenario"
+            python3 tests/kubernetes/contract.py --adapter "$agent" --context "kind-$name" --kubeconfig "$KUBECONFIG" --image "$image" --backend postgres-s3 "$scenario" "$@"
         done
     else
         python3 tests/kubernetes/contract.py --adapter "$agent" --context "kind-$name" --kubeconfig "$KUBECONFIG" --image "$image" "$@"

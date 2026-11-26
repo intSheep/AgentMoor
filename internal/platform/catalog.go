@@ -52,6 +52,17 @@ CREATE TABLE IF NOT EXISTS operations (
  change_json TEXT NOT NULL, state TEXT NOT NULL, message TEXT NOT NULL, version BIGINT NOT NULL, updated BIGINT NOT NULL,
  PRIMARY KEY(scope,op));
 CREATE INDEX IF NOT EXISTS operation_blobs ON operations(scope,digest,state);
+CREATE TABLE IF NOT EXISTS part_manifests (
+ scope TEXT NOT NULL, op TEXT NOT NULL, digest TEXT NOT NULL, manifest TEXT NOT NULL,
+ PRIMARY KEY(scope,op));
+CREATE TABLE IF NOT EXISTS operation_parts (
+ scope TEXT NOT NULL, op TEXT NOT NULL, digest TEXT NOT NULL, size BIGINT NOT NULL,
+ PRIMARY KEY(scope,op,digest));
+CREATE INDEX IF NOT EXISTS part_candidates ON operation_parts(scope,digest);
+CREATE TABLE IF NOT EXISTS revision_parts (
+ scope TEXT NOT NULL, kind TEXT NOT NULL, asset_id TEXT NOT NULL, version BIGINT NOT NULL, op TEXT NOT NULL,
+ PRIMARY KEY(scope,kind,asset_id,version));
+CREATE INDEX IF NOT EXISTS revision_manifests ON revision_parts(scope,op);
 `
 
 // OpenCatalog takes an exclusive service lease. Many workers may use the HTTP
@@ -190,6 +201,17 @@ func (c *Catalog) Begin(ctx context.Context, s asset.Scope, ch asset.Change) (as
 	if err != nil {
 		return t, err
 	}
+	var prepared int
+	err = c.writer.QueryRowContext(ctx, "SELECT 1 FROM part_manifests WHERE scope=$1 AND op=$2", scope, t.ID).Scan(&prepared)
+	if err == nil {
+		// A prepared operation must resume its frozen representation even if
+		// an unrelated legacy publication has stored the same complete tar.
+		t.Upload = true
+		return t, nil
+	}
+	if !errors.Is(err, sql.ErrNoRows) {
+		return t, err
+	}
 	exists, err := c.objects.Exists(ctx, objectKey(s, ch.SHA256))
 	t.Upload = !exists
 	return t, err
@@ -241,12 +263,24 @@ func (c *Catalog) Commit(ctx context.Context, s asset.Scope, id string) (int64, 
 		return 0, ErrConflict
 	}
 	ch := o.change
-	exists, err := c.objects.Exists(ctx, objectKey(s, ch.SHA256))
+	parts, hasParts, err := c.operationParts(ctx, c.writer, scope, id)
 	if err != nil {
 		return 0, err
 	}
-	if !exists {
-		return 0, ErrNotReady
+	if hasParts {
+		// The logical revision remains the original tar. Verification reads every
+		// byte once; the representation is never published as raw content.
+		if err = c.verifyParts(ctx, s, ch, parts); err != nil {
+			return 0, err
+		}
+	} else {
+		exists, err := c.objects.Exists(ctx, objectKey(s, ch.SHA256))
+		if err != nil {
+			return 0, err
+		}
+		if !exists {
+			return 0, ErrNotReady
+		}
 	}
 	current, v, err := head(ctx, c.writer, scope, ch.Key)
 	if err != nil {
@@ -267,6 +301,12 @@ func (c *Catalog) Commit(ctx context.Context, s asset.Scope, id string) (int64, 
 		raw, err := json.Marshal(ch.Metadata)
 		if err != nil {
 			return 0, err
+		}
+		if hasParts {
+			_, err = tx.ExecContext(ctx, "INSERT INTO revision_parts(scope,kind,asset_id,version,op) VALUES($1,$2,$3,$4,$5)", scope, ch.Kind, ch.ID, v, id)
+			if err != nil {
+				return 0, err
+			}
 		}
 		_, err = tx.ExecContext(ctx, "INSERT INTO revisions(scope,kind,asset_id,version,digest,metadata,created) VALUES($1,$2,$3,$4,$5,$6,$7)", scope, ch.Kind, ch.ID, v, ch.SHA256, string(raw), now)
 		if err != nil {
@@ -334,6 +374,21 @@ func (c *Catalog) Read(ctx context.Context, s asset.Scope, k asset.Key, version 
 	r.Scope = s
 	r.Created = time.Unix(0, ns).UTC()
 	r.ContentPath = r.Key.ContentPath(r.Version)
+	var op string
+	err = c.db.QueryRowContext(ctx, "SELECT op FROM revision_parts WHERE scope=$1 AND kind=$2 AND asset_id=$3 AND version=$4", s.Prefix(), k.Kind, k.ID, r.Version).Scan(&op)
+	if err == nil {
+		parts, _, err := c.operationParts(ctx, c.db, s.Prefix(), op)
+		if err != nil {
+			return r, nil, err
+		}
+		if err = parts.Validate(asset.Change{Metadata: r.Metadata}); err != nil {
+			return r, nil, err
+		}
+		return r, newPartsReader(ctx, c.objects, s, parts), nil
+	}
+	if !errors.Is(err, sql.ErrNoRows) {
+		return r, nil, err
+	}
 	stream, err := c.objects.Get(ctx, objectKey(s, r.SHA256))
 	return r, stream, err
 }
@@ -367,7 +422,10 @@ func (c *Catalog) Collect(ctx context.Context, s asset.Scope, before time.Time) 
 	if err != nil {
 		return 0, err
 	}
-	rows, err := c.db.QueryContext(ctx, `SELECT DISTINCT digest FROM operations o WHERE scope=$1 AND state IN ('expired','conflict') AND updated<$2 AND NOT EXISTS (SELECT 1 FROM revisions r WHERE r.scope=o.scope AND r.digest=o.digest) AND NOT EXISTS (SELECT 1 FROM operations p WHERE p.scope=o.scope AND p.digest=o.digest AND p.state='pending')`, scope, before.UnixNano())
+	rows, err := c.db.QueryContext(ctx, `SELECT DISTINCT digest FROM operations o WHERE scope=$1 AND state<>'pending' AND updated<$2
+ AND NOT EXISTS (SELECT 1 FROM revisions r WHERE r.scope=o.scope AND r.digest=o.digest AND NOT EXISTS
+ (SELECT 1 FROM revision_parts rp WHERE rp.scope=r.scope AND rp.kind=r.kind AND rp.asset_id=r.asset_id AND rp.version=r.version))
+ AND NOT EXISTS (SELECT 1 FROM operations p WHERE p.scope=o.scope AND p.digest=o.digest AND p.state='pending')`, scope, before.UnixNano())
 	if err != nil {
 		return 0, err
 	}
@@ -399,5 +457,6 @@ func (c *Catalog) Collect(ctx context.Context, s asset.Scope, before time.Time) 
 			n++
 		}
 	}
-	return n, nil
+	parts, err := c.collectParts(ctx, s, before)
+	return n + parts, err
 }

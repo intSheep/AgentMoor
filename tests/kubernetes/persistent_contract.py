@@ -96,7 +96,7 @@ class PersistentContract:
         print("PERSISTENT_STAGE queued_turn_survived_control_plane_restart", flush=True)
         return turn
 
-    def verify(self, scenario):
+    def verify(self, scenario, workspace_parts=False):
         assert self.restart_evidence is not None
         # Physical backend inspection is only evidence of backend selection;
         # all business amounts, versions and checkpoints remain HTTP assertions.
@@ -104,12 +104,18 @@ class PersistentContract:
         version = sql("SHOW server_version")
         counts = [int(value) for value in sql("SELECT (SELECT count(*) FROM tasks), (SELECT count(*) FROM turns), (SELECT count(*) FROM revisions), (SELECT count(*) FROM operations)").split("|")]
         assert counts[0] >= 2 and counts[1] >= 2 and counts[2] > 0 and counts[3] > 0
-        object_keys = set(sql("SELECT DISTINCT scope || '/objects/' || digest FROM revisions").splitlines())
+        object_keys = set(sql("SELECT DISTINCT r.scope || '/objects/' || r.digest FROM revisions r WHERE NOT EXISTS (SELECT 1 FROM revision_parts p WHERE p.scope=r.scope AND p.kind=r.kind AND p.asset_id=r.asset_id AND p.version=r.version)").splitlines())
+        part_keys = set(sql("SELECT DISTINCT p.scope || '/parts/' || p.digest FROM operation_parts p JOIN revision_parts r ON r.scope=p.scope AND r.op=p.op").splitlines())
+        representations = int(sql("SELECT count(*) FROM revision_parts"))
+        if workspace_parts:
+            assert representations > 0 and part_keys, "incremental workspace storage was not used"
+        else:
+            assert representations == 0 and not part_keys, "default transfer unexpectedly changed"
         with self.forward(self.base, self.namespace, service="s3", port=9000, scheme="http") as endpoint:
             listing = ET.fromstring(signed_s3(endpoint, "GET", "/" + BUCKET, "list-type=2"))
             assert listing.findtext("{*}IsTruncated") == "false"
             stored = {entry.text for entry in listing.findall("{*}Contents/{*}Key")}
-        assert object_keys and object_keys <= stored
+        assert object_keys and object_keys | part_keys <= stored
         fallback = self.kube("exec", "deployment/agentmoor", "--", "python3", "-c",
                              "import json; from pathlib import Path; print(json.dumps([Path('/store/catalog.sqlite').exists(), Path('/store/objects').exists()]))")
         assert json.loads(fallback) == [False, False], "storage fallback detected"
@@ -120,7 +126,10 @@ class PersistentContract:
         evidence = {"scenario": scenario, "metadata_backend": "postgresql", "postgres_version": version,
                     "object_backend": "s3-compatible-minio", "minio_version": self.kube("exec", "deployment/s3", "--", "minio", "--version").splitlines()[0],
                     "images": images, "postgres_rows": dict(zip(("tasks", "turns", "revisions", "operations"), counts)),
-                    "verified_object_count": len(object_keys), "sqlite_or_local_objects_present": False,
+                    "verified_object_count": len(object_keys | part_keys),
+                    "verified_part_object_count": len(part_keys), "workspace_part_revisions": representations,
+                    "workspace_transfer": "tar-parts.v1" if workspace_parts else "full",
+                    "sqlite_or_local_objects_present": False,
                     "queued_restart": self.restart_evidence,
                     "limitations": ["No abrupt Worker Pod-loss combination on PostgreSQL/S3; separate P0 acceptance covers it.", "No live model; fixed real Codex CLI uses a scripted Responses endpoint."]}
         print("PERSISTENT_RESULT " + json.dumps(evidence, sort_keys=True), flush=True)

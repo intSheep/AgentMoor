@@ -1,0 +1,179 @@
+{
+  "recorded_at_utc": "2026-11-26T14:21:51.679781+00:00",
+  "source_commit": "48e929074ba83680714557ac2744b0881d7a9e30",
+  "platform_revision": "48e929074ba83680714557ac2744b0881d7a9e30",
+  "binary_sha256": "1a7ec9b92daa58556a6b8b130e2efc60e3f550d30e50cc2bfa3fae5e13209860",
+  "go_toolchain": "go1.27.4",
+  "host": {
+    "platform": "macOS-27.2.1-arm64-arm-64bit-Mach-O",
+    "python": "3.15.2"
+  },
+  "storage": {
+    "metadata": "sqlite",
+    "objects": "local-disk"
+  },
+  "adapter_version": "0.5.0",
+  "workspace_transfer": "full",
+  "input": {
+    "files": 10000,
+    "file_bytes": 4096,
+    "seed": 0,
+    "source_payload_bytes": 40960000
+  },
+  "timing_scope": "CLI sync wall time through the loopback proxy; excludes input generation and download/restore checks",
+  "request_byte_scope": "Actual change mutation request bodies: begin JSON + full tar or gzip manifest + missing part PUT bodies + commit body. Excludes headers, HTTP responses and transport overhead. upload_payload_bytes retains only PUT content/part bodies.",
+  "commit_timing_scope": "Proxy request entry to upstream commit response headers, including forwarding its request body; excludes downstream response consumption.",
+  "download_timing_scope": "Fixed-version public GET through the proxy to a local tar file; validation hashing and tar inventory are timed separately.",
+  "restore_timing_scope": "Real AgentMoor CLI restore version 1 wall time, including download, validation and atomic publish; excludes the subsequent inventory comparison.",
+  "run_elapsed_seconds": 46.625579,
+  "sync_total_elapsed_seconds": 3.970532,
+  "fixed_version_downloads": {
+    "1": {
+      "download_elapsed_seconds": 0.026538,
+      "validation_elapsed_seconds": 0.137892
+    },
+    "2": {
+      "download_elapsed_seconds": 0.026359,
+      "validation_elapsed_seconds": 0.135603
+    },
+    "3": {
+      "download_elapsed_seconds": 0.028192,
+      "validation_elapsed_seconds": 0.136011
+    }
+  },
+  "old_version_cli_restore_elapsed_seconds": 40.224116,
+  "stages": [
+    {
+      "phase": "initial",
+      "source_file_count": 10000,
+      "source_payload_bytes": 40960000,
+      "changed_payload_bytes": 40960000,
+      "upload_requests": 1,
+      "upload_payload_bytes": 46133248,
+      "change_mutation_requests": 3,
+      "change_mutation_payload_bytes": 46133542,
+      "sync_elapsed_seconds": 1.009245,
+      "workspace_version": 1,
+      "workspace_format": "workspace-tar.v1",
+      "workspace_sha256": "86c452c1a261e88e41674cfd16832fd0ceb3b53c11a557c26a768b4e871ac15d",
+      "workspace_archive_bytes": 46133248,
+      "begin_requests": 1,
+      "begin_payload_bytes": 294,
+      "full_content_requests": 1,
+      "full_content_payload_bytes": 46133248,
+      "parts_manifest_requests": 0,
+      "parts_manifest_payload_bytes": 0,
+      "part_body_requests": 0,
+      "part_body_payload_bytes": 0,
+      "commit_requests": 1,
+      "commit_payload_bytes": 0,
+      "parts_manifest_gzip_payload_bytes": 0,
+      "commit_response_headers_elapsed_seconds": [
+        0.000587
+      ]
+    },
+    {
+      "phase": "unchanged",
+      "source_file_count": 10000,
+      "source_payload_bytes": 40960000,
+      "changed_payload_bytes": 0,
+      "upload_requests": 0,
+      "upload_payload_bytes": 0,
+      "change_mutation_requests": 0,
+      "change_mutation_payload_bytes": 0,
+      "sync_elapsed_seconds": 0.923842,
+      "workspace_version": 1,
+      "workspace_format": "workspace-tar.v1",
+      "workspace_sha256": "86c452c1a261e88e41674cfd16832fd0ceb3b53c11a557c26a768b4e871ac15d",
+      "workspace_archive_bytes": 46133248,
+      "begin_requests": 0,
+      "begin_payload_bytes": 0,
+      "full_content_requests": 0,
+      "full_content_payload_bytes": 0,
+      "parts_manifest_requests": 0,
+      "parts_manifest_payload_bytes": 0,
+      "part_body_requests": 0,
+      "part_body_payload_bytes": 0,
+      "commit_requests": 0,
+      "commit_payload_bytes": 0,
+      "parts_manifest_gzip_payload_bytes": 0,
+      "commit_response_headers_elapsed_seconds": []
+    },
+    {
+      "phase": "single_file_update",
+      "source_file_count": 10000,
+      "source_payload_bytes": 40960000,
+      "changed_payload_bytes": 4096,
+      "upload_requests": 1,
+      "upload_payload_bytes": 46133248,
+      "change_mutation_requests": 3,
+      "change_mutation_payload_bytes": 46133542,
+      "sync_elapsed_seconds": 1.023146,
+      "workspace_version": 2,
+      "workspace_format": "workspace-tar.v1",
+      "workspace_sha256": "abb0b258ab4b7f333180cd2c8c07548f43036cfa9e1076c6ec72d7af7c3abd5e",
+      "workspace_archive_bytes": 46133248,
+      "begin_requests": 1,
+      "begin_payload_bytes": 294,
+      "full_content_requests": 1,
+      "full_content_payload_bytes": 46133248,
+      "parts_manifest_requests": 0,
+      "parts_manifest_payload_bytes": 0,
+      "part_body_requests": 0,
+      "part_body_payload_bytes": 0,
+      "commit_requests": 1,
+      "commit_payload_bytes": 0,
+      "parts_manifest_gzip_payload_bytes": 0,
+      "commit_response_headers_elapsed_seconds": [
+        0.000511
+      ]
+    },
+    {
+      "phase": "single_file_delete",
+      "source_file_count": 9999,
+      "source_payload_bytes": 40955904,
+      "changed_payload_bytes": 4096,
+      "upload_requests": 1,
+      "upload_payload_bytes": 46128640,
+      "change_mutation_requests": 3,
+      "change_mutation_payload_bytes": 46128934,
+      "sync_elapsed_seconds": 1.014299,
+      "workspace_version": 3,
+      "workspace_format": "workspace-tar.v1",
+      "workspace_sha256": "29f199da926843f04d555e1a015e50f744abb194c5383b72e7d12a3a5f02ddb3",
+      "workspace_archive_bytes": 46128640,
+      "begin_requests": 1,
+      "begin_payload_bytes": 294,
+      "full_content_requests": 1,
+      "full_content_payload_bytes": 46128640,
+      "parts_manifest_requests": 0,
+      "parts_manifest_payload_bytes": 0,
+      "part_body_requests": 0,
+      "part_body_payload_bytes": 0,
+      "commit_requests": 1,
+      "commit_payload_bytes": 0,
+      "parts_manifest_gzip_payload_bytes": 0,
+      "commit_response_headers_elapsed_seconds": [
+        0.000509
+      ]
+    }
+  ],
+  "verification": {
+    "fixed_version_tar_sha256": {
+      "1": "86c452c1a261e88e41674cfd16832fd0ceb3b53c11a557c26a768b4e871ac15d",
+      "2": "abb0b258ab4b7f333180cd2c8c07548f43036cfa9e1076c6ec72d7af7c3abd5e",
+      "3": "29f199da926843f04d555e1a015e50f744abb194c5383b72e7d12a3a5f02ddb3"
+    },
+    "old_version_cli_restore": "all original file hashes matched",
+    "unchanged_workspace": "zero change mutation requests",
+    "single_file_mutations": "complete workspace tar uploaded"
+  },
+  "limitations": [
+    "Logical content remains workspace-tar.v1; transfer mode is recorded separately.",
+    "Upload counts measure HTTP request-body bytes, excluding HTTP headers and transport overhead.",
+    "Synthetic files and an owned loopback platform/storage fixture; not a production performance SLO.",
+    "tar-parts measurement requires distinct file bodies of at most 4 MiB to assert one body for a single-file update; larger product files may span multiple bodies.",
+    "changed_payload_bytes is source-file delta size, including removed bytes; it is not network transfer size.",
+    "No runtime CLI or model is executed. Only the real AgentMoor sync/restore CLI runs."
+  ]
+}

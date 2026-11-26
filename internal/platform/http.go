@@ -71,6 +71,7 @@ func (a *API) Handler() http.Handler {
 		})
 	}
 	a.taskRoutes(handle)
+	a.partRoutes(handle)
 	handle("GET /v1/context", "", func(w http.ResponseWriter, r *http.Request, g Grant) error { return reply(w, g) })
 	handle("GET /v1/assets", "read", func(w http.ResponseWriter, r *http.Request, g Grant) error {
 		items, err := a.Catalog.List(r.Context(), g.Scope)

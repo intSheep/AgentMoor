@@ -44,6 +44,8 @@ func TestPostgresAndS3(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer c.Close()
+	checkTarPartsStorage(t, c, scope("integration-parts"))
+	checkTarPartsCollection(t, c, scope("integration-parts-gc"))
 	checkTurnQueue(t, c, scope("followup"))
 	checkHistoricalReferencesSurviveGC(t, c, objects, scope("history-integration"))
 	s := scope("integration")

@@ -86,4 +86,5 @@ The linked guides are in Chinese.
 | [Adapter research](docs/research.md) | Design references from Magpie, CC Switch, and the four supported agents. |
 | [Repository guide](AGENTS.md) | Code layout, adapter conventions, and checks to run before submitting a change. |
 | [Workspace upload baseline](docs/workspace-upload-baseline.md) | Measure actual upload bytes for large synthetic workspaces and check fixed-version recovery. |
+| [Incremental workspace uploads](docs/workspace-incremental.md) | Enable content reuse while preserving complete tar downloads, and measure transfer and storage costs. |
 | [Original product requirements](docs/PRD-v0.1.md) | Archived first draft. The acceptance results list the agents included in this preview. |

@@ -2,7 +2,9 @@ package worker
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
+	"crypto/sha256"
 	"crypto/x509"
 	"database/sql"
 	"encoding/json"
@@ -49,6 +51,12 @@ func (a publicationRuntime) ExecuteFile(ctx context.Context, env task.Environmen
 		if err := os.WriteFile(filepath.Join(dir, "session"), []byte(session), 0600); err != nil {
 			return task.Execution{}, err
 		}
+		if err := os.Mkdir(filepath.Join(env.Workspace, "in"), 0700); err != nil {
+			return task.Execution{}, err
+		}
+		if err := os.WriteFile(filepath.Join(env.Workspace, "in", "input.txt"), []byte("original workspace input\n"), 0600); err != nil {
+			return task.Execution{}, err
+		}
 	} else {
 		if err := history.Files(dir); err != nil {
 			return task.Execution{}, err
@@ -79,6 +87,17 @@ type publicationFault struct {
 	statuses    []int
 	checkpoint  task.Checkpoint
 	checkpoints []task.Checkpoint
+	publishDir  string
+	frozenTar   []byte
+	manifests   []publicationPartRequest
+	parts       []publicationPartRequest
+	partDigest  string
+}
+
+type publicationPartRequest struct {
+	path, encoding string
+	size           int64
+	body           []byte
 }
 
 type publicationHarness struct {
@@ -184,6 +203,7 @@ func (h *publicationHarness) prepare(point, mode string, status, limit int) (Eng
 	h.fault.point, h.fault.mode, h.fault.status, h.fault.limit = point, mode, status, limit
 	h.fault.target = task.TurnKey(turn, asset.Key{Kind: "artifact", ID: "out/report.txt"})
 	h.fault.work, h.fault.checkpoint = e.Config.Workspace, cp
+	h.fault.publishDir = filepath.Join(e.Config.StateDir, "publish")
 	h.fault.mu.Unlock()
 	return e, turn, cp
 }
@@ -211,13 +231,33 @@ func (h *publicationHarness) serve(w http.ResponseWriter, r *http.Request) {
 			r.Body = io.NopCloser(bytes.NewReader(upload))
 		} else if r.Method == "POST" && strings.HasSuffix(r.URL.Path, "/commit") {
 			stage = "commit"
+		} else if r.Method == "POST" && strings.HasSuffix(r.URL.Path, "/parts") {
+			stage = "manifest"
+		} else if r.Method == "PUT" && strings.Contains(r.URL.Path, "/parts/") {
+			stage = "part"
+		}
+		if stage == "manifest" || stage == "part" {
+			var err error
+			upload, err = io.ReadAll(r.Body)
+			if err != nil {
+				h.t.Error(err)
+				http.Error(w, "fixture could not capture parts request", 500)
+				return
+			}
+			r.Body = io.NopCloser(bytes.NewReader(upload))
 		}
 	}
 	f.mu.Lock()
 	match := stage == "begin" && ch.Key == f.target
 	if stage != "begin" && len(f.changes) > 0 {
 		op := asset.Fingerprint(f.changes[0])
-		match = r.URL.Path == "/v1/changes/"+op+"/"+map[string]string{"upload": "content", "commit": "commit"}[stage]
+		prefix := "/v1/changes/" + op + "/"
+		switch stage {
+		case "upload", "commit", "manifest":
+			match = r.URL.Path == prefix+map[string]string{"upload": "content", "commit": "commit", "manifest": "parts"}[stage]
+		case "part":
+			match = strings.HasPrefix(r.URL.Path, prefix+"parts/")
+		}
 	}
 	if match {
 		switch stage {
@@ -227,20 +267,56 @@ func (h *publicationHarness) serve(w http.ResponseWriter, r *http.Request) {
 			f.uploads = append(f.uploads, append([]byte(nil), upload...))
 		case "commit":
 			f.commits++
+		case "manifest", "part":
+			request := publicationPartRequest{path: r.URL.Path, encoding: r.Header.Get("Content-Encoding"), size: r.ContentLength, body: append([]byte(nil), upload...)}
+			if stage == "manifest" {
+				f.manifests = append(f.manifests, request)
+			} else {
+				f.parts = append(f.parts, request)
+			}
 		}
 	}
 	selected := match && strings.HasPrefix(f.point, stage+"-") && f.failures < f.limit
+	if stage == "part" && !strings.HasSuffix(r.URL.Path, "/"+f.partDigest) {
+		selected = false
+	}
 	if selected {
 		f.failures++
 	}
-	point, mode, status, work, expected := f.point, f.mode, f.status, f.work, f.checkpoint
+	point, mode, status, work, expected, target, publishDir := f.point, f.mode, f.status, f.work, f.checkpoint, f.target, f.publishDir
 	f.mu.Unlock()
 	if !selected {
 		h.api.ServeHTTP(w, r)
 		return
 	}
-	// Change the live file after its immutable blob has already been captured.
-	if err := os.WriteFile(filepath.Join(work, "out", "report.txt"), []byte("changed after freezing\n"), 0600); err != nil {
+	if target.Kind == "workspace" {
+		j, err := load(Config{Scope: h.scope, Endpoint: h.server.URL, StateDir: publishDir})
+		if err != nil || j.Pending == nil || j.Pending.Change.Key != target || j.Pending.Transfer != asset.TarPartsFormat {
+			h.t.Errorf("fixture did not find frozen workspace pending: %+v %v", j.Pending, err)
+			http.Error(w, "fixture missing pending workspace", 500)
+			return
+		}
+		raw, err := os.ReadFile(filepath.Join(publishDir, j.Pending.Blob))
+		if err != nil {
+			h.t.Error(err)
+			http.Error(w, "fixture missing frozen tar", 500)
+			return
+		}
+		f.mu.Lock()
+		if f.frozenTar == nil {
+			f.frozenTar = raw
+		} else if !bytes.Equal(f.frozenTar, raw) {
+			h.t.Error("retry replaced the pending frozen workspace tar")
+		}
+		f.mu.Unlock()
+	}
+	// Workspace publication precedes artifact scanning. Mutate a non-artifact
+	// input so the later artifact still matches the native report in the tar.
+	liveFile := filepath.Join(work, "out", "report.txt")
+	if target.Kind == "workspace" {
+		liveFile = filepath.Join(work, "in", "input.txt")
+	}
+	if err := os.WriteFile(liveFile, []byte("changed after freezing\n"), 0600); err != nil {
 		h.t.Error(err)
 	}
 	var current task.Checkpoint
@@ -291,6 +367,15 @@ func (h *publicationHarness) serve(w http.ResponseWriter, r *http.Request) {
 		}
 		if recorder.Code/100 != 2 {
 			h.t.Errorf("acknowledgement was dropped for a failed operation: HTTP %d", recorder.Code)
+		}
+		if target.Kind == "workspace" {
+			var after task.Checkpoint
+			if err := h.saas.JSON(r.Context(), "GET", "/v1/tasks/report/checkpoint", nil, &after); err != nil || !reflect.DeepEqual(after, expected) {
+				h.t.Errorf("successful publication before acknowledgement advanced task checkpoint: %+v %v", after, err)
+			}
+			f.mu.Lock()
+			f.checkpoints = append(f.checkpoints, after)
+			f.mu.Unlock()
 		}
 		conn, _, err := w.(http.Hijacker).Hijack()
 		if err != nil {
@@ -437,6 +522,241 @@ func TestTaskPublicationRetriesFrozenOperationAcrossHTTPBoundaries(t *testing.T)
 				t.Fatal(err)
 			}
 			h.verify(t, e, turn, cp, task.Succeeded, 2)
+		})
+	}
+}
+
+func (h *publicationHarness) prepareParts(point, mode string, status, limit int) (Engine, string, task.Checkpoint) {
+	h.t.Helper()
+	e, turn, cp := h.prepare(point, mode, status, limit)
+	runs, err := os.ReadFile(h.runtime.counter)
+	if err != nil || strings.Count(string(runs), "executed\n") != 1 {
+		h.t.Fatalf("initial native fixture did not execute exactly once: %q %v", runs, err)
+	}
+	e.Config.WorkspaceTransfer = asset.TarPartsFormat
+	h.fault.mu.Lock()
+	h.fault.target = task.TurnKey(turn, asset.Key{Kind: "workspace", ID: "root"})
+	h.fault.partDigest = fmt.Sprintf("%x", sha256.Sum256([]byte("revised frozen bytes\n")))
+	h.fault.mu.Unlock()
+	return e, turn, cp
+}
+
+func (h *publicationHarness) verifyParts(t *testing.T, e Engine, turn string, cp task.Checkpoint, state string, begins, failures int) {
+	t.Helper()
+	var row task.Record
+	if err := h.saas.JSON(t.Context(), "GET", "/v1/tasks/report/turns/"+turn, nil, &row); err != nil {
+		t.Fatal(err)
+	}
+	if row.State != state || row.Parent == nil || !reflect.DeepEqual(*row.Parent, cp) {
+		t.Fatalf("unexpected parts task completion: %+v", row)
+	}
+	runs, err := os.ReadFile(h.runtime.counter)
+	if err != nil || strings.Count(string(runs), "executed\n") != 2 {
+		t.Fatalf("parts retry reran native fixture: %q %v", runs, err)
+	}
+	f := h.fault
+	f.mu.Lock()
+	changes := append([]asset.Change(nil), f.changes...)
+	manifests := append([]publicationPartRequest(nil), f.manifests...)
+	parts := append([]publicationPartRequest(nil), f.parts...)
+	frozen := append([]byte(nil), f.frozenTar...)
+	checkpoints := append([]task.Checkpoint(nil), f.checkpoints...)
+	failed, fullUploads := f.failures, len(f.uploads)
+	statuses := append([]int(nil), f.statuses...)
+	point, commits := f.point, f.commits
+	f.mu.Unlock()
+	key := task.TurnKey(turn, asset.Key{Kind: "workspace", ID: "root"})
+	if len(changes) != begins || failed != failures || len(checkpoints) == 0 || len(manifests) == 0 || len(frozen) == 0 || fullUploads != 0 {
+		t.Fatalf("parts fault did not exercise expected protocol: begins=%d failures=%d checkpoints=%d manifests=%d frozen=%d full=%d", len(changes), failed, len(checkpoints), len(manifests), len(frozen), fullUploads)
+	}
+	for _, change := range changes {
+		if change.Key != key || change.Base != 0 || !reflect.DeepEqual(change, changes[0]) {
+			t.Fatal("parts retry changed metadata/base/operation identity", change)
+		}
+	}
+	if digest := fmt.Sprintf("%x", sha256.Sum256(frozen)); digest != changes[0].SHA256 || int64(len(frozen)) != changes[0].Size {
+		t.Fatal("pending frozen tar does not match the original change")
+	}
+	for _, checkpoint := range checkpoints {
+		if !reflect.DeepEqual(checkpoint, cp) {
+			t.Fatal("partial parts publication advanced checkpoint", checkpoint)
+		}
+	}
+	if strings.HasSuffix(point, "-after") && (len(statuses) != failures || len(checkpoints) < 2*failures) {
+		t.Fatal("lost acknowledgement did not follow actual API success and a checkpoint observation", statuses, checkpoints)
+	}
+	for _, status := range statuses {
+		if status/100 != 2 {
+			t.Fatal("dropped acknowledgement hid an unsuccessful API operation", status)
+		}
+	}
+	op := asset.Fingerprint(changes[0])
+	var manifest asset.TarParts
+	for index, request := range manifests {
+		if request.path != "/v1/changes/"+op+"/parts" || request.encoding != "gzip" || request.size != int64(len(request.body)) || !bytes.Equal(request.body, manifests[0].body) {
+			t.Fatal("retry changed frozen compressed manifest or operation path", request.path)
+		}
+		reader, err := gzip.NewReader(bytes.NewReader(request.body))
+		if err != nil {
+			t.Fatal(err)
+		}
+		var decoded asset.TarParts
+		err = json.NewDecoder(reader).Decode(&decoded)
+		closeErr := reader.Close()
+		if err != nil || closeErr != nil || decoded.Validate(changes[0]) != nil {
+			t.Fatal("request is not a valid frozen gzip manifest", err, closeErr)
+		}
+		if index == 0 {
+			manifest = decoded
+		} else if !reflect.DeepEqual(decoded, manifest) {
+			t.Fatal("retry changed decoded manifest")
+		}
+	}
+	objectSizes := map[string]int64{}
+	for _, part := range manifest.Parts {
+		if len(part.Inline) == 0 {
+			objectSizes[part.SHA256] = part.Size
+		}
+	}
+	for _, request := range parts {
+		digest := strings.TrimPrefix(request.path, "/v1/changes/"+op+"/parts/")
+		if digest != fmt.Sprintf("%x", sha256.Sum256(request.body)) || objectSizes[digest] != int64(len(request.body)) || request.size != int64(len(request.body)) || request.encoding != "" {
+			t.Fatal("part request changed operation, digest, size or actual frozen bytes", request.path)
+		}
+	}
+	config := e.Config
+	config.StateDir = filepath.Join(config.StateDir, "publish")
+	j, err := load(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	current := h.checkpoint(t.Context())
+	if state == task.Succeeded {
+		ref, found := findArtifact(row, key)
+		if len(parts) == 0 || commits == 0 || j.Pending != nil || j.Cursors[asset.Fingerprint(key)].Version != 1 || !found || ref.Version != 1 || ref.SHA256 != changes[0].SHA256 || current.Workspace != ref || current.SessionID != cp.SessionID || current.Session.Key != task.TurnKey(turn, asset.Key{Kind: "session", ID: cp.SessionID}) {
+			t.Fatal("successful parts task did not commit complete checkpoint/cursor", row, current, j)
+		}
+		h.verifyWorkspace(t, e, ref, frozen, "revised frozen bytes\n")
+		primary, found := findArtifact(row, task.TurnKey(turn, asset.Key{Kind: "artifact", ID: "out/report.txt"}))
+		if !found {
+			t.Fatal("successful parts task has no native primary artifact")
+		}
+		h.verifyContent(t, primary.Key, primary.Version, "revised frozen bytes\n")
+	} else {
+		if len(row.Assets) != 0 || !reflect.DeepEqual(current, cp) || j.Pending == nil || j.Pending.Transfer != asset.TarPartsFormat || !reflect.DeepEqual(j.Pending.Change, changes[0]) || j.Cursors[asset.Fingerprint(key)].Version != 0 {
+			t.Fatal("failed parts task lost pending transfer or advanced checkpoint/cursor", row, current, j)
+		}
+		pendingTar, err := os.ReadFile(filepath.Join(config.StateDir, j.Pending.Blob))
+		if err != nil || !bytes.Equal(pendingTar, frozen) {
+			t.Fatal("failed parts task did not preserve the original frozen tar", err)
+		}
+	}
+	live, err := os.ReadFile(filepath.Join(e.Config.Workspace, "in", "input.txt"))
+	if err != nil || string(live) != "changed after freezing\n" {
+		t.Fatalf("fixture did not actually change the live non-artifact input: %q %v", live, err)
+	}
+	var revisions []asset.Revision
+	if err := h.saas.JSON(t.Context(), "GET", "/v1/assets", nil, &revisions); err != nil {
+		t.Fatal(err)
+	}
+	versions := 0
+	for _, revision := range revisions {
+		if revision.Key == key {
+			versions++
+			if revision.Version != 1 || revision.SHA256 != changes[0].SHA256 {
+				t.Fatal("parts retry produced a different visible workspace version", revision)
+			}
+		}
+	}
+	wantVersions := 0
+	if state == task.Succeeded {
+		wantVersions = 1
+	}
+	if versions != wantVersions {
+		t.Fatal("unexpected workspace versions", versions)
+	}
+	var operations []asset.Job
+	if err := h.saas.JSON(t.Context(), "GET", "/v1/status", nil, &operations); err != nil {
+		t.Fatal(err)
+	}
+	count := 0
+	for _, operation := range operations {
+		if operation.Key == key {
+			count++
+			want := "pending"
+			if state == task.Succeeded {
+				want = "committed"
+			}
+			if operation.Operation != op || operation.State != want {
+				t.Fatal("parts retry changed operation identity/state", operation)
+			}
+		}
+	}
+	if count != 1 {
+		t.Fatal("parts retry did not retain exactly one operation", count)
+	}
+	h.verifyWorkspace(t, e, cp.Workspace, nil, "first frozen bytes\n")
+	h.verifyContent(t, asset.Key{Kind: "artifact", ID: "out/report.txt"}, 1, "first frozen bytes\n")
+}
+
+func (h *publicationHarness) verifyWorkspace(t *testing.T, e Engine, ref task.Ref, expected []byte, report string) {
+	t.Helper()
+	revision, body, err := h.saas.Content(t.Context(), ref.Key, ref.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, err := io.ReadAll(body)
+	body.Close()
+	if err != nil || revision.Scope != h.scope || revision.SHA256 != ref.SHA256 || fmt.Sprintf("%x", sha256.Sum256(raw)) != ref.SHA256 || (expected != nil && !bytes.Equal(raw, expected)) {
+		t.Fatal("fixed workspace HTTP content differs from frozen bytes", err)
+	}
+	dest := filepath.Join(t.TempDir(), "restored-workspace")
+	if err := e.Restore(t.Context(), ref.Key, ref.Version, dest); err != nil {
+		t.Fatal(err)
+	}
+	verifyTransferredTree(t, dest, raw)
+	content, err := os.ReadFile(filepath.Join(dest, "out", "report.txt"))
+	if err != nil || string(content) != report {
+		t.Fatalf("restored workspace used live report instead of its frozen version: %q %v", content, err)
+	}
+	input, err := os.ReadFile(filepath.Join(dest, "in", "input.txt"))
+	if err != nil || string(input) != "original workspace input\n" {
+		t.Fatalf("restored workspace used changed live input instead of its frozen version: %q %v", input, err)
+	}
+}
+
+func TestTaskWorkspacePartsRetriesFrozenOperationAcrossHTTPBoundaries(t *testing.T) {
+	for _, point := range []string{"manifest-before", "manifest-after", "part-before", "part-after", "commit-before", "commit-after"} {
+		t.Run(point, func(t *testing.T) {
+			h := newPublicationHarness(t)
+			e, turn, cp := h.prepareParts(point, "", http.StatusServiceUnavailable, 1)
+			if err := e.RunTurn(t.Context(), turn); err != nil {
+				t.Fatal(err)
+			}
+			h.verifyParts(t, e, turn, cp, task.Succeeded, 2, 1)
+		})
+	}
+}
+
+func TestTaskWorkspacePartsPermanentManifestErrorKeepsFrozenPending(t *testing.T) {
+	h := newPublicationHarness(t)
+	e, turn, cp := h.prepareParts("manifest-before", "", http.StatusBadRequest, 99)
+	var status *platform.HTTPError
+	if err := e.RunTurn(t.Context(), turn); !errors.As(err, &status) || status.StatusCode != http.StatusBadRequest {
+		t.Fatal("permanent manifest error was hidden or retried", err)
+	}
+	h.verifyParts(t, e, turn, cp, task.Failed, 1, 1)
+}
+
+func TestTaskWorkspacePartsExhaustionKeepsFrozenPending(t *testing.T) {
+	for _, point := range []string{"manifest-before", "part-before", "commit-before"} {
+		t.Run(point, func(t *testing.T) {
+			h := newPublicationHarness(t)
+			e, turn, cp := h.prepareParts(point, "", http.StatusServiceUnavailable, 99)
+			if err := e.RunTurn(t.Context(), turn); err == nil {
+				t.Fatal("exhausted workspace parts publication did not fail")
+			}
+			h.verifyParts(t, e, turn, cp, task.Failed, 3, 3)
 		})
 	}
 }
