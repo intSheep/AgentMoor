@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -16,6 +17,54 @@ import (
 	"agentmoor/internal/asset"
 	"agentmoor/internal/task"
 )
+
+var nativeSkillName = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{0,63}$`)
+
+func (a Adapter) SkillDirectory(env task.Environment, name string) (string, error) {
+	if !filepath.IsAbs(env.Home) || !nativeSkillName.MatchString(name) {
+		return "", fmt.Errorf("Codex skills require a private absolute home and a valid name")
+	}
+	return filepath.Join(env.Home, ".codex", "skills", name), nil
+}
+
+// The Worker restores verified packages into a private native home. Resolve the
+// same paths Codex advertises, so explicit mentions select these packages even
+// when the workspace has another Skill with the same name.
+func loadedSkills(env task.Environment) ([]task.LoadedSkill, error) {
+	if len(env.Skills) == 0 {
+		return nil, nil
+	}
+	if len(env.Skills) > task.MaxSkills || !filepath.IsAbs(env.Home) {
+		return nil, fmt.Errorf("invalid Codex private skills")
+	}
+	home, err := filepath.EvalSymlinks(env.Home)
+	if err != nil {
+		return nil, err
+	}
+	root := filepath.Join(home, ".codex", "skills")
+	resolvedRoot, err := filepath.EvalSymlinks(root)
+	if err != nil || resolvedRoot != root {
+		return nil, fmt.Errorf("Codex skill root must stay in its private home")
+	}
+	seen := make(map[string]bool, len(env.Skills))
+	loaded := make([]task.LoadedSkill, 0, len(env.Skills))
+	for _, skill := range env.Skills {
+		if !nativeSkillName.MatchString(skill.Name) || seen[skill.Name] || !filepath.IsAbs(skill.Manifest) {
+			return nil, fmt.Errorf("invalid or duplicate Codex skill")
+		}
+		manifest, err := filepath.EvalSymlinks(skill.Manifest)
+		if err != nil || manifest != filepath.Join(root, skill.Name, "SKILL.md") || strings.ContainsAny(manifest, ")\r\n") {
+			return nil, fmt.Errorf("Codex skill manifest must be in its assigned private directory")
+		}
+		info, err := os.Stat(manifest)
+		if err != nil || !info.Mode().IsRegular() {
+			return nil, fmt.Errorf("Codex skill needs a regular SKILL.md")
+		}
+		seen[skill.Name] = true
+		loaded = append(loaded, task.LoadedSkill{Name: skill.Name, Manifest: manifest})
+	}
+	return loaded, nil
+}
 
 func (a Adapter) ExecuteTask(ctx context.Context, env task.Environment, spec task.Spec) (task.Execution, error) {
 	return runTurn(ctx, env, spec.Prompt(), "", nil, nil)
@@ -58,12 +107,40 @@ func (a Adapter) ExecuteFile(ctx context.Context, env task.Environment, spec tas
 		// execution retain the read-only, non-interactive policy below.
 		"-c", `mcp_servers.report.tools.render.approval_mode="approve"`,
 	}
+	skills, err := loadedSkills(env)
+	if err != nil {
+		return task.Execution{}, err
+	}
+	if len(skills) > 0 {
+		paths := make(map[string]string, len(skills))
+		for _, skill := range skills {
+			paths[skill.Name] = skill.Manifest
+		}
+		raw, err := json.Marshal(paths)
+		if err != nil {
+			return task.Execution{}, err
+		}
+		settings = append(settings, "-c", "mcp_servers.report.env.AGENTMOOR_SKILLS="+strconv.Quote(string(raw)))
+	}
 	return runTurn(ctx, env, []byte(spec.Instruction), session, restore, settings)
 }
 
 func runTurn(ctx context.Context, env task.Environment, prompt []byte, id string, restore task.RestoreHistory, fileSettings []string) (task.Execution, error) {
+	skills, err := loadedSkills(env)
+	if err != nil {
+		return task.Execution{}, err
+	}
+	if len(skills) > 0 {
+		var nativePrompt bytes.Buffer
+		nativePrompt.Write(prompt)
+		nativePrompt.WriteString("\n\nUse the following pinned native skills for this turn:\n")
+		for _, skill := range skills {
+			fmt.Fprintf(&nativePrompt, "[$%s](%s)\n", skill.Name, skill.Manifest)
+		}
+		prompt = nativePrompt.Bytes()
+	}
 	home := filepath.Join(env.Home, ".codex")
-	if err := os.Mkdir(home, 0700); err != nil {
+	if err := os.MkdirAll(home, 0700); err != nil {
 		return task.Execution{}, err
 	}
 	vars := []string{"HOME=" + env.Home, "CODEX_HOME=" + home}

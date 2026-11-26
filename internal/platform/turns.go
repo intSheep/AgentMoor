@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"slices"
 	"time"
 
 	"agentmoor/internal/asset"
@@ -62,6 +63,7 @@ func (c *Catalog) submitTurn(ctx context.Context, a taskAddress, q task.Question
 		Deadline: time.Now().UTC().Add(task.Timeout),
 		Spec:     spec,
 		Parent:   &cp,
+		Skills:   slices.Clone(cp.Skills),
 	}
 	raw, err := json.Marshal(rec)
 	if err != nil {
@@ -118,7 +120,7 @@ func (c *Catalog) latestCheckpoint(ctx context.Context, scope asset.Scope) (task
 	if source.State != task.Succeeded {
 		return task.Checkpoint{}, ErrConflict
 	}
-	var cp task.Checkpoint
+	cp := task.Checkpoint{Skills: slices.Clone(source.Skills)}
 	for _, ref := range source.Assets {
 		switch ref.Kind {
 		case "session":

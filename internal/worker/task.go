@@ -81,7 +81,7 @@ func (e *Engine) runTask(ctx context.Context, wait time.Duration, turn string) e
 		return fmt.Errorf("task is %s", record.State)
 	}
 	attempt := uuid.NewString()
-	if err = e.taskUpdate(ctx, route+"/claim", task.Claim{Attempt: attempt}, &record); err != nil {
+	if err = e.taskUpdate(ctx, route+"/claim", task.Claim{Attempt: attempt, Skills: c.SkillPins}, &record); err != nil {
 		return err
 	}
 	runCtx, cancel := context.WithDeadline(ctx, record.Deadline)
@@ -201,6 +201,10 @@ func (e *Engine) execute(ctx context.Context, record task.Record) (string, []tas
 	}
 	// Keep the private native history available for inspection after a failed publication.
 	env := task.Environment{Executable: c.RuntimeCLI, Workspace: c.Workspace, Home: home}
+	env.Skills, err = e.installTaskSkills(ctx, env, record.Skills)
+	if err != nil {
+		return "", nil, err
+	}
 	var output task.Execution
 	target := filepath.Join("out", spec.Output)
 	if spec.Mode == task.FileTurn {

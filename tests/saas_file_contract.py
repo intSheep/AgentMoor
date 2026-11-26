@@ -49,7 +49,7 @@ class FileReportClient(ReportClient):
             return {entry.name.removeprefix("./"): archive.extractfile(entry).read()
                     for entry in archive if entry.isfile()}
 
-    def observe(self, row, session, operation, marker=None, expected_operations=None):
+    def observe(self, row, session, operation, marker=None, expected_operations=None, policy=None):
         refs = self.refs(row)
         turn = row.get("turn_id", "")
         prefix = "turns/" + turn + "/" if turn else ""
@@ -74,7 +74,10 @@ class FileReportClient(ReportClient):
         raw = self.download(refs["artifact"])
         assert raw == canonical(expected) and raw == workspace["out/report.json"]
         artifacts = [ref for ref in row["assets"] if ref["kind"] == "artifact"]
-        assert {ref["id"] for ref in artifacts} == {prefix + "out/report.json", prefix + "out/tool-proof.json"}
+        expected_artifacts = {prefix + "out/report.json", prefix + "out/tool-proof.json"}
+        if policy is not None:
+            expected_artifacts.add(prefix + "out/skill-proof.json")
+        assert {ref["id"] for ref in artifacts} == expected_artifacts
         for ref in artifacts:
             assert self.download(ref) == workspace[ref["id"].removeprefix(prefix)]
         histories = self.archive(refs["session"])
@@ -88,7 +91,10 @@ class FileReportClient(ReportClient):
         assert messages[-1]["content"][-1]["text"] == "done"
         calls = [event["payload"] for event in native if event["type"] == "response_item"
                  and event["payload"].get("type") == "function_call"]
-        assert any("render" in call.get("name", "") and json.loads(call["arguments"]) == {"operation": operation}
+        expected_arguments = {"operation": operation}
+        if policy is not None:
+            expected_arguments["policy"] = policy
+        assert any("render" in call.get("name", "") and json.loads(call["arguments"]) == expected_arguments
                    for call in calls)
         return state["marker"], (refs["artifact"], raw)
 

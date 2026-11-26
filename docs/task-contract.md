@@ -48,6 +48,14 @@ Codex 文件模式由部署端设置 `CODEX_FILE_TOOL=/absolute/path/to/tool`。
 
 ## SaaS 追问同一个会话
 
+### 固定版本 Skill
+
+Skill 由受信部署配置的 `skill_pins` 选择，SaaS 的任务指令不能指定包版本或安装位置。每项包含原 Skill 的完整固定版本 `source` 引用（`kind=skill`、ID、version、SHA-256、content_path）和安全的 `name`，最多 16 项。当前任务安装只接受 `skill-tar.v1` 包；单文件 `skill-markdown.v1` 会明确失败。清单中的名称必须与包内 `SKILL.md` 的 frontmatter name 相同。
+
+Worker 在首次 `claim` 用执行凭据提交选定 pins；平台验证本作用域的版本与摘要，将它们冻结到任务记录。成功 checkpoint 和之后的追问记录包含同一份 `skills`。同一 attempt 重试、替换 Worker 或后续配置不得改动或省略既定 pins，否则返回冲突。发布 Skill 新版本不会升级正在接续的会话；采用新版本需要部署方显式选择新的逻辑任务与对应作用域资产。
+
+每次执行都将包的原始清单、脚本、参考文件和权限恢复到新的私有运行时 HOME，先验证字节再安装，不覆盖已有目录。Codex 适配器使用私有 `CODEX_HOME/skills/<name>` 并通过规范绝对路径的原生 Skill 提及加载正文，保持 read-only、禁 shell 的设置。运行时自己的工作区 Skill 和平台中原有 Skill 版本不会改写；任务记录的 pins 表示本轮平台托管安装，工作区原生 Skill 仍按原规则发现和归档。受信 MCP 工具收到 `AGENTMOOR_SKILLS` 的名称到规范清单路径映射，模型不能为工具选择脚本路径。
+
 从首轮记录的 `assets` 取 `kind=session` 的 ID，或读取 `GET /v1/tasks/{id}/checkpoint` 的 `session_id`。SaaS 为每个新问题生成一个小写、带连字符的 UUID；网络重试沿用这个 UUID。以下请求只需原任务的提交凭据。
 
 ```http
