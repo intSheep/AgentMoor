@@ -21,6 +21,7 @@ from file_report_contract import run as run_file_report
 from pod_loss_contract import run as run_pod_loss
 from skill_report_contract import SkillCatalog, SkillReportClient, run as run_skill_report
 from runtimes import BINARIES, environment
+from persistent_contract import PersistentContract
 
 
 def check(*args, data=None):
@@ -30,6 +31,8 @@ def check(*args, data=None):
 def main(opts, temp):
     if opts.pod_loss or opts.skill_report:
         opts.file_report = True
+    if opts.backend == "postgres-s3" and (opts.pod_loss or not opts.file_report):
+        raise ValueError("PostgreSQL/S3 acceptance requires --file-report or --skill-report; Pod-loss is a separate local-backend contract")
     ns = "agentmoor-contract-" + uuid.uuid4().hex[:10]
     base = ["kubectl", "--context", opts.context, "--kubeconfig", opts.kubeconfig]
     def kube(*args, data=None):
@@ -69,9 +72,14 @@ def main(opts, temp):
     def apply_job(*args, **kwargs):
         kube("apply", "-f", "-", data=manifest_for(*args, **kwargs))
 
+    storage = None
     cancellation_scope = {**scope, "runtime": "cancel-job"}
     check(*base, "create", "namespace", ns)
     try:
+        if opts.backend == "postgres-s3":
+            kube("apply", "-f", HERE / "persistent.yaml")
+            storage = PersistentContract(kube, base, ns, forward)
+            storage.initialize()
         kube("create", "secret", "generic", "signing", "--from-file=" + str(platform / "signing.key"))
         kube("create", "secret", "generic", "tls", "--from-file=" + str(cert), "--from-file=" + str(key))
         kube("create", "configmap", "configuration", "--from-file=" + str(cfg), "--from-file=" + str(cert))
@@ -92,6 +100,9 @@ def main(opts, temp):
         workloads = (HERE / "workloads.yaml").read_text().replace("CONTRACT_IMAGE", opts.image)
         if opts.file_report:
             workloads = workloads.replace("/opt/test/model.py", "/opt/test/skill_model.py" if opts.skill_report else "/opt/test/file_model.py")
+        if storage:
+            native_env = "        env:\n" + "\n".join("        - " + json.dumps(item) for item in storage.api_environment()) + "\n"
+            workloads = workloads.replace("        ports: [{containerPort: 7401}]", native_env + "        ports: [{containerPort: 7401}]")
         kube("apply", "-f", "-", data=workloads)
         for deploy in ("agentmoor", "model"):
             kube("rollout", "status", "deployment/" + deploy, "--timeout=150s")
@@ -115,14 +126,20 @@ def main(opts, temp):
                             lambda: apply_job("no-skill", "cancel-executor",
                                               ["agentmoor", "run-task", "--config", "/config/worker.json"],
                                               config_name="cancel-configuration"))
-                run_skill_report(client, catalog, kube, temp, cert, wait_job, negative)
+                run_skill_report(client, catalog, kube, temp, cert, wait_job, negative,
+                                 queued_restart=storage.restart_queued_turn if storage else None)
+                if storage:
+                    storage.verify("skill-report")
                 return
             if opts.file_report:
                 negative = (issue("--submit", allocation=cancellation_scope),
                             lambda: apply_job("missing-input", "cancel-executor",
                                               ["agentmoor", "run-task", "--config", "/config/worker.json"],
                                               config_name="cancel-configuration"))
-                run_file_report(client, kube, temp, cert, wait_job, negative)
+                run_file_report(client, kube, temp, cert, wait_job, negative,
+                                queued_restart=storage.restart_queued_turn if storage else None)
+                if storage:
+                    storage.verify("file-report")
                 return
             client.submit()
             try:
@@ -223,22 +240,53 @@ def wait_job(kube, name, seconds=170):
     raise TimeoutError(name + " timed out: " + kube("get", "pods", "-o", "wide"))
 
 
+class ForwardedEndpoint(str):
+    """Stable local origin; infrastructure can reconnect after a service Pod restart."""
+
+
 @contextlib.contextmanager
-def forward(base, ns):
+def forward(base, ns, service="agentmoor", port=7401, scheme="https"):
     errors = tempfile.TemporaryFile(mode="w+")
-    proc = subprocess.Popen([*base, "-n", ns, "port-forward", "svc/agentmoor", ":7401",
-                             "--address", "127.0.0.1"], stdout=subprocess.PIPE, stderr=errors, text=True)
+    proc = None
+
+    def start(local=""):
+        process = subprocess.Popen([*base, "-n", ns, "port-forward", "svc/" + service, str(local) + ":" + str(port),
+                                    "--address", "127.0.0.1"], stdout=subprocess.PIPE, stderr=errors, text=True)
+        try:
+            if not select.select([process.stdout], [], [], 15)[0]:
+                raise TimeoutError("port-forward did not start")
+            match = re.search(r"127\.0\.0\.1:(\d+)", process.stdout.readline())
+            if not match:
+                raise RuntimeError("no forwarded port")
+            return process, match[1]
+        except Exception:
+            if process.poll() is None:
+                process.terminate()
+            process.wait(timeout=10)
+            process.stdout.close()
+            raise
+
+    def stop():
+        if proc is not None:
+            if proc.poll() is None:
+                proc.terminate()
+            proc.wait(timeout=10)
+            proc.stdout.close()
+
     try:
-        if not select.select([proc.stdout], [], [], 15)[0]:
-            raise TimeoutError("port-forward did not start")
-        match = re.search(r"127\.0\.0\.1:(\d+)", proc.stdout.readline())
-        if not match:
-            raise RuntimeError("no forwarded port")
-        yield "https://127.0.0.1:" + match[1]
+        proc, local = start()
+        endpoint = ForwardedEndpoint(scheme + "://127.0.0.1:" + local)
+
+        def reconnect():
+            nonlocal proc
+            stop()
+            proc, actual = start(local)
+            assert actual == local
+
+        endpoint.reconnect = reconnect
+        yield endpoint
     finally:
-        proc.terminate()
-        proc.wait(timeout=10)
-        proc.stdout.close()
+        stop()
         if sys.exc_info()[0] is not None:
             errors.seek(0)
             print(errors.read()[-1200:], file=sys.stderr)
@@ -252,6 +300,7 @@ if __name__ == "__main__":
     special = parser.add_mutually_exclusive_group()
     special.add_argument("--pod-loss", action="store_true")
     special.add_argument("--skill-report", action="store_true")
+    parser.add_argument("--backend", choices=("local", "postgres-s3"), default="local")
     for key in ("context", "kubeconfig", "image"):
         parser.add_argument("--" + key, required=True)
     with tempfile.TemporaryDirectory(prefix="agentmoor-saas-") as tmp:

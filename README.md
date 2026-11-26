@@ -48,6 +48,7 @@ make test-k8s       # Test delivery, cancellation, and cross-Pod follow-ups in a
 make test-k8s-file-report # Test Codex file tools and edits across fresh Pods
 make test-k8s-skills # Test pinned native Skills, their scripts, and cross-Pod loading
 make test-services  # Test PostgreSQL and S3-compatible storage with Docker Compose
+make test-k8s-persistent # Run Codex file/Skill workflows on PostgreSQL and S3, including API restart
 ```
 
 To try the Kubernetes workflow with Codex:
