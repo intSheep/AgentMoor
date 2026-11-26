@@ -1,0 +1,1570 @@
+{
+  "source_commit": "109b534a5e9d65dcd19ffb34cab4c118f18406b7",
+  "status": "passed",
+  "recorded_at_utc": "2026-11-26T15:33:36.297604+00:00",
+  "entrypoint": "make test-k8s-persistent-faults",
+  "exit_code": 0,
+  "same_namespace_database_and_bucket": true,
+  "fixture": {
+    "native_cli": "codex-cli 0.171.0-alpha.13",
+    "model": "scripted-responses",
+    "model_api_key_used": false,
+    "workspace_transfer": "tar-parts.v1",
+    "logical_workspace_format": "workspace-tar.v1",
+    "image": "agentmoor-contract:agentmoor-6bd972a03837-codex",
+    "image_id": "sha256:719d60dfaeeb3d69f992f53a284d07bfd0634c316fa1f419d2ea2f42367931ae",
+    "kubernetes_node_image": "kindest/node:v1.35.0"
+  },
+  "host_checks": {
+    "status": "passed",
+    "commands": [
+      "make fmt",
+      "make check",
+      "make demo"
+    ],
+    "source_tree_matches_commit": "109b534a5e9d65dcd19ffb34cab4c118f18406b7",
+    "timing": "Executed before the source commit was created, using the same Go/Python source tree; not claimed as a rerun after the documentation changes."
+  },
+  "interrupted_observation_delay_seconds": 1.366905428,
+  "pod_loss_result": {
+    "artifacts": [
+      {
+        "content_path": "/v1/content?id=out%2Freport.json&kind=artifact&version=1",
+        "id": "out/report.json",
+        "kind": "artifact",
+        "sha256": "0eedcaa0683c54040d1530ef5a8948574aa84cae40327ce6aa0f759c2f2e74a5",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2F158b1ff0-540d-4a40-88e1-fc6360576800%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/158b1ff0-540d-4a40-88e1-fc6360576800/out/report.json",
+        "kind": "artifact",
+        "sha256": "765749907ac4614335e6c320ab097caf6518453049650037439b17368099cc4b",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2F89d9a1f0-a885-4494-b892-9998ae6e5650%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/89d9a1f0-a885-4494-b892-9998ae6e5650/out/report.json",
+        "kind": "artifact",
+        "sha256": "9664dd0b4371e276488fa7237dc2f79f1542ceabfaf9b1ea227b758ce80a24f7",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2Fce194e94-288b-4ddb-a996-aad5cec9c5af%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/ce194e94-288b-4ddb-a996-aad5cec9c5af/out/report.json",
+        "kind": "artifact",
+        "sha256": "9664dd0b4371e276488fa7237dc2f79f1542ceabfaf9b1ea227b758ce80a24f7",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2F75ac1b8f-a793-41e6-be73-5a55d20d71f1%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/75ac1b8f-a793-41e6-be73-5a55d20d71f1/out/report.json",
+        "kind": "artifact",
+        "sha256": "9664dd0b4371e276488fa7237dc2f79f1542ceabfaf9b1ea227b758ce80a24f7",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2F5328c7db-f8f4-45bc-9c0f-127d061b41a4%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/5328c7db-f8f4-45bc-9c0f-127d061b41a4/out/report.json",
+        "kind": "artifact",
+        "sha256": "9664dd0b4371e276488fa7237dc2f79f1542ceabfaf9b1ea227b758ce80a24f7",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2Fb73f7e17-e7ab-4829-ad29-277ea68b1a91%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/b73f7e17-e7ab-4829-ad29-277ea68b1a91/out/report.json",
+        "kind": "artifact",
+        "sha256": "9664dd0b4371e276488fa7237dc2f79f1542ceabfaf9b1ea227b758ce80a24f7",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2Fa96c6c24-7c74-4097-8550-c3ddf03119de%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/a96c6c24-7c74-4097-8550-c3ddf03119de/out/report.json",
+        "kind": "artifact",
+        "sha256": "9664dd0b4371e276488fa7237dc2f79f1542ceabfaf9b1ea227b758ce80a24f7",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2Fcae727c2-ef5f-431b-9458-ff312c3eff18%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/cae727c2-ef5f-431b-9458-ff312c3eff18/out/report.json",
+        "kind": "artifact",
+        "sha256": "9664dd0b4371e276488fa7237dc2f79f1542ceabfaf9b1ea227b758ce80a24f7",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2F5a5c77c8-e3eb-4910-9aba-d8b4cf675f9a%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/5a5c77c8-e3eb-4910-9aba-d8b4cf675f9a/out/report.json",
+        "kind": "artifact",
+        "sha256": "9664dd0b4371e276488fa7237dc2f79f1542ceabfaf9b1ea227b758ce80a24f7",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2F82831226-766c-4dcd-99ac-6ae7f45ab863%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/82831226-766c-4dcd-99ac-6ae7f45ab863/out/report.json",
+        "kind": "artifact",
+        "sha256": "9664dd0b4371e276488fa7237dc2f79f1542ceabfaf9b1ea227b758ce80a24f7",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2F0dcf4a84-3583-441e-bbb0-62983bcd09c9%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/0dcf4a84-3583-441e-bbb0-62983bcd09c9/out/report.json",
+        "kind": "artifact",
+        "sha256": "9664dd0b4371e276488fa7237dc2f79f1542ceabfaf9b1ea227b758ce80a24f7",
+        "version": 1
+      }
+    ],
+    "business_rows": 2,
+    "checkpoint_preserved": true,
+    "cli": "codex-cli 0.171.0-alpha.13",
+    "deadline": "2026-11-26T15:30:25.760940572Z",
+    "expected_operations": [
+      "produce",
+      "revise",
+      "audit",
+      "audit",
+      "audit",
+      "audit",
+      "audit",
+      "audit",
+      "audit",
+      "audit",
+      "audit",
+      "audit"
+    ],
+    "failed_publication_pod_uids": [
+      "d31b85ff-015a-4b96-8951-32a641b498f1"
+    ],
+    "gc_scope": "24-hour history/pending protection; orphan expiry positive control remains in service tests",
+    "historical_revision_count": 44,
+    "interrupted_observed_at": "2026-11-26T15:30:27.127846+00:00",
+    "lost_pod_uid": "75690aa4-b76d-4bb8-b4a8-f1787db8080f",
+    "model": "scripted-responses",
+    "native_execution_counts": {
+      "16849883-d515-4194-bf54-7da6e7572fe9": 1,
+      "21dc62a1-28fc-4bd9-9290-5413d474ec3b": 1,
+      "3981ba78-5d58-4013-b0f3-d7527e1352ff": 1,
+      "3a97d7e5-7ada-4cd3-a9ec-5ab7a5871cc2": 1,
+      "4116ecf3-d9e2-4ff5-a1ce-34d0d3ad3562": 1,
+      "496c3929-ead7-493a-b26b-8ae615769804": 1,
+      "4df0071e-8bbd-47db-8f84-4205bed783af": 1,
+      "54860195-f983-4313-b91a-d9b39b2345b3": 1,
+      "75690aa4-b76d-4bb8-b4a8-f1787db8080f": 1,
+      "8d70505c-ccc5-47be-b3a0-4b42e34100cc": 1,
+      "9165118d-f074-4a24-9581-da7d21316dd8": 1,
+      "ce2ef82f-36de-4b49-9448-2654b962b407": 1,
+      "d31b85ff-015a-4b96-8951-32a641b498f1": 1,
+      "f46a06f3-8f7b-486c-8ca9-6e2e3d78046d": 1
+    },
+    "original_uuid_recreated_jobs": 0,
+    "original_uuid_replays": 2,
+    "production_timeout_seconds": 900,
+    "publication_faults": [
+      {
+        "barrier_gc": {
+          "gc": {
+            "removed": 0
+          },
+          "historical_revisions_verified": 8
+        },
+        "case_id": "begin-before",
+        "checkpoint_unchanged_at_barrier": true,
+        "frozen_change": {
+          "adapter_version": "0.5.0",
+          "base_version": 0,
+          "completeness": "persisted-files",
+          "format": "workspace-tar.v1",
+          "id": "turns/89d9a1f0-a885-4494-b892-9998ae6e5650/root",
+          "kind": "workspace",
+          "media_type": "application/x-tar",
+          "name": "root",
+          "origin": "runtime",
+          "runtime_version": "codex-cli 0.171.0-alpha.13",
+          "sha256": "c0c2424519114dc2370e71b8468c6e9cdf7eef0046c9a07c458edcd98a533512",
+          "size": 8192
+        },
+        "hit_count": 1,
+        "interrupted_sibling_events": 0,
+        "ledger": {
+          "armed_at": "2026-11-26T15:14:20.117153015Z",
+          "blocked": false,
+          "case_id": "begin-before",
+          "change": {
+            "adapter_version": "0.5.0",
+            "base_version": 0,
+            "completeness": "persisted-files",
+            "format": "workspace-tar.v1",
+            "id": "turns/89d9a1f0-a885-4494-b892-9998ae6e5650/root",
+            "kind": "workspace",
+            "media_type": "application/x-tar",
+            "name": "root",
+            "origin": "runtime",
+            "runtime_version": "codex-cli 0.171.0-alpha.13",
+            "sha256": "c0c2424519114dc2370e71b8468c6e9cdf7eef0046c9a07c458edcd98a533512",
+            "size": 8192
+          },
+          "consistent": true,
+          "events": [
+            {
+              "at": "2026-11-26T15:14:21.539685938Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:21.945338662Z",
+              "injected": true,
+              "operation": "8b1830961d4abb48d8c4a2496d6d7cd6d2e66c3a7bfdc9d1f9dd27637964ab30",
+              "path": "/v1/changes",
+              "stage": "begin"
+            },
+            {
+              "at": "2026-11-26T15:14:22.05228146Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:22.057181355Z",
+              "injected": false,
+              "operation": "8b1830961d4abb48d8c4a2496d6d7cd6d2e66c3a7bfdc9d1f9dd27637964ab30",
+              "path": "/v1/changes",
+              "stage": "begin",
+              "upstream_status": 200
+            },
+            {
+              "at": "2026-11-26T15:14:22.057598363Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:22.062063416Z",
+              "first_missing": "9664dd0b4371e276488fa7237dc2f79f1542ceabfaf9b1ea227b758ce80a24f7",
+              "injected": false,
+              "manifest_digest": "f73a362167da60ca71036fbb6d4e4e70e05e0b19718616f9adbf97bf5bdcdd47",
+              "missing_count": 3,
+              "operation": "8b1830961d4abb48d8c4a2496d6d7cd6d2e66c3a7bfdc9d1f9dd27637964ab30",
+              "path": "/v1/changes/8b1830961d4abb48d8c4a2496d6d7cd6d2e66c3a7bfdc9d1f9dd27637964ab30/parts",
+              "size": 801,
+              "stage": "manifest",
+              "upstream_status": 200,
+              "wire_sha256": "2527d8878488ba10e3eccb36ab3e4b624288e16bc81a008cbe2316f72ce82e65"
+            },
+            {
+              "at": "2026-11-26T15:14:22.062224961Z",
+              "body_sha256": "9664dd0b4371e276488fa7237dc2f79f1542ceabfaf9b1ea227b758ce80a24f7",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:22.068250088Z",
+              "injected": false,
+              "operation": "8b1830961d4abb48d8c4a2496d6d7cd6d2e66c3a7bfdc9d1f9dd27637964ab30",
+              "path": "/v1/changes/8b1830961d4abb48d8c4a2496d6d7cd6d2e66c3a7bfdc9d1f9dd27637964ab30/parts/9664dd0b4371e276488fa7237dc2f79f1542ceabfaf9b1ea227b758ce80a24f7",
+              "size": 124,
+              "stage": "part",
+              "upstream_status": 204
+            },
+            {
+              "at": "2026-11-26T15:14:22.062277087Z",
+              "body_sha256": "5516a3b44506131527256991e1d9cca6111241d38f0b65b48c7e0605f4145f71",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:22.069004021Z",
+              "injected": false,
+              "operation": "8b1830961d4abb48d8c4a2496d6d7cd6d2e66c3a7bfdc9d1f9dd27637964ab30",
+              "path": "/v1/changes/8b1830961d4abb48d8c4a2496d6d7cd6d2e66c3a7bfdc9d1f9dd27637964ab30/parts/5516a3b44506131527256991e1d9cca6111241d38f0b65b48c7e0605f4145f71",
+              "size": 38,
+              "stage": "part",
+              "upstream_status": 204
+            },
+            {
+              "at": "2026-11-26T15:14:22.06432313Z",
+              "body_sha256": "49c96672c1f8e02fde2400a5866bb2ebb5c92907120c05ce12b28be7d5cae960",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:22.072115378Z",
+              "injected": false,
+              "operation": "8b1830961d4abb48d8c4a2496d6d7cd6d2e66c3a7bfdc9d1f9dd27637964ab30",
+              "path": "/v1/changes/8b1830961d4abb48d8c4a2496d6d7cd6d2e66c3a7bfdc9d1f9dd27637964ab30/parts/49c96672c1f8e02fde2400a5866bb2ebb5c92907120c05ce12b28be7d5cae960",
+              "size": 432,
+              "stage": "part",
+              "upstream_status": 204
+            },
+            {
+              "at": "2026-11-26T15:14:22.072282298Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:22.076184881Z",
+              "injected": false,
+              "operation": "8b1830961d4abb48d8c4a2496d6d7cd6d2e66c3a7bfdc9d1f9dd27637964ab30",
+              "path": "/v1/changes/8b1830961d4abb48d8c4a2496d6d7cd6d2e66c3a7bfdc9d1f9dd27637964ab30/commit",
+              "stage": "commit",
+              "upstream_status": 200
+            }
+          ],
+          "hits": 1,
+          "hold_first": true,
+          "limit": 1,
+          "manifest_digest": "f73a362167da60ca71036fbb6d4e4e70e05e0b19718616f9adbf97bf5bdcdd47",
+          "operation": "8b1830961d4abb48d8c4a2496d6d7cd6d2e66c3a7bfdc9d1f9dd27637964ab30",
+          "part_target": "9664dd0b4371e276488fa7237dc2f79f1542ceabfaf9b1ea227b758ce80a24f7",
+          "stage": "begin",
+          "target": {
+            "id": "turns/89d9a1f0-a885-4494-b892-9998ae6e5650/root",
+            "kind": "workspace"
+          },
+          "timing": "before",
+          "wire_sha256": "2527d8878488ba10e3eccb36ab3e4b624288e16bc81a008cbe2316f72ce82e65"
+        },
+        "marker_mutation": {
+          "after_sha256": "62723b7538204f7e1a4ea09225fc4c2286a8e0f8385d9c4585a32b6ed798ce44",
+          "before_sha256": "f7245d487e6d2bd1c7695c215dc4a40ca936ef51cc3b5c409ee78b96b9d7cb2a",
+          "changed": true,
+          "path": "/run/task/work/state.json"
+        },
+        "native_exec_count": 1,
+        "outcome": "succeeded",
+        "pod_uid": "21dc62a1-28fc-4bd9-9290-5413d474ec3b",
+        "turn_id": "89d9a1f0-a885-4494-b892-9998ae6e5650"
+      },
+      {
+        "barrier_gc": {
+          "gc": {
+            "removed": 0
+          },
+          "historical_revisions_verified": 12
+        },
+        "case_id": "begin-after",
+        "checkpoint_unchanged_at_barrier": true,
+        "frozen_change": {
+          "adapter_version": "0.5.0",
+          "base_version": 0,
+          "completeness": "persisted-files",
+          "format": "workspace-tar.v1",
+          "id": "turns/ce194e94-288b-4ddb-a996-aad5cec9c5af/root",
+          "kind": "workspace",
+          "media_type": "application/x-tar",
+          "name": "root",
+          "origin": "runtime",
+          "runtime_version": "codex-cli 0.171.0-alpha.13",
+          "sha256": "b78d631c209386d8f10478ebc95b9259facafb214c68522d3102d8a386ccdc2b",
+          "size": 8704
+        },
+        "hit_count": 1,
+        "interrupted_sibling_events": 0,
+        "ledger": {
+          "armed_at": "2026-11-26T15:14:25.406414004Z",
+          "blocked": false,
+          "case_id": "begin-after",
+          "change": {
+            "adapter_version": "0.5.0",
+            "base_version": 0,
+            "completeness": "persisted-files",
+            "format": "workspace-tar.v1",
+            "id": "turns/ce194e94-288b-4ddb-a996-aad5cec9c5af/root",
+            "kind": "workspace",
+            "media_type": "application/x-tar",
+            "name": "root",
+            "origin": "runtime",
+            "runtime_version": "codex-cli 0.171.0-alpha.13",
+            "sha256": "b78d631c209386d8f10478ebc95b9259facafb214c68522d3102d8a386ccdc2b",
+            "size": 8704
+          },
+          "consistent": true,
+          "events": [
+            {
+              "at": "2026-11-26T15:14:27.896386195Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:28.32681665Z",
+              "injected": true,
+              "operation": "40be31f3eab4e92cbf76bedb782fdf3342fc3d2933ee133ecf7f0c1e0adf5509",
+              "path": "/v1/changes",
+              "stage": "begin",
+              "upstream_status": 200
+            },
+            {
+              "at": "2026-11-26T15:14:28.430126787Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:28.433042265Z",
+              "injected": false,
+              "operation": "40be31f3eab4e92cbf76bedb782fdf3342fc3d2933ee133ecf7f0c1e0adf5509",
+              "path": "/v1/changes",
+              "stage": "begin",
+              "upstream_status": 200
+            },
+            {
+              "at": "2026-11-26T15:14:28.433869324Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:28.442187208Z",
+              "first_missing": "6ed477125926766221ec7ed0d79c785ebdf32bd56d1177df82d29e453997f733",
+              "injected": false,
+              "manifest_digest": "cc01fba3d44cf0d3385a52247b5ed607d5aa48281ea04bdd4cfe8928fbd79f50",
+              "missing_count": 1,
+              "operation": "40be31f3eab4e92cbf76bedb782fdf3342fc3d2933ee133ecf7f0c1e0adf5509",
+              "path": "/v1/changes/40be31f3eab4e92cbf76bedb782fdf3342fc3d2933ee133ecf7f0c1e0adf5509/parts",
+              "size": 798,
+              "stage": "manifest",
+              "upstream_status": 200,
+              "wire_sha256": "5a98ed9281037638bd41c5f4b750393203b76b22a3dd07d0010bf2a4de638d3a"
+            },
+            {
+              "at": "2026-11-26T15:14:28.442376296Z",
+              "body_sha256": "6ed477125926766221ec7ed0d79c785ebdf32bd56d1177df82d29e453997f733",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:28.446143208Z",
+              "injected": false,
+              "operation": "40be31f3eab4e92cbf76bedb782fdf3342fc3d2933ee133ecf7f0c1e0adf5509",
+              "path": "/v1/changes/40be31f3eab4e92cbf76bedb782fdf3342fc3d2933ee133ecf7f0c1e0adf5509/parts/6ed477125926766221ec7ed0d79c785ebdf32bd56d1177df82d29e453997f733",
+              "size": 575,
+              "stage": "part",
+              "upstream_status": 204
+            },
+            {
+              "at": "2026-11-26T15:14:28.446234877Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:28.450545384Z",
+              "injected": false,
+              "operation": "40be31f3eab4e92cbf76bedb782fdf3342fc3d2933ee133ecf7f0c1e0adf5509",
+              "path": "/v1/changes/40be31f3eab4e92cbf76bedb782fdf3342fc3d2933ee133ecf7f0c1e0adf5509/commit",
+              "stage": "commit",
+              "upstream_status": 200
+            }
+          ],
+          "hits": 1,
+          "hold_first": true,
+          "limit": 1,
+          "manifest_digest": "cc01fba3d44cf0d3385a52247b5ed607d5aa48281ea04bdd4cfe8928fbd79f50",
+          "operation": "40be31f3eab4e92cbf76bedb782fdf3342fc3d2933ee133ecf7f0c1e0adf5509",
+          "part_target": "6ed477125926766221ec7ed0d79c785ebdf32bd56d1177df82d29e453997f733",
+          "stage": "begin",
+          "target": {
+            "id": "turns/ce194e94-288b-4ddb-a996-aad5cec9c5af/root",
+            "kind": "workspace"
+          },
+          "timing": "after",
+          "wire_sha256": "5a98ed9281037638bd41c5f4b750393203b76b22a3dd07d0010bf2a4de638d3a"
+        },
+        "marker_mutation": {
+          "after_sha256": "a3f5c9d56bab3161eef2bb706a54baa316d5488966f3cc85a6f28bd1594ef6bb",
+          "before_sha256": "f7245d487e6d2bd1c7695c215dc4a40ca936ef51cc3b5c409ee78b96b9d7cb2a",
+          "changed": true,
+          "path": "/run/task/work/state.json"
+        },
+        "native_exec_count": 1,
+        "outcome": "succeeded",
+        "pod_uid": "16849883-d515-4194-bf54-7da6e7572fe9",
+        "turn_id": "ce194e94-288b-4ddb-a996-aad5cec9c5af"
+      },
+      {
+        "barrier_gc": {
+          "gc": {
+            "removed": 0
+          },
+          "historical_revisions_verified": 16
+        },
+        "case_id": "manifest-before",
+        "checkpoint_unchanged_at_barrier": true,
+        "frozen_change": {
+          "adapter_version": "0.5.0",
+          "base_version": 0,
+          "completeness": "persisted-files",
+          "format": "workspace-tar.v1",
+          "id": "turns/75ac1b8f-a793-41e6-be73-5a55d20d71f1/root",
+          "kind": "workspace",
+          "media_type": "application/x-tar",
+          "name": "root",
+          "origin": "runtime",
+          "runtime_version": "codex-cli 0.171.0-alpha.13",
+          "sha256": "bc91edc72fd9c1c40e5727578f897ac3aec5908192c185c5ac83cd9f82e892f1",
+          "size": 8704
+        },
+        "hit_count": 1,
+        "interrupted_sibling_events": 0,
+        "ledger": {
+          "armed_at": "2026-11-26T15:14:32.282882225Z",
+          "blocked": false,
+          "case_id": "manifest-before",
+          "change": {
+            "adapter_version": "0.5.0",
+            "base_version": 0,
+            "completeness": "persisted-files",
+            "format": "workspace-tar.v1",
+            "id": "turns/75ac1b8f-a793-41e6-be73-5a55d20d71f1/root",
+            "kind": "workspace",
+            "media_type": "application/x-tar",
+            "name": "root",
+            "origin": "runtime",
+            "runtime_version": "codex-cli 0.171.0-alpha.13",
+            "sha256": "bc91edc72fd9c1c40e5727578f897ac3aec5908192c185c5ac83cd9f82e892f1",
+            "size": 8704
+          },
+          "consistent": true,
+          "events": [
+            {
+              "at": "2026-11-26T15:14:34.469930484Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:34.474182032Z",
+              "injected": false,
+              "operation": "3ea467253bbe6e199e54abb156fead94187e335394863531cd66b9a33fe97068",
+              "path": "/v1/changes",
+              "stage": "begin",
+              "upstream_status": 200
+            },
+            {
+              "at": "2026-11-26T15:14:34.475302889Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:34.801334016Z",
+              "injected": true,
+              "manifest_digest": "d3ab726984fbf55015210eb6808fa176090ba3cea08c81e99447c1da1fe4208f",
+              "operation": "3ea467253bbe6e199e54abb156fead94187e335394863531cd66b9a33fe97068",
+              "path": "/v1/changes/3ea467253bbe6e199e54abb156fead94187e335394863531cd66b9a33fe97068/parts",
+              "size": 805,
+              "stage": "manifest",
+              "wire_sha256": "ec5b282576204b75d2fc79bb9439f53646396c1e89b9882ad5ff0bc988df04ae"
+            },
+            {
+              "at": "2026-11-26T15:14:34.904096892Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:34.907640759Z",
+              "injected": false,
+              "operation": "3ea467253bbe6e199e54abb156fead94187e335394863531cd66b9a33fe97068",
+              "path": "/v1/changes",
+              "stage": "begin",
+              "upstream_status": 200
+            },
+            {
+              "at": "2026-11-26T15:14:34.908281564Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:34.913042748Z",
+              "first_missing": "ca6ab16b41d7e80a2acd763bfe7a6d25ed305c7243355f9743c1bdcb3cc93ebc",
+              "injected": false,
+              "manifest_digest": "d3ab726984fbf55015210eb6808fa176090ba3cea08c81e99447c1da1fe4208f",
+              "missing_count": 1,
+              "operation": "3ea467253bbe6e199e54abb156fead94187e335394863531cd66b9a33fe97068",
+              "path": "/v1/changes/3ea467253bbe6e199e54abb156fead94187e335394863531cd66b9a33fe97068/parts",
+              "size": 805,
+              "stage": "manifest",
+              "upstream_status": 200,
+              "wire_sha256": "ec5b282576204b75d2fc79bb9439f53646396c1e89b9882ad5ff0bc988df04ae"
+            },
+            {
+              "at": "2026-11-26T15:14:34.913185876Z",
+              "body_sha256": "ca6ab16b41d7e80a2acd763bfe7a6d25ed305c7243355f9743c1bdcb3cc93ebc",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:34.916909663Z",
+              "injected": false,
+              "operation": "3ea467253bbe6e199e54abb156fead94187e335394863531cd66b9a33fe97068",
+              "path": "/v1/changes/3ea467253bbe6e199e54abb156fead94187e335394863531cd66b9a33fe97068/parts/ca6ab16b41d7e80a2acd763bfe7a6d25ed305c7243355f9743c1bdcb3cc93ebc",
+              "size": 718,
+              "stage": "part",
+              "upstream_status": 204
+            },
+            {
+              "at": "2026-11-26T15:14:34.916998623Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:34.92059624Z",
+              "injected": false,
+              "operation": "3ea467253bbe6e199e54abb156fead94187e335394863531cd66b9a33fe97068",
+              "path": "/v1/changes/3ea467253bbe6e199e54abb156fead94187e335394863531cd66b9a33fe97068/commit",
+              "stage": "commit",
+              "upstream_status": 200
+            }
+          ],
+          "hits": 1,
+          "hold_first": true,
+          "limit": 1,
+          "manifest_digest": "d3ab726984fbf55015210eb6808fa176090ba3cea08c81e99447c1da1fe4208f",
+          "operation": "3ea467253bbe6e199e54abb156fead94187e335394863531cd66b9a33fe97068",
+          "part_target": "ca6ab16b41d7e80a2acd763bfe7a6d25ed305c7243355f9743c1bdcb3cc93ebc",
+          "stage": "manifest",
+          "target": {
+            "id": "turns/75ac1b8f-a793-41e6-be73-5a55d20d71f1/root",
+            "kind": "workspace"
+          },
+          "timing": "before",
+          "wire_sha256": "ec5b282576204b75d2fc79bb9439f53646396c1e89b9882ad5ff0bc988df04ae"
+        },
+        "marker_mutation": {
+          "after_sha256": "fa330f6095bbf660a3dbe52e6af7ac581cc549b16cec2e01ee0a76922983ad53",
+          "before_sha256": "f7245d487e6d2bd1c7695c215dc4a40ca936ef51cc3b5c409ee78b96b9d7cb2a",
+          "changed": true,
+          "path": "/run/task/work/state.json"
+        },
+        "native_exec_count": 1,
+        "outcome": "succeeded",
+        "pod_uid": "496c3929-ead7-493a-b26b-8ae615769804",
+        "turn_id": "75ac1b8f-a793-41e6-be73-5a55d20d71f1"
+      },
+      {
+        "barrier_gc": {
+          "gc": {
+            "removed": 0
+          },
+          "historical_revisions_verified": 20
+        },
+        "case_id": "manifest-after",
+        "checkpoint_unchanged_at_barrier": true,
+        "frozen_change": {
+          "adapter_version": "0.5.0",
+          "base_version": 0,
+          "completeness": "persisted-files",
+          "format": "workspace-tar.v1",
+          "id": "turns/5328c7db-f8f4-45bc-9c0f-127d061b41a4/root",
+          "kind": "workspace",
+          "media_type": "application/x-tar",
+          "name": "root",
+          "origin": "runtime",
+          "runtime_version": "codex-cli 0.171.0-alpha.13",
+          "sha256": "94b69c285b1f850f020c3f00f4664329e229fa5ed82d8a41fe4eb532e5ebe042",
+          "size": 8704
+        },
+        "hit_count": 1,
+        "interrupted_sibling_events": 0,
+        "ledger": {
+          "armed_at": "2026-11-26T15:14:38.320809674Z",
+          "blocked": false,
+          "case_id": "manifest-after",
+          "change": {
+            "adapter_version": "0.5.0",
+            "base_version": 0,
+            "completeness": "persisted-files",
+            "format": "workspace-tar.v1",
+            "id": "turns/5328c7db-f8f4-45bc-9c0f-127d061b41a4/root",
+            "kind": "workspace",
+            "media_type": "application/x-tar",
+            "name": "root",
+            "origin": "runtime",
+            "runtime_version": "codex-cli 0.171.0-alpha.13",
+            "sha256": "94b69c285b1f850f020c3f00f4664329e229fa5ed82d8a41fe4eb532e5ebe042",
+            "size": 8704
+          },
+          "consistent": true,
+          "events": [
+            {
+              "at": "2026-11-26T15:14:40.963587463Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:40.966707237Z",
+              "injected": false,
+              "operation": "435f52aa56c0a778c992b8f45b809cc5b23ce6b756ddae9a524aa9a57d380cd6",
+              "path": "/v1/changes",
+              "stage": "begin",
+              "upstream_status": 200
+            },
+            {
+              "at": "2026-11-26T15:14:40.967678174Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:41.695075101Z",
+              "first_missing": "7021d263c49e9307c17e7480e8229d08cd69de31e24c1fda19be7e1aee19bda2",
+              "injected": true,
+              "manifest_digest": "80b5216e69f7e56d70f2e594abbac0ed0e338757649594592a7d190b4f113ffc",
+              "missing_count": 1,
+              "operation": "435f52aa56c0a778c992b8f45b809cc5b23ce6b756ddae9a524aa9a57d380cd6",
+              "path": "/v1/changes/435f52aa56c0a778c992b8f45b809cc5b23ce6b756ddae9a524aa9a57d380cd6/parts",
+              "size": 802,
+              "stage": "manifest",
+              "upstream_status": 200,
+              "wire_sha256": "6c85b7c0a6a0d388b7e542b0d625a82dc28f2f694ed355c7ebfb28dc22709950"
+            },
+            {
+              "at": "2026-11-26T15:14:41.79828407Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:41.800590577Z",
+              "injected": false,
+              "operation": "435f52aa56c0a778c992b8f45b809cc5b23ce6b756ddae9a524aa9a57d380cd6",
+              "path": "/v1/changes",
+              "stage": "begin",
+              "upstream_status": 200
+            },
+            {
+              "at": "2026-11-26T15:14:41.801574389Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:41.804792874Z",
+              "first_missing": "7021d263c49e9307c17e7480e8229d08cd69de31e24c1fda19be7e1aee19bda2",
+              "injected": false,
+              "manifest_digest": "80b5216e69f7e56d70f2e594abbac0ed0e338757649594592a7d190b4f113ffc",
+              "missing_count": 1,
+              "operation": "435f52aa56c0a778c992b8f45b809cc5b23ce6b756ddae9a524aa9a57d380cd6",
+              "path": "/v1/changes/435f52aa56c0a778c992b8f45b809cc5b23ce6b756ddae9a524aa9a57d380cd6/parts",
+              "size": 802,
+              "stage": "manifest",
+              "upstream_status": 200,
+              "wire_sha256": "6c85b7c0a6a0d388b7e542b0d625a82dc28f2f694ed355c7ebfb28dc22709950"
+            },
+            {
+              "at": "2026-11-26T15:14:41.804963419Z",
+              "body_sha256": "7021d263c49e9307c17e7480e8229d08cd69de31e24c1fda19be7e1aee19bda2",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:41.808438617Z",
+              "injected": false,
+              "operation": "435f52aa56c0a778c992b8f45b809cc5b23ce6b756ddae9a524aa9a57d380cd6",
+              "path": "/v1/changes/435f52aa56c0a778c992b8f45b809cc5b23ce6b756ddae9a524aa9a57d380cd6/parts/7021d263c49e9307c17e7480e8229d08cd69de31e24c1fda19be7e1aee19bda2",
+              "size": 861,
+              "stage": "part",
+              "upstream_status": 204
+            },
+            {
+              "at": "2026-11-26T15:14:41.80853887Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:41.812554829Z",
+              "injected": false,
+              "operation": "435f52aa56c0a778c992b8f45b809cc5b23ce6b756ddae9a524aa9a57d380cd6",
+              "path": "/v1/changes/435f52aa56c0a778c992b8f45b809cc5b23ce6b756ddae9a524aa9a57d380cd6/commit",
+              "stage": "commit",
+              "upstream_status": 200
+            }
+          ],
+          "hits": 1,
+          "hold_first": true,
+          "limit": 1,
+          "manifest_digest": "80b5216e69f7e56d70f2e594abbac0ed0e338757649594592a7d190b4f113ffc",
+          "operation": "435f52aa56c0a778c992b8f45b809cc5b23ce6b756ddae9a524aa9a57d380cd6",
+          "part_target": "7021d263c49e9307c17e7480e8229d08cd69de31e24c1fda19be7e1aee19bda2",
+          "stage": "manifest",
+          "target": {
+            "id": "turns/5328c7db-f8f4-45bc-9c0f-127d061b41a4/root",
+            "kind": "workspace"
+          },
+          "timing": "after",
+          "wire_sha256": "6c85b7c0a6a0d388b7e542b0d625a82dc28f2f694ed355c7ebfb28dc22709950"
+        },
+        "marker_mutation": {
+          "after_sha256": "def5f92fd23865b29269b94e97f7ec73d34d6999b44d082d17b5f08f1b374952",
+          "before_sha256": "f7245d487e6d2bd1c7695c215dc4a40ca936ef51cc3b5c409ee78b96b9d7cb2a",
+          "changed": true,
+          "path": "/run/task/work/state.json"
+        },
+        "native_exec_count": 1,
+        "outcome": "succeeded",
+        "pod_uid": "4df0071e-8bbd-47db-8f84-4205bed783af",
+        "turn_id": "5328c7db-f8f4-45bc-9c0f-127d061b41a4"
+      },
+      {
+        "barrier_gc": {
+          "gc": {
+            "removed": 0
+          },
+          "historical_revisions_verified": 24
+        },
+        "case_id": "part-before",
+        "checkpoint_unchanged_at_barrier": true,
+        "frozen_change": {
+          "adapter_version": "0.5.0",
+          "base_version": 0,
+          "completeness": "persisted-files",
+          "format": "workspace-tar.v1",
+          "id": "turns/b73f7e17-e7ab-4829-ad29-277ea68b1a91/root",
+          "kind": "workspace",
+          "media_type": "application/x-tar",
+          "name": "root",
+          "origin": "runtime",
+          "runtime_version": "codex-cli 0.171.0-alpha.13",
+          "sha256": "d9a08ba12621b5ff23c71c807e59f423e9d9c6b3e392ede425c136284321917f",
+          "size": 8704
+        },
+        "hit_count": 1,
+        "interrupted_sibling_events": 0,
+        "ledger": {
+          "armed_at": "2026-11-26T15:14:45.475664266Z",
+          "blocked": false,
+          "case_id": "part-before",
+          "change": {
+            "adapter_version": "0.5.0",
+            "base_version": 0,
+            "completeness": "persisted-files",
+            "format": "workspace-tar.v1",
+            "id": "turns/b73f7e17-e7ab-4829-ad29-277ea68b1a91/root",
+            "kind": "workspace",
+            "media_type": "application/x-tar",
+            "name": "root",
+            "origin": "runtime",
+            "runtime_version": "codex-cli 0.171.0-alpha.13",
+            "sha256": "d9a08ba12621b5ff23c71c807e59f423e9d9c6b3e392ede425c136284321917f",
+            "size": 8704
+          },
+          "consistent": true,
+          "events": [
+            {
+              "at": "2026-11-26T15:14:47.85553176Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:47.859596762Z",
+              "injected": false,
+              "operation": "a9863d34a59efcd449797615dd4b4bf90d61a93f27d33b00e366c0f7803ef5f4",
+              "path": "/v1/changes",
+              "stage": "begin",
+              "upstream_status": 200
+            },
+            {
+              "at": "2026-11-26T15:14:47.860607492Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:47.867741809Z",
+              "first_missing": "7250d9668fda5adc9392d2626fff125eb49d1e67e2993e91d7d0bbd99c4a5ab5",
+              "injected": false,
+              "manifest_digest": "6b7cf548d9b99a8cb9ce11b1f7874302e469f3140ce766f924d8197898c40d18",
+              "missing_count": 1,
+              "operation": "a9863d34a59efcd449797615dd4b4bf90d61a93f27d33b00e366c0f7803ef5f4",
+              "path": "/v1/changes/a9863d34a59efcd449797615dd4b4bf90d61a93f27d33b00e366c0f7803ef5f4/parts",
+              "size": 803,
+              "stage": "manifest",
+              "upstream_status": 200,
+              "wire_sha256": "878710ea95431bddfea2025c75e1e33ef37fba74f57096973202e91a82380024"
+            },
+            {
+              "at": "2026-11-26T15:14:47.867908646Z",
+              "body_sha256": "7250d9668fda5adc9392d2626fff125eb49d1e67e2993e91d7d0bbd99c4a5ab5",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:48.518690123Z",
+              "injected": true,
+              "operation": "a9863d34a59efcd449797615dd4b4bf90d61a93f27d33b00e366c0f7803ef5f4",
+              "path": "/v1/changes/a9863d34a59efcd449797615dd4b4bf90d61a93f27d33b00e366c0f7803ef5f4/parts/7250d9668fda5adc9392d2626fff125eb49d1e67e2993e91d7d0bbd99c4a5ab5",
+              "size": 1004,
+              "stage": "part"
+            },
+            {
+              "at": "2026-11-26T15:14:48.61952425Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:48.621704255Z",
+              "injected": false,
+              "operation": "a9863d34a59efcd449797615dd4b4bf90d61a93f27d33b00e366c0f7803ef5f4",
+              "path": "/v1/changes",
+              "stage": "begin",
+              "upstream_status": 200
+            },
+            {
+              "at": "2026-11-26T15:14:48.622484521Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:48.625759424Z",
+              "first_missing": "7250d9668fda5adc9392d2626fff125eb49d1e67e2993e91d7d0bbd99c4a5ab5",
+              "injected": false,
+              "manifest_digest": "6b7cf548d9b99a8cb9ce11b1f7874302e469f3140ce766f924d8197898c40d18",
+              "missing_count": 1,
+              "operation": "a9863d34a59efcd449797615dd4b4bf90d61a93f27d33b00e366c0f7803ef5f4",
+              "path": "/v1/changes/a9863d34a59efcd449797615dd4b4bf90d61a93f27d33b00e366c0f7803ef5f4/parts",
+              "size": 803,
+              "stage": "manifest",
+              "upstream_status": 200,
+              "wire_sha256": "878710ea95431bddfea2025c75e1e33ef37fba74f57096973202e91a82380024"
+            },
+            {
+              "at": "2026-11-26T15:14:48.62591776Z",
+              "body_sha256": "7250d9668fda5adc9392d2626fff125eb49d1e67e2993e91d7d0bbd99c4a5ab5",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:48.62970009Z",
+              "injected": false,
+              "operation": "a9863d34a59efcd449797615dd4b4bf90d61a93f27d33b00e366c0f7803ef5f4",
+              "path": "/v1/changes/a9863d34a59efcd449797615dd4b4bf90d61a93f27d33b00e366c0f7803ef5f4/parts/7250d9668fda5adc9392d2626fff125eb49d1e67e2993e91d7d0bbd99c4a5ab5",
+              "size": 1004,
+              "stage": "part",
+              "upstream_status": 204
+            },
+            {
+              "at": "2026-11-26T15:14:48.629792759Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:48.633570005Z",
+              "injected": false,
+              "operation": "a9863d34a59efcd449797615dd4b4bf90d61a93f27d33b00e366c0f7803ef5f4",
+              "path": "/v1/changes/a9863d34a59efcd449797615dd4b4bf90d61a93f27d33b00e366c0f7803ef5f4/commit",
+              "stage": "commit",
+              "upstream_status": 200
+            }
+          ],
+          "hits": 1,
+          "hold_first": true,
+          "limit": 1,
+          "manifest_digest": "6b7cf548d9b99a8cb9ce11b1f7874302e469f3140ce766f924d8197898c40d18",
+          "operation": "a9863d34a59efcd449797615dd4b4bf90d61a93f27d33b00e366c0f7803ef5f4",
+          "part_target": "7250d9668fda5adc9392d2626fff125eb49d1e67e2993e91d7d0bbd99c4a5ab5",
+          "stage": "part",
+          "target": {
+            "id": "turns/b73f7e17-e7ab-4829-ad29-277ea68b1a91/root",
+            "kind": "workspace"
+          },
+          "timing": "before",
+          "wire_sha256": "878710ea95431bddfea2025c75e1e33ef37fba74f57096973202e91a82380024"
+        },
+        "marker_mutation": {
+          "after_sha256": "432076b531bc928e95d1e1a17d4fb1d96ae7f1bcedbbe008b35abcece19b6b7e",
+          "before_sha256": "f7245d487e6d2bd1c7695c215dc4a40ca936ef51cc3b5c409ee78b96b9d7cb2a",
+          "changed": true,
+          "path": "/run/task/work/state.json"
+        },
+        "native_exec_count": 1,
+        "outcome": "succeeded",
+        "pod_uid": "3981ba78-5d58-4013-b0f3-d7527e1352ff",
+        "turn_id": "b73f7e17-e7ab-4829-ad29-277ea68b1a91"
+      },
+      {
+        "barrier_gc": {
+          "gc": {
+            "removed": 0
+          },
+          "historical_revisions_verified": 28
+        },
+        "case_id": "part-after",
+        "checkpoint_unchanged_at_barrier": true,
+        "frozen_change": {
+          "adapter_version": "0.5.0",
+          "base_version": 0,
+          "completeness": "persisted-files",
+          "format": "workspace-tar.v1",
+          "id": "turns/a96c6c24-7c74-4097-8550-c3ddf03119de/root",
+          "kind": "workspace",
+          "media_type": "application/x-tar",
+          "name": "root",
+          "origin": "runtime",
+          "runtime_version": "codex-cli 0.171.0-alpha.13",
+          "sha256": "9e65108d82c4b7e71fc1f97d17d4cf90cb499d2b45bc372db274ccec226f521b",
+          "size": 9216
+        },
+        "hit_count": 1,
+        "interrupted_sibling_events": 0,
+        "ledger": {
+          "armed_at": "2026-11-26T15:14:52.507077339Z",
+          "blocked": false,
+          "case_id": "part-after",
+          "change": {
+            "adapter_version": "0.5.0",
+            "base_version": 0,
+            "completeness": "persisted-files",
+            "format": "workspace-tar.v1",
+            "id": "turns/a96c6c24-7c74-4097-8550-c3ddf03119de/root",
+            "kind": "workspace",
+            "media_type": "application/x-tar",
+            "name": "root",
+            "origin": "runtime",
+            "runtime_version": "codex-cli 0.171.0-alpha.13",
+            "sha256": "9e65108d82c4b7e71fc1f97d17d4cf90cb499d2b45bc372db274ccec226f521b",
+            "size": 9216
+          },
+          "consistent": true,
+          "events": [
+            {
+              "at": "2026-11-26T15:14:54.468685176Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:54.471847326Z",
+              "injected": false,
+              "operation": "bc30ccc0007c4890c0754192d23c98c5ffa21c4b9a56cdc68c6c55eb2b4cc471",
+              "path": "/v1/changes",
+              "stage": "begin",
+              "upstream_status": 200
+            },
+            {
+              "at": "2026-11-26T15:14:54.47274147Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:54.477119562Z",
+              "first_missing": "2c460890f4aa2b536146560607c5859680cb198aff2c3cb7e74ac684934995e2",
+              "injected": false,
+              "manifest_digest": "9df524c54c292fecbe1b877539728dde44960be8ade79ffab83394d17399ce01",
+              "missing_count": 1,
+              "operation": "bc30ccc0007c4890c0754192d23c98c5ffa21c4b9a56cdc68c6c55eb2b4cc471",
+              "path": "/v1/changes/bc30ccc0007c4890c0754192d23c98c5ffa21c4b9a56cdc68c6c55eb2b4cc471/parts",
+              "size": 805,
+              "stage": "manifest",
+              "upstream_status": 200,
+              "wire_sha256": "ce36f6fa5a747774a0302a77fdc98a3871cfa15524c29de617847fd03a60cc30"
+            },
+            {
+              "at": "2026-11-26T15:14:54.477288357Z",
+              "body_sha256": "2c460890f4aa2b536146560607c5859680cb198aff2c3cb7e74ac684934995e2",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:55.10044018Z",
+              "injected": true,
+              "operation": "bc30ccc0007c4890c0754192d23c98c5ffa21c4b9a56cdc68c6c55eb2b4cc471",
+              "path": "/v1/changes/bc30ccc0007c4890c0754192d23c98c5ffa21c4b9a56cdc68c6c55eb2b4cc471/parts/2c460890f4aa2b536146560607c5859680cb198aff2c3cb7e74ac684934995e2",
+              "size": 1147,
+              "stage": "part",
+              "upstream_status": 204
+            },
+            {
+              "at": "2026-11-26T15:14:55.202194172Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:55.204438901Z",
+              "injected": false,
+              "operation": "bc30ccc0007c4890c0754192d23c98c5ffa21c4b9a56cdc68c6c55eb2b4cc471",
+              "path": "/v1/changes",
+              "stage": "begin",
+              "upstream_status": 200
+            },
+            {
+              "at": "2026-11-26T15:14:55.205088407Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:55.211417508Z",
+              "injected": false,
+              "manifest_digest": "9df524c54c292fecbe1b877539728dde44960be8ade79ffab83394d17399ce01",
+              "operation": "bc30ccc0007c4890c0754192d23c98c5ffa21c4b9a56cdc68c6c55eb2b4cc471",
+              "path": "/v1/changes/bc30ccc0007c4890c0754192d23c98c5ffa21c4b9a56cdc68c6c55eb2b4cc471/parts",
+              "size": 805,
+              "stage": "manifest",
+              "upstream_status": 200,
+              "wire_sha256": "ce36f6fa5a747774a0302a77fdc98a3871cfa15524c29de617847fd03a60cc30"
+            },
+            {
+              "at": "2026-11-26T15:14:55.211524176Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:14:55.21802782Z",
+              "injected": false,
+              "operation": "bc30ccc0007c4890c0754192d23c98c5ffa21c4b9a56cdc68c6c55eb2b4cc471",
+              "path": "/v1/changes/bc30ccc0007c4890c0754192d23c98c5ffa21c4b9a56cdc68c6c55eb2b4cc471/commit",
+              "stage": "commit",
+              "upstream_status": 200
+            }
+          ],
+          "hits": 1,
+          "hold_first": true,
+          "limit": 1,
+          "manifest_digest": "9df524c54c292fecbe1b877539728dde44960be8ade79ffab83394d17399ce01",
+          "operation": "bc30ccc0007c4890c0754192d23c98c5ffa21c4b9a56cdc68c6c55eb2b4cc471",
+          "part_target": "2c460890f4aa2b536146560607c5859680cb198aff2c3cb7e74ac684934995e2",
+          "stage": "part",
+          "target": {
+            "id": "turns/a96c6c24-7c74-4097-8550-c3ddf03119de/root",
+            "kind": "workspace"
+          },
+          "timing": "after",
+          "wire_sha256": "ce36f6fa5a747774a0302a77fdc98a3871cfa15524c29de617847fd03a60cc30"
+        },
+        "marker_mutation": {
+          "after_sha256": "60c4b8c079c9c1ff5b84242519ddd269299a1eb071a9f0f1d411e7ae6fab3214",
+          "before_sha256": "f7245d487e6d2bd1c7695c215dc4a40ca936ef51cc3b5c409ee78b96b9d7cb2a",
+          "changed": true,
+          "path": "/run/task/work/state.json"
+        },
+        "native_exec_count": 1,
+        "outcome": "succeeded",
+        "pod_uid": "4116ecf3-d9e2-4ff5-a1ce-34d0d3ad3562",
+        "turn_id": "a96c6c24-7c74-4097-8550-c3ddf03119de"
+      },
+      {
+        "barrier_gc": {
+          "gc": {
+            "removed": 0
+          },
+          "historical_revisions_verified": 32
+        },
+        "case_id": "commit-before",
+        "checkpoint_unchanged_at_barrier": true,
+        "frozen_change": {
+          "adapter_version": "0.5.0",
+          "base_version": 0,
+          "completeness": "persisted-files",
+          "format": "workspace-tar.v1",
+          "id": "turns/cae727c2-ef5f-431b-9458-ff312c3eff18/root",
+          "kind": "workspace",
+          "media_type": "application/x-tar",
+          "name": "root",
+          "origin": "runtime",
+          "runtime_version": "codex-cli 0.171.0-alpha.13",
+          "sha256": "936db35b8255250e85b012da6f36df32c3e9c9f8793780b8770c8346552ce8ee",
+          "size": 9216
+        },
+        "hit_count": 1,
+        "interrupted_sibling_events": 0,
+        "ledger": {
+          "armed_at": "2026-11-26T15:14:58.813532778Z",
+          "blocked": false,
+          "case_id": "commit-before",
+          "change": {
+            "adapter_version": "0.5.0",
+            "base_version": 0,
+            "completeness": "persisted-files",
+            "format": "workspace-tar.v1",
+            "id": "turns/cae727c2-ef5f-431b-9458-ff312c3eff18/root",
+            "kind": "workspace",
+            "media_type": "application/x-tar",
+            "name": "root",
+            "origin": "runtime",
+            "runtime_version": "codex-cli 0.171.0-alpha.13",
+            "sha256": "936db35b8255250e85b012da6f36df32c3e9c9f8793780b8770c8346552ce8ee",
+            "size": 9216
+          },
+          "consistent": true,
+          "events": [
+            {
+              "at": "2026-11-26T15:15:00.613987469Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:15:00.617858422Z",
+              "injected": false,
+              "operation": "c59e553a709b99608a6e22600de04feb3d0eb5f13454824159820856dd1f8f90",
+              "path": "/v1/changes",
+              "stage": "begin",
+              "upstream_status": 200
+            },
+            {
+              "at": "2026-11-26T15:15:00.618927474Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:15:00.624240065Z",
+              "first_missing": "5305841f9bf00ec3b6efc5b9299fadc6f2970e9be6ca3c1f4a16cbad5c658f06",
+              "injected": false,
+              "manifest_digest": "628b55c058e0390ea232ca0cfe90aeb64df169d4fe0c3fe890c3a37b9702cffd",
+              "missing_count": 1,
+              "operation": "c59e553a709b99608a6e22600de04feb3d0eb5f13454824159820856dd1f8f90",
+              "path": "/v1/changes/c59e553a709b99608a6e22600de04feb3d0eb5f13454824159820856dd1f8f90/parts",
+              "size": 806,
+              "stage": "manifest",
+              "upstream_status": 200,
+              "wire_sha256": "ac563ea341de8d072fc0437fcec545c663de4875076b7a9a243399456b8e103d"
+            },
+            {
+              "at": "2026-11-26T15:15:00.624449567Z",
+              "body_sha256": "5305841f9bf00ec3b6efc5b9299fadc6f2970e9be6ca3c1f4a16cbad5c658f06",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:15:00.628537022Z",
+              "injected": false,
+              "operation": "c59e553a709b99608a6e22600de04feb3d0eb5f13454824159820856dd1f8f90",
+              "path": "/v1/changes/c59e553a709b99608a6e22600de04feb3d0eb5f13454824159820856dd1f8f90/parts/5305841f9bf00ec3b6efc5b9299fadc6f2970e9be6ca3c1f4a16cbad5c658f06",
+              "size": 1290,
+              "stage": "part",
+              "upstream_status": 204
+            },
+            {
+              "at": "2026-11-26T15:15:00.628651148Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:15:01.038379308Z",
+              "injected": true,
+              "operation": "c59e553a709b99608a6e22600de04feb3d0eb5f13454824159820856dd1f8f90",
+              "path": "/v1/changes/c59e553a709b99608a6e22600de04feb3d0eb5f13454824159820856dd1f8f90/commit",
+              "stage": "commit"
+            },
+            {
+              "at": "2026-11-26T15:15:01.138903872Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:15:01.141705857Z",
+              "injected": false,
+              "operation": "c59e553a709b99608a6e22600de04feb3d0eb5f13454824159820856dd1f8f90",
+              "path": "/v1/changes",
+              "stage": "begin",
+              "upstream_status": 200
+            },
+            {
+              "at": "2026-11-26T15:15:01.142442613Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:15:01.145815895Z",
+              "injected": false,
+              "manifest_digest": "628b55c058e0390ea232ca0cfe90aeb64df169d4fe0c3fe890c3a37b9702cffd",
+              "operation": "c59e553a709b99608a6e22600de04feb3d0eb5f13454824159820856dd1f8f90",
+              "path": "/v1/changes/c59e553a709b99608a6e22600de04feb3d0eb5f13454824159820856dd1f8f90/parts",
+              "size": 806,
+              "stage": "manifest",
+              "upstream_status": 200,
+              "wire_sha256": "ac563ea341de8d072fc0437fcec545c663de4875076b7a9a243399456b8e103d"
+            },
+            {
+              "at": "2026-11-26T15:15:01.145911979Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:15:01.153787594Z",
+              "injected": false,
+              "operation": "c59e553a709b99608a6e22600de04feb3d0eb5f13454824159820856dd1f8f90",
+              "path": "/v1/changes/c59e553a709b99608a6e22600de04feb3d0eb5f13454824159820856dd1f8f90/commit",
+              "stage": "commit",
+              "upstream_status": 200
+            }
+          ],
+          "hits": 1,
+          "hold_first": true,
+          "limit": 1,
+          "manifest_digest": "628b55c058e0390ea232ca0cfe90aeb64df169d4fe0c3fe890c3a37b9702cffd",
+          "operation": "c59e553a709b99608a6e22600de04feb3d0eb5f13454824159820856dd1f8f90",
+          "part_target": "5305841f9bf00ec3b6efc5b9299fadc6f2970e9be6ca3c1f4a16cbad5c658f06",
+          "stage": "commit",
+          "target": {
+            "id": "turns/cae727c2-ef5f-431b-9458-ff312c3eff18/root",
+            "kind": "workspace"
+          },
+          "timing": "before",
+          "wire_sha256": "ac563ea341de8d072fc0437fcec545c663de4875076b7a9a243399456b8e103d"
+        },
+        "marker_mutation": {
+          "after_sha256": "555aa49b5fe04a25856f5ad70b5de5089a7037c9cfc13461f0da149b22441863",
+          "before_sha256": "f7245d487e6d2bd1c7695c215dc4a40ca936ef51cc3b5c409ee78b96b9d7cb2a",
+          "changed": true,
+          "path": "/run/task/work/state.json"
+        },
+        "native_exec_count": 1,
+        "outcome": "succeeded",
+        "pod_uid": "9165118d-f074-4a24-9581-da7d21316dd8",
+        "turn_id": "cae727c2-ef5f-431b-9458-ff312c3eff18"
+      },
+      {
+        "barrier_gc": {
+          "gc": {
+            "removed": 0
+          },
+          "historical_revisions_verified": 36
+        },
+        "case_id": "commit-after",
+        "checkpoint_unchanged_at_barrier": true,
+        "frozen_change": {
+          "adapter_version": "0.5.0",
+          "base_version": 0,
+          "completeness": "persisted-files",
+          "format": "workspace-tar.v1",
+          "id": "turns/5a5c77c8-e3eb-4910-9aba-d8b4cf675f9a/root",
+          "kind": "workspace",
+          "media_type": "application/x-tar",
+          "name": "root",
+          "origin": "runtime",
+          "runtime_version": "codex-cli 0.171.0-alpha.13",
+          "sha256": "5694e453a4c655b544ee831a3e36fcaebcc5e590a7b02a342bd507ffd6e55f06",
+          "size": 9216
+        },
+        "hit_count": 1,
+        "interrupted_sibling_events": 0,
+        "ledger": {
+          "armed_at": "2026-11-26T15:15:04.775708049Z",
+          "blocked": false,
+          "case_id": "commit-after",
+          "change": {
+            "adapter_version": "0.5.0",
+            "base_version": 0,
+            "completeness": "persisted-files",
+            "format": "workspace-tar.v1",
+            "id": "turns/5a5c77c8-e3eb-4910-9aba-d8b4cf675f9a/root",
+            "kind": "workspace",
+            "media_type": "application/x-tar",
+            "name": "root",
+            "origin": "runtime",
+            "runtime_version": "codex-cli 0.171.0-alpha.13",
+            "sha256": "5694e453a4c655b544ee831a3e36fcaebcc5e590a7b02a342bd507ffd6e55f06",
+            "size": 9216
+          },
+          "consistent": true,
+          "events": [
+            {
+              "at": "2026-11-26T15:15:06.469932207Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:15:06.473680783Z",
+              "injected": false,
+              "operation": "194300d8c067beb9718e572869c01f6d5be3e5089fd73a3c1ea7e2da72757b3e",
+              "path": "/v1/changes",
+              "stage": "begin",
+              "upstream_status": 200
+            },
+            {
+              "at": "2026-11-26T15:15:06.474213622Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:15:06.479677006Z",
+              "first_missing": "c167097b42ff55d8aea2d0928dfbbb47caa0cd003accdc8fb05823ad9eec0a8b",
+              "injected": false,
+              "manifest_digest": "7c760f3d1a6f120e323ad9925674a5d12ac8c02720815e5b17d04611a261832d",
+              "missing_count": 1,
+              "operation": "194300d8c067beb9718e572869c01f6d5be3e5089fd73a3c1ea7e2da72757b3e",
+              "path": "/v1/changes/194300d8c067beb9718e572869c01f6d5be3e5089fd73a3c1ea7e2da72757b3e/parts",
+              "size": 804,
+              "stage": "manifest",
+              "upstream_status": 200,
+              "wire_sha256": "51c1a26b3b67198fc094ab7502cb62c5c57ddbbad0de93abbc42efa236965950"
+            },
+            {
+              "at": "2026-11-26T15:15:06.479910591Z",
+              "body_sha256": "c167097b42ff55d8aea2d0928dfbbb47caa0cd003accdc8fb05823ad9eec0a8b",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:15:06.486574612Z",
+              "injected": false,
+              "operation": "194300d8c067beb9718e572869c01f6d5be3e5089fd73a3c1ea7e2da72757b3e",
+              "path": "/v1/changes/194300d8c067beb9718e572869c01f6d5be3e5089fd73a3c1ea7e2da72757b3e/parts/c167097b42ff55d8aea2d0928dfbbb47caa0cd003accdc8fb05823ad9eec0a8b",
+              "size": 1433,
+              "stage": "part",
+              "upstream_status": 204
+            },
+            {
+              "at": "2026-11-26T15:15:06.486725113Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:15:06.941133899Z",
+              "injected": true,
+              "operation": "194300d8c067beb9718e572869c01f6d5be3e5089fd73a3c1ea7e2da72757b3e",
+              "path": "/v1/changes/194300d8c067beb9718e572869c01f6d5be3e5089fd73a3c1ea7e2da72757b3e/commit",
+              "stage": "commit",
+              "upstream_status": 200
+            },
+            {
+              "at": "2026-11-26T15:15:07.043616523Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:15:07.044268196Z",
+              "injected": false,
+              "operation": "194300d8c067beb9718e572869c01f6d5be3e5089fd73a3c1ea7e2da72757b3e",
+              "path": "/v1/changes",
+              "stage": "begin",
+              "upstream_status": 200
+            }
+          ],
+          "hits": 1,
+          "hold_first": true,
+          "limit": 1,
+          "manifest_digest": "7c760f3d1a6f120e323ad9925674a5d12ac8c02720815e5b17d04611a261832d",
+          "operation": "194300d8c067beb9718e572869c01f6d5be3e5089fd73a3c1ea7e2da72757b3e",
+          "part_target": "c167097b42ff55d8aea2d0928dfbbb47caa0cd003accdc8fb05823ad9eec0a8b",
+          "stage": "commit",
+          "target": {
+            "id": "turns/5a5c77c8-e3eb-4910-9aba-d8b4cf675f9a/root",
+            "kind": "workspace"
+          },
+          "timing": "after",
+          "wire_sha256": "51c1a26b3b67198fc094ab7502cb62c5c57ddbbad0de93abbc42efa236965950"
+        },
+        "marker_mutation": {
+          "after_sha256": "19ee26a2a3b9c308b1a28a4b3c9dc8698dd60c2350b0ee577446c4f2259e5635",
+          "before_sha256": "f7245d487e6d2bd1c7695c215dc4a40ca936ef51cc3b5c409ee78b96b9d7cb2a",
+          "changed": true,
+          "path": "/run/task/work/state.json"
+        },
+        "native_exec_count": 1,
+        "outcome": "succeeded",
+        "pod_uid": "f46a06f3-8f7b-486c-8ca9-6e2e3d78046d",
+        "turn_id": "5a5c77c8-e3eb-4910-9aba-d8b4cf675f9a"
+      },
+      {
+        "barrier_gc": {
+          "gc": {
+            "removed": 0
+          },
+          "historical_revisions_verified": 40
+        },
+        "case_id": "manifest-before-exhausted",
+        "checkpoint_unchanged_at_barrier": true,
+        "frozen_change": {
+          "adapter_version": "0.5.0",
+          "base_version": 0,
+          "completeness": "persisted-files",
+          "format": "workspace-tar.v1",
+          "id": "turns/5e894b3c-22f0-42d1-bcd2-6d3e4093b7ba/root",
+          "kind": "workspace",
+          "media_type": "application/x-tar",
+          "name": "root",
+          "origin": "runtime",
+          "runtime_version": "codex-cli 0.171.0-alpha.13",
+          "sha256": "b1e75bf224a82f506cbce03b0e238c1d786cb5a0b7db36baf7a1898ef556b3db",
+          "size": 9728
+        },
+        "hit_count": 3,
+        "interrupted_sibling_events": 0,
+        "ledger": {
+          "armed_at": "2026-11-26T15:15:10.698139824Z",
+          "blocked": false,
+          "case_id": "manifest-before-exhausted",
+          "change": {
+            "adapter_version": "0.5.0",
+            "base_version": 0,
+            "completeness": "persisted-files",
+            "format": "workspace-tar.v1",
+            "id": "turns/5e894b3c-22f0-42d1-bcd2-6d3e4093b7ba/root",
+            "kind": "workspace",
+            "media_type": "application/x-tar",
+            "name": "root",
+            "origin": "runtime",
+            "runtime_version": "codex-cli 0.171.0-alpha.13",
+            "sha256": "b1e75bf224a82f506cbce03b0e238c1d786cb5a0b7db36baf7a1898ef556b3db",
+            "size": 9728
+          },
+          "consistent": true,
+          "events": [
+            {
+              "at": "2026-11-26T15:15:12.840487655Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:15:12.844897095Z",
+              "injected": false,
+              "operation": "28c7ded688af1edc9b65a50fc0515e60bece90c2c7c4128b13f43b3bdb02ea95",
+              "path": "/v1/changes",
+              "stage": "begin",
+              "upstream_status": 200
+            },
+            {
+              "at": "2026-11-26T15:15:12.846591787Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:15:13.349234931Z",
+              "injected": true,
+              "manifest_digest": "385ff21eb10703709160b46816fe4da32f5036f9f78e5262a7bf37a4c9e204f8",
+              "operation": "28c7ded688af1edc9b65a50fc0515e60bece90c2c7c4128b13f43b3bdb02ea95",
+              "path": "/v1/changes/28c7ded688af1edc9b65a50fc0515e60bece90c2c7c4128b13f43b3bdb02ea95/parts",
+              "size": 807,
+              "stage": "manifest",
+              "wire_sha256": "295bc728b60e85d84c473ee1b4975b462c25ce97fa5dad05ce222bf50a13a97d"
+            },
+            {
+              "at": "2026-11-26T15:15:13.449815136Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:15:13.452166671Z",
+              "injected": false,
+              "operation": "28c7ded688af1edc9b65a50fc0515e60bece90c2c7c4128b13f43b3bdb02ea95",
+              "path": "/v1/changes",
+              "stage": "begin",
+              "upstream_status": 200
+            },
+            {
+              "at": "2026-11-26T15:15:13.452443758Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:15:13.452558177Z",
+              "injected": true,
+              "manifest_digest": "385ff21eb10703709160b46816fe4da32f5036f9f78e5262a7bf37a4c9e204f8",
+              "operation": "28c7ded688af1edc9b65a50fc0515e60bece90c2c7c4128b13f43b3bdb02ea95",
+              "path": "/v1/changes/28c7ded688af1edc9b65a50fc0515e60bece90c2c7c4128b13f43b3bdb02ea95/parts",
+              "size": 807,
+              "stage": "manifest",
+              "wire_sha256": "295bc728b60e85d84c473ee1b4975b462c25ce97fa5dad05ce222bf50a13a97d"
+            },
+            {
+              "at": "2026-11-26T15:15:13.656281916Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:15:13.662411465Z",
+              "injected": false,
+              "operation": "28c7ded688af1edc9b65a50fc0515e60bece90c2c7c4128b13f43b3bdb02ea95",
+              "path": "/v1/changes",
+              "stage": "begin",
+              "upstream_status": 200
+            },
+            {
+              "at": "2026-11-26T15:15:13.66565318Z",
+              "cancelled": false,
+              "completed_at": "2026-11-26T15:15:13.665889183Z",
+              "injected": true,
+              "manifest_digest": "385ff21eb10703709160b46816fe4da32f5036f9f78e5262a7bf37a4c9e204f8",
+              "operation": "28c7ded688af1edc9b65a50fc0515e60bece90c2c7c4128b13f43b3bdb02ea95",
+              "path": "/v1/changes/28c7ded688af1edc9b65a50fc0515e60bece90c2c7c4128b13f43b3bdb02ea95/parts",
+              "size": 807,
+              "stage": "manifest",
+              "wire_sha256": "295bc728b60e85d84c473ee1b4975b462c25ce97fa5dad05ce222bf50a13a97d"
+            }
+          ],
+          "hits": 3,
+          "hold_first": true,
+          "limit": 3,
+          "manifest_digest": "385ff21eb10703709160b46816fe4da32f5036f9f78e5262a7bf37a4c9e204f8",
+          "operation": "28c7ded688af1edc9b65a50fc0515e60bece90c2c7c4128b13f43b3bdb02ea95",
+          "stage": "manifest",
+          "target": {
+            "id": "turns/5e894b3c-22f0-42d1-bcd2-6d3e4093b7ba/root",
+            "kind": "workspace"
+          },
+          "timing": "before",
+          "wire_sha256": "295bc728b60e85d84c473ee1b4975b462c25ce97fa5dad05ce222bf50a13a97d"
+        },
+        "marker_mutation": {
+          "after_sha256": "0854cb4be289eba7238b9f242f9072c6e0c42789e017cea315f673e0504ff1d5",
+          "before_sha256": "f7245d487e6d2bd1c7695c215dc4a40ca936ef51cc3b5c409ee78b96b9d7cb2a",
+          "changed": true,
+          "path": "/run/task/work/state.json"
+        },
+        "native_exec_count": 1,
+        "outcome": "failed",
+        "pod_uid": "d31b85ff-015a-4b96-8951-32a641b498f1",
+        "turn_id": "5e894b3c-22f0-42d1-bcd2-6d3e4093b7ba"
+      }
+    ],
+    "recovery_pod_uid": "8d70505c-ccc5-47be-b3a0-4b42e34100cc",
+    "session_sha256": "499b3e940b5b990239e9cb6854e1f3edd0cbb121afdaee47faae611bf8e24368",
+    "successful_pod_uids": [
+      "ce2ef82f-36de-4b49-9448-2654b962b407",
+      "54860195-f983-4313-b91a-d9b39b2345b3",
+      "21dc62a1-28fc-4bd9-9290-5413d474ec3b",
+      "16849883-d515-4194-bf54-7da6e7572fe9",
+      "496c3929-ead7-493a-b26b-8ae615769804",
+      "4df0071e-8bbd-47db-8f84-4205bed783af",
+      "3981ba78-5d58-4013-b0f3-d7527e1352ff",
+      "4116ecf3-d9e2-4ff5-a1ce-34d0d3ad3562",
+      "9165118d-f074-4a24-9581-da7d21316dd8",
+      "f46a06f3-8f7b-486c-8ca9-6e2e3d78046d",
+      "3a97d7e5-7ada-4cd3-a9ec-5ab7a5871cc2"
+    ],
+    "unpublished_files_restored": false,
+    "worker_exit_code": 137
+  },
+  "persistent_result": {
+    "images": {
+      "postgres": [
+        {
+          "image": "docker.io/library/postgres:18-alpine",
+          "image_id": "sha256:d4e55489302f9c75af116f3b3147f613e712f07e5eb8dabec82d9147dd0a00e5"
+        }
+      ],
+      "s3": [
+        {
+          "image": "docker.io/pgsty/minio:RELEASE.2026-04-17T00-00-00Z",
+          "image_id": "sha256:c007f271acf939425e3b553813c2c4531069cd467a59f84ec96121937ff414d9"
+        }
+      ]
+    },
+    "limitations": [
+      "No live model; fixed real Codex CLI uses a scripted Responses endpoint.",
+      "Public GC checks retain the 24-hour orphan window; post-window orphan deletion is covered by service tests, not this cluster run."
+    ],
+    "metadata_backend": "postgresql",
+    "minio_version": "minio version RELEASE.2026-04-17T00-00-00Z (commit-id=f48dbe777d0e066d2e74d5e671a8ca21c2ec1664)",
+    "object_backend": "s3-compatible-minio",
+    "postgres_rows": {
+      "operations": 49,
+      "revisions": 48,
+      "tasks": 1,
+      "turns": 13
+    },
+    "postgres_version": "18.7",
+    "queued_restart": {
+      "accepted_state": "queued",
+      "api_pod_uids": [
+        "f685a8b2-0cda-4041-a316-12523c6cdaa2",
+        "3b2b000c-6d95-41f1-97f3-1588a3c66d22"
+      ],
+      "restored_state": "queued",
+      "same_uuid_replays": 2,
+      "turn_id": "158b1ff0-540d-4a40-88e1-fc6360576800"
+    },
+    "scenario": "persistent-faults",
+    "sqlite_or_local_objects_present": false,
+    "verified_object_count": 40,
+    "verified_part_object_count": 22,
+    "workspace_part_revisions": 12,
+    "workspace_transfer": "tar-parts.v1"
+  },
+  "four_cli_matrix": {
+    "source_commit": "109b534a5e9d65dcd19ffb34cab4c118f18406b7",
+    "entrypoint": "make test-k8s",
+    "status": "passed",
+    "exit_code": 0,
+    "model_scope": "scripted fixture protocols; no live model",
+    "runtimes": {
+      "codex": {
+        "status": "passed",
+        "pinned_cli_version": "0.171.0-alpha.13",
+        "image": "agentmoor-contract:agentmoor-5fcbe10ae9f8-codex",
+        "image_id": "sha256:719d60dfaeeb3d69f992f53a284d07bfd0634c316fa1f419d2ea2f42367931ae",
+        "native_cancellation_elapsed_seconds": 4.6,
+        "assertions": [
+          "fixed-version report after Pod deletion",
+          "two sequential turns in new Jobs and Pods",
+          "active follow-up cancellation with prior checkpoint retained",
+          "active native cancellation and Worker Job exit"
+        ]
+      },
+      "gemini-cli": {
+        "status": "passed",
+        "pinned_cli_version": "0.70.0",
+        "image": "agentmoor-contract:agentmoor-5fcbe10ae9f8-gemini-cli",
+        "image_id": "sha256:b569e78f4f440556a55815a91d546a39ff2b22fee9a2bc641c18d3da938c9b4a",
+        "native_cancellation_elapsed_seconds": 3.1,
+        "assertions": [
+          "fixed-version report after Pod deletion",
+          "two sequential turns in new Jobs and Pods",
+          "active follow-up cancellation with prior checkpoint retained",
+          "active native cancellation and Worker Job exit"
+        ]
+      },
+      "opencode": {
+        "status": "passed",
+        "pinned_cli_version": "1.19.6",
+        "image": "agentmoor-contract:agentmoor-5fcbe10ae9f8-opencode",
+        "image_id": "sha256:2db40c1e278af1ce9306b43b66a963fcd8ccaba206d8dcf61528bd8c1929235d",
+        "native_cancellation_elapsed_seconds": 3.8,
+        "assertions": [
+          "fixed-version report after Pod deletion",
+          "two sequential turns in new Jobs and Pods",
+          "active follow-up cancellation with prior checkpoint retained",
+          "active native cancellation and Worker Job exit"
+        ]
+      },
+      "claude-code": {
+        "status": "passed",
+        "pinned_cli_version": "2.1.330",
+        "image": "agentmoor-contract:agentmoor-5fcbe10ae9f8-claude-code",
+        "image_id": "sha256:ed66c1d469c28a9d07b638215ceebdee6d63bf0d88cc702ca2660ddf36b9badf",
+        "native_cancellation_elapsed_seconds": 3.9,
+        "assertions": [
+          "fixed-version report after Pod deletion",
+          "two sequential turns in new Jobs and Pods",
+          "active follow-up cancellation with prior checkpoint retained",
+          "active native cancellation and Worker Job exit"
+        ]
+      }
+    },
+    "owned_cluster_cleanup_completed": true
+  },
+  "owned_cluster_cleanup_completed": true,
+  "limitations": [
+    "No live model or model API key was used.",
+    "This combined fault and 900-second Pod-loss run covers Codex with tar-parts.v1 on PostgreSQL/S3; the four-CLI matrix is a separate default text workflow regression.",
+    "Public GC retains the 24-hour orphan window. This run verifies historical/pending protection within that window; deletion after orphan expiry is covered by service tests.",
+    "No multi-control-plane replica or production HA acceptance is claimed.",
+    "This source run did not explicitly prove a second valid tenant credential cannot read the retained fixed references.",
+    "Examples 1-3 were not executed as one complete V2 suite command in this run. Any subsequent suite/tenant-isolation result requires its own source evidence."
+  ],
+  "acceptance_scope": "Codex tar-parts.v1 publication-fault and 900-second Pod-loss combination passed; not the complete V2/P1 exit gate."
+}

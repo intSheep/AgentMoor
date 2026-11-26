@@ -1,0 +1,1986 @@
+{
+  "source_commit": "89c3c155a707dc977fd15692d4c54fff032b6dfd",
+  "status": "passed",
+  "entrypoint": "make test-k8s-v2",
+  "exit_code": 0,
+  "recorded_at_utc": "2026-11-26T16:26:08.273628+00:00",
+  "one_suite_command_one_kind_cluster_one_runtime_image": true,
+  "scenario_order": [
+    "file-report",
+    "skill-report",
+    "persistent-faults"
+  ],
+  "scenario_storage_isolation": "Each scenario has its own namespace/database/bucket; each long fault/Pod-loss combination keeps one namespace/database/bucket throughout.",
+  "fixture": {
+    "image": "agentmoor-contract:agentmoor-c463e4a82b85-codex",
+    "docker_image_id": "sha256:ed9aa23771708f42446bf49b98795cc55bebc3cb3fc7f49410ea2dff60d8da1a",
+    "kubernetes_node_image": "kindest/node:v1.35.0",
+    "worker_image_id_reported_in_active_replay": "sha256:1c4bcdf5cba83d6907f38a3c77171c9587c7cf6f824a9f44c135ccb64976f1ed",
+    "native_cli": "codex-cli 0.171.0-alpha.13",
+    "model": "scripted-responses",
+    "model_api_key_used": false,
+    "workspace_transfer": "tar-parts.v1",
+    "logical_workspace_format": "workspace-tar.v1"
+  },
+  "image_identity_observations": {
+    "docker_kind_load_log_image_id": "sha256:ed9aa23771708f42446bf49b98795cc55bebc3cb3fc7f49410ea2dff60d8da1a",
+    "active_replay_pod_reported_image_id": "sha256:1c4bcdf5cba83d6907f38a3c77171c9587c7cf6f824a9f44c135ccb64976f1ed",
+    "observation_basis": "This suite's Docker/kind-load log and ACTIVE_REPLAY_RESULT from its running Pod, for the same loaded runtime tag.",
+    "interpretation": "Values are recorded as reported by their respective tools. No config-versus-manifest type interpretation is asserted."
+  },
+  "active_replay_results": [
+    {
+      "scenario": "file-report",
+      "result": {
+        "assets_empty": true,
+        "checkpoint_sha256": "11bb5c1f44344addd5340feafe4d998352fbd1ca941cf618600b47f35ef504bc",
+        "checkpoint_unchanged": true,
+        "image_id": "sha256:1c4bcdf5cba83d6907f38a3c77171c9587c7cf6f824a9f44c135ccb64976f1ed",
+        "job_count": 1,
+        "job_uid": "78f78fd3-c1a8-4d26-aae4-21a6425ff277",
+        "observation_seconds": 2.353,
+        "pod_count": 1,
+        "pod_uid": "e392e39b-af32-4688-b089-177f34b7c3fc",
+        "record_unchanged": true,
+        "same_uuid_replays": 2,
+        "state": "running",
+        "turn_id": "1e25eb83-6564-4146-99a9-f402823cf146",
+        "worker_container_id": "containerd://4e463e47917389c61cf5a13ffb39985aa663bbdf6ebbc582058f465cc0b62854",
+        "worker_restart_count": 0
+      }
+    },
+    {
+      "scenario": "persistent-faults",
+      "result": {
+        "assets_empty": true,
+        "checkpoint_sha256": "7ba18912493765af4282587ac79549994f095f1fe1e542a266aad59fb6254f63",
+        "checkpoint_unchanged": true,
+        "image_id": "sha256:1c4bcdf5cba83d6907f38a3c77171c9587c7cf6f824a9f44c135ccb64976f1ed",
+        "job_count": 1,
+        "job_uid": "ad8b7784-bca5-41a1-872c-01ebd131860f",
+        "observation_seconds": 2.33,
+        "pod_count": 1,
+        "pod_uid": "f038895c-d17d-4449-ad4a-93446902c7bc",
+        "record_unchanged": true,
+        "same_uuid_replays": 2,
+        "state": "running",
+        "turn_id": "e5aff81e-ad01-4ecc-8e95-b623450ace38",
+        "worker_container_id": "containerd://74cd373fec0d675d736e0c9dd1a06b6aacdff40577dd500cb4d2436666de8a74",
+        "worker_restart_count": 0
+      }
+    }
+  ],
+  "four_cli_regression": {
+    "source_commit": "89c3c155a707dc977fd15692d4c54fff032b6dfd",
+    "entrypoint": "make test-k8s",
+    "status": "passed",
+    "exit_code": 0,
+    "model_scope": "default text workflow with scripted model protocols; not the combined Codex file-fault workflow",
+    "runtimes": {
+      "codex": {
+        "status": "passed",
+        "pinned_cli_version": "0.171.0-alpha.13",
+        "image": "agentmoor-contract:agentmoor-06f23b729120-codex",
+        "docker_image_id": "sha256:ed9aa23771708f42446bf49b98795cc55bebc3cb3fc7f49410ea2dff60d8da1a",
+        "native_cancellation_elapsed_seconds": 2.3,
+        "assertions": [
+          "report after original Pod deletion",
+          "two sequential new-Pod follow-ups",
+          "active follow-up cancellation",
+          "active native cancellation and Job exit"
+        ]
+      },
+      "gemini-cli": {
+        "status": "passed",
+        "pinned_cli_version": "0.70.0",
+        "image": "agentmoor-contract:agentmoor-06f23b729120-gemini-cli",
+        "docker_image_id": "sha256:ba00b53cfcdff66826703cfe3a3e922151ab5e85f52e31530dd0c7b48e2a95ea",
+        "native_cancellation_elapsed_seconds": 3.0,
+        "assertions": [
+          "report after original Pod deletion",
+          "two sequential new-Pod follow-ups",
+          "active follow-up cancellation",
+          "active native cancellation and Job exit"
+        ]
+      },
+      "opencode": {
+        "status": "passed",
+        "pinned_cli_version": "1.19.6",
+        "image": "agentmoor-contract:agentmoor-06f23b729120-opencode",
+        "docker_image_id": "sha256:fbd030145f7f4636f18b01bbc4544e2630e2d482679572acbad650c7d07e34ee",
+        "native_cancellation_elapsed_seconds": 3.8,
+        "assertions": [
+          "report after original Pod deletion",
+          "two sequential new-Pod follow-ups",
+          "active follow-up cancellation",
+          "active native cancellation and Job exit"
+        ]
+      },
+      "claude-code": {
+        "status": "passed",
+        "pinned_cli_version": "2.1.330",
+        "image": "agentmoor-contract:agentmoor-06f23b729120-claude-code",
+        "docker_image_id": "sha256:5528be9a4567c116fd1f28f5c0fffb18fe554a64a164fbbe5cfa0145d6144613",
+        "native_cancellation_elapsed_seconds": 3.8,
+        "assertions": [
+          "report after original Pod deletion",
+          "two sequential new-Pod follow-ups",
+          "active follow-up cancellation",
+          "active native cancellation and Job exit"
+        ]
+      }
+    },
+    "owned_cluster_cleanup_completed": true,
+    "owned_cluster_nodes_and_four_image_tags_verified_absent_by_root": true,
+    "raw_log": {
+      "path_at_execution": "/private/tmp/agentmoor-v2-forward-full-k8s.log",
+      "sha256": "26101c77a60d48c45477a963ff668e21b0845a14631796042167b747a083cdaa"
+    }
+  },
+  "host_checks": {
+    "source_commit": "89c3c155a707dc977fd15692d4c54fff032b6dfd",
+    "status": "passed",
+    "commands": [
+      "make fmt",
+      "make check",
+      "make demo"
+    ],
+    "tool_session": 68166,
+    "exit_code": 0,
+    "observation_basis": "Root confirmed the combined command exited 0 against clean source89, with no later Go/Python source edits during the suite.",
+    "go_race_results_included_cached_packages": true,
+    "port_forward_offline_tests": {
+      "count": 5,
+      "status": "passed",
+      "elapsed_seconds": 0.287
+    },
+    "demo_log_at_execution": "/private/tmp/agentmoor-forward-fixed-demo.log"
+  },
+  "scenarios": {
+    "file-report": {
+      "status": "passed",
+      "contract_result": {
+        "active_mcp_cancel": "cancelled-with-checkpoint-preserved",
+        "artifacts": [
+          {
+            "content_path": "/v1/content?id=out%2Freport.json&kind=artifact&version=1",
+            "id": "out/report.json",
+            "kind": "artifact",
+            "sha256": "46490efb3a12c26c536897c261443751fdee87f0a0ea2c4b08a101539cd1219d",
+            "version": 1
+          },
+          {
+            "content_path": "/v1/content?id=turns%2Fd4d21c59-d4a8-4332-9bd3-7af5b41d629d%2Fout%2Freport.json&kind=artifact&version=1",
+            "id": "turns/d4d21c59-d4a8-4332-9bd3-7af5b41d629d/out/report.json",
+            "kind": "artifact",
+            "sha256": "08fa11bd6612ac6ed015219eb774ea26617e08f4af98b3f4496e8212c8e395da",
+            "version": 1
+          },
+          {
+            "content_path": "/v1/content?id=turns%2Ffe5e929b-97d3-4325-8002-3ef1a4d4cb9a%2Fout%2Freport.json&kind=artifact&version=1",
+            "id": "turns/fe5e929b-97d3-4325-8002-3ef1a4d4cb9a/out/report.json",
+            "kind": "artifact",
+            "sha256": "7faf69b8e46b9045c5b708d56144f877b459456c43bcdba0d68f1330bbbdbe2f",
+            "version": 1
+          },
+          {
+            "content_path": "/v1/content?id=turns%2Fd0441155-43ae-45b5-9c99-52b2966b492b%2Fout%2Freport.json&kind=artifact&version=1",
+            "id": "turns/d0441155-43ae-45b5-9c99-52b2966b492b/out/report.json",
+            "kind": "artifact",
+            "sha256": "7faf69b8e46b9045c5b708d56144f877b459456c43bcdba0d68f1330bbbdbe2f",
+            "version": 1
+          }
+        ],
+        "business_rows": 2,
+        "cli": "codex-cli 0.171.0-alpha.13",
+        "database_write_retry": "trigger-failure-then-imported-and-already-imported",
+        "missing_input": "failed-without-assets",
+        "model": "scripted-responses",
+        "pod_uids": [
+          "2202f7b5-5278-482a-bfe3-aa586f0dc90c",
+          "e116b905-9925-47b7-a678-a48b3122e3fc",
+          "8e5c1052-fdee-4aae-8622-00fc45cd741f"
+        ],
+        "recovery_pod_uid": "10d1b880-0c81-4c56-9ce1-88f2dec9ecbe",
+        "session_sha256": "29ecf8145dde1851e3266953c7ed5c3d87e8b7cdc9fae7f6e0080a1c501d23a4",
+        "workspace_loss_simulation": "same-session-required-files-removed-before-tool"
+      },
+      "cross_tenant_result": {
+        "accepted_state": "queued",
+        "api_pod_uids": [
+          "3e79e2ad-ce9d-4594-bccf-b394e136a885",
+          "8db6bddd-dc17-4ed8-a985-66767afeb7aa"
+        ],
+        "asset_kinds": [
+          "artifact",
+          "session",
+          "workspace"
+        ],
+        "asset_versions_checked": 16,
+        "checkpoint_denial_status": 404,
+        "content_denial_status": 404,
+        "content_denials": 16,
+        "foreign_assets_empty": true,
+        "foreign_context_read": true,
+        "foreign_heads_empty": true,
+        "foreign_read_only": true,
+        "kind_counts": {
+          "artifact": 8,
+          "session": 4,
+          "workspace": 4
+        },
+        "only_tenant_differs": true,
+        "owner_rechecked_versions": 16,
+        "restored_state": "queued",
+        "revision_header_absent": true,
+        "same_uuid_replays": 2,
+        "scenario": "file-report",
+        "task_denial_status": 404
+      },
+      "persistent_result": {
+        "images": {
+          "postgres": [
+            {
+              "image": "docker.io/library/postgres:18-alpine",
+              "image_id": "sha256:d4e55489302f9c75af116f3b3147f613e712f07e5eb8dabec82d9147dd0a00e5"
+            }
+          ],
+          "s3": [
+            {
+              "image": "docker.io/pgsty/minio:RELEASE.2026-04-17T00-00-00Z",
+              "image_id": "sha256:c007f271acf939425e3b553813c2c4531069cd467a59f84ec96121937ff414d9"
+            }
+          ]
+        },
+        "limitations": [
+          "No abrupt Worker Pod-loss combination on PostgreSQL/S3; separate P0 acceptance covers it.",
+          "No live model; fixed real Codex CLI uses a scripted Responses endpoint."
+        ],
+        "metadata_backend": "postgresql",
+        "minio_version": "minio version RELEASE.2026-04-17T00-00-00Z (commit-id=f48dbe777d0e066d2e74d5e671a8ca21c2ec1664)",
+        "object_backend": "s3-compatible-minio",
+        "postgres_rows": {
+          "operations": 16,
+          "revisions": 16,
+          "tasks": 2,
+          "turns": 5
+        },
+        "postgres_version": "18.7",
+        "queued_restart": {
+          "accepted_state": "queued",
+          "api_pod_uids": [
+            "3e79e2ad-ce9d-4594-bccf-b394e136a885",
+            "8db6bddd-dc17-4ed8-a985-66767afeb7aa"
+          ],
+          "restored_state": "queued",
+          "same_uuid_replays": 2,
+          "turn_id": "d4d21c59-d4a8-4332-9bd3-7af5b41d629d"
+        },
+        "scenario": "file-report",
+        "sqlite_or_local_objects_present": false,
+        "verified_object_count": 24,
+        "verified_part_object_count": 14,
+        "workspace_part_revisions": 4,
+        "workspace_transfer": "tar-parts.v1"
+      }
+    },
+    "skill-report": {
+      "status": "passed",
+      "contract_result": {
+        "artifacts": [
+          {
+            "content_path": "/v1/content?id=out%2Freport.json&kind=artifact&version=1",
+            "id": "out/report.json",
+            "kind": "artifact",
+            "sha256": "308342061e8daac3cdfff215b6177382030709021bb6259ce7bc23ab914b161c",
+            "version": 1
+          },
+          {
+            "content_path": "/v1/content?id=turns%2F93d27bf4-56cd-42d8-aea9-548d82085531%2Fout%2Freport.json&kind=artifact&version=1",
+            "id": "turns/93d27bf4-56cd-42d8-aea9-548d82085531/out/report.json",
+            "kind": "artifact",
+            "sha256": "ff430fbb92d380c4afa875bdf1d22177104fd5ebbb12dd3e5d5f97ca01180c19",
+            "version": 1
+          },
+          {
+            "content_path": "/v1/content?id=turns%2Ffa39d37a-7ed7-4e8f-8a3a-16da446c3ddd%2Fout%2Freport.json&kind=artifact&version=1",
+            "id": "turns/fa39d37a-7ed7-4e8f-8a3a-16da446c3ddd/out/report.json",
+            "kind": "artifact",
+            "sha256": "a4873d090a7f63595e17af84aae740818932a3177d27d7ff7213f4b434e0eba6",
+            "version": 1
+          }
+        ],
+        "business_rows": 2,
+        "cli": "codex-cli 0.171.0-alpha.13",
+        "member_sha256": {
+          "SKILL.md": "409836ed1756aa5e7b82d966634ac3d7c578d48582b1a2be257f8c2778ace131",
+          "references/rule.json": "b7ced63653a6e29b3db4bc7146df385c78edc9623fed34679a76bb86e37160d5",
+          "scripts/check.py": "69fbf32f2d1319c7111d4cacb8290f3b0226ec3bd8e1de27af6ac0d2a40b07ab"
+        },
+        "model": "scripted-responses",
+        "native_skill_rule": "verified-by-installed-script-and-reference",
+        "newer_unselected_skill": {
+          "content_path": "/v1/content?id=catalog%2Fskills%2Fpinned-report&kind=skill&version=2",
+          "id": "catalog/skills/pinned-report",
+          "kind": "skill",
+          "sha256": "ece67133695f6650e8329c53a1ddb8ea2692f172fc9fce73ff53c13dd58e0665",
+          "version": 2
+        },
+        "no_skill_control": "failed-without-assets",
+        "pod_uids": [
+          "5a6c874f-45aa-4769-86c2-eeeb2fe0d999",
+          "273ca833-300e-424a-89f7-b67c3b603970",
+          "6f71bfa2-d12c-4597-a615-4059e57dc02a"
+        ],
+        "session_sha256": "88b0ddfb0579ed2a74638341e60a715e1a9fefbcdfab2d74724ffa5a181a7016",
+        "skill_pin": {
+          "name": "pinned-report",
+          "source": {
+            "content_path": "/v1/content?id=catalog%2Fskills%2Fpinned-report&kind=skill&version=1",
+            "id": "catalog/skills/pinned-report",
+            "kind": "skill",
+            "sha256": "3dfee264f8ff89d5ccde5a8de580a6da02a641502315102d90a501d1b5429c8d",
+            "version": 1
+          }
+        }
+      },
+      "cross_tenant_result": {
+        "accepted_state": "queued",
+        "api_pod_uids": [
+          "3b8106d8-cb8a-460c-8cb9-b5f896882849",
+          "d1018270-47fe-415c-ac21-598b689afaac"
+        ],
+        "asset_kinds": [
+          "artifact",
+          "session",
+          "skill",
+          "workspace"
+        ],
+        "asset_versions_checked": 17,
+        "checkpoint_denial_status": 404,
+        "content_denial_status": 404,
+        "content_denials": 17,
+        "foreign_assets_empty": true,
+        "foreign_context_read": true,
+        "foreign_heads_empty": true,
+        "foreign_read_only": true,
+        "kind_counts": {
+          "artifact": 9,
+          "session": 3,
+          "skill": 2,
+          "workspace": 3
+        },
+        "only_tenant_differs": true,
+        "owner_rechecked_versions": 17,
+        "restored_state": "queued",
+        "revision_header_absent": true,
+        "same_uuid_replays": 2,
+        "scenario": "skill-report",
+        "task_denial_status": 404
+      },
+      "persistent_result": {
+        "images": {
+          "postgres": [
+            {
+              "image": "docker.io/library/postgres:18-alpine",
+              "image_id": "sha256:d4e55489302f9c75af116f3b3147f613e712f07e5eb8dabec82d9147dd0a00e5"
+            }
+          ],
+          "s3": [
+            {
+              "image": "docker.io/pgsty/minio:RELEASE.2026-04-17T00-00-00Z",
+              "image_id": "sha256:c007f271acf939425e3b553813c2c4531069cd467a59f84ec96121937ff414d9"
+            }
+          ]
+        },
+        "limitations": [
+          "No abrupt Worker Pod-loss combination on PostgreSQL/S3; separate P0 acceptance covers it.",
+          "No live model; fixed real Codex CLI uses a scripted Responses endpoint."
+        ],
+        "metadata_backend": "postgresql",
+        "minio_version": "minio version RELEASE.2026-04-17T00-00-00Z (commit-id=f48dbe777d0e066d2e74d5e671a8ca21c2ec1664)",
+        "object_backend": "s3-compatible-minio",
+        "postgres_rows": {
+          "operations": 17,
+          "revisions": 17,
+          "tasks": 2,
+          "turns": 2
+        },
+        "postgres_version": "18.7",
+        "queued_restart": {
+          "accepted_state": "queued",
+          "api_pod_uids": [
+            "3b8106d8-cb8a-460c-8cb9-b5f896882849",
+            "d1018270-47fe-415c-ac21-598b689afaac"
+          ],
+          "restored_state": "queued",
+          "same_uuid_replays": 2,
+          "turn_id": "93d27bf4-56cd-42d8-aea9-548d82085531"
+        },
+        "scenario": "skill-report",
+        "sqlite_or_local_objects_present": false,
+        "verified_object_count": 30,
+        "verified_part_object_count": 16,
+        "workspace_part_revisions": 3,
+        "workspace_transfer": "tar-parts.v1"
+      }
+    },
+    "persistent-faults": {
+      "status": "passed",
+      "contract_result": {
+        "artifacts": [
+          {
+            "content_path": "/v1/content?id=out%2Freport.json&kind=artifact&version=1",
+            "id": "out/report.json",
+            "kind": "artifact",
+            "sha256": "951b7e7009fe88103d02d8dc000ef36509f6d8be2d25eac3fd58b1e38c6c1484",
+            "version": 1
+          },
+          {
+            "content_path": "/v1/content?id=turns%2F8bc12811-7cb1-4152-a4b2-0975afc7f878%2Fout%2Freport.json&kind=artifact&version=1",
+            "id": "turns/8bc12811-7cb1-4152-a4b2-0975afc7f878/out/report.json",
+            "kind": "artifact",
+            "sha256": "486cdbbb11835542d7cd6c64d97f1f6f36d843d14c9cc143d532ed7d10686291",
+            "version": 1
+          },
+          {
+            "content_path": "/v1/content?id=turns%2F0692e402-26bd-4275-98cb-6b5261453ca1%2Fout%2Freport.json&kind=artifact&version=1",
+            "id": "turns/0692e402-26bd-4275-98cb-6b5261453ca1/out/report.json",
+            "kind": "artifact",
+            "sha256": "6b1b7aa38d58fc6694e44a8be8994d152ce4db2e9fbde9a03fb7d94fe9435975",
+            "version": 1
+          },
+          {
+            "content_path": "/v1/content?id=turns%2F231db9fc-84d8-4e0a-aa7b-7d6f4dc44f66%2Fout%2Freport.json&kind=artifact&version=1",
+            "id": "turns/231db9fc-84d8-4e0a-aa7b-7d6f4dc44f66/out/report.json",
+            "kind": "artifact",
+            "sha256": "6b1b7aa38d58fc6694e44a8be8994d152ce4db2e9fbde9a03fb7d94fe9435975",
+            "version": 1
+          },
+          {
+            "content_path": "/v1/content?id=turns%2F0163c764-c225-4099-8cf7-8eb8c9645a80%2Fout%2Freport.json&kind=artifact&version=1",
+            "id": "turns/0163c764-c225-4099-8cf7-8eb8c9645a80/out/report.json",
+            "kind": "artifact",
+            "sha256": "6b1b7aa38d58fc6694e44a8be8994d152ce4db2e9fbde9a03fb7d94fe9435975",
+            "version": 1
+          },
+          {
+            "content_path": "/v1/content?id=turns%2Fa7e7115c-c44d-400d-bd3e-3cdc22842e38%2Fout%2Freport.json&kind=artifact&version=1",
+            "id": "turns/a7e7115c-c44d-400d-bd3e-3cdc22842e38/out/report.json",
+            "kind": "artifact",
+            "sha256": "6b1b7aa38d58fc6694e44a8be8994d152ce4db2e9fbde9a03fb7d94fe9435975",
+            "version": 1
+          },
+          {
+            "content_path": "/v1/content?id=turns%2Fca9b3dfd-24e6-490f-bfc9-6f59e3562455%2Fout%2Freport.json&kind=artifact&version=1",
+            "id": "turns/ca9b3dfd-24e6-490f-bfc9-6f59e3562455/out/report.json",
+            "kind": "artifact",
+            "sha256": "6b1b7aa38d58fc6694e44a8be8994d152ce4db2e9fbde9a03fb7d94fe9435975",
+            "version": 1
+          },
+          {
+            "content_path": "/v1/content?id=turns%2F68b93f96-a180-4e25-9ad6-97de8dfa90df%2Fout%2Freport.json&kind=artifact&version=1",
+            "id": "turns/68b93f96-a180-4e25-9ad6-97de8dfa90df/out/report.json",
+            "kind": "artifact",
+            "sha256": "6b1b7aa38d58fc6694e44a8be8994d152ce4db2e9fbde9a03fb7d94fe9435975",
+            "version": 1
+          },
+          {
+            "content_path": "/v1/content?id=turns%2F546b698f-e45e-42ae-bf9e-a58e4ad642c3%2Fout%2Freport.json&kind=artifact&version=1",
+            "id": "turns/546b698f-e45e-42ae-bf9e-a58e4ad642c3/out/report.json",
+            "kind": "artifact",
+            "sha256": "6b1b7aa38d58fc6694e44a8be8994d152ce4db2e9fbde9a03fb7d94fe9435975",
+            "version": 1
+          },
+          {
+            "content_path": "/v1/content?id=turns%2Fba01f0b6-a349-4a5a-b06c-8e0cde965600%2Fout%2Freport.json&kind=artifact&version=1",
+            "id": "turns/ba01f0b6-a349-4a5a-b06c-8e0cde965600/out/report.json",
+            "kind": "artifact",
+            "sha256": "6b1b7aa38d58fc6694e44a8be8994d152ce4db2e9fbde9a03fb7d94fe9435975",
+            "version": 1
+          },
+          {
+            "content_path": "/v1/content?id=turns%2F4193c556-3db0-4181-8676-9c8a568bae82%2Fout%2Freport.json&kind=artifact&version=1",
+            "id": "turns/4193c556-3db0-4181-8676-9c8a568bae82/out/report.json",
+            "kind": "artifact",
+            "sha256": "6b1b7aa38d58fc6694e44a8be8994d152ce4db2e9fbde9a03fb7d94fe9435975",
+            "version": 1
+          },
+          {
+            "content_path": "/v1/content?id=turns%2F38785bb5-a2c6-42f8-9440-e84ff2aff915%2Fout%2Freport.json&kind=artifact&version=1",
+            "id": "turns/38785bb5-a2c6-42f8-9440-e84ff2aff915/out/report.json",
+            "kind": "artifact",
+            "sha256": "6b1b7aa38d58fc6694e44a8be8994d152ce4db2e9fbde9a03fb7d94fe9435975",
+            "version": 1
+          }
+        ],
+        "business_rows": 2,
+        "checkpoint_preserved": true,
+        "cli": "codex-cli 0.171.0-alpha.13",
+        "deadline": "2026-11-26T16:25:14.293264351Z",
+        "expected_operations": [
+          "produce",
+          "revise",
+          "audit",
+          "audit",
+          "audit",
+          "audit",
+          "audit",
+          "audit",
+          "audit",
+          "audit",
+          "audit",
+          "audit"
+        ],
+        "failed_publication_pod_uids": [
+          "18074b12-8c8a-4773-8a04-6c76fb4d7c4d"
+        ],
+        "gc_scope": "24-hour history/pending protection; orphan expiry positive control remains in service tests",
+        "historical_revision_count": 44,
+        "interrupted_observed_at": "2026-11-26T16:25:15.957088+00:00",
+        "lost_pod_uid": "f038895c-d17d-4449-ad4a-93446902c7bc",
+        "model": "scripted-responses",
+        "native_execution_counts": {
+          "14ad830b-187d-4df9-b521-07480b3e8d5b": 1,
+          "18074b12-8c8a-4773-8a04-6c76fb4d7c4d": 1,
+          "2240d38f-68e7-4f86-bdf8-b29a14b1fcae": 1,
+          "4e99573c-511f-4f17-8244-f8a99e7679f3": 1,
+          "57ff2459-ab6b-4279-92b1-b853ba0b7ce2": 1,
+          "80b35de5-a7b1-41d0-b4a9-e75c91890c4f": 1,
+          "839b3700-b09d-47ab-b7b7-9d30afc4228a": 1,
+          "a481b5f9-b556-49a3-b779-668d2299803b": 1,
+          "d4633aab-c84b-4522-aba9-ef4ef82f0f9e": 1,
+          "d70ffcf8-5102-4ded-af52-3ef0727028d8": 1,
+          "e716c15f-82f9-488d-8057-44172bd64272": 1,
+          "f038895c-d17d-4449-ad4a-93446902c7bc": 1,
+          "f803fd32-18b8-45cb-b05e-e80b5f498b09": 1,
+          "fb9ed9ba-47bb-48cf-b8c5-74fb00e021ec": 1
+        },
+        "original_uuid_recreated_jobs": 0,
+        "original_uuid_replays": 2,
+        "production_timeout_seconds": 900,
+        "publication_faults": [
+          {
+            "barrier_gc": {
+              "gc": {
+                "removed": 0
+              },
+              "historical_revisions_verified": 8
+            },
+            "case_id": "begin-before",
+            "checkpoint_unchanged_at_barrier": true,
+            "frozen_change": {
+              "adapter_version": "0.5.0",
+              "base_version": 0,
+              "completeness": "persisted-files",
+              "format": "workspace-tar.v1",
+              "id": "turns/0692e402-26bd-4275-98cb-6b5261453ca1/root",
+              "kind": "workspace",
+              "media_type": "application/x-tar",
+              "name": "root",
+              "origin": "runtime",
+              "runtime_version": "codex-cli 0.171.0-alpha.13",
+              "sha256": "3fb98963bc4ed757cbbd18cdc8afa4e4f39bbf38798caa4d31abfd84e9ac651b",
+              "size": 8192
+            },
+            "hit_count": 1,
+            "interrupted_sibling_events": 0,
+            "ledger": {
+              "armed_at": "2026-11-26T16:09:09.04332431Z",
+              "blocked": false,
+              "case_id": "begin-before",
+              "change": {
+                "adapter_version": "0.5.0",
+                "base_version": 0,
+                "completeness": "persisted-files",
+                "format": "workspace-tar.v1",
+                "id": "turns/0692e402-26bd-4275-98cb-6b5261453ca1/root",
+                "kind": "workspace",
+                "media_type": "application/x-tar",
+                "name": "root",
+                "origin": "runtime",
+                "runtime_version": "codex-cli 0.171.0-alpha.13",
+                "sha256": "3fb98963bc4ed757cbbd18cdc8afa4e4f39bbf38798caa4d31abfd84e9ac651b",
+                "size": 8192
+              },
+              "consistent": true,
+              "events": [
+                {
+                  "at": "2026-11-26T16:09:11.033133884Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:11.466673897Z",
+                  "injected": true,
+                  "operation": "3b949e58fafeb8874d9b729ec6ff0dabfbcbbef1d0eb8b99ae99645278a78e29",
+                  "path": "/v1/changes",
+                  "stage": "begin"
+                },
+                {
+                  "at": "2026-11-26T16:09:11.568171255Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:11.572122422Z",
+                  "injected": false,
+                  "operation": "3b949e58fafeb8874d9b729ec6ff0dabfbcbbef1d0eb8b99ae99645278a78e29",
+                  "path": "/v1/changes",
+                  "stage": "begin",
+                  "upstream_status": 200
+                },
+                {
+                  "at": "2026-11-26T16:09:11.572598427Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:11.577312435Z",
+                  "first_missing": "6b1b7aa38d58fc6694e44a8be8994d152ce4db2e9fbde9a03fb7d94fe9435975",
+                  "injected": false,
+                  "manifest_digest": "e1b3f4ac9ab111ac4ba1230b0f4ad4d3701ecb2883d20cdda2c6f90cc523b1d9",
+                  "missing_count": 3,
+                  "operation": "3b949e58fafeb8874d9b729ec6ff0dabfbcbbef1d0eb8b99ae99645278a78e29",
+                  "path": "/v1/changes/3b949e58fafeb8874d9b729ec6ff0dabfbcbbef1d0eb8b99ae99645278a78e29/parts",
+                  "size": 803,
+                  "stage": "manifest",
+                  "upstream_status": 200,
+                  "wire_sha256": "9e321581e1953b3327878a1e0b40c270ecc9a20425af5e89fb5a707d164b0dc8"
+                },
+                {
+                  "at": "2026-11-26T16:09:11.577462478Z",
+                  "body_sha256": "6b1b7aa38d58fc6694e44a8be8994d152ce4db2e9fbde9a03fb7d94fe9435975",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:11.58542627Z",
+                  "injected": false,
+                  "operation": "3b949e58fafeb8874d9b729ec6ff0dabfbcbbef1d0eb8b99ae99645278a78e29",
+                  "path": "/v1/changes/3b949e58fafeb8874d9b729ec6ff0dabfbcbbef1d0eb8b99ae99645278a78e29/parts/6b1b7aa38d58fc6694e44a8be8994d152ce4db2e9fbde9a03fb7d94fe9435975",
+                  "size": 124,
+                  "stage": "part",
+                  "upstream_status": 204
+                },
+                {
+                  "at": "2026-11-26T16:09:11.577505187Z",
+                  "body_sha256": "e9725437a6428207ee5deb3b73f1d4335e18fed6b1715b455d64f09074be0fd9",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:11.582677408Z",
+                  "injected": false,
+                  "operation": "3b949e58fafeb8874d9b729ec6ff0dabfbcbbef1d0eb8b99ae99645278a78e29",
+                  "path": "/v1/changes/3b949e58fafeb8874d9b729ec6ff0dabfbcbbef1d0eb8b99ae99645278a78e29/parts/e9725437a6428207ee5deb3b73f1d4335e18fed6b1715b455d64f09074be0fd9",
+                  "size": 432,
+                  "stage": "part",
+                  "upstream_status": 204
+                },
+                {
+                  "at": "2026-11-26T16:09:11.579704585Z",
+                  "body_sha256": "5516a3b44506131527256991e1d9cca6111241d38f0b65b48c7e0605f4145f71",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:11.587888004Z",
+                  "injected": false,
+                  "operation": "3b949e58fafeb8874d9b729ec6ff0dabfbcbbef1d0eb8b99ae99645278a78e29",
+                  "path": "/v1/changes/3b949e58fafeb8874d9b729ec6ff0dabfbcbbef1d0eb8b99ae99645278a78e29/parts/5516a3b44506131527256991e1d9cca6111241d38f0b65b48c7e0605f4145f71",
+                  "size": 38,
+                  "stage": "part",
+                  "upstream_status": 204
+                },
+                {
+                  "at": "2026-11-26T16:09:11.588001172Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:11.592213758Z",
+                  "injected": false,
+                  "operation": "3b949e58fafeb8874d9b729ec6ff0dabfbcbbef1d0eb8b99ae99645278a78e29",
+                  "path": "/v1/changes/3b949e58fafeb8874d9b729ec6ff0dabfbcbbef1d0eb8b99ae99645278a78e29/commit",
+                  "stage": "commit",
+                  "upstream_status": 200
+                }
+              ],
+              "hits": 1,
+              "hold_first": true,
+              "limit": 1,
+              "manifest_digest": "e1b3f4ac9ab111ac4ba1230b0f4ad4d3701ecb2883d20cdda2c6f90cc523b1d9",
+              "operation": "3b949e58fafeb8874d9b729ec6ff0dabfbcbbef1d0eb8b99ae99645278a78e29",
+              "part_target": "6b1b7aa38d58fc6694e44a8be8994d152ce4db2e9fbde9a03fb7d94fe9435975",
+              "stage": "begin",
+              "target": {
+                "id": "turns/0692e402-26bd-4275-98cb-6b5261453ca1/root",
+                "kind": "workspace"
+              },
+              "timing": "before",
+              "wire_sha256": "9e321581e1953b3327878a1e0b40c270ecc9a20425af5e89fb5a707d164b0dc8"
+            },
+            "marker_mutation": {
+              "after_sha256": "62723b7538204f7e1a4ea09225fc4c2286a8e0f8385d9c4585a32b6ed798ce44",
+              "before_sha256": "d0ee06cb4155e03b389082465ef8dc87c5a1f5089164f77f347b7f32a022c66a",
+              "changed": true,
+              "path": "/run/task/work/state.json"
+            },
+            "native_exec_count": 1,
+            "outcome": "succeeded",
+            "pod_uid": "fb9ed9ba-47bb-48cf-b8c5-74fb00e021ec",
+            "turn_id": "0692e402-26bd-4275-98cb-6b5261453ca1"
+          },
+          {
+            "barrier_gc": {
+              "gc": {
+                "removed": 0
+              },
+              "historical_revisions_verified": 12
+            },
+            "case_id": "begin-after",
+            "checkpoint_unchanged_at_barrier": true,
+            "frozen_change": {
+              "adapter_version": "0.5.0",
+              "base_version": 0,
+              "completeness": "persisted-files",
+              "format": "workspace-tar.v1",
+              "id": "turns/231db9fc-84d8-4e0a-aa7b-7d6f4dc44f66/root",
+              "kind": "workspace",
+              "media_type": "application/x-tar",
+              "name": "root",
+              "origin": "runtime",
+              "runtime_version": "codex-cli 0.171.0-alpha.13",
+              "sha256": "55414f3a61c83e80e0dd60cab93d1ffc591c70720ceeae7c5c33b6c2ed52fddb",
+              "size": 8704
+            },
+            "hit_count": 1,
+            "interrupted_sibling_events": 0,
+            "ledger": {
+              "armed_at": "2026-11-26T16:09:14.862114365Z",
+              "blocked": false,
+              "case_id": "begin-after",
+              "change": {
+                "adapter_version": "0.5.0",
+                "base_version": 0,
+                "completeness": "persisted-files",
+                "format": "workspace-tar.v1",
+                "id": "turns/231db9fc-84d8-4e0a-aa7b-7d6f4dc44f66/root",
+                "kind": "workspace",
+                "media_type": "application/x-tar",
+                "name": "root",
+                "origin": "runtime",
+                "runtime_version": "codex-cli 0.171.0-alpha.13",
+                "sha256": "55414f3a61c83e80e0dd60cab93d1ffc591c70720ceeae7c5c33b6c2ed52fddb",
+                "size": 8704
+              },
+              "consistent": true,
+              "events": [
+                {
+                  "at": "2026-11-26T16:09:17.271795684Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:17.595105956Z",
+                  "injected": true,
+                  "operation": "18bc4ec9767060b0af7445c89f5e530373d2e1a376a98abcc2d084bbc36b4e41",
+                  "path": "/v1/changes",
+                  "stage": "begin",
+                  "upstream_status": 200
+                },
+                {
+                  "at": "2026-11-26T16:09:17.698048412Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:17.700078642Z",
+                  "injected": false,
+                  "operation": "18bc4ec9767060b0af7445c89f5e530373d2e1a376a98abcc2d084bbc36b4e41",
+                  "path": "/v1/changes",
+                  "stage": "begin",
+                  "upstream_status": 200
+                },
+                {
+                  "at": "2026-11-26T16:09:17.700951401Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:17.704893526Z",
+                  "first_missing": "3e6e5647204127f35486dd8e8226742e02ca670f349f385468c13d2e2b7978b0",
+                  "injected": false,
+                  "manifest_digest": "ac96d7ff2085ddee2bd5e7540941c9f558c137d974219d6822ae70a776169a18",
+                  "missing_count": 1,
+                  "operation": "18bc4ec9767060b0af7445c89f5e530373d2e1a376a98abcc2d084bbc36b4e41",
+                  "path": "/v1/changes/18bc4ec9767060b0af7445c89f5e530373d2e1a376a98abcc2d084bbc36b4e41/parts",
+                  "size": 800,
+                  "stage": "manifest",
+                  "upstream_status": 200,
+                  "wire_sha256": "099f3a7376eda4fafc8f94ca5c52f7ee5ac3e1ce6e25be71a4cd7bb5f6c29403"
+                },
+                {
+                  "at": "2026-11-26T16:09:17.705056402Z",
+                  "body_sha256": "3e6e5647204127f35486dd8e8226742e02ca670f349f385468c13d2e2b7978b0",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:17.707708139Z",
+                  "injected": false,
+                  "operation": "18bc4ec9767060b0af7445c89f5e530373d2e1a376a98abcc2d084bbc36b4e41",
+                  "path": "/v1/changes/18bc4ec9767060b0af7445c89f5e530373d2e1a376a98abcc2d084bbc36b4e41/parts/3e6e5647204127f35486dd8e8226742e02ca670f349f385468c13d2e2b7978b0",
+                  "size": 575,
+                  "stage": "part",
+                  "upstream_status": 204
+                },
+                {
+                  "at": "2026-11-26T16:09:17.707823307Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:17.712254145Z",
+                  "injected": false,
+                  "operation": "18bc4ec9767060b0af7445c89f5e530373d2e1a376a98abcc2d084bbc36b4e41",
+                  "path": "/v1/changes/18bc4ec9767060b0af7445c89f5e530373d2e1a376a98abcc2d084bbc36b4e41/commit",
+                  "stage": "commit",
+                  "upstream_status": 200
+                }
+              ],
+              "hits": 1,
+              "hold_first": true,
+              "limit": 1,
+              "manifest_digest": "ac96d7ff2085ddee2bd5e7540941c9f558c137d974219d6822ae70a776169a18",
+              "operation": "18bc4ec9767060b0af7445c89f5e530373d2e1a376a98abcc2d084bbc36b4e41",
+              "part_target": "3e6e5647204127f35486dd8e8226742e02ca670f349f385468c13d2e2b7978b0",
+              "stage": "begin",
+              "target": {
+                "id": "turns/231db9fc-84d8-4e0a-aa7b-7d6f4dc44f66/root",
+                "kind": "workspace"
+              },
+              "timing": "after",
+              "wire_sha256": "099f3a7376eda4fafc8f94ca5c52f7ee5ac3e1ce6e25be71a4cd7bb5f6c29403"
+            },
+            "marker_mutation": {
+              "after_sha256": "a3f5c9d56bab3161eef2bb706a54baa316d5488966f3cc85a6f28bd1594ef6bb",
+              "before_sha256": "d0ee06cb4155e03b389082465ef8dc87c5a1f5089164f77f347b7f32a022c66a",
+              "changed": true,
+              "path": "/run/task/work/state.json"
+            },
+            "native_exec_count": 1,
+            "outcome": "succeeded",
+            "pod_uid": "d70ffcf8-5102-4ded-af52-3ef0727028d8",
+            "turn_id": "231db9fc-84d8-4e0a-aa7b-7d6f4dc44f66"
+          },
+          {
+            "barrier_gc": {
+              "gc": {
+                "removed": 0
+              },
+              "historical_revisions_verified": 16
+            },
+            "case_id": "manifest-before",
+            "checkpoint_unchanged_at_barrier": true,
+            "frozen_change": {
+              "adapter_version": "0.5.0",
+              "base_version": 0,
+              "completeness": "persisted-files",
+              "format": "workspace-tar.v1",
+              "id": "turns/0163c764-c225-4099-8cf7-8eb8c9645a80/root",
+              "kind": "workspace",
+              "media_type": "application/x-tar",
+              "name": "root",
+              "origin": "runtime",
+              "runtime_version": "codex-cli 0.171.0-alpha.13",
+              "sha256": "3556648d8a85a108db3a454824157b50b9b2e513c19ae07148a2d7a5081fb4b4",
+              "size": 8704
+            },
+            "hit_count": 1,
+            "interrupted_sibling_events": 0,
+            "ledger": {
+              "armed_at": "2026-11-26T16:09:21.022743303Z",
+              "blocked": false,
+              "case_id": "manifest-before",
+              "change": {
+                "adapter_version": "0.5.0",
+                "base_version": 0,
+                "completeness": "persisted-files",
+                "format": "workspace-tar.v1",
+                "id": "turns/0163c764-c225-4099-8cf7-8eb8c9645a80/root",
+                "kind": "workspace",
+                "media_type": "application/x-tar",
+                "name": "root",
+                "origin": "runtime",
+                "runtime_version": "codex-cli 0.171.0-alpha.13",
+                "sha256": "3556648d8a85a108db3a454824157b50b9b2e513c19ae07148a2d7a5081fb4b4",
+                "size": 8704
+              },
+              "consistent": true,
+              "events": [
+                {
+                  "at": "2026-11-26T16:09:23.247525179Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:23.250555544Z",
+                  "injected": false,
+                  "operation": "7b3c99aa13a1fcd8428a240deada3aaf8d087ae3016c261264608ff7bd133483",
+                  "path": "/v1/changes",
+                  "stage": "begin",
+                  "upstream_status": 200
+                },
+                {
+                  "at": "2026-11-26T16:09:23.250968423Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:23.819828067Z",
+                  "injected": true,
+                  "manifest_digest": "72378ba02c156400bf5db4c9d877c610e0c854e9d7566ee1665363b165db5dec",
+                  "operation": "7b3c99aa13a1fcd8428a240deada3aaf8d087ae3016c261264608ff7bd133483",
+                  "path": "/v1/changes/7b3c99aa13a1fcd8428a240deada3aaf8d087ae3016c261264608ff7bd133483/parts",
+                  "size": 805,
+                  "stage": "manifest",
+                  "wire_sha256": "86f96cd7b4ad71a07d84ade54f02a2d786d14e0dac4aec97a77b5539d60f1e02"
+                },
+                {
+                  "at": "2026-11-26T16:09:23.92099238Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:23.923622866Z",
+                  "injected": false,
+                  "operation": "7b3c99aa13a1fcd8428a240deada3aaf8d087ae3016c261264608ff7bd133483",
+                  "path": "/v1/changes",
+                  "stage": "begin",
+                  "upstream_status": 200
+                },
+                {
+                  "at": "2026-11-26T16:09:23.923933869Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:23.928344041Z",
+                  "first_missing": "83dac9e7365808b3113aaf863737b3da3d539f2ffd34c92a0248811e3b514045",
+                  "injected": false,
+                  "manifest_digest": "72378ba02c156400bf5db4c9d877c610e0c854e9d7566ee1665363b165db5dec",
+                  "missing_count": 1,
+                  "operation": "7b3c99aa13a1fcd8428a240deada3aaf8d087ae3016c261264608ff7bd133483",
+                  "path": "/v1/changes/7b3c99aa13a1fcd8428a240deada3aaf8d087ae3016c261264608ff7bd133483/parts",
+                  "size": 805,
+                  "stage": "manifest",
+                  "upstream_status": 200,
+                  "wire_sha256": "86f96cd7b4ad71a07d84ade54f02a2d786d14e0dac4aec97a77b5539d60f1e02"
+                },
+                {
+                  "at": "2026-11-26T16:09:23.928507667Z",
+                  "body_sha256": "83dac9e7365808b3113aaf863737b3da3d539f2ffd34c92a0248811e3b514045",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:23.932643461Z",
+                  "injected": false,
+                  "operation": "7b3c99aa13a1fcd8428a240deada3aaf8d087ae3016c261264608ff7bd133483",
+                  "path": "/v1/changes/7b3c99aa13a1fcd8428a240deada3aaf8d087ae3016c261264608ff7bd133483/parts/83dac9e7365808b3113aaf863737b3da3d539f2ffd34c92a0248811e3b514045",
+                  "size": 718,
+                  "stage": "part",
+                  "upstream_status": 204
+                },
+                {
+                  "at": "2026-11-26T16:09:23.932794421Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:23.940680004Z",
+                  "injected": false,
+                  "operation": "7b3c99aa13a1fcd8428a240deada3aaf8d087ae3016c261264608ff7bd133483",
+                  "path": "/v1/changes/7b3c99aa13a1fcd8428a240deada3aaf8d087ae3016c261264608ff7bd133483/commit",
+                  "stage": "commit",
+                  "upstream_status": 200
+                }
+              ],
+              "hits": 1,
+              "hold_first": true,
+              "limit": 1,
+              "manifest_digest": "72378ba02c156400bf5db4c9d877c610e0c854e9d7566ee1665363b165db5dec",
+              "operation": "7b3c99aa13a1fcd8428a240deada3aaf8d087ae3016c261264608ff7bd133483",
+              "part_target": "83dac9e7365808b3113aaf863737b3da3d539f2ffd34c92a0248811e3b514045",
+              "stage": "manifest",
+              "target": {
+                "id": "turns/0163c764-c225-4099-8cf7-8eb8c9645a80/root",
+                "kind": "workspace"
+              },
+              "timing": "before",
+              "wire_sha256": "86f96cd7b4ad71a07d84ade54f02a2d786d14e0dac4aec97a77b5539d60f1e02"
+            },
+            "marker_mutation": {
+              "after_sha256": "fa330f6095bbf660a3dbe52e6af7ac581cc549b16cec2e01ee0a76922983ad53",
+              "before_sha256": "d0ee06cb4155e03b389082465ef8dc87c5a1f5089164f77f347b7f32a022c66a",
+              "changed": true,
+              "path": "/run/task/work/state.json"
+            },
+            "native_exec_count": 1,
+            "outcome": "succeeded",
+            "pod_uid": "80b35de5-a7b1-41d0-b4a9-e75c91890c4f",
+            "turn_id": "0163c764-c225-4099-8cf7-8eb8c9645a80"
+          },
+          {
+            "barrier_gc": {
+              "gc": {
+                "removed": 0
+              },
+              "historical_revisions_verified": 20
+            },
+            "case_id": "manifest-after",
+            "checkpoint_unchanged_at_barrier": true,
+            "frozen_change": {
+              "adapter_version": "0.5.0",
+              "base_version": 0,
+              "completeness": "persisted-files",
+              "format": "workspace-tar.v1",
+              "id": "turns/a7e7115c-c44d-400d-bd3e-3cdc22842e38/root",
+              "kind": "workspace",
+              "media_type": "application/x-tar",
+              "name": "root",
+              "origin": "runtime",
+              "runtime_version": "codex-cli 0.171.0-alpha.13",
+              "sha256": "f20fed3f0dab90a4cc056ccb4373d6404ccf98b35bca84bb6c28bb752f8a61ec",
+              "size": 8704
+            },
+            "hit_count": 1,
+            "interrupted_sibling_events": 0,
+            "ledger": {
+              "armed_at": "2026-11-26T16:09:28.08246023Z",
+              "blocked": false,
+              "case_id": "manifest-after",
+              "change": {
+                "adapter_version": "0.5.0",
+                "base_version": 0,
+                "completeness": "persisted-files",
+                "format": "workspace-tar.v1",
+                "id": "turns/a7e7115c-c44d-400d-bd3e-3cdc22842e38/root",
+                "kind": "workspace",
+                "media_type": "application/x-tar",
+                "name": "root",
+                "origin": "runtime",
+                "runtime_version": "codex-cli 0.171.0-alpha.13",
+                "sha256": "f20fed3f0dab90a4cc056ccb4373d6404ccf98b35bca84bb6c28bb752f8a61ec",
+                "size": 8704
+              },
+              "consistent": true,
+              "events": [
+                {
+                  "at": "2026-11-26T16:09:30.312176282Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:30.315340566Z",
+                  "injected": false,
+                  "operation": "7d317802ab35c096c9457a11d4233bb3fd03959feb8472d983c650fd3f7472c0",
+                  "path": "/v1/changes",
+                  "stage": "begin",
+                  "upstream_status": 200
+                },
+                {
+                  "at": "2026-11-26T16:09:30.316201366Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:30.913002512Z",
+                  "first_missing": "bf9e5dcf74a38b4e9058e18dc1030207e1503c869afa77c746bb6a0fc1ee2f73",
+                  "injected": true,
+                  "manifest_digest": "98fc340c5173dccac51b90021e3763cd4f106a1ec3c0537368b65b8b2e294754",
+                  "missing_count": 1,
+                  "operation": "7d317802ab35c096c9457a11d4233bb3fd03959feb8472d983c650fd3f7472c0",
+                  "path": "/v1/changes/7d317802ab35c096c9457a11d4233bb3fd03959feb8472d983c650fd3f7472c0/parts",
+                  "size": 803,
+                  "stage": "manifest",
+                  "upstream_status": 200,
+                  "wire_sha256": "bd46d7f44171b4727e3d3f73220d6fbf68b030202313b10ec3c2e80deaeb91bc"
+                },
+                {
+                  "at": "2026-11-26T16:09:31.015591007Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:31.017865697Z",
+                  "injected": false,
+                  "operation": "7d317802ab35c096c9457a11d4233bb3fd03959feb8472d983c650fd3f7472c0",
+                  "path": "/v1/changes",
+                  "stage": "begin",
+                  "upstream_status": 200
+                },
+                {
+                  "at": "2026-11-26T16:09:31.022133367Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:31.025169899Z",
+                  "first_missing": "bf9e5dcf74a38b4e9058e18dc1030207e1503c869afa77c746bb6a0fc1ee2f73",
+                  "injected": false,
+                  "manifest_digest": "98fc340c5173dccac51b90021e3763cd4f106a1ec3c0537368b65b8b2e294754",
+                  "missing_count": 1,
+                  "operation": "7d317802ab35c096c9457a11d4233bb3fd03959feb8472d983c650fd3f7472c0",
+                  "path": "/v1/changes/7d317802ab35c096c9457a11d4233bb3fd03959feb8472d983c650fd3f7472c0/parts",
+                  "size": 803,
+                  "stage": "manifest",
+                  "upstream_status": 200,
+                  "wire_sha256": "bd46d7f44171b4727e3d3f73220d6fbf68b030202313b10ec3c2e80deaeb91bc"
+                },
+                {
+                  "at": "2026-11-26T16:09:31.025339901Z",
+                  "body_sha256": "bf9e5dcf74a38b4e9058e18dc1030207e1503c869afa77c746bb6a0fc1ee2f73",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:31.029317151Z",
+                  "injected": false,
+                  "operation": "7d317802ab35c096c9457a11d4233bb3fd03959feb8472d983c650fd3f7472c0",
+                  "path": "/v1/changes/7d317802ab35c096c9457a11d4233bb3fd03959feb8472d983c650fd3f7472c0/parts/bf9e5dcf74a38b4e9058e18dc1030207e1503c869afa77c746bb6a0fc1ee2f73",
+                  "size": 861,
+                  "stage": "part",
+                  "upstream_status": 204
+                },
+                {
+                  "at": "2026-11-26T16:09:31.029445944Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:31.033112524Z",
+                  "injected": false,
+                  "operation": "7d317802ab35c096c9457a11d4233bb3fd03959feb8472d983c650fd3f7472c0",
+                  "path": "/v1/changes/7d317802ab35c096c9457a11d4233bb3fd03959feb8472d983c650fd3f7472c0/commit",
+                  "stage": "commit",
+                  "upstream_status": 200
+                }
+              ],
+              "hits": 1,
+              "hold_first": true,
+              "limit": 1,
+              "manifest_digest": "98fc340c5173dccac51b90021e3763cd4f106a1ec3c0537368b65b8b2e294754",
+              "operation": "7d317802ab35c096c9457a11d4233bb3fd03959feb8472d983c650fd3f7472c0",
+              "part_target": "bf9e5dcf74a38b4e9058e18dc1030207e1503c869afa77c746bb6a0fc1ee2f73",
+              "stage": "manifest",
+              "target": {
+                "id": "turns/a7e7115c-c44d-400d-bd3e-3cdc22842e38/root",
+                "kind": "workspace"
+              },
+              "timing": "after",
+              "wire_sha256": "bd46d7f44171b4727e3d3f73220d6fbf68b030202313b10ec3c2e80deaeb91bc"
+            },
+            "marker_mutation": {
+              "after_sha256": "def5f92fd23865b29269b94e97f7ec73d34d6999b44d082d17b5f08f1b374952",
+              "before_sha256": "d0ee06cb4155e03b389082465ef8dc87c5a1f5089164f77f347b7f32a022c66a",
+              "changed": true,
+              "path": "/run/task/work/state.json"
+            },
+            "native_exec_count": 1,
+            "outcome": "succeeded",
+            "pod_uid": "2240d38f-68e7-4f86-bdf8-b29a14b1fcae",
+            "turn_id": "a7e7115c-c44d-400d-bd3e-3cdc22842e38"
+          },
+          {
+            "barrier_gc": {
+              "gc": {
+                "removed": 0
+              },
+              "historical_revisions_verified": 24
+            },
+            "case_id": "part-before",
+            "checkpoint_unchanged_at_barrier": true,
+            "frozen_change": {
+              "adapter_version": "0.5.0",
+              "base_version": 0,
+              "completeness": "persisted-files",
+              "format": "workspace-tar.v1",
+              "id": "turns/ca9b3dfd-24e6-490f-bfc9-6f59e3562455/root",
+              "kind": "workspace",
+              "media_type": "application/x-tar",
+              "name": "root",
+              "origin": "runtime",
+              "runtime_version": "codex-cli 0.171.0-alpha.13",
+              "sha256": "38ab60cec726a185394b018e0fe2568a59856abc75b68aff3231a45997f6a8b1",
+              "size": 8704
+            },
+            "hit_count": 1,
+            "interrupted_sibling_events": 0,
+            "ledger": {
+              "armed_at": "2026-11-26T16:09:35.020713838Z",
+              "blocked": false,
+              "case_id": "part-before",
+              "change": {
+                "adapter_version": "0.5.0",
+                "base_version": 0,
+                "completeness": "persisted-files",
+                "format": "workspace-tar.v1",
+                "id": "turns/ca9b3dfd-24e6-490f-bfc9-6f59e3562455/root",
+                "kind": "workspace",
+                "media_type": "application/x-tar",
+                "name": "root",
+                "origin": "runtime",
+                "runtime_version": "codex-cli 0.171.0-alpha.13",
+                "sha256": "38ab60cec726a185394b018e0fe2568a59856abc75b68aff3231a45997f6a8b1",
+                "size": 8704
+              },
+              "consistent": true,
+              "events": [
+                {
+                  "at": "2026-11-26T16:09:37.31982737Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:37.32328324Z",
+                  "injected": false,
+                  "operation": "b7ea7ecb07405e67ab48f494e33e8d246a642661b4ad9df0dd0499169d53ec38",
+                  "path": "/v1/changes",
+                  "stage": "begin",
+                  "upstream_status": 200
+                },
+                {
+                  "at": "2026-11-26T16:09:37.324530628Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:37.329670224Z",
+                  "first_missing": "6e4a3b22b534b1399d1eaf92164e671ca9bec1b90cd259e480f9c0b8b1e4fa35",
+                  "injected": false,
+                  "manifest_digest": "c0bebe2d9c5ea304c861e93f9cbba6698cf0b073cf0cbc1326431791c1e889fe",
+                  "missing_count": 1,
+                  "operation": "b7ea7ecb07405e67ab48f494e33e8d246a642661b4ad9df0dd0499169d53ec38",
+                  "path": "/v1/changes/b7ea7ecb07405e67ab48f494e33e8d246a642661b4ad9df0dd0499169d53ec38/parts",
+                  "size": 804,
+                  "stage": "manifest",
+                  "upstream_status": 200,
+                  "wire_sha256": "3b2ac649c4403142dd1f9932a7df6ef20ad407c2a27981226f99777f0cfe6e46"
+                },
+                {
+                  "at": "2026-11-26T16:09:37.3298306Z",
+                  "body_sha256": "6e4a3b22b534b1399d1eaf92164e671ca9bec1b90cd259e480f9c0b8b1e4fa35",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:37.83485724Z",
+                  "injected": true,
+                  "operation": "b7ea7ecb07405e67ab48f494e33e8d246a642661b4ad9df0dd0499169d53ec38",
+                  "path": "/v1/changes/b7ea7ecb07405e67ab48f494e33e8d246a642661b4ad9df0dd0499169d53ec38/parts/6e4a3b22b534b1399d1eaf92164e671ca9bec1b90cd259e480f9c0b8b1e4fa35",
+                  "size": 1004,
+                  "stage": "part"
+                },
+                {
+                  "at": "2026-11-26T16:09:37.938165617Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:37.94132815Z",
+                  "injected": false,
+                  "operation": "b7ea7ecb07405e67ab48f494e33e8d246a642661b4ad9df0dd0499169d53ec38",
+                  "path": "/v1/changes",
+                  "stage": "begin",
+                  "upstream_status": 200
+                },
+                {
+                  "at": "2026-11-26T16:09:37.942154367Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:37.947601175Z",
+                  "first_missing": "6e4a3b22b534b1399d1eaf92164e671ca9bec1b90cd259e480f9c0b8b1e4fa35",
+                  "injected": false,
+                  "manifest_digest": "c0bebe2d9c5ea304c861e93f9cbba6698cf0b073cf0cbc1326431791c1e889fe",
+                  "missing_count": 1,
+                  "operation": "b7ea7ecb07405e67ab48f494e33e8d246a642661b4ad9df0dd0499169d53ec38",
+                  "path": "/v1/changes/b7ea7ecb07405e67ab48f494e33e8d246a642661b4ad9df0dd0499169d53ec38/parts",
+                  "size": 804,
+                  "stage": "manifest",
+                  "upstream_status": 200,
+                  "wire_sha256": "3b2ac649c4403142dd1f9932a7df6ef20ad407c2a27981226f99777f0cfe6e46"
+                },
+                {
+                  "at": "2026-11-26T16:09:37.947784968Z",
+                  "body_sha256": "6e4a3b22b534b1399d1eaf92164e671ca9bec1b90cd259e480f9c0b8b1e4fa35",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:37.950943835Z",
+                  "injected": false,
+                  "operation": "b7ea7ecb07405e67ab48f494e33e8d246a642661b4ad9df0dd0499169d53ec38",
+                  "path": "/v1/changes/b7ea7ecb07405e67ab48f494e33e8d246a642661b4ad9df0dd0499169d53ec38/parts/6e4a3b22b534b1399d1eaf92164e671ca9bec1b90cd259e480f9c0b8b1e4fa35",
+                  "size": 1004,
+                  "stage": "part",
+                  "upstream_status": 204
+                },
+                {
+                  "at": "2026-11-26T16:09:37.951026711Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:37.954851417Z",
+                  "injected": false,
+                  "operation": "b7ea7ecb07405e67ab48f494e33e8d246a642661b4ad9df0dd0499169d53ec38",
+                  "path": "/v1/changes/b7ea7ecb07405e67ab48f494e33e8d246a642661b4ad9df0dd0499169d53ec38/commit",
+                  "stage": "commit",
+                  "upstream_status": 200
+                }
+              ],
+              "hits": 1,
+              "hold_first": true,
+              "limit": 1,
+              "manifest_digest": "c0bebe2d9c5ea304c861e93f9cbba6698cf0b073cf0cbc1326431791c1e889fe",
+              "operation": "b7ea7ecb07405e67ab48f494e33e8d246a642661b4ad9df0dd0499169d53ec38",
+              "part_target": "6e4a3b22b534b1399d1eaf92164e671ca9bec1b90cd259e480f9c0b8b1e4fa35",
+              "stage": "part",
+              "target": {
+                "id": "turns/ca9b3dfd-24e6-490f-bfc9-6f59e3562455/root",
+                "kind": "workspace"
+              },
+              "timing": "before",
+              "wire_sha256": "3b2ac649c4403142dd1f9932a7df6ef20ad407c2a27981226f99777f0cfe6e46"
+            },
+            "marker_mutation": {
+              "after_sha256": "432076b531bc928e95d1e1a17d4fb1d96ae7f1bcedbbe008b35abcece19b6b7e",
+              "before_sha256": "d0ee06cb4155e03b389082465ef8dc87c5a1f5089164f77f347b7f32a022c66a",
+              "changed": true,
+              "path": "/run/task/work/state.json"
+            },
+            "native_exec_count": 1,
+            "outcome": "succeeded",
+            "pod_uid": "839b3700-b09d-47ab-b7b7-9d30afc4228a",
+            "turn_id": "ca9b3dfd-24e6-490f-bfc9-6f59e3562455"
+          },
+          {
+            "barrier_gc": {
+              "gc": {
+                "removed": 0
+              },
+              "historical_revisions_verified": 28
+            },
+            "case_id": "part-after",
+            "checkpoint_unchanged_at_barrier": true,
+            "frozen_change": {
+              "adapter_version": "0.5.0",
+              "base_version": 0,
+              "completeness": "persisted-files",
+              "format": "workspace-tar.v1",
+              "id": "turns/68b93f96-a180-4e25-9ad6-97de8dfa90df/root",
+              "kind": "workspace",
+              "media_type": "application/x-tar",
+              "name": "root",
+              "origin": "runtime",
+              "runtime_version": "codex-cli 0.171.0-alpha.13",
+              "sha256": "69fdb1dfdee6b5ccb9e261bf794f8b47f24290b88daf29ef58f940f48474d515",
+              "size": 9216
+            },
+            "hit_count": 1,
+            "interrupted_sibling_events": 0,
+            "ledger": {
+              "armed_at": "2026-11-26T16:09:41.963869874Z",
+              "blocked": false,
+              "case_id": "part-after",
+              "change": {
+                "adapter_version": "0.5.0",
+                "base_version": 0,
+                "completeness": "persisted-files",
+                "format": "workspace-tar.v1",
+                "id": "turns/68b93f96-a180-4e25-9ad6-97de8dfa90df/root",
+                "kind": "workspace",
+                "media_type": "application/x-tar",
+                "name": "root",
+                "origin": "runtime",
+                "runtime_version": "codex-cli 0.171.0-alpha.13",
+                "sha256": "69fdb1dfdee6b5ccb9e261bf794f8b47f24290b88daf29ef58f940f48474d515",
+                "size": 9216
+              },
+              "consistent": true,
+              "events": [
+                {
+                  "at": "2026-11-26T16:09:44.297243432Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:44.301493685Z",
+                  "injected": false,
+                  "operation": "52e46dad0b57426ff352b4d22d65241781534a951167e4b91d331a4f08cdb27c",
+                  "path": "/v1/changes",
+                  "stage": "begin",
+                  "upstream_status": 200
+                },
+                {
+                  "at": "2026-11-26T16:09:44.302407528Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:44.30938356Z",
+                  "first_missing": "4b86eec0c44bfd443f922073d630804029827a9e852dfd8def9de307c4fe4af8",
+                  "injected": false,
+                  "manifest_digest": "8dfea42cf1e7cae2ac519e824d11422854bb0836bc64fd1a49b87b3171d9715a",
+                  "missing_count": 1,
+                  "operation": "52e46dad0b57426ff352b4d22d65241781534a951167e4b91d331a4f08cdb27c",
+                  "path": "/v1/changes/52e46dad0b57426ff352b4d22d65241781534a951167e4b91d331a4f08cdb27c/parts",
+                  "size": 806,
+                  "stage": "manifest",
+                  "upstream_status": 200,
+                  "wire_sha256": "22497d4013a5b5a11970f341b232624e3afea813b220623db66996f648fa5be1"
+                },
+                {
+                  "at": "2026-11-26T16:09:44.309523103Z",
+                  "body_sha256": "4b86eec0c44bfd443f922073d630804029827a9e852dfd8def9de307c4fe4af8",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:44.768798137Z",
+                  "injected": true,
+                  "operation": "52e46dad0b57426ff352b4d22d65241781534a951167e4b91d331a4f08cdb27c",
+                  "path": "/v1/changes/52e46dad0b57426ff352b4d22d65241781534a951167e4b91d331a4f08cdb27c/parts/4b86eec0c44bfd443f922073d630804029827a9e852dfd8def9de307c4fe4af8",
+                  "size": 1147,
+                  "stage": "part",
+                  "upstream_status": 204
+                },
+                {
+                  "at": "2026-11-26T16:09:44.87162705Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:44.874365454Z",
+                  "injected": false,
+                  "operation": "52e46dad0b57426ff352b4d22d65241781534a951167e4b91d331a4f08cdb27c",
+                  "path": "/v1/changes",
+                  "stage": "begin",
+                  "upstream_status": 200
+                },
+                {
+                  "at": "2026-11-26T16:09:44.875023503Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:44.878532498Z",
+                  "injected": false,
+                  "manifest_digest": "8dfea42cf1e7cae2ac519e824d11422854bb0836bc64fd1a49b87b3171d9715a",
+                  "operation": "52e46dad0b57426ff352b4d22d65241781534a951167e4b91d331a4f08cdb27c",
+                  "path": "/v1/changes/52e46dad0b57426ff352b4d22d65241781534a951167e4b91d331a4f08cdb27c/parts",
+                  "size": 806,
+                  "stage": "manifest",
+                  "upstream_status": 200,
+                  "wire_sha256": "22497d4013a5b5a11970f341b232624e3afea813b220623db66996f648fa5be1"
+                },
+                {
+                  "at": "2026-11-26T16:09:44.878635791Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:44.883798595Z",
+                  "injected": false,
+                  "operation": "52e46dad0b57426ff352b4d22d65241781534a951167e4b91d331a4f08cdb27c",
+                  "path": "/v1/changes/52e46dad0b57426ff352b4d22d65241781534a951167e4b91d331a4f08cdb27c/commit",
+                  "stage": "commit",
+                  "upstream_status": 200
+                }
+              ],
+              "hits": 1,
+              "hold_first": true,
+              "limit": 1,
+              "manifest_digest": "8dfea42cf1e7cae2ac519e824d11422854bb0836bc64fd1a49b87b3171d9715a",
+              "operation": "52e46dad0b57426ff352b4d22d65241781534a951167e4b91d331a4f08cdb27c",
+              "part_target": "4b86eec0c44bfd443f922073d630804029827a9e852dfd8def9de307c4fe4af8",
+              "stage": "part",
+              "target": {
+                "id": "turns/68b93f96-a180-4e25-9ad6-97de8dfa90df/root",
+                "kind": "workspace"
+              },
+              "timing": "after",
+              "wire_sha256": "22497d4013a5b5a11970f341b232624e3afea813b220623db66996f648fa5be1"
+            },
+            "marker_mutation": {
+              "after_sha256": "60c4b8c079c9c1ff5b84242519ddd269299a1eb071a9f0f1d411e7ae6fab3214",
+              "before_sha256": "d0ee06cb4155e03b389082465ef8dc87c5a1f5089164f77f347b7f32a022c66a",
+              "changed": true,
+              "path": "/run/task/work/state.json"
+            },
+            "native_exec_count": 1,
+            "outcome": "succeeded",
+            "pod_uid": "14ad830b-187d-4df9-b521-07480b3e8d5b",
+            "turn_id": "68b93f96-a180-4e25-9ad6-97de8dfa90df"
+          },
+          {
+            "barrier_gc": {
+              "gc": {
+                "removed": 0
+              },
+              "historical_revisions_verified": 32
+            },
+            "case_id": "commit-before",
+            "checkpoint_unchanged_at_barrier": true,
+            "frozen_change": {
+              "adapter_version": "0.5.0",
+              "base_version": 0,
+              "completeness": "persisted-files",
+              "format": "workspace-tar.v1",
+              "id": "turns/546b698f-e45e-42ae-bf9e-a58e4ad642c3/root",
+              "kind": "workspace",
+              "media_type": "application/x-tar",
+              "name": "root",
+              "origin": "runtime",
+              "runtime_version": "codex-cli 0.171.0-alpha.13",
+              "sha256": "e53d6c2b528e9dec55323b9eaf74a75a12e31e18f6dd0b1052afe23ae608591d",
+              "size": 9216
+            },
+            "hit_count": 1,
+            "interrupted_sibling_events": 0,
+            "ledger": {
+              "armed_at": "2026-11-26T16:09:48.406678152Z",
+              "blocked": false,
+              "case_id": "commit-before",
+              "change": {
+                "adapter_version": "0.5.0",
+                "base_version": 0,
+                "completeness": "persisted-files",
+                "format": "workspace-tar.v1",
+                "id": "turns/546b698f-e45e-42ae-bf9e-a58e4ad642c3/root",
+                "kind": "workspace",
+                "media_type": "application/x-tar",
+                "name": "root",
+                "origin": "runtime",
+                "runtime_version": "codex-cli 0.171.0-alpha.13",
+                "sha256": "e53d6c2b528e9dec55323b9eaf74a75a12e31e18f6dd0b1052afe23ae608591d",
+                "size": 9216
+              },
+              "consistent": true,
+              "events": [
+                {
+                  "at": "2026-11-26T16:09:50.307111661Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:50.310025984Z",
+                  "injected": false,
+                  "operation": "2c3e6500eb63f5df5848cc3e05263720f4e311ddd4dfa994f958dffdab3824ad",
+                  "path": "/v1/changes",
+                  "stage": "begin",
+                  "upstream_status": 200
+                },
+                {
+                  "at": "2026-11-26T16:09:50.31253501Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:50.317433853Z",
+                  "first_missing": "76e70ca9d070d4c87e30392b40d0f7fd1c86e3a4fa2d0910be3f2283a4f1d33f",
+                  "injected": false,
+                  "manifest_digest": "2dbc78b388f6196bf632324b70f8357aba25ad097e4ed1a35482352b790a50bc",
+                  "missing_count": 1,
+                  "operation": "2c3e6500eb63f5df5848cc3e05263720f4e311ddd4dfa994f958dffdab3824ad",
+                  "path": "/v1/changes/2c3e6500eb63f5df5848cc3e05263720f4e311ddd4dfa994f958dffdab3824ad/parts",
+                  "size": 808,
+                  "stage": "manifest",
+                  "upstream_status": 200,
+                  "wire_sha256": "29158ba8207c2b2be855472719d041097880d1f9d120db98a4ee65a86401ad4b"
+                },
+                {
+                  "at": "2026-11-26T16:09:50.317633605Z",
+                  "body_sha256": "76e70ca9d070d4c87e30392b40d0f7fd1c86e3a4fa2d0910be3f2283a4f1d33f",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:50.320784222Z",
+                  "injected": false,
+                  "operation": "2c3e6500eb63f5df5848cc3e05263720f4e311ddd4dfa994f958dffdab3824ad",
+                  "path": "/v1/changes/2c3e6500eb63f5df5848cc3e05263720f4e311ddd4dfa994f958dffdab3824ad/parts/76e70ca9d070d4c87e30392b40d0f7fd1c86e3a4fa2d0910be3f2283a4f1d33f",
+                  "size": 1290,
+                  "stage": "part",
+                  "upstream_status": 204
+                },
+                {
+                  "at": "2026-11-26T16:09:50.320872889Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:50.779715419Z",
+                  "injected": true,
+                  "operation": "2c3e6500eb63f5df5848cc3e05263720f4e311ddd4dfa994f958dffdab3824ad",
+                  "path": "/v1/changes/2c3e6500eb63f5df5848cc3e05263720f4e311ddd4dfa994f958dffdab3824ad/commit",
+                  "stage": "commit"
+                },
+                {
+                  "at": "2026-11-26T16:09:50.881830283Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:50.886733585Z",
+                  "injected": false,
+                  "operation": "2c3e6500eb63f5df5848cc3e05263720f4e311ddd4dfa994f958dffdab3824ad",
+                  "path": "/v1/changes",
+                  "stage": "begin",
+                  "upstream_status": 200
+                },
+                {
+                  "at": "2026-11-26T16:09:50.887348924Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:50.893333029Z",
+                  "injected": false,
+                  "manifest_digest": "2dbc78b388f6196bf632324b70f8357aba25ad097e4ed1a35482352b790a50bc",
+                  "operation": "2c3e6500eb63f5df5848cc3e05263720f4e311ddd4dfa994f958dffdab3824ad",
+                  "path": "/v1/changes/2c3e6500eb63f5df5848cc3e05263720f4e311ddd4dfa994f958dffdab3824ad/parts",
+                  "size": 808,
+                  "stage": "manifest",
+                  "upstream_status": 200,
+                  "wire_sha256": "29158ba8207c2b2be855472719d041097880d1f9d120db98a4ee65a86401ad4b"
+                },
+                {
+                  "at": "2026-11-26T16:09:50.89346628Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:50.897026901Z",
+                  "injected": false,
+                  "operation": "2c3e6500eb63f5df5848cc3e05263720f4e311ddd4dfa994f958dffdab3824ad",
+                  "path": "/v1/changes/2c3e6500eb63f5df5848cc3e05263720f4e311ddd4dfa994f958dffdab3824ad/commit",
+                  "stage": "commit",
+                  "upstream_status": 200
+                }
+              ],
+              "hits": 1,
+              "hold_first": true,
+              "limit": 1,
+              "manifest_digest": "2dbc78b388f6196bf632324b70f8357aba25ad097e4ed1a35482352b790a50bc",
+              "operation": "2c3e6500eb63f5df5848cc3e05263720f4e311ddd4dfa994f958dffdab3824ad",
+              "part_target": "76e70ca9d070d4c87e30392b40d0f7fd1c86e3a4fa2d0910be3f2283a4f1d33f",
+              "stage": "commit",
+              "target": {
+                "id": "turns/546b698f-e45e-42ae-bf9e-a58e4ad642c3/root",
+                "kind": "workspace"
+              },
+              "timing": "before",
+              "wire_sha256": "29158ba8207c2b2be855472719d041097880d1f9d120db98a4ee65a86401ad4b"
+            },
+            "marker_mutation": {
+              "after_sha256": "555aa49b5fe04a25856f5ad70b5de5089a7037c9cfc13461f0da149b22441863",
+              "before_sha256": "d0ee06cb4155e03b389082465ef8dc87c5a1f5089164f77f347b7f32a022c66a",
+              "changed": true,
+              "path": "/run/task/work/state.json"
+            },
+            "native_exec_count": 1,
+            "outcome": "succeeded",
+            "pod_uid": "4e99573c-511f-4f17-8244-f8a99e7679f3",
+            "turn_id": "546b698f-e45e-42ae-bf9e-a58e4ad642c3"
+          },
+          {
+            "barrier_gc": {
+              "gc": {
+                "removed": 0
+              },
+              "historical_revisions_verified": 36
+            },
+            "case_id": "commit-after",
+            "checkpoint_unchanged_at_barrier": true,
+            "frozen_change": {
+              "adapter_version": "0.5.0",
+              "base_version": 0,
+              "completeness": "persisted-files",
+              "format": "workspace-tar.v1",
+              "id": "turns/ba01f0b6-a349-4a5a-b06c-8e0cde965600/root",
+              "kind": "workspace",
+              "media_type": "application/x-tar",
+              "name": "root",
+              "origin": "runtime",
+              "runtime_version": "codex-cli 0.171.0-alpha.13",
+              "sha256": "d65a336ee32803e6af8b5398c05a79d31c3edae9e7d86955b4a202501300180d",
+              "size": 9216
+            },
+            "hit_count": 1,
+            "interrupted_sibling_events": 0,
+            "ledger": {
+              "armed_at": "2026-11-26T16:09:54.193804499Z",
+              "blocked": false,
+              "case_id": "commit-after",
+              "change": {
+                "adapter_version": "0.5.0",
+                "base_version": 0,
+                "completeness": "persisted-files",
+                "format": "workspace-tar.v1",
+                "id": "turns/ba01f0b6-a349-4a5a-b06c-8e0cde965600/root",
+                "kind": "workspace",
+                "media_type": "application/x-tar",
+                "name": "root",
+                "origin": "runtime",
+                "runtime_version": "codex-cli 0.171.0-alpha.13",
+                "sha256": "d65a336ee32803e6af8b5398c05a79d31c3edae9e7d86955b4a202501300180d",
+                "size": 9216
+              },
+              "consistent": true,
+              "events": [
+                {
+                  "at": "2026-11-26T16:09:56.346448825Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:56.349353314Z",
+                  "injected": false,
+                  "operation": "1dc5b98d93cc38b16bba05b14c12057e253b7bf3a248a2ff05465ca7388e3350",
+                  "path": "/v1/changes",
+                  "stage": "begin",
+                  "upstream_status": 200
+                },
+                {
+                  "at": "2026-11-26T16:09:56.349865986Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:56.354836163Z",
+                  "first_missing": "59e5dfd20fceed488e6ed34ee99b9f451341da5c556b8fb70d063c6295e017fc",
+                  "injected": false,
+                  "manifest_digest": "1c0d5f35f4a0b6e20e16c736965d806eddbd35c676a1bbff6f107a47e9c203c2",
+                  "missing_count": 1,
+                  "operation": "1dc5b98d93cc38b16bba05b14c12057e253b7bf3a248a2ff05465ca7388e3350",
+                  "path": "/v1/changes/1dc5b98d93cc38b16bba05b14c12057e253b7bf3a248a2ff05465ca7388e3350/parts",
+                  "size": 804,
+                  "stage": "manifest",
+                  "upstream_status": 200,
+                  "wire_sha256": "d3ef3ec65af98c0f6b7c14805244c84e32d22153642768830281673dc08f066c"
+                },
+                {
+                  "at": "2026-11-26T16:09:56.355011665Z",
+                  "body_sha256": "59e5dfd20fceed488e6ed34ee99b9f451341da5c556b8fb70d063c6295e017fc",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:56.358130823Z",
+                  "injected": false,
+                  "operation": "1dc5b98d93cc38b16bba05b14c12057e253b7bf3a248a2ff05465ca7388e3350",
+                  "path": "/v1/changes/1dc5b98d93cc38b16bba05b14c12057e253b7bf3a248a2ff05465ca7388e3350/parts/59e5dfd20fceed488e6ed34ee99b9f451341da5c556b8fb70d063c6295e017fc",
+                  "size": 1433,
+                  "stage": "part",
+                  "upstream_status": 204
+                },
+                {
+                  "at": "2026-11-26T16:09:56.35821274Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:56.834302493Z",
+                  "injected": true,
+                  "operation": "1dc5b98d93cc38b16bba05b14c12057e253b7bf3a248a2ff05465ca7388e3350",
+                  "path": "/v1/changes/1dc5b98d93cc38b16bba05b14c12057e253b7bf3a248a2ff05465ca7388e3350/commit",
+                  "stage": "commit",
+                  "upstream_status": 200
+                },
+                {
+                  "at": "2026-11-26T16:09:56.937281325Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:09:56.937759621Z",
+                  "injected": false,
+                  "operation": "1dc5b98d93cc38b16bba05b14c12057e253b7bf3a248a2ff05465ca7388e3350",
+                  "path": "/v1/changes",
+                  "stage": "begin",
+                  "upstream_status": 200
+                }
+              ],
+              "hits": 1,
+              "hold_first": true,
+              "limit": 1,
+              "manifest_digest": "1c0d5f35f4a0b6e20e16c736965d806eddbd35c676a1bbff6f107a47e9c203c2",
+              "operation": "1dc5b98d93cc38b16bba05b14c12057e253b7bf3a248a2ff05465ca7388e3350",
+              "part_target": "59e5dfd20fceed488e6ed34ee99b9f451341da5c556b8fb70d063c6295e017fc",
+              "stage": "commit",
+              "target": {
+                "id": "turns/ba01f0b6-a349-4a5a-b06c-8e0cde965600/root",
+                "kind": "workspace"
+              },
+              "timing": "after",
+              "wire_sha256": "d3ef3ec65af98c0f6b7c14805244c84e32d22153642768830281673dc08f066c"
+            },
+            "marker_mutation": {
+              "after_sha256": "19ee26a2a3b9c308b1a28a4b3c9dc8698dd60c2350b0ee577446c4f2259e5635",
+              "before_sha256": "d0ee06cb4155e03b389082465ef8dc87c5a1f5089164f77f347b7f32a022c66a",
+              "changed": true,
+              "path": "/run/task/work/state.json"
+            },
+            "native_exec_count": 1,
+            "outcome": "succeeded",
+            "pod_uid": "a481b5f9-b556-49a3-b779-668d2299803b",
+            "turn_id": "ba01f0b6-a349-4a5a-b06c-8e0cde965600"
+          },
+          {
+            "barrier_gc": {
+              "gc": {
+                "removed": 0
+              },
+              "historical_revisions_verified": 40
+            },
+            "case_id": "manifest-before-exhausted",
+            "checkpoint_unchanged_at_barrier": true,
+            "frozen_change": {
+              "adapter_version": "0.5.0",
+              "base_version": 0,
+              "completeness": "persisted-files",
+              "format": "workspace-tar.v1",
+              "id": "turns/dfade2e3-a31f-47b5-8c24-8bc32c7df0c4/root",
+              "kind": "workspace",
+              "media_type": "application/x-tar",
+              "name": "root",
+              "origin": "runtime",
+              "runtime_version": "codex-cli 0.171.0-alpha.13",
+              "sha256": "2666965899f4c33e9eadd875b5055c00bd230fe5b8e50f5cda30dcc3b9cd3d2a",
+              "size": 9728
+            },
+            "hit_count": 3,
+            "interrupted_sibling_events": 0,
+            "ledger": {
+              "armed_at": "2026-11-26T16:10:00.277731423Z",
+              "blocked": false,
+              "case_id": "manifest-before-exhausted",
+              "change": {
+                "adapter_version": "0.5.0",
+                "base_version": 0,
+                "completeness": "persisted-files",
+                "format": "workspace-tar.v1",
+                "id": "turns/dfade2e3-a31f-47b5-8c24-8bc32c7df0c4/root",
+                "kind": "workspace",
+                "media_type": "application/x-tar",
+                "name": "root",
+                "origin": "runtime",
+                "runtime_version": "codex-cli 0.171.0-alpha.13",
+                "sha256": "2666965899f4c33e9eadd875b5055c00bd230fe5b8e50f5cda30dcc3b9cd3d2a",
+                "size": 9728
+              },
+              "consistent": true,
+              "events": [
+                {
+                  "at": "2026-11-26T16:10:02.678743567Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:10:02.682208603Z",
+                  "injected": false,
+                  "operation": "01c8b28d6f7850f66cdf13cc4b8352fc46a13004bdcc577bea5a5bee22a600de",
+                  "path": "/v1/changes",
+                  "stage": "begin",
+                  "upstream_status": 200
+                },
+                {
+                  "at": "2026-11-26T16:10:02.683527409Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:10:03.116325956Z",
+                  "injected": true,
+                  "manifest_digest": "8dcbc2ef53e1a68324e4d12398927ac6880f9688ebe97a97f0fe6b7a95153375",
+                  "operation": "01c8b28d6f7850f66cdf13cc4b8352fc46a13004bdcc577bea5a5bee22a600de",
+                  "path": "/v1/changes/01c8b28d6f7850f66cdf13cc4b8352fc46a13004bdcc577bea5a5bee22a600de/parts",
+                  "size": 807,
+                  "stage": "manifest",
+                  "wire_sha256": "65ea7cd746e0a3d7c2cc8b53b10a94156ffe6b2a4127a6174a643a9c1eeb881f"
+                },
+                {
+                  "at": "2026-11-26T16:10:03.219816877Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:10:03.223015244Z",
+                  "injected": false,
+                  "operation": "01c8b28d6f7850f66cdf13cc4b8352fc46a13004bdcc577bea5a5bee22a600de",
+                  "path": "/v1/changes",
+                  "stage": "begin",
+                  "upstream_status": 200
+                },
+                {
+                  "at": "2026-11-26T16:10:03.223634084Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:10:03.223772502Z",
+                  "injected": true,
+                  "manifest_digest": "8dcbc2ef53e1a68324e4d12398927ac6880f9688ebe97a97f0fe6b7a95153375",
+                  "operation": "01c8b28d6f7850f66cdf13cc4b8352fc46a13004bdcc577bea5a5bee22a600de",
+                  "path": "/v1/changes/01c8b28d6f7850f66cdf13cc4b8352fc46a13004bdcc577bea5a5bee22a600de/parts",
+                  "size": 807,
+                  "stage": "manifest",
+                  "wire_sha256": "65ea7cd746e0a3d7c2cc8b53b10a94156ffe6b2a4127a6174a643a9c1eeb881f"
+                },
+                {
+                  "at": "2026-11-26T16:10:03.432487611Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:10:03.445409747Z",
+                  "injected": false,
+                  "operation": "01c8b28d6f7850f66cdf13cc4b8352fc46a13004bdcc577bea5a5bee22a600de",
+                  "path": "/v1/changes",
+                  "stage": "begin",
+                  "upstream_status": 200
+                },
+                {
+                  "at": "2026-11-26T16:10:03.446678802Z",
+                  "cancelled": false,
+                  "completed_at": "2026-11-26T16:10:03.447388851Z",
+                  "injected": true,
+                  "manifest_digest": "8dcbc2ef53e1a68324e4d12398927ac6880f9688ebe97a97f0fe6b7a95153375",
+                  "operation": "01c8b28d6f7850f66cdf13cc4b8352fc46a13004bdcc577bea5a5bee22a600de",
+                  "path": "/v1/changes/01c8b28d6f7850f66cdf13cc4b8352fc46a13004bdcc577bea5a5bee22a600de/parts",
+                  "size": 807,
+                  "stage": "manifest",
+                  "wire_sha256": "65ea7cd746e0a3d7c2cc8b53b10a94156ffe6b2a4127a6174a643a9c1eeb881f"
+                }
+              ],
+              "hits": 3,
+              "hold_first": true,
+              "limit": 3,
+              "manifest_digest": "8dcbc2ef53e1a68324e4d12398927ac6880f9688ebe97a97f0fe6b7a95153375",
+              "operation": "01c8b28d6f7850f66cdf13cc4b8352fc46a13004bdcc577bea5a5bee22a600de",
+              "stage": "manifest",
+              "target": {
+                "id": "turns/dfade2e3-a31f-47b5-8c24-8bc32c7df0c4/root",
+                "kind": "workspace"
+              },
+              "timing": "before",
+              "wire_sha256": "65ea7cd746e0a3d7c2cc8b53b10a94156ffe6b2a4127a6174a643a9c1eeb881f"
+            },
+            "marker_mutation": {
+              "after_sha256": "0854cb4be289eba7238b9f242f9072c6e0c42789e017cea315f673e0504ff1d5",
+              "before_sha256": "d0ee06cb4155e03b389082465ef8dc87c5a1f5089164f77f347b7f32a022c66a",
+              "changed": true,
+              "path": "/run/task/work/state.json"
+            },
+            "native_exec_count": 1,
+            "outcome": "failed",
+            "pod_uid": "18074b12-8c8a-4773-8a04-6c76fb4d7c4d",
+            "turn_id": "dfade2e3-a31f-47b5-8c24-8bc32c7df0c4"
+          }
+        ],
+        "recovery_pod_uid": "f803fd32-18b8-45cb-b05e-e80b5f498b09",
+        "session_sha256": "f0ce4b0acf9b7c6049e27ebc10fad6d1e238c04489ab1aae83e0806af19d93da",
+        "successful_pod_uids": [
+          "e716c15f-82f9-488d-8057-44172bd64272",
+          "57ff2459-ab6b-4279-92b1-b853ba0b7ce2",
+          "fb9ed9ba-47bb-48cf-b8c5-74fb00e021ec",
+          "d70ffcf8-5102-4ded-af52-3ef0727028d8",
+          "80b35de5-a7b1-41d0-b4a9-e75c91890c4f",
+          "2240d38f-68e7-4f86-bdf8-b29a14b1fcae",
+          "839b3700-b09d-47ab-b7b7-9d30afc4228a",
+          "14ad830b-187d-4df9-b521-07480b3e8d5b",
+          "4e99573c-511f-4f17-8244-f8a99e7679f3",
+          "a481b5f9-b556-49a3-b779-668d2299803b",
+          "d4633aab-c84b-4522-aba9-ef4ef82f0f9e"
+        ],
+        "unpublished_files_restored": false,
+        "worker_exit_code": 137
+      },
+      "cross_tenant_result": {
+        "accepted_state": "queued",
+        "api_pod_uids": [
+          "5c6284ed-d836-4dea-8c96-f16bd04cd17e",
+          "9740f8a8-ecd5-4295-a539-bb32ccf9e370"
+        ],
+        "asset_kinds": [
+          "artifact",
+          "session",
+          "workspace"
+        ],
+        "asset_versions_checked": 48,
+        "checkpoint_denial_status": 404,
+        "content_denial_status": 404,
+        "content_denials": 48,
+        "foreign_assets_empty": true,
+        "foreign_context_read": true,
+        "foreign_heads_empty": true,
+        "foreign_read_only": true,
+        "kind_counts": {
+          "artifact": 24,
+          "session": 12,
+          "workspace": 12
+        },
+        "only_tenant_differs": true,
+        "owner_rechecked_versions": 48,
+        "restored_state": "queued",
+        "revision_header_absent": true,
+        "same_uuid_replays": 2,
+        "scenario": "persistent-faults",
+        "task_denial_status": 404
+      },
+      "persistent_result": {
+        "images": {
+          "postgres": [
+            {
+              "image": "docker.io/library/postgres:18-alpine",
+              "image_id": "sha256:d4e55489302f9c75af116f3b3147f613e712f07e5eb8dabec82d9147dd0a00e5"
+            }
+          ],
+          "s3": [
+            {
+              "image": "docker.io/pgsty/minio:RELEASE.2026-04-17T00-00-00Z",
+              "image_id": "sha256:c007f271acf939425e3b553813c2c4531069cd467a59f84ec96121937ff414d9"
+            }
+          ]
+        },
+        "limitations": [
+          "No live model; fixed real Codex CLI uses a scripted Responses endpoint.",
+          "Public GC checks retain the 24-hour orphan window; post-window orphan deletion is covered by service tests, not this cluster run."
+        ],
+        "metadata_backend": "postgresql",
+        "minio_version": "minio version RELEASE.2026-04-17T00-00-00Z (commit-id=f48dbe777d0e066d2e74d5e671a8ca21c2ec1664)",
+        "object_backend": "s3-compatible-minio",
+        "postgres_rows": {
+          "operations": 49,
+          "revisions": 48,
+          "tasks": 1,
+          "turns": 13
+        },
+        "postgres_version": "18.7",
+        "queued_restart": {
+          "accepted_state": "queued",
+          "api_pod_uids": [
+            "5c6284ed-d836-4dea-8c96-f16bd04cd17e",
+            "9740f8a8-ecd5-4295-a539-bb32ccf9e370"
+          ],
+          "restored_state": "queued",
+          "same_uuid_replays": 2,
+          "turn_id": "8bc12811-7cb1-4152-a4b2-0975afc7f878"
+        },
+        "scenario": "persistent-faults",
+        "sqlite_or_local_objects_present": false,
+        "verified_object_count": 40,
+        "verified_part_object_count": 22,
+        "workspace_part_revisions": 12,
+        "workspace_transfer": "tar-parts.v1"
+      }
+    }
+  },
+  "interrupted_observation_delay_seconds": 1.663823649,
+  "owned_cluster_cleanup_completed": true,
+  "raw_log": {
+    "path_at_execution": "/private/tmp/agentmoor-v2-suite-retry-k8s.log",
+    "sha256": "b7c3c1b951bc3661ccce881bd85bb789770af592ff1d7bd7c90856b6a649202e"
+  },
+  "test_infrastructure_fix": {
+    "scope": "This forwarding correction affects only the host Kubernetes fixture; publication/task production Go semantics are unchanged. Active replay assertions were separately added to the host acceptance flow.",
+    "behavior": "Redirect stdout/stderr to owned temporary files; read complete readiness lines using pread without changing the child's file position; retain local port on reconnect and bounded diagnostic tails on failure.",
+    "owned_regression_fixture": {
+      "test_file": "tests/kubernetes/test_forward.py",
+      "test_count": 5,
+      "flood_lines": 150000,
+      "flood_payload_bytes": 4350000,
+      "old_pipe_stall_reproduced_by_root": true,
+      "cases": [
+        "chatty child progresses and reconnects",
+        "split readiness preserves complete port",
+        "startup exit retains diagnostics",
+        "caller failure retains late diagnostics",
+        "failed reconnect stops both children"
+      ]
+    },
+    "original_failure_attribution": "The deterministic old-fixture pipe stall is consistent with the earlier final TLS handshake timeout. Its traceback alone does not prove that exact underlying cause."
+  },
+  "first_combination_run": {
+    "source_commit": "109b534a5e9d65dcd19ffb34cab4c118f18406b7",
+    "evidence": "postgres-s3-faults-2026-11-26.json",
+    "retained_without_changes": true
+  },
+  "previous_failed_suite": {
+    "source_commit": "54cb556a3786b055e1f6f927196b069109b26e07",
+    "evidence": "postgres-s3-v2-suite-failed-2026-11-26.json",
+    "status": "failed",
+    "retained_without_changes": true
+  },
+  "historical_active_replay_probe": {
+    "evidence": "postgres-s3-active-replay-2026-11-26.json",
+    "host_source_commit": "75b44a181b75bd59f13e38b0d4ed02965bda9c5a",
+    "runtime_image_source_commit": "54cb556a3786b055e1f6f927196b069109b26e07",
+    "scope": "Historical separate short probe. This new suite has its own two ACTIVE_REPLAY_RESULT records and does not substitute this prior probe for either assertion."
+  },
+  "limitations": [
+    "Fixed real Codex CLI with scripted Responses; no live model or model API key.",
+    "The four-CLI default text matrix is a separate command at this same source, not a four-CLI repetition of the Codex file-fault suite.",
+    "Public GC retains its 24-hour orphan window. This suite checks history/pending protection within it, not post-window orphan expiry deletion.",
+    "No multi-control-plane replica or production HA acceptance is claimed."
+  ],
+  "execution": {
+    "root_tool_session": 66961,
+    "exit_code": 0,
+    "exit_code_observation": "Root confirmed the completed real command returned exit 0; not inferred from individual RESULT lines."
+  }
+}
