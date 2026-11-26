@@ -59,3 +59,7 @@ Codex CLI `0.171.0-alpha.13` 在 kind 0.33.0 / Kubernetes v1.35.0 中，经脚�
 ## 2026-11-26：固定 Skill 包补充验收
 
 Codex Adapter `0.5.0` 的 `make test-k8s-skills` 通过。真实 Linux Codex `0.171.0-alpha.13` 在三个新 Pod 中加载相同 v1 原生 Skill，工具实际执行恢复包内脚本并读取参考文件；来源 head 升到 v2 后不漂移，相同输入没有 Skill 的负例明确失败。来源包、工作区原生 Skill 和旧报告未被覆盖。[完整证据与边界](verification-matrix.md#2026-11-26固定-skill-版本与原生加载)。
+
+## 2026-11-26：PostgreSQL / S3 下的 Codex 任务与队列恢复
+
+`make test-k8s-persistent` 在同一专属 kind 集群和 Codex 镜像中，依次跑通 PostgreSQL 18.7 + MinIO RELEASE.2026-04-17T00-00-00Z 的文件与固定 Skill SaaS 契约，包括 queued 追问接受后真实更换控制面 Pod、原 UUID 重投与单 Job 调度。文件、取消、业务数据库失败重试、旧版下载、Skill v1 不随 v2 head 漂移等断言保持；直接核对真实后端，确认没有 SQLite / 本地对象回退。[结果与剩余边界](verification-matrix.md#2026-11-26postgresql--s3-联合集群与队列恢复) · [结构化证据](evidence/postgres-s3-contract-2026-11-26.json)。未组合活跃 Worker Pod 丢失及发布边界故障，不视为 V2 整体完成。

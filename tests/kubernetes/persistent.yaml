@@ -1,0 +1,82 @@
+# Disposable in-cluster services, using the same images as tests/services.compose.yml.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: postgres-data}
+spec:
+  accessModes: [ReadWriteOnce]
+  resources: {requests: {storage: 256Mi}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: postgres}
+spec:
+  selector: {app: postgres}
+  ports: [{port: 5432}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: postgres}
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector: {matchLabels: {app: postgres}}
+  template:
+    metadata: {labels: {app: postgres}}
+    spec:
+      automountServiceAccountToken: false
+      securityContext: {runAsNonRoot: true, runAsUser: 70, fsGroup: 70}
+      containers:
+      - name: postgres
+        image: postgres:18-alpine
+        imagePullPolicy: Never
+        env:
+        - {name: POSTGRES_DB, value: agentmoor}
+        - {name: POSTGRES_PASSWORD, value: disposable-test-password}
+        - {name: PGDATA, value: /var/lib/postgresql/data/pgdata}
+        ports: [{containerPort: 5432}]
+        readinessProbe:
+          exec: {command: [pg_isready, -U, postgres, -d, agentmoor]}
+          periodSeconds: 1
+        volumeMounts: [{name: data, mountPath: /var/lib/postgresql/data}]
+      volumes: [{name: data, persistentVolumeClaim: {claimName: postgres-data}}]
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: s3-data}
+spec:
+  accessModes: [ReadWriteOnce]
+  resources: {requests: {storage: 256Mi}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: s3}
+spec:
+  selector: {app: s3}
+  ports: [{port: 9000}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: s3}
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector: {matchLabels: {app: s3}}
+  template:
+    metadata: {labels: {app: s3}}
+    spec:
+      automountServiceAccountToken: false
+      securityContext: {runAsNonRoot: true, runAsUser: 65532, fsGroup: 65532}
+      containers:
+      - name: s3
+        image: pgsty/minio:RELEASE.2026-04-17T00-00-00Z
+        imagePullPolicy: Never
+        command: [minio, server, /data]
+        env:
+        - {name: MINIO_ROOT_USER, value: disposable-test}
+        - {name: MINIO_ROOT_PASSWORD, value: disposable-test-password}
+        ports: [{containerPort: 9000}]
+        readinessProbe:
+          httpGet: {path: /minio/health/ready, port: 9000}
+          periodSeconds: 1
+        volumeMounts: [{name: data, mountPath: /data}]
+      volumes: [{name: data, persistentVolumeClaim: {claimName: s3-data}}]
