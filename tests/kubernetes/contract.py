@@ -19,6 +19,8 @@ from saas_contract import ReportClient
 from saas_file_contract import FileReportClient
 from file_report_contract import run as run_file_report
 from pod_loss_contract import run as run_pod_loss
+from publication_fault_contract import run as run_publication_faults
+from diagnostics import dump_failure_logs
 from skill_report_contract import SkillCatalog, SkillReportClient, run as run_skill_report
 from runtimes import BINARIES, environment
 from persistent_contract import PersistentContract
@@ -31,8 +33,10 @@ def check(*args, data=None):
 def main(opts, temp):
     if opts.pod_loss or opts.skill_report:
         opts.file_report = True
-    if opts.backend == "postgres-s3" and (opts.pod_loss or not opts.file_report):
-        raise ValueError("PostgreSQL/S3 acceptance requires --file-report or --skill-report; Pod-loss is a separate local-backend contract")
+    if opts.publication_faults and not (opts.pod_loss and opts.workspace_parts and opts.backend == "postgres-s3" and opts.adapter == "codex"):
+        raise ValueError("publication faults require Codex, PostgreSQL/S3, --pod-loss and --workspace-parts")
+    if opts.backend == "postgres-s3" and (not opts.file_report or (opts.pod_loss and not opts.publication_faults)):
+        raise ValueError("PostgreSQL/S3 requires file/Skill mode or the explicit persistent publication/Pod-loss contract")
     ns = "agentmoor-contract-" + uuid.uuid4().hex[:10]
     base = ["kubectl", "--context", opts.context, "--kubeconfig", opts.kubeconfig]
     def kube(*args, data=None):
@@ -44,6 +48,9 @@ def main(opts, temp):
               "runtime_cli": "/usr/local/bin/" + BINARIES[opts.adapter]}
     if opts.workspace_parts:
         config["workspace_transfer"] = "tar-parts.v1"
+    if opts.publication_faults:
+        config["endpoint"] = "https://publication-proxy:7443"
+        config["runtime_cli"] = "/opt/test/native_count.sh"
     if opts.file_report and opts.adapter != "codex":
         raise ValueError("the file tool contract requires Codex")
     cfg = temp / "worker.json"
@@ -57,8 +64,9 @@ def main(opts, temp):
 
     cert, key = temp / "cert.pem", temp / "key.pem"
     conf = temp / "openssl.cnf"
+    names = "DNS:agentmoor,IP:127.0.0.1" + (",DNS:publication-proxy" if opts.publication_faults else "")
     conf.write_text("[req]\ndistinguished_name=dn\nx509_extensions=ext\nprompt=no\n[dn]\nCN=agentmoor\n"
-                    "[ext]\nsubjectAltName=DNS:agentmoor,IP:127.0.0.1\nbasicConstraints=critical,CA:TRUE\n")
+                    "[ext]\nsubjectAltName=" + names + "\nbasicConstraints=critical,CA:TRUE\n")
     subprocess.run(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "1",
                     "-keyout", key, "-out", cert, "-config", conf], check=True, stderr=subprocess.DEVNULL)
     def manifest_for(name, credential, command, config_name="configuration"):
@@ -108,6 +116,10 @@ def main(opts, temp):
         kube("apply", "-f", "-", data=workloads)
         for deploy in ("agentmoor", "model"):
             kube("rollout", "status", "deployment/" + deploy, "--timeout=150s")
+        if opts.publication_faults:
+            proxy = (HERE / "publication-proxy.yaml").read_text().replace("CONTRACT_IMAGE", opts.image)
+            kube("apply", "-f", "-", data=proxy)
+            kube("rollout", "status", "deployment/publication-proxy", "--timeout=150s")
         with forward(base, ns) as endpoint:
             context = ssl.create_default_context(cafile=str(cert))
             if opts.skill_report:
@@ -121,7 +133,26 @@ def main(opts, temp):
                 client = client_class(endpoint, issue("--submit"), scope["runtime"], context)
             apply_job("produce", "executor", ["agentmoor", "run-task", "--config", "/config/worker.json"])
             if opts.pod_loss:
-                run_pod_loss(client, kube, temp, cert, wait_job)
+                try:
+                    if opts.publication_faults:
+                        collector = ReportClient(endpoint, issue("--gc"), scope["runtime"], context)
+                        def collect():
+                            return json.loads(collector.request("POST", "/v1/gc"))
+                        run_pod_loss(client, kube, temp, cert, wait_job,
+                                     publication_hook=run_publication_faults,
+                                     queued_restart=storage.restart_queued_turn, collect=collect)
+                        storage.verify("persistent-faults", workspace_parts=True, min_tasks=1,
+                                       require_queued_restart=True, pod_loss=True)
+                    else:
+                        run_pod_loss(client, kube, temp, cert, wait_job)
+                except Exception:
+                    dump_failure_logs(kube)
+                    if opts.publication_faults:
+                        try:
+                            print(kube("logs", "deployment/publication-proxy", "--all-containers=true", "--tail=200"), flush=True)
+                        except Exception as error:
+                            print("CONTRACT_DIAGNOSTIC_FAILED publication-proxy " + str(error), flush=True)
+                    raise
                 return
             if opts.skill_report:
                 negative = (issue("--submit", allocation=cancellation_scope),
@@ -300,6 +331,7 @@ if __name__ == "__main__":
     parser.add_argument("--adapter", choices=BINARIES, required=True)
     parser.add_argument("--file-report", action="store_true")
     parser.add_argument("--workspace-parts", action="store_true")
+    parser.add_argument("--publication-faults", action="store_true")
     special = parser.add_mutually_exclusive_group()
     special.add_argument("--pod-loss", action="store_true")
     special.add_argument("--skill-report", action="store_true")

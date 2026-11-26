@@ -16,7 +16,10 @@ def command(*args):
     return subprocess.check_output(args, timeout=30).strip()
 
 
-def run(client, kube, temp, cert, wait_job):
+def run(client, kube, temp, cert, wait_job, publication_hook=None, queued_restart=None, collect=None):
+    if publication_hook:
+        from publication_fault_contract import require_native_once, verify_history
+    native_execution_counts = {}
     def stage(name, **values):
         print("POD_LOSS_STAGE " + json.dumps({"stage": name, **values}, sort_keys=True), flush=True)
 
@@ -39,9 +42,22 @@ def run(client, kube, temp, cert, wait_job):
     def pods_for(job):
         return json.loads(kube("get", "pods", "-l", "job-name=" + job, "-o", "json"))["items"]
 
-    def retire(job):
-        wait_job(kube, job)
+    def retire(job, failed=False):
+        if failed:
+            until = time.monotonic() + 90
+            while time.monotonic() < until:
+                status = json.loads(kube("get", "job", job, "-o", "json")).get("status", {})
+                if status.get("failed"):
+                    break
+                time.sleep(.3)
+            else:
+                raise TimeoutError("failed publication Worker did not exit")
+        else:
+            wait_job(kube, job)
         pod, = pods_for(job)
+        if publication_hook:
+            require_native_once(pod)
+            native_execution_counts[pod["metadata"]["uid"]] = 1
         assert any(v["name"] == "private-work" and "emptyDir" in v for v in pod["spec"]["volumes"])
         kube("delete", "job", job, "--cascade=foreground", "--wait=true")
         assert not pods_for(job)
@@ -88,6 +104,15 @@ def run(client, kube, temp, cert, wait_job):
         raise TimeoutError("SIGKILL did not terminate the Worker container")
 
     deliveries, pod_uids = [], []
+    failed_pod_uids, history, publication_cases = [], [], []
+    expected_operations = ["produce"]
+
+    def protect_history():
+        if publication_hook:
+            if collect:
+                collect()
+            verify_history(client, history)
+
     client.submit()
     client.await_result()
     pod_uids.append(retire("produce"))
@@ -99,15 +124,33 @@ def run(client, kube, temp, cert, wait_job):
     deliveries.append(("", initial))
     stage("initial_report_verified", pod_uid=pod_uids[-1])
 
-    revision = client.ask(session, "Revise the saved report by appending a west refund of 9 cents.")
+    revision_message = "Revise the saved report by appending a west refund of 9 cents."
+    revision = queued_restart(client, session, revision_message) if queued_restart else client.ask(session, revision_message)
     revised, _ = client.answer(revision)
     assert revised["parent"] == cp
     pod_uids.append(retire(job_for(revision)))
-    _, revised_delivery = client.observe(revised, session, "revise", marker)
+    expected_operations.append("revise")
+    _, revised_delivery = client.observe(revised, session, "revise", marker, expected_operations=list(expected_operations))
     client.ingest(revised, revised_delivery, temp, cert)
     deliveries.append((revision, revised_delivery))
     cp = checkpoint()
     stage("revised_checkpoint_verified", pod_uid=pod_uids[-1])
+
+    if publication_hook:
+        prior_operations, prior_pods = list(expected_operations), list(pod_uids)
+        state = publication_hook(client, kube, checkpoint=cp, session=session, marker=marker,
+                                 expected_operations=list(expected_operations), deliveries=list(deliveries),
+                                 pod_uids=list(pod_uids), collect=collect, retire=retire, job_for=job_for)
+        cp, expected_operations = state["checkpoint"], state["expected_operations"]
+        deliveries, pod_uids = state["deliveries"], state["pod_uids"]
+        failed_pod_uids, history, publication_cases = state["failed_pod_uids"], state["history"], state["cases"]
+        assert cp == checkpoint() and cp["session_id"] == session
+        assert expected_operations[:len(prior_operations)] == prior_operations
+        assert pod_uids[:len(prior_pods)] == prior_pods
+        assert len(pod_uids) == len(expected_operations) == len(deliveries)
+        assert len(set([*pod_uids, *failed_pod_uids])) == len(pod_uids) + len(failed_pod_uids)
+        protect_history()
+        stage("publication_faults_verified", successful_rounds=len(pod_uids), failed_rounds=len(failed_pod_uids))
 
     message = "Lose the active report Pod during its tool call."
     lost = client.ask(session, message)
@@ -120,12 +163,20 @@ def run(client, kube, temp, cert, wait_job):
     remaining = (declared_deadline - datetime.now(timezone.utc)).total_seconds()
     assert 0 < remaining <= 900, remaining
     stage("tool_active", pod_uid=pod["metadata"]["uid"], deadline=active["deadline"])
+    if publication_hook:
+        # The active wrapper writes a decimal count outside the capture root.
+        # Read it before SIGKILL; finished Pods use terminated.message instead.
+        native_count = int(kube("exec", pod["metadata"]["name"], "-c", "worker", "--", "python3", "-c",
+                                "from pathlib import Path; print(int(Path('/run/task/native-executions').read_text().strip()))"))
+        assert native_count == 1, native_count
+        native_execution_counts[pod["metadata"]["uid"]] = native_count
     kill_worker(pod)
     kube("delete", "job", job, "--cascade=foreground", "--wait=true", "--grace-period=0")
     assert not pods_for(job)
     assert record(route)["state"] == "running", "Worker acknowledged instead of disappearing"
     assert checkpoint() == cp
     client.verify_stored(deliveries, temp)
+    protect_history()
     stage("worker_lost_without_acknowledgement", exit_code=137, deadline=active["deadline"])
 
     # There is no test clock, shortened timeout, direct database write, or
@@ -159,17 +210,23 @@ def run(client, kube, temp, cert, wait_job):
     assert checkpoint() == cp
     client.verify_stored(deliveries, temp)
 
+    protect_history()
     recovered_turn = client.ask(session, "Audit the saved report after the Worker Pod disappeared.")
     recovered, _ = client.answer(recovered_turn)
     assert recovered["parent"] == cp
     recovery_uid = retire(job_for(recovered_turn))
-    _, recovered_delivery = client.observe(recovered, session, "audit", marker)
+    recovery_operations = [*expected_operations, "audit"]
+    _, recovered_delivery = client.observe(recovered, session, "audit", marker,
+                                          expected_operations=recovery_operations)
     recovered_files = client.archive(client.refs(recovered)["workspace"])
     assert ".hold-started" not in recovered_files and "unpublished-draft.txt" not in recovered_files
     deliveries.append((recovered_turn, recovered_delivery))
     client.verify_stored(deliveries, temp)
-    assert len(set([*pod_uids, pod["metadata"]["uid"], recovery_uid])) == 4
-    print("POD_LOSS_RESULT " + json.dumps({
+    protect_history()
+    all_pod_uids = [*pod_uids, *failed_pod_uids, pod["metadata"]["uid"], recovery_uid]
+    assert len(pod_uids) == len(expected_operations)
+    assert len(set(all_pod_uids)) == len(all_pod_uids) == len(expected_operations) + len(failed_pod_uids) + 2
+    result = {
         "cli": "codex-cli 0.171.0-alpha.13", "model": "scripted-responses",
         "production_timeout_seconds": 900, "deadline": active["deadline"],
         "interrupted_observed_at": interrupted_at,
@@ -179,4 +236,11 @@ def run(client, kube, temp, cert, wait_job):
         "session_sha256": hashlib.sha256(session.encode()).hexdigest(),
         "checkpoint_preserved": True, "unpublished_files_restored": False,
         "business_rows": 2, "artifacts": [ref for _, (ref, _) in deliveries],
-    }, sort_keys=True), flush=True)
+    }
+    if publication_hook:
+        assert set(native_execution_counts) == set(all_pod_uids)
+        result.update(publication_faults=publication_cases, failed_publication_pod_uids=failed_pod_uids,
+                      expected_operations=recovery_operations, native_execution_counts=native_execution_counts,
+                      historical_revision_count=len(history),
+                      gc_scope=("24-hour history/pending protection; orphan expiry positive control remains in service tests" if collect else "not_run"))
+    print("POD_LOSS_RESULT " + json.dumps(result, sort_keys=True), flush=True)
