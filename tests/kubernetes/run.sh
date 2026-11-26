@@ -26,7 +26,13 @@ kind create cluster --image kindest/node:v1.35.0 --name "$name" --kubeconfig "$K
 if [ "$persistent" -eq 1 ]; then
     for service in postgres:18-alpine pgsty/minio:RELEASE.2026-04-17T00-00-00Z; do
         docker image inspect "$service" >/dev/null 2>&1 || docker pull "$service"
-        kind load docker-image "$service" --name "$name"
+        # Docker's containerd store can retain a multi-platform index without
+        # every referenced architecture. Export just the installed architecture
+        # so kind's all-platform import never follows missing index entries.
+        platform=$(docker image inspect --format '{{.Os}}/{{.Architecture}}' "$service")
+        archive="$state/$(echo "$service" | tr '/:' '__').tar"
+        docker image save --platform "$platform" -o "$archive" "$service"
+        kind load image-archive "$archive" --name "$name"
     done
 fi
 for agent in $agents; do
