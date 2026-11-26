@@ -60,6 +60,20 @@ export AGENTMOOR_TOKEN_FILE=/run/agentmoor/primary.token
 
 省略 `--write` 可签发只读凭据，`--gc` 单独授予回收权限。凭据默认 1 小时，最长 24 小时。长期运行的 Worker 每次请求都会重读凭据文件，控制面可在到期前原子替换文件。
 
+HTTP 按以下能力分别授权；同一凭据可以组合多种能力。
+
+| 能力 | 允许的操作 | CLI 签发方式 |
+| --- | --- | --- |
+| Read | 列举资产、head、操作状态，下载内容，读取任务、追问和 checkpoint | 默认包含 |
+| Write | 开始资产变更、上传完整内容或清单/文件块、提交资产版本 | `--write` |
+| Submit | 提交任务或追问、请求取消 | `--submit` |
+| Execute | 领取任务或追问、报告完成 | `--execute`；CLI 同时授予 Write，供 Worker 发布结果 |
+| Collect | 回收本作用域的过期无引用对象 | `--gc` |
+
+`GET /v1/context` 用于查看当前有效凭据自身的授权。Submit 不授予 Execute 或 Write，Write 不授予 Submit 或 Execute，Collect 也不授予 Write。SaaS 使用 `--submit`，Worker 使用 `--execute`；回收工具单独使用 `--gc`。所有操作都受 Tenant、Project、Runtime、Adapter 四项作用域限制。
+
+[HTTP 授权矩阵](../internal/platform/authorization_matrix_test.go)逐条列出当前 22 条公开路由：有效但缺少能力的凭据返回 403，无效身份返回 401；四个作用域维度各自变化时，另一个合法凭据访问已有固定引用返回 404，原归属数据保持不变。它包含各接口的有效正例和同摘要文件块的隔离验证；新增路由时应同步补入矩阵。此项尚不包含签名密钥轮换、单凭据撤销或不可信代码沙箱验收。
+
 将下面配置保存在受信目录，例如 `/etc/agentmoor/primary.json`。`workspace`、`sessions` 和 `state_dir` 使用绝对路径。前两者分配给一个逻辑运行时，`state_dir` 由 Worker 独占，可跨进程重启保留。平台密钥、Worker 凭据和配置放在工作区之外，工作区快照会收录整个目录树，包括点文件。
 
 ```json
