@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -120,7 +122,7 @@ func (c *Catalog) cancelTask(ctx context.Context, s taskAddress) (task.Record, e
 	})
 }
 func (c *Catalog) finishTask(ctx context.Context, s taskAddress, finish task.Finish) (task.Record, error) {
-	if (finish.Error == "") == (finish.SessionID == "") || len(finish.Error) > 256 {
+	if (finish.Error == "") == (finish.SessionID == "") || len(finish.Error) > 256 || len(finish.Artifacts) > task.MaxArtifacts || (finish.Error != "" && len(finish.Artifacts) != 0) {
 		return task.Record{}, errBadRequest
 	}
 	return c.changeTask(ctx, s, false, func(slot *taskSlot) error {
@@ -155,7 +157,7 @@ func (c *Catalog) finishTask(ctx context.Context, s taskAddress, finish task.Fin
 		if slot.Parent != nil && slot.Parent.SessionID != finish.SessionID {
 			return ErrConflict
 		}
-		refs, err := c.taskAssets(ctx, s, slot.Spec.Output, finish.SessionID)
+		refs, err := c.taskAssets(ctx, s, slot.Spec.Output, finish.SessionID, finish.Artifacts)
 		if err != nil {
 			return err
 		}
@@ -165,15 +167,54 @@ func (c *Catalog) finishTask(ctx context.Context, s taskAddress, finish task.Fin
 	})
 }
 
-func (c *Catalog) taskAssets(ctx context.Context, s taskAddress, output, session string) ([]task.Ref, error) {
-	keys := []asset.Key{{Kind: "artifact", ID: "out/" + output}, {Kind: "workspace", ID: "root"}, {Kind: "session", ID: session}}
+func (c *Catalog) taskAssets(ctx context.Context, s taskAddress, output, session string, artifacts []task.Ref) ([]task.Ref, error) {
+	primary := task.TurnKey(s.turn, asset.Key{Kind: "artifact", ID: "out/" + output})
+	keys := []asset.Key{primary}
+	declared := make(map[asset.Key]task.Ref, len(artifacts))
+	if len(artifacts) > 0 {
+		prefix := task.TurnKey(s.turn, asset.Key{Kind: "artifact", ID: "out"}).ID + "/"
+		for _, ref := range artifacts {
+			if !ref.Key.Valid() || ref.Kind != "artifact" || !strings.HasPrefix(ref.ID, prefix) || ref.Version <= 0 || ref.ContentPath != ref.Key.ContentPath(ref.Version) {
+				return nil, errBadRequest
+			}
+			if _, exists := declared[ref.Key]; exists {
+				return nil, errBadRequest
+			}
+			declared[ref.Key] = ref
+			if ref.Key != primary {
+				keys = append(keys, ref.Key)
+			}
+		}
+		if _, exists := declared[primary]; !exists {
+			return nil, ErrNotReady
+		}
+		sort.Slice(keys[1:], func(i, j int) bool { return keys[i+1].ID < keys[j+1].ID })
+	}
+	keys = append(keys, task.TurnKey(s.turn, asset.Key{Kind: "workspace", ID: "root"}), task.TurnKey(s.turn, asset.Key{Kind: "session", ID: session}))
 	var refs []task.Ref
 	for _, k := range keys {
-		k = task.TurnKey(s.turn, k)
 		if !k.Valid() {
 			return nil, errBadRequest
 		}
-		m, v, err := head(ctx, c.writer, s.Prefix(), k)
+		var m asset.Metadata
+		var v int64
+		var err error
+		if requested, pinned := declared[k]; pinned {
+			var raw string
+			v = requested.Version
+			err = c.writer.QueryRowContext(ctx, "SELECT metadata FROM revisions WHERE scope=$1 AND kind=$2 AND asset_id=$3 AND version=$4", s.Prefix(), k.Kind, k.ID, v).Scan(&raw)
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, ErrNotReady
+			}
+			if err == nil {
+				err = json.Unmarshal([]byte(raw), &m)
+			}
+			if err == nil && m.SHA256 != requested.SHA256 {
+				return nil, ErrConflict
+			}
+		} else {
+			m, v, err = head(ctx, c.writer, s.Prefix(), k)
+		}
 		if err != nil {
 			return nil, err
 		}

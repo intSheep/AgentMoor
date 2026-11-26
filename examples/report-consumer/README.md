@@ -37,14 +37,22 @@ The current text-mode follow-up publishes `reply.txt`; ordinary free-form
 replies do not meet this example's schema. This importer does not change
 AgentMoor's Worker, run tools, or republish modified files from a new Pod.
 
-The importer reads only a successful task or turn and downloads the exact
-artifact version over the same origin. It checks SHA-256, validates the schema
+The importer reads only a successful task or turn and selects the report named
+by `spec.output` from its `out/` delivery directory. Other delivered files are
+not imported. It downloads the exact artifact version over the same origin,
+checks SHA-256, validates the schema
 and rejects totals that do not match the independent expectation. It then
 stores the report by endpoint, application scope, task, turn, artifact and
 version. Exact replays return `already-imported`. A different receipt for the
 same identity is rejected and does not replace the stored report. A follow-up
 has a separate artifact identity and can have a version number of 1 without
 overwriting the first result.
+
+If the business database write fails, the command exits with an error and the
+transaction rolls back. Run the same command again after fixing the database;
+it downloads the pinned version again and imports it once. No Agent task is
+submitted or executed by this retry. `make test-worker-file-report` injects a
+real SQLite insert failure after two independent Workers have delivered files.
 
 In production, derive the scope from your trusted tenant/project binding for
 the token; this example's `--scope` is a local database label, not an

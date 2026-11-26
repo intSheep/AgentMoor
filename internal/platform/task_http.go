@@ -83,7 +83,7 @@ func (a *API) taskRoutes(handle func(string, string, apiHandler)) {
 		})
 		bind("POST "+route+"/finish", "execute", func(w http.ResponseWriter, r *http.Request, s taskAddress) (task.Record, error) {
 			var finish task.Finish
-			if !decodeInput(w, r, &finish, 4096) {
+			if !decodeInput(w, r, &finish, 1<<20) {
 				return task.Record{}, errBadRequest
 			}
 			return a.Catalog.finishTask(r.Context(), s, finish)

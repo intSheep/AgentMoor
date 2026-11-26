@@ -195,9 +195,9 @@ func TestWorkerFileDelivery(t *testing.T) {
 		}
 		session = cp.SessionID
 		var ref task.Ref
-		for _, asset := range row.Assets {
-			if asset.Kind == "artifact" {
-				ref = asset
+		for _, item := range row.Assets {
+			if item.Kind == "artifact" && item.ID == task.TurnKey(turn, asset.Key{Kind: "artifact", ID: "out/report.json"}).ID {
+				ref = item
 			}
 		}
 		want := fmt.Sprintf(`{"totals_cents":{"east":98,"west":%d}}`, west)
@@ -222,6 +222,27 @@ func TestWorkerFileDelivery(t *testing.T) {
 			t.Fatalf("final-text control: %q %v", out, err)
 		}
 		check(os.WriteFile(expected, []byte(want), 0600))
+		if i > 0 {
+			// A real business-database failure happens after verified HTTP download.
+			// The Worker allocation is already gone; retrying this consumer can only
+			// read the pinned receipt and never execute the Agent again.
+			business, err := sql.Open("sqlite3", dbPath)
+			check(err)
+			_, err = business.Exec("CREATE TRIGGER reject_report BEFORE INSERT ON imported_reports BEGIN SELECT RAISE(ABORT, 'fixture database write failed'); END")
+			check(err)
+			out, err := runImport()
+			if err == nil || !strings.Contains(string(out), "fixture database write failed") {
+				t.Fatalf("database failure control: %q %v", out, err)
+			}
+			var count int
+			check(business.QueryRow("SELECT count(*) FROM imported_reports").Scan(&count))
+			if count != 1 {
+				t.Fatalf("failed database write changed previous imports: %d", count)
+			}
+			_, err = business.Exec("DROP TRIGGER reject_report")
+			check(err)
+			check(business.Close())
+		}
 		for _, status := range []string{"imported", "already-imported"} {
 			out, err := runImport()
 			if err != nil {

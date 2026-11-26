@@ -54,10 +54,10 @@ class ConsumerTest(unittest.TestCase):
         report = {"totals_cents": {"east": cents, "west": -4}}
         if raw is None:
             raw = json.dumps(report).encode()
-        asset = "report.json" if turn is None else f"turns/{turn}/report.json"
+        asset = "out/report.json" if turn is None else f"turns/{turn}/out/report.json"
         query = urllib.parse.urlencode({"kind": "artifact", "id": asset, "version": version})
         content = "/v1/content?" + query
-        record = {"state": "succeeded", "id": "sample", "assets": [
+        record = {"state": "succeeded", "id": "sample", "spec": {"output": "report.json"}, "assets": [
             {"kind": "artifact", "id": asset, "version": version,
              "sha256": hashlib.sha256(raw).hexdigest(), "content_path": content},
             {"kind": "workspace", "id": "workspace"},
@@ -150,11 +150,34 @@ class ConsumerTest(unittest.TestCase):
         self.assertEqual([route for route, _ in self.server.requests], [FIRST, content])
         self.assertFalse(self.db.exists())
 
-    def test_cancelled_record_never_imported(self):
-        _, record = self.receipt(31)
-        record["state"] = "cancelled"
+    def test_primary_report_selected_from_multiple_artifacts(self):
+        content, record = self.receipt(31)
+        record["assets"].insert(0, {"kind": "artifact", "id": "out/summary.txt"})
         self.server.routes[FIRST] = (200, json.dumps(record).encode())
-        self.run_import(success=False, error="successful record")
+        self.assertEqual(self.run_import()["status"], "imported")
+        self.assertEqual([route for route, _ in self.server.requests], [FIRST, content])
+        record["assets"].append(record["assets"][1])
+        self.server.routes[FIRST] = (200, json.dumps(record).encode())
+        self.run_import(success=False, error="exactly one matching")
+
+    def test_platform_output_names_with_spaces_and_unicode(self):
+        old_content, record = self.receipt(31)
+        output = "销售 report.json"
+        ref = record["assets"][0]
+        record["spec"]["output"] = output
+        ref["id"] = "out/" + output
+        ref["content_path"] = "/v1/content?" + urllib.parse.urlencode(
+            {"kind": "artifact", "id": ref["id"], "version": 1})
+        self.server.routes[ref["content_path"]] = self.server.routes[old_content]
+        self.server.routes[FIRST] = (200, json.dumps(record).encode())
+        self.assertEqual(self.run_import()["status"], "imported")
+
+    def test_unsuccessful_record_never_imported(self):
+        _, record = self.receipt(31)
+        for state in ("failed", "cancelled", "interrupted", "running"):
+            record["state"] = state
+            self.server.routes[FIRST] = (200, json.dumps(record).encode())
+            self.run_import(success=False, error="successful record")
         self.assertFalse(self.db.exists())
 
 

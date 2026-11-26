@@ -78,9 +78,18 @@ def fetch_report(endpoint, token, task_id, turn_id):
     record = load_json(get(opener, endpoint, route, token))
     if record.get("state") != "succeeded" or record.get("id") != task_id or record.get("turn_id") != turn_id:
         raise ValueError("requested task or turn is not a matching successful record")
-    artifacts = [ref for ref in record.get("assets", []) if ref.get("kind") == "artifact"]
+    output = record.get("spec", {}).get("output")
+    if (not isinstance(output, str) or not output or output in {".", ".."}
+            or any(char in output for char in "/\\:\x00\r\n")
+            or len(output.encode("utf-8")) > 128):
+        raise ValueError("successful record must identify its report output")
+    primary = "out/" + output
+    if turn_id is not None:
+        primary = "turns/" + turn_id + "/" + primary
+    artifacts = [ref for ref in record.get("assets", [])
+                 if ref.get("kind") == "artifact" and ref.get("id") == primary]
     if len(artifacts) != 1:
-        raise ValueError("successful record must have exactly one artifact")
+        raise ValueError("successful record must have exactly one matching report artifact")
     ref = artifacts[0]
     artifact, version, digest = ref["id"], ref["version"], ref["sha256"]
     if not isinstance(artifact, str) or not artifact or len(artifact) > 4096:

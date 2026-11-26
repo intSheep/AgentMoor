@@ -27,6 +27,9 @@ const TextTurn = "text-turn.v1"
 const ContinueTurn = "continue-turn.v1"
 const FileTurn = "file-turn.v1"
 
+// MaxArtifacts bounds the delivery receipt carried by the Worker finish call.
+const MaxArtifacts = 128
+
 // Prompt contains only the two SaaS fields passed to the native CLI on stdin.
 func (s Spec) Prompt() []byte {
 	b, _ := json.Marshal(struct {
@@ -115,4 +118,7 @@ type Finish struct {
 	Attempt   string `json:"attempt"`
 	SessionID string `json:"session_id,omitempty"`
 	Error     string `json:"error,omitempty"`
+	// Artifacts pins the complete delivery directory for this successful turn.
+	// An omitted list retains the original single-output worker protocol.
+	Artifacts []Ref `json:"artifacts,omitempty"`
 }

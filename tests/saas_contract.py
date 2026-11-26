@@ -57,10 +57,17 @@ class ReportClient:
     def verify(self, row):
         refs = {r["kind"]: r for r in row["assets"]}
         assert set(refs) == {"artifact", "session", "workspace"}
-        receipt = refs["artifact"]
+        receipt = self.primary(row)
         report = self.request("GET", receipt["content_path"])
         assert hashlib.sha256(report).hexdigest() == receipt["sha256"]
         assert json.loads(report) == {"totals_cents": {self.region: self.amount - 7, "west": 31}}
+        return receipt
+
+    def primary(self, row):
+        prefix = "turns/" + row["turn_id"] + "/" if row.get("turn_id") else ""
+        expected = prefix + "out/" + row["spec"]["output"]
+        receipt, = [ref for ref in row["assets"]
+                    if ref["kind"] == "artifact" and ref["id"] == expected]
         return receipt
 
     def ask(self, session, message):
@@ -79,7 +86,7 @@ class ReportClient:
             if row["state"] == "succeeded":
                 refs = {r["kind"]: r for r in row["assets"]}
                 assert set(refs) == {"workspace", "session", "artifact"}
-                receipt = refs["artifact"]
+                receipt = self.primary(row)
                 answer = self.request("GET", receipt["content_path"])
                 assert hashlib.sha256(answer).hexdigest() == receipt["sha256"]
                 return row, json.loads(answer)

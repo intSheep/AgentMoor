@@ -45,6 +45,7 @@ A runtime hook can invoke `sync` once. For continuous sync, `watch` listens for 
 make check          # Check formatting, run go vet and tests with the race detector, then build
 make demo           # Upload, sync again, and restore assets using the local server
 make test-k8s       # Test delivery, cancellation, and cross-Pod follow-ups in a disposable kind cluster
+make test-k8s-file-report # Test Codex file tools and edits across fresh Pods
 make test-services  # Test PostgreSQL and S3-compatible storage with Docker Compose
 ```
 
@@ -58,6 +59,13 @@ make test-k8s AGENT=codex
 The second command also runs the preflight before it builds. The kind test uses a deterministic model endpoint and needs no model API key. It does need network access for first-time image and CLI downloads. See the [prerequisites and expected results](docs/task-contract.md#一条命令复验).
 
 The native CLI recovery tests can also run outside Kubernetes. They require the matching CLI version and start a local model endpoint. Each test creates a conversation, removes the original directories, restores the session, and checks that the next model request contains a random marker from the first turn. [Reproduction steps](docs/operations.md)
+
+The Codex file test uses a scripted model to request a deployment-selected MCP
+tool. The tool reads CSV data, writes real report files, and revises them in new
+Pods with the same native session. The SaaS client downloads pinned versions,
+checks their bytes and amounts, and imports reports into its own SQLite database.
+It also checks database failure retries and cancellation during a tool call.
+No model account or API key is needed. [File task contract](docs/task-contract.md#文件交付和多份产物)
 
 ## Project documentation
 

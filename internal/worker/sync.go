@@ -37,8 +37,8 @@ func (e *Engine) authorize(ctx context.Context) (platform.Grant, error) {
 }
 
 type scan struct {
-	turnID         string // follow-up checkpoints have independent keys within the allocation
-	taskOutput     string // publish just the allocated output for task runs
+	turnID         string      // follow-up checkpoints have independent keys within the allocation
+	artifacts      *[]task.Ref // optional receipt of the complete delivery directory
 	engine         *Engine
 	journal        *Journal
 	heads          map[asset.Key]asset.Revision
@@ -46,9 +46,9 @@ type scan struct {
 	runtimeVersion string
 }
 
-func (e *Engine) Sync(ctx context.Context) error { return e.sync(ctx, "", "") }
+func (e *Engine) Sync(ctx context.Context) error { return e.sync(ctx, "", nil) }
 
-func (e *Engine) sync(ctx context.Context, turn, taskOutput string) (err error) {
+func (e *Engine) sync(ctx context.Context, turn string, artifacts *[]task.Ref) (err error) {
 	c := e.Config
 	if err = c.Validate(); err != nil {
 		return err
@@ -94,7 +94,7 @@ func (e *Engine) sync(ctx context.Context, turn, taskOutput string) (err error) 
 	if d.ID != c.Scope.Adapter || (c.AdapterVersion != "" && d.Version != c.AdapterVersion) {
 		return fmt.Errorf("adapter ID or version mismatch")
 	}
-	s := scan{engine: e, turnID: turn, taskOutput: taskOutput, journal: &j, heads: map[asset.Key]asset.Revision{}, seen: map[asset.Key]bool{}}
+	s := scan{engine: e, turnID: turn, artifacts: artifacts, journal: &j, heads: map[asset.Key]asset.Revision{}, seen: map[asset.Key]bool{}}
 	// Blobs are disposable until referenced by a durable pending operation.
 	leftovers, err := os.ReadDir(c.StateDir)
 	if err != nil {
@@ -232,6 +232,9 @@ func (s *scan) tree(ctx context.Context, root *os.Root, key asset.Key, format st
 }
 
 func (s *scan) file(ctx context.Context, root *os.Root, key asset.Key, format, src, session string) error {
+	if s.artifacts != nil && key.Kind == "artifact" && len(*s.artifacts) >= task.MaxArtifacts {
+		return fmt.Errorf("task delivery exceeds %d artifacts", task.MaxArtifacts)
+	}
 	b, err := snapshot.File(ctx, root, src, s.engine.Config.StateDir)
 	if err != nil {
 		return err
@@ -240,7 +243,15 @@ func (s *scan) file(ctx context.Context, root *os.Root, key asset.Key, format, s
 	if media == "" {
 		media = "application/octet-stream"
 	}
-	return s.publish(ctx, asset.Metadata{Key: key, Format: format, MediaType: media, Name: path.Base(src), SessionID: session}, b)
+	if err = s.publish(ctx, asset.Metadata{Key: key, Format: format, MediaType: media, Name: path.Base(src), SessionID: session}, b); err != nil {
+		return err
+	}
+	if s.artifacts != nil && key.Kind == "artifact" {
+		key = task.TurnKey(s.turnID, key)
+		version := s.journal.Cursors[asset.Fingerprint(key)].Version
+		*s.artifacts = append(*s.artifacts, task.Ref{Key: key, Version: version, SHA256: b.SHA256, ContentPath: key.ContentPath(version)})
+	}
+	return nil
 }
 
 func (s *scan) workspace(ctx context.Context, root *os.Root) error {
@@ -248,10 +259,6 @@ func (s *scan) workspace(ctx context.Context, root *os.Root) error {
 		return err
 	}
 	c := s.engine.Config
-	if s.taskOutput != "" {
-		output := path.Join(c.Artifacts, s.taskOutput)
-		return s.file(ctx, root, asset.Key{Kind: "artifact", ID: output}, "file.v1", output, c.ArtifactSession)
-	}
 	if finder, ok := s.engine.Adapter.(adapter.SkillDiscoverer); ok {
 		skills, err := finder.DiscoverSkills(ctx, root)
 		if err != nil {

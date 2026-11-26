@@ -9,21 +9,59 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"agentmoor/internal/adapter"
 	"agentmoor/internal/adapters/sessionfile"
+	"agentmoor/internal/asset"
 	"agentmoor/internal/task"
 )
 
 func (a Adapter) ExecuteTask(ctx context.Context, env task.Environment, spec task.Spec) (task.Execution, error) {
-	return runText(ctx, env, spec.Prompt(), "", nil)
+	return runTurn(ctx, env, spec.Prompt(), "", nil, nil)
 }
 
 func (a Adapter) ContinueTask(ctx context.Context, env task.Environment, id, message string, restore task.RestoreHistory) (task.Execution, error) {
-	return runText(ctx, env, []byte(message), id, restore)
+	return runTurn(ctx, env, []byte(message), id, restore, nil)
 }
 
-func runText(ctx context.Context, env task.Environment, prompt []byte, id string, restore task.RestoreHistory) (task.Execution, error) {
+// The deployment chooses this executable, never the task or the restored workspace.
+// Its single render tool is responsible for constraining its own inputs and side effects.
+func (a Adapter) ExecuteFile(ctx context.Context, env task.Environment, spec task.Spec, result, session string, restore task.RestoreHistory) (task.Execution, error) {
+	tool := os.Getenv("CODEX_FILE_TOOL")
+	if !filepath.IsAbs(tool) || !spec.Valid() || spec.Mode != task.FileTurn || !asset.SafePath(result) || filepath.Base(result) != result {
+		return task.Execution{}, fmt.Errorf("file turn requires a deployment-selected absolute CODEX_FILE_TOOL and a workspace-relative result file")
+	}
+	tool, err := filepath.EvalSymlinks(tool)
+	if err != nil {
+		return task.Execution{}, err
+	}
+	workspace, err := filepath.EvalSymlinks(env.Workspace)
+	if err != nil {
+		return task.Execution{}, err
+	}
+	rel, err := filepath.Rel(workspace, tool)
+	if err != nil || (rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))) {
+		return task.Execution{}, fmt.Errorf("CODEX_FILE_TOOL must be outside the agent workspace")
+	}
+	info, err := os.Stat(tool)
+	if err != nil || !info.Mode().IsRegular() || info.Mode().Perm()&0111 == 0 {
+		return task.Execution{}, fmt.Errorf("CODEX_FILE_TOOL must be an executable regular file")
+	}
+	settings := []string{
+		"-c", "mcp_servers.report.command=" + strconv.Quote(tool),
+		"-c", "mcp_servers.report.cwd=" + strconv.Quote(env.Workspace),
+		"-c", "mcp_servers.report.env.REPORT_RESULT=" + strconv.Quote(result),
+		"-c", "mcp_servers.report.env.REPORT_PREVIOUS=" + strconv.Quote(filepath.Join("out", spec.Output)),
+		"-c", `mcp_servers.report.enabled_tools=["render"]`,
+		// Approve just the tool installed by the operator. Other tools and shell
+		// execution retain the read-only, non-interactive policy below.
+		"-c", `mcp_servers.report.tools.render.approval_mode="approve"`,
+	}
+	return runTurn(ctx, env, []byte(spec.Instruction), session, restore, settings)
+}
+
+func runTurn(ctx context.Context, env task.Environment, prompt []byte, id string, restore task.RestoreHistory, fileSettings []string) (task.Execution, error) {
 	home := filepath.Join(env.Home, ".codex")
 	if err := os.Mkdir(home, 0700); err != nil {
 		return task.Execution{}, err
@@ -34,6 +72,7 @@ func runText(ctx context.Context, env task.Environment, prompt []byte, id string
 		"--disable", "shell_tool", "--disable", "multi_agent", "--disable", "apps", "--disable", "hooks",
 		"-c", `web_search="disabled"`, "--json",
 	}
+	args = append(args, fileSettings...)
 	if key := os.Getenv("OPENAI_API_KEY"); key != "" {
 		vars = append(vars, "OPENAI_API_KEY="+key, "CODEX_API_KEY="+key)
 	}
@@ -59,20 +98,26 @@ func runText(ctx context.Context, env task.Environment, prompt []byte, id string
 	if err := adapter.RunCLIInput(ctx, env.Executable, env.Workspace, vars, bytes.NewReader(prompt), &out, 2<<20, append(args, "-")...); err != nil {
 		return task.Execution{}, err
 	}
-	result, err := decodeTurn(&out)
+	result, err := decodeTurn(&out, fileSettings != nil)
 	result.HistoryDir = filepath.Join(home, "sessions")
 	return result, err
 }
 
-func decodeTurn(r io.Reader) (task.Execution, error) {
+func decodeTurn(r io.Reader, fileMode bool) (task.Execution, error) {
 	var result task.Execution
-	var started, done bool
+	var started, done, rendered bool
 	dec := json.NewDecoder(r)
 	for {
 		var e struct {
 			Type   string
 			Thread string `json:"thread_id"`
-			Item   struct{ Type, Text string }
+			Item   struct {
+				Type, Text, Server, Tool, Status string
+				Error                            json.RawMessage
+				Result                           *struct {
+					IsError bool `json:"isError"`
+				}
+			}
 		}
 		err := dec.Decode(&e)
 		if err == io.EOF {
@@ -103,6 +148,13 @@ func decodeTurn(r io.Reader) (task.Execution, error) {
 				}
 				result.Text = e.Item.Text
 			case "reasoning":
+			case "mcp_tool_call":
+				if !fileMode || !started || e.Item.Server != "report" || e.Item.Tool != "render" ||
+					e.Item.Status != "completed" || e.Item.Result == nil || e.Item.Result.IsError ||
+					(len(e.Item.Error) > 0 && string(e.Item.Error) != "null") {
+					return task.Execution{}, fmt.Errorf("unexpected or failed Codex file tool")
+				}
+				rendered = true
 			case "error":
 				// The CLI emits model metadata fallback notices before turn.started.
 				if started {
@@ -117,7 +169,7 @@ func decodeTurn(r io.Reader) (task.Execution, error) {
 			return task.Execution{}, fmt.Errorf("Codex turn failed")
 		}
 	}
-	if !started || !done || result.SessionID == "" || result.Text == "" {
+	if !started || !done || result.SessionID == "" || result.Text == "" || (fileMode && !rendered) {
 		return task.Execution{}, fmt.Errorf("incomplete Codex turn")
 	}
 	return result, nil

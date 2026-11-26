@@ -88,11 +88,11 @@ func (e *Engine) runTask(ctx context.Context, wait time.Duration, turn string) e
 	defer cancel()
 	stopped := make(chan struct{})
 	go func() { defer close(stopped); e.monitorTask(runCtx, route, cancel) }()
-	session, runErr := e.execute(runCtx, record)
+	session, artifacts, runErr := e.execute(runCtx, record)
 	cancel()
 	<-stopped
 	// A failed acknowledgement can be retried without starting another turn.
-	finish := task.Finish{Attempt: attempt, SessionID: session}
+	finish := task.Finish{Attempt: attempt, SessionID: session, Artifacts: artifacts}
 	if runErr != nil {
 		finish.Error = "execution or asset publication failed"
 	}
@@ -160,7 +160,7 @@ func (e *Engine) monitorTask(ctx context.Context, route string, stop context.Can
 	}
 }
 
-func (e *Engine) execute(ctx context.Context, record task.Record) (string, error) {
+func (e *Engine) execute(ctx context.Context, record task.Record) (string, []task.Ref, error) {
 	c := e.Config
 	spec := record.Spec
 	var err error
@@ -170,34 +170,34 @@ func (e *Engine) execute(ctx context.Context, record task.Record) (string, error
 		err = os.Mkdir(c.Workspace, 0700)
 	}
 	if err != nil {
-		return "", fmt.Errorf("task needs a new workspace: %w", err)
+		return "", nil, fmt.Errorf("task needs a new workspace: %w", err)
 	}
 	root, err := os.OpenRoot(c.Workspace)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	defer root.Close()
 	info, err := adapter.Inspect(ctx, e.Adapter, root, c.RuntimeCLI)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	if !info.Tested || (c.RuntimeVersion != "" && c.RuntimeVersion != info.RuntimeVersion) || (c.AdapterVersion != "" && c.AdapterVersion != info.Descriptor.Version) {
-		return "", fmt.Errorf("unverified task adapter/runtime version")
+		return "", nil, fmt.Errorf("unverified task adapter/runtime version")
 	}
 	if record.Parent == nil {
 		if err = root.WriteFile("input.txt", []byte(spec.Input), 0600); err != nil {
-			return "", err
+			return "", nil, err
 		}
 		if err = root.Mkdir("out", 0700); err != nil {
-			return "", err
+			return "", nil, err
 		}
 	}
 	if err = os.MkdirAll(c.StateDir, 0700); err != nil {
-		return "", err
+		return "", nil, err
 	}
 	home, err := os.MkdirTemp(c.StateDir, "task-home-*")
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	// Keep the private native history available for inspection after a failed publication.
 	env := task.Environment{Executable: c.RuntimeCLI, Workspace: c.Workspace, Home: home}
@@ -206,11 +206,11 @@ func (e *Engine) execute(ctx context.Context, record task.Record) (string, error
 	if spec.Mode == task.FileTurn {
 		files, ok := e.Adapter.(task.FileExecutor)
 		if !ok {
-			return "", fmt.Errorf("adapter does not support file turns")
+			return "", nil, fmt.Errorf("adapter does not support file turns")
 		}
 		staged := ".result-" + uuid.NewString()
 		if _, err := root.Lstat(staged); !errors.Is(err, os.ErrNotExist) {
-			return "", fmt.Errorf("file turn needs a fresh result path")
+			return "", nil, fmt.Errorf("file turn needs a fresh result path")
 		}
 		var session string
 		var history task.RestoreHistory
@@ -219,19 +219,19 @@ func (e *Engine) execute(ctx context.Context, record task.Record) (string, error
 		}
 		output, err = files.ExecuteFile(ctx, env, spec, staged, session, history)
 		if err == nil && session != "" && output.SessionID != session {
-			return "", fmt.Errorf("native session changed on continuation")
+			return "", nil, fmt.Errorf("native session changed on continuation")
 		}
 		if err == nil {
 			info, statErr := root.Lstat(staged)
 			if statErr != nil || !info.Mode().IsRegular() {
-				return "", fmt.Errorf("file tool did not produce a new regular file")
+				return "", nil, fmt.Errorf("file tool did not produce a new regular file")
 			}
 			err = root.Rename(staged, target)
 		}
 	} else {
 		executor, ok := e.Adapter.(task.Executor)
 		if !ok {
-			return "", fmt.Errorf("adapter does not support text turns")
+			return "", nil, fmt.Errorf("adapter does not support text turns")
 		}
 		output, err = e.runText(ctx, executor, env, record)
 		if err == nil {
@@ -239,7 +239,7 @@ func (e *Engine) execute(ctx context.Context, record task.Record) (string, error
 		}
 	}
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	// The journal must remain outside both the workspace and the history root.
 	c.StateDir = filepath.Join(c.StateDir, "publish")
@@ -247,15 +247,12 @@ func (e *Engine) execute(ctx context.Context, record task.Record) (string, error
 	c.Sessions = output.HistoryDir
 	c.ArtifactSession = output.SessionID
 	publisher := Engine{Config: c, Client: e.Client, Adapter: e.Adapter}
-	publishedOutput := ""
-	if record.TurnID != "" || spec.Mode == task.FileTurn {
-		publishedOutput = spec.Output
-	}
-	if err = publisher.sync(ctx, record.TurnID, publishedOutput); err != nil {
-		return "", err
+	var artifacts []task.Ref
+	if err = publisher.sync(ctx, record.TurnID, &artifacts); err != nil {
+		return "", nil, err
 	}
 	_ = os.RemoveAll(home)
-	return output.SessionID, nil
+	return output.SessionID, artifacts, nil
 }
 
 func (e *Engine) runText(ctx context.Context, executor task.Executor, env task.Environment, record task.Record) (task.Execution, error) {
