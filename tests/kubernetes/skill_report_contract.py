@@ -8,6 +8,7 @@ import time
 import urllib.parse
 import urllib.request
 
+from diagnostics import dump_failure_logs
 from saas_file_contract import FileReportClient
 
 
@@ -157,8 +158,5 @@ def run(client, catalog, kube, temp, cert, wait_job, negative, queued_restart=No
             "no_skill_control": "failed-without-assets", "native_skill_rule": "verified-by-installed-script-and-reference",
         }, sort_keys=True), flush=True)
     except Exception:
-        print(kube("logs", "deployment/model")[-3000:], flush=True)
-        for pod in json.loads(kube("get", "pods", "-o", "json"))["items"]:
-            if "job-name" in pod["metadata"].get("labels", {}):
-                print(kube("logs", "pod/" + pod["metadata"]["name"])[-2000:], flush=True)
+        dump_failure_logs(kube)
         raise
