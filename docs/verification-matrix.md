@@ -12,10 +12,11 @@
 | Codex 文件工具、文件恢复后再编辑 | `make test-k8s-file-report`，例 1–2 | 2026-11-26：固定 Linux CLI + 脚本模型通过；三个全新 Pod 接续、多文件下载、旧版不变。真实模型未跑。[证据](#2026-11-26codex-文件工具集群验收通过) |
 | 固定版本 Skill 安装与原生加载 | `make test-k8s-skills` | 2026-11-26：Linux Codex + 脚本模型、三个新 Pod 使用同一 v1，发布 v2 不漂移；相同输入无 Skill 负例失败。[证据](#2026-11-26固定-skill-版本与原生加载) |
 | Codex 文件任务取消、失联及重试 | 例 3、`make test-k8s-pod-loss` | 活跃 MCP 工具取消、SIGKILL 后等待原生产期限进入 interrupted、原 UUID 重投和新 UUID 恢复、业务数据库失败重试均已通过。[Pod 丢失验收](pod-loss-acceptance.md) |
-| PostgreSQL + 对象存储下的 Kubernetes 文件/Skill 契约 | `make test-k8s-persistent` | 2026-11-26：同一次命令中两场景均通过，含 queued 追问的控制面 Pod 重启和原 UUID 重投；V2 的 Pod 丢失组合、发布边界故障注入仍待验收。[证据](#2026-11-26postgresql--s3-联合集群与队列恢复) |
-| 任务冻结资产的发布重试 | `go test -race ./internal/worker` | SQLite + 真实 HTTP/Worker 故障矩阵通过：Begin/Upload/Commit 前后、真实元数据失败恢复、取消/期限、永久错误与重试耗尽。Agent 每轮只执行一次，冻结字节和操作身份不变；PG/S3 同一边界故障组合尚未注入。[证据](#2026-11-26任务冻结发布重试与历史引用回收) |
+| PostgreSQL + 对象存储下的 Kubernetes 文件/Skill 契约 | `make test-k8s-persistent` | 2026-11-26：同一次命令中两场景均通过，含 queued 追问的控制面 Pod 重启和原 UUID 重投；后续完整 V2 套件另覆盖发布故障和 Pod 丢失。[短入口证据](#2026-11-26postgresql--s3-联合集群与队列恢复) |
+| 任务冻结资产的发布重试 | `go test -race ./internal/worker` | SQLite + 真实 HTTP/Worker 故障矩阵通过：Begin/Upload/Commit 前后、真实元数据失败恢复、取消/期限、永久错误与重试耗尽。Agent 每轮只执行一次，冻结字节和操作身份不变；PG/S3 的分片发布边界也已在完整 V2 套件通过。[单元及服务证据](#2026-11-26任务冻结发布重试与历史引用回收) |
 | 非 head 历史 Artifact/Skill 的 GC 保护 | `TestHistoricalArtifactAndSkillReferencesSurviveGC`、`make test-services` | SQLite 与 PostgreSQL/S3 均通过：v1 被 v2 替代为历史后仍保留完整字节；同次 GC 确实删除孤儿对象，旧版本经 HTTP 下载并核 SHA-256。 |
 | 可选工作区增量上传 | `make test-k8s-workspace-parts`、上传测量脚本 | `tar-parts.v1` 默认关闭；PG/S3 文件与固定 Skill 集群通过，公开下载仍是原 tar。5,000/10,000 文件的单文件修改请求体减少约 99%，清单流量和更高的首次/读取成本均已记录。[实测与边界](workspace-incremental.md) |
+| 完整 PG/S3 V2、发布故障、失联及租户拒读 | `make test-k8s-v2` | `89c3c155` 同命令三场景全部通过，含两次 running 原 UUID 重投、八个发布边界、耗尽恢复、真实 900 秒失联、三套 API 重启及 16/17/48 个固定版本的外租户精确 404。[原始证据](evidence/postgres-s3-v2-suite-2026-11-26.json) · [复验说明](persistent-faults-acceptance.md) |
 
 ## 待落地的可运行示例
 
@@ -153,6 +154,30 @@ PG/S3 专项先在 `84461dd`、诊断增强后的 `852166d` 各失败一次，�
 同一干净源码 `e8deb796` 的完整 `make test-k8s` 也通过：Codex、Gemini CLI、OpenCode、Claude Code 四个真实固定版本 CLI 均完成原 Pod 删除后交付、两次自动新 Pod 续聊及两种取消。初始原生执行取消约 2.3、3.1、3.9、3.8 秒；自有集群和临时镜像已清理。该矩阵使用默认全量传输与脚本模型，分片的真实文件/Skill 能力由上述 PG/S3 专项验证。
 
 任务重试另在真实 HTTP/SQLite 上覆盖清单、分片及 Commit 的前后错误与真实 TCP 应答丢失、永久错误及三次耗尽，确认一次原生测试子进程、固定操作/清单/内容、唯一版本、成功 primary 与工作区一致、checkpoint 及 `pending.Transfer` 保留。平台服务测试覆盖新旧表示、重启、依赖损坏/跨 scope 拒绝、历史与 pending 的 GC 保护和真实孤儿删除；并行上传失败会取消其他活动请求。真实模型和 PG/S3 中同一发布边界、Worker 无应答丢失的联合场景仍由 INT-67 承接，不关闭 V2 整体。
+
+### 2026-11-26 UTC：持久化故障套件与转发夹具修复
+
+`make test-k8s-v2` 将 PG/S3 文件、固定 Skill 和发布故障/失联放入同一命令、kind 集群与 Codex 镜像；三场景各自隔离命名空间、数据库和桶。各场景的 API 重启后，另一合法只读租户必须能读取自身授权上下文、看见空资产列表，并对原租户任务、checkpoint 和全部固定内容得到精确 404、无 revision header；原租户再读相同历史字节核 SHA-256。活跃工具回合原 UUID 重投两次后，还要求同一记录、checkpoint、Job UID、Pod UID、容器 ID 和零重启保持两个调度周期。
+
+首轮完整源码 `54cb556` 在已成功输出 Pod 丢失恢复结果之后，最终外租户固定内容读取发生 TLS 握手超时，缺少第三份租户和存储结果，因此整体失败。[原始失败证据](evidence/postgres-s3-v2-suite-failed-2026-11-26.json)。`89c3c155` 修复了验收端口转发的 stdout 背压：原夹具只读启动行，4.35 MB 的确定性连接日志可令子进程停止后续工作；新夹具写临时文件并用 `pread` 查完整启动行，保留原端口重连及错误日志。五项离线回归已加入 CI，HTTP 判定和生产 900 秒期限不变。该机制与原超时相符，未把原异常链当作同一根因的直接证明。
+
+修复源码 `89c3c155` 的 `make fmt/check/demo` 与完整四 CLI 默认文本矩阵通过，原生取消约 2.3/3.0/3.8/3.8 秒，专属矩阵集群和镜像标签已清理。
+
+### 2026-11-26 UTC：完整 V2 套件通过
+
+同一干净源码 `89c3c155a707dc977fd15692d4c54fff032b6dfd` 的 `make test-k8s-v2` 最终退出 0，专属 kind 集群已清理。[全部原始结果、故障 ledger 与回归身份](evidence/postgres-s3-v2-suite-2026-11-26.json)。
+
+| 同一命令中的场景 | API 重启后外租户固定版本精确 404 / 原租户再核摘要 | S3 引用对象 / 其中 part 对象 |
+| --- | --- | --- |
+| 文件交付、修改、取消及恢复 | 16 / 16 | 24 / 14 |
+| 固定 Skill v1、来源 v2 不漂移及无 Skill 负例 | 17 / 17，含两份 Skill 版本 | 30 / 16 |
+| 发布边界、耗尽和真实 Worker 失联 | 48 / 48 | 40 / 22 |
+
+三场景均核验 PostgreSQL **18.7**、MinIO **RELEASE.2026-04-17T00-00-00Z**，无 SQLite/本地对象回退；均在 queued 时真实替换 API Pod、原 UUID 重投两次并恢复单 Job。文件与失联场景另在原生工具活跃时重投原 UUID 两次，完整 running 记录、checkpoint、唯一 Job/Pod/容器和零重启保持两个调度周期。
+
+八个 Begin/manifest/part/commit 前后故障均恢复成功；manifest 连续三次失败没有成功资产，新 UUID 恢复成功。长场景 14 个独立 Pod 原生执行各为 1，成功后仍为唯一版本和原冻结内容。SIGKILL 退出 137，无 Worker 收尾确认；公开生产期限为 `2026-11-26T16:25:14.293264351Z`，观察 interrupted 为 `16:25:15.957088+00:00`，约晚 1.66 秒。原 UUID 不生成替代 Job，新 UUID 在新 Pod 沿原会话恢复，checkpoint、两条业务记录和旧版字节保持，未归档文件未恢复。
+
+由此达到本矩阵的 P1/V2 无模型密钥工程门槛。真实模型仍按用户选择后补，不承诺多控制面副本、生产 HA 或不可信代码隔离。公开 GC 沿用 24 小时窗口，本次只证历史/pending 保护；过期孤儿真实删除仍由存储服务测试覆盖。[入口、历史来源与边界](persistent-faults-acceptance.md)。
 
 ## V2 退出门槛
 
