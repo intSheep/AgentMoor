@@ -21,11 +21,13 @@ def render(operation):
         source.unlink()
         state_path.unlink()
         return render("revise")
-    if operation == "hold":
+    if operation in ("hold", "pod_loss"):
         assert source.is_file() and state_path.is_file()
         Path(".hold-started").write_text("active MCP render\n")
         Path("unpublished-draft.txt").write_text("must not advance the checkpoint\n")
-        time.sleep(90)
+        # The Pod-loss test kills this process. Its fixture must not finish
+        # naturally before the unchanged production 15-minute allocation expires.
+        time.sleep(1200 if operation == "pod_loss" else 90)
         raise ValueError("hold operation was not cancelled")
     if operation == "produce":
         if source.exists() or state_path.exists():
@@ -73,7 +75,7 @@ def handle(method, params):
     if method == "tools/list":
         return {"tools": [{"name": "render", "description": "Generate, revise or audit the saved regional report.",
                            "inputSchema": {"type": "object", "properties": {"operation": {
-                               "type": "string", "enum": ["produce", "revise", "audit", "missing_input", "lost_workspace", "hold"]}},
+                               "type": "string", "enum": ["produce", "revise", "audit", "missing_input", "lost_workspace", "hold", "pod_loss"]}},
                                "required": ["operation"], "additionalProperties": False}}]}
     if method == "ping":
         return {}

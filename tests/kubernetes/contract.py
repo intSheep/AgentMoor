@@ -18,6 +18,7 @@ sys.path.insert(0, str(HERE.parent))
 from saas_contract import ReportClient
 from saas_file_contract import FileReportClient
 from file_report_contract import run as run_file_report
+from pod_loss_contract import run as run_pod_loss
 from runtimes import BINARIES, environment
 
 
@@ -26,6 +27,8 @@ def check(*args, data=None):
 
 
 def main(opts, temp):
+    if opts.pod_loss:
+        opts.file_report = True
     ns = "agentmoor-contract-" + uuid.uuid4().hex[:10]
     base = ["kubectl", "--context", opts.context, "--kubeconfig", opts.kubeconfig]
     def kube(*args, data=None):
@@ -96,6 +99,9 @@ def main(opts, temp):
             client = client_class(endpoint, issue("--submit"), scope["runtime"],
                                   ssl.create_default_context(cafile=str(cert)))
             apply_job("produce", "executor", ["agentmoor", "run-task", "--config", "/config/worker.json"])
+            if opts.pod_loss:
+                run_pod_loss(client, kube, temp, cert, wait_job)
+                return
             if opts.file_report:
                 negative = (issue("--submit", allocation=cancellation_scope),
                             lambda: apply_job("missing-input", "cancel-executor",
@@ -228,6 +234,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--adapter", choices=BINARIES, required=True)
     parser.add_argument("--file-report", action="store_true")
+    parser.add_argument("--pod-loss", action="store_true")
     for key in ("context", "kubeconfig", "image"):
         parser.add_argument("--" + key, required=True)
     with tempfile.TemporaryDirectory(prefix="agentmoor-saas-") as tmp:
