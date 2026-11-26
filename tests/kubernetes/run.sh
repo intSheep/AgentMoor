@@ -2,8 +2,6 @@
 # Disposable cluster and kubeconfig. Never change the user's current context.
 set -eu
 cd "$(dirname "$0")/../.."
-state=$(mktemp -d)
-name="agentmoor-$(python3 -c 'import uuid; print(uuid.uuid4().hex[:12])')"
 agents=${AGENT:-"codex gemini-cli opencode claude-code"}
 images=""
 persistent=0
@@ -14,7 +12,10 @@ if [ "${1:-}" = "--persistent" ]; then
         echo "Persistent contract requires AGENT=codex and no extra flags" >&2
         exit 1
     fi
+    sh tests/kubernetes/check_persistent_prereqs.sh
 fi
+state=$(mktemp -d)
+name="agentmoor-$(python3 -c 'import uuid; print(uuid.uuid4().hex[:12])')"
 export KUBECONFIG="$state/kubeconfig"
 cleanup() {
     kind delete cluster --name "$name" --kubeconfig "$KUBECONFIG"
