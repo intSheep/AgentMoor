@@ -186,7 +186,7 @@ func (s *scan) flush(ctx context.Context) error {
 		v, err = s.engine.Client.Publish(ctx, p.Change, file)
 		// Task execution must finish the frozen operation without rerunning the
 		// Agent. Ordinary Sync keeps its one-attempt, journal-on-next-scan behavior.
-		if err == nil || s.artifacts == nil || attempt >= 2 || !transientPublication(err) {
+		if err == nil || s.artifacts == nil || attempt >= 2 || !transientPublication(ctx, err) {
 			break
 		}
 		select {
@@ -207,8 +207,11 @@ func (s *scan) flush(ctx context.Context) error {
 	return os.Remove(file)
 }
 
-func transientPublication(err error) bool {
-	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+func transientPublication(ctx context.Context, err error) bool {
+	// net/http's response-header timeout also matches DeadlineExceeded. Only
+	// the owning task context distinguishes that transport timeout from the
+	// caller's actual deadline; a live task may retry its shorter HTTP timeout.
+	if ctx.Err() != nil || errors.Is(err, context.Canceled) || err == context.DeadlineExceeded {
 		return false
 	}
 	var status *platform.HTTPError

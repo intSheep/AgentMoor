@@ -521,7 +521,7 @@ func TestTaskPublicationCancellationAndDeadlineInterruptRequests(t *testing.T) {
 
 func TestPublicationRetryClassification(t *testing.T) {
 	for _, status := range []int{408, 429, 500, 502, 503, 504} {
-		if !transientPublication(fmt.Errorf("publish: %w", &platform.HTTPError{StatusCode: status, Message: "fixture"})) {
+		if !transientPublication(t.Context(), fmt.Errorf("publish: %w", &platform.HTTPError{StatusCode: status, Message: "fixture"})) {
 			t.Errorf("transient HTTP %d was not retried", status)
 		}
 	}
@@ -537,6 +537,7 @@ func TestPublicationRetryClassification(t *testing.T) {
 		{"network timeout", &net.DNSError{IsTimeout: true}, true},
 		{"caller cancelled", fmt.Errorf("request: %w", context.Canceled), false},
 		{"caller deadline", fmt.Errorf("request: %w", context.DeadlineExceeded), false},
+		{"exact deadline sentinel", context.DeadlineExceeded, false},
 		{"TLS certificate", &url.Error{Op: "Post", URL: "https://fixture.invalid", Err: x509.UnknownAuthorityError{}}, false},
 		{"local frozen file missing", &os.PathError{Op: "open", Path: "missing-blob", Err: os.ErrNotExist}, false},
 		{"local permission", &os.PathError{Op: "open", Path: "frozen-blob", Err: os.ErrPermission}, false},
@@ -547,9 +548,46 @@ func TestPublicationRetryClassification(t *testing.T) {
 		{"unclassified error", errors.New("permanent fixture error"), false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			if got := transientPublication(tc.err); got != tc.want {
+			ctx := t.Context()
+			if tc.name == "caller deadline" {
+				var stop context.CancelFunc
+				ctx, stop = context.WithDeadline(ctx, time.Now().Add(-time.Second))
+				defer stop()
+			}
+			if got := transientPublication(ctx, tc.err); got != tc.want {
 				t.Fatalf("retry=%t, want %t for %T", got, tc.want, tc.err)
 			}
 		})
+	}
+}
+
+func TestPublicationRetriesResponseHeaderTimeoutWithLiveTaskContext(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		<-r.Context().Done()
+	}))
+	defer server.Close()
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.ResponseHeaderTimeout = 20 * time.Millisecond
+	defer transport.CloseIdleConnections()
+	client := &http.Client{Transport: transport}
+	request, err := http.NewRequestWithContext(t.Context(), "POST", server.URL, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, err := client.Do(request)
+	if response != nil {
+		response.Body.Close()
+	}
+	var network net.Error
+	if err == nil || !errors.Is(err, context.DeadlineExceeded) || !errors.As(err, &network) || !network.Timeout() || t.Context().Err() != nil {
+		t.Fatalf("fixture did not reproduce a transport timeout with a live task: %v", err)
+	}
+	if !transientPublication(t.Context(), err) {
+		t.Fatal("live task incorrectly treated the shorter HTTP timeout as its own deadline", err)
+	}
+	ctx, stop := context.WithCancel(t.Context())
+	stop()
+	if transientPublication(ctx, err) {
+		t.Fatal("a cancelled task retried an earlier transport timeout")
 	}
 }
