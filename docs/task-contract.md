@@ -94,7 +94,7 @@ Worker 每秒检查一次取消请求。运行中失联且未确认结束时，1
 
 ## 一条命令复验
 
-从项目根目录运行 `make test-k8s`。需要 Go、C 编译器、Docker、kind、kubectl、Python 3 和 OpenSSL。脚本构建本地测试镜像，创建专属 kind 集群及 kubeconfig，并在退出时回收。每个镜像只装一种固定版本的 CLI，构建时校验其 SHA-512。默认依次运行 Codex、Gemini CLI、OpenCode，再回归 Claude Code。单独复验可用 `make test-k8s AGENT=gemini-cli`，其他适配器 ID 见下表。测试使用 kind v0.31.0 和 Kubernetes v1.35.0，模型由集群内的确定性服务模拟。
+从项目根目录运行 `make test-k8s`。需要 Go、C 编译器、Docker、kind、kubectl、Python 3 和 OpenSSL。脚本构建本地测试镜像，创建专属 kind 集群及 kubeconfig，并在退出时回收。每个镜像只装一种固定版本的 CLI，构建时校验其 SHA-512。默认依次运行 Codex、Gemini CLI、OpenCode，再回归 Claude Code。单独复验可用 `make test-k8s AGENT=gemini-cli`，其他适配器 ID 见下表。2026-11-26 复验使用 kind v0.33.0 和 Kubernetes v1.35.0，模型由集群内的确定性服务模拟。
 
 1. 独立的 [SaaS 测试客户端](../tests/saas_contract.py) 只发 HTTP 请求，提交含随机金额、重复地区和负数的 CSV，检查重复提交和冲突。
 2. Pod A 领取任务，选定版本的真实 CLI 发起模型请求。SaaS 轮询任务、下载报告、校验摘要，并用独立的预期金额验算。

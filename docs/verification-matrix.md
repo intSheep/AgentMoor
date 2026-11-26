@@ -9,8 +9,8 @@
 | PostgreSQL + S3 兼容存储 | `make test-services` | [已记录](mvp.md#prd-验收对应表)：验证资产发布、读回和回收。不是同一次跨 Pod 任务端到端测试。 |
 | 本机从 CSV 生成报告 | [文件工具样例](../examples/file-report/README.md) | 可用 `make test-file-report` 直接调用工具，或指定本机 Codex CLI，由回环脚本模型请求执行工具。独立验算读取磁盘上的实际文件。此入口只覆盖例 1 的本机文件生成步骤。 |
 | Worker 交付工具文件，业务端下载并去重 | `make test-worker-file-report` | 本地真实 HTTP 平台、两个独立 Worker 进程、SQLite 导入器通过。测试适配器提供会话及最终文本。[本次证据](#2026-11-25worker-文件交付) |
-| Codex 文件工具、文件恢复后再编辑 | 例 1–2 | 计划。分别记录真实 CLI + 脚本模型、真实 CLI + 真实模型的结果。 |
-| Codex 文件任务取消、失联及重试 | 例 3 | 计划。当前文本取消测试不能替代工具生命周期验证。 |
+| Codex 文件工具、文件恢复后再编辑 | `make test-k8s-file-report`，例 1–2 | 2026-11-26：固定 Linux CLI + 脚本模型通过；三个全新 Pod 接续、多文件下载、旧版不变。真实模型未跑。[证据](#2026-11-26codex-文件工具集群验收通过) |
+| Codex 文件任务取消、失联及重试 | 例 3 | 活跃 MCP 工具取消、恢复后新回合、业务数据库失败重试已通过；工具运行中 Pod 突然丢失仍未验收。 |
 | PostgreSQL + 对象存储下的完整 Kubernetes 契约 | V2 退出门槛 | 计划。不据后端测试推断跨 Pod 端到端已过。 |
 
 ## 待落地的可运行示例
@@ -64,6 +64,26 @@ OrbStack 对 `agentmoor-a7ac05925384-control-plane` 的事件显示，节点于 
 ```sh
 python3 tests/kubernetes/diagnose_file_report.py --check
 ```
+
+### 2026-11-26：Codex 文件工具集群验收通过
+
+代码提交 `b153a3d33f8845cd843cf400f6ad40b30cfa9947`，macOS ARM64、Docker 29.8.2、kind 0.33.0、Kubernetes v1.35.0。固定 Linux ARM64 Codex `0.171.0-alpha.13`，使用脚本 Responses 模型、SQLite 与本地不可变对象存储。[结构化验收证据](evidence/codex-file-report-2026-11-26.json)。本机原生恢复往返另用 Codex `0.171.0-alpha.13.2` 通过。
+
+`make test-k8s-file-report` 通过。只给部署端选定的 `report.render` 设置工具级 `approval_mode="approve"`，保留原生 `read-only`、禁 shell、apps、hooks 和多 Agent。工具的文件与外部动作权限由部署端负责。SaaS 指令只引用输入路径，脚本模型不读取 CSV、不计算金额；原生 MCP 工具实际落盘，最终回答仅为 `done`。成功后独立 SaaS 客户端经公开 API 下载固定版本，对金额、SHA-256、两份业务文件和原生会话记录逐项核对；缺输入返回 failed，成功资产为空。
+
+| 回合 | 新 Pod UID | report.json SHA-256 |
+| --- | --- | --- |
+| 生成 | `ce0d7b56-670a-4516-8b56-65ed4495f492` | `9ff6adafeb0cb99ca79a546ed02272f312a4140c76b1db47f593317cc8c469bc` |
+| 修改 | `a5db9578-bb41-4ff3-a74f-4102acf9135e` | `45e2ae257cfb30ffc9c9e036ec59fbf30914c6caa4e37ac43b7cb90d41eb1d0b` |
+| 审计 | `89b962aa-c4fc-4ea3-bee6-c0946c8afc41` | `e6772bfd70bf3ac1133f6d1199874d2ac2de0eac49be57c704fa5be0cd1a167f` |
+
+三轮使用同一原生会话，标识 SHA-256 为 `9b396ae4bac350bbe9816b31d9a52cda244d14f7c498bc2e1b9108a00889ecf3`。前两个 Pod 和各自 emptyDir 在追问前已删除；只存在工作区的随机标记没有进入原生历史或模型请求，第三轮从恢复文件读取。旧 Artifact 在后续修改、取消及恢复后仍能按原摘要下载。每轮 `out/report.json` 和 `out/tool-proof.json` 均在成功清单中；完整交付集、同名修改、删除/改名及 Skill 扫描另有 Worker/平台测试。
+
+两份业务报告各自 `imported → already-imported`。修订报告入库前，用真实 SQLite BEFORE INSERT Trigger 触发写入失败，确认此前记录未变；移除 Trigger 后重试只产生第二条记录，没有重新运行 Agent。迟到重放第一份仍是 `already-imported`，数据库保持两行。`make test-worker-file-report` 也验证了真实 Worker 销毁后业务数据库失败恢复；独立消费者的 10 项 HTTP 测试通过，包括拒绝失败、取消、运行中和中断记录。
+
+同会话负例在合成工具开始前移除恢复出的 CSV/state 后执行修订，明确失败且 checkpoint 不变。这是在恢复后模拟所需文件缺失，不是关闭生产 Worker 恢复的实测。另在真实 MCP 进程写出启动标志并进入阻塞后取消，观察到 cancelling/cancelled，25 秒内 Job 退出，没有成功资产；新 UUID 和 Pod `9c82006c-4aca-4e77-9e2d-c86beffcca10` 从最近成功版本继续审计，未归档草稿没有混入。直接杀掉活跃 Worker Pod 的 interrupted/恢复场景仍未跑。
+
+同一代码的 `make fmt`、`make check`（含 race）、`make demo`、`make test-services` 与四 CLI `make test-k8s` 全部通过。后者仍是四个 CLI 的文本交付、连续新 Pod 追问及运行中取消；本节文件能力仅声明 Codex 已测。真实模型 smoke、固定版本 Skill 注入和 PostgreSQL/S3 下完整跨 Pod 流程均未验收，不据本次通过推断支持。
 
 ### 例 3：取消、失联与重试
 

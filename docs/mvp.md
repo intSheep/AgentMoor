@@ -47,3 +47,7 @@
 | Claude Code | 通过 | 通过 | 通过 |
 
 第二次追问只带本轮的新校验码。正确答案必须同时包含原始 CSV 的合计、上一次追问的随机码以及本轮校验码。每次提交都重发一次，并检查只有一个对应 Job。取消测试分别等待首轮和后续追问的模型请求到达，再检查 Worker 确认、Job 退出，且已取消的回合没有成功交付物。追问取消后，最近成功的工作区和会话引用保持一致。本轮使用本机 kind 集群、Linux ARM64 原生 CLI 和确定性模型端点。版本、各 CLI 的接手方式及复验命令见[任务契约](task-contract.md)。
+
+## 2026-11-26：Codex 文件工作流补充验收
+
+Codex CLI `0.171.0-alpha.13` 在 kind 0.33.0 / Kubernetes v1.35.0 中，经脚本模型请求受信 MCP 工具，完成真实 CSV 文件读写、三次不同 Pod 的同会话接续、两份 Artifact 的固定版本交付、旧版下载、业务数据库写入失败后重试及活跃工具取消。`make test-k8s-file-report` 通过；四 CLI 的 `make test-k8s` 文本矩阵、`make check`、`make demo`、`make test-services` 和本机 Codex `.13.2` 的 native roundtrip 也通过。[完整结果与边界](verification-matrix.md#2026-11-26codex-文件工具集群验收通过) · [结构化证据](evidence/codex-file-report-2026-11-26.json)。真实模型、Skill 固定版本注入及活跃工具中 Pod 突然丢失仍未验收。
