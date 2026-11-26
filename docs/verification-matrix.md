@@ -42,7 +42,7 @@
 
 这次运行的测试会话为 `06bdd842-9539-43db-ba12-9f95fc05f213`。现有 `ingest.py` 拒绝了两次以最终文本作为预期的导入。按独立验算的金额导入时，每份依次返回 `imported`、`already-imported`。数据库共两行，两个 Worker 均退出后，两条引用均能下载原字节。每次复验生成新的会话和追问 ID。
 
-同日，提交 `9c573b9` 的 `make test-k8s-file-report` 在一次性 kind v0.31.0 集群运行，使用独立 kubeconfig、OrbStack Docker 29.8.2 和 Codex `0.171.0-alpha.13`。首轮调用 `report.render` 需要审批，非交互 CLI 返回 `MCP tool call requires approval, but approval policy is never`，任务失败。没有生成首份集群报告，也没有触发修订 Pod。该提交保留诊断入口，当前内置适配器只声明已验证的文本模式。
+同日，提交 `9c573b9` 的 `make test-k8s-file-report` 在一次性 kind v0.31.0 集群运行，使用独立 kubeconfig、OrbStack Docker 29.8.2 和 Codex `0.171.0-alpha.13`。首轮任务终态为 `failed`，脚本模型没有收到工具的写入确认。随后在同版本的独立诊断容器中，原生 `report.render` 事件从 `in_progress` 变为 `failed`，结果为 `null`，错误为 `MCP tool call requires approval, but approval policy is never`。这是该非交互调用的拒绝结果，没有产生等待用户确认的请求。没有生成首份集群报告，也没有触发修订 Pod。该提交保留诊断入口，当前内置适配器只声明已验证的文本模式。
 
 本次集群命令使用的 `kind` 位于工作树临时目录，Darwin ARM64 可执行文件的 SHA-256 与官方 v0.31.0 release 记录一致，为 `88bf554fe9da6311c9f8c2d082613c002911a476f6b5090e9420b35d84e70c5c`。下面是实际入口，`tool_dir` 表示该临时目录。验收结束后移除了临时集群、kubeconfig 和工具。
 
@@ -51,6 +51,18 @@
 PATH="$tool_dir:/Applications/OrbStack.app/Contents/MacOS/xbin:$PATH" DOCKER_CONTEXT=orbstack make test-k8s-file-report
 # 当前分支，本地文件交付通过
 make test-worker-file-report
+```
+
+#### 2026-11-26：首个 Pod 的诊断中断
+
+在 intSheep 的 MacBook Pro 上，执行会话 `85346` 从 `9c573b9` 的临时副本调用了 `make test-k8s-file-report`。重新连接后，原会话显示 Make 退出码为 2，诊断程序退出码为 1，输出里没有 `FILE_REPORT_DIAG` 记录。当天的探针只转发集群名和完整诊断记录，因此无法确定停止在启动、工具调用或发布的哪一步。11 月 25 日观察到的原生 CLI 审批错误仍是上一次运行的证据。
+
+OrbStack 对 `agentmoor-a7ac05925384-control-plane` 的事件显示，节点于 02:58:08 UTC 退出并销毁。随后按该次运行的名称检查，集群节点和专属镜像标签均已清除。恢复时只读取了原会话，没有重建集群。首个 Pod UID、实际 CLI 版本、原生 session ID、工具接收或写入状态及 Worker 的回执均未取回。两个 Pod 的标记恢复、业务端两版哈希和去重没有本轮验收结果，也没有可交给用户处理的待审批请求。
+
+保留的[诊断程序](../tests/kubernetes/diagnose_file_report.py)现在分段输出集群就绪、镜像构建与加载、Worker Job 创建和任务提交等已观测事件。它区分 MCP 工具发现和 `tools/call`，同时核对原生事件、临时文件、发布入口、Worker 终态确认以及 SaaS 的 HTTP 记录。若调用真的到达测试工具，探针在写入前停止。以下离线检查通过；修订后的探针尚未在集群中运行。
+
+```sh
+python3 tests/kubernetes/diagnose_file_report.py --check
 ```
 
 ### 例 3：取消、失联与重试
