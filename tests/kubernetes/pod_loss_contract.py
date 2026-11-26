@@ -27,8 +27,14 @@ def run(client, kube, temp, cert, wait_job):
         return record(client.route + "/checkpoint")
 
     def job_for(turn):
-        job, = json.loads(kube("get", "jobs", "-l", "agentmoor.io/turn=" + turn, "-o", "json"))["items"]
-        return job["metadata"]["name"]
+        until = time.monotonic() + 90
+        while time.monotonic() < until:
+            jobs = json.loads(kube("get", "jobs", "-l", "agentmoor.io/turn=" + turn, "-o", "json"))["items"]
+            assert len(jobs) <= 1, "duplicate Job for the same turn"
+            if jobs:
+                return jobs[0]["metadata"]["name"]
+            time.sleep(.3)
+        raise TimeoutError("follow-up Job was not dispatched")
 
     def pods_for(job):
         return json.loads(kube("get", "pods", "-l", "job-name=" + job, "-o", "json"))["items"]
@@ -91,6 +97,7 @@ def run(client, kube, temp, cert, wait_job):
     marker, initial = client.observe(first, session, "produce")
     client.ingest(first, initial, temp, cert)
     deliveries.append(("", initial))
+    stage("initial_report_verified", pod_uid=pod_uids[-1])
 
     revision = client.ask(session, "Revise the saved report by appending a west refund of 9 cents.")
     revised, _ = client.answer(revision)
@@ -100,6 +107,7 @@ def run(client, kube, temp, cert, wait_job):
     client.ingest(revised, revised_delivery, temp, cert)
     deliveries.append((revision, revised_delivery))
     cp = checkpoint()
+    stage("revised_checkpoint_verified", pod_uid=pod_uids[-1])
 
     message = "Lose the active report Pod during its tool call."
     lost = client.ask(session, message)
