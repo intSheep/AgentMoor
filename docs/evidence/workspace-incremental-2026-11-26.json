@@ -1,0 +1,1502 @@
+{
+  "recorded_at_utc": "2026-11-26T14:31:39.769100+00:00",
+  "source_commit": "48e929074ba83680714557ac2744b0881d7a9e30",
+  "platform_revision": "48e929074ba83680714557ac2744b0881d7a9e30",
+  "binary_sha256": "1a7ec9b92daa58556a6b8b130e2efc60e3f550d30e50cc2bfa3fae5e13209860",
+  "go_toolchain": "go1.27.4",
+  "host": {
+    "platform": "macOS-27.2.1-arm64-arm-64bit-Mach-O",
+    "python": "3.15.2"
+  },
+  "measurement": "Real AgentMoor platform and sync/restore CLI through an owned loopback HTTP proxy; synthetic data only.",
+  "logical_workspace_format": "workspace-tar.v1",
+  "default_workspace_transfer": "full",
+  "backends": {
+    "local": {
+      "metadata": "sqlite",
+      "objects": "local-disk",
+      "sqlite_version": null,
+      "sqlite_version_note": "Not recorded by these runs; no version inferred.",
+      "catalog_configuration_at_source_commit": {
+        "journal_mode": "WAL",
+        "synchronous": "FULL"
+      }
+    },
+    "postgres-s3": {
+      "metadata": "postgresql",
+      "objects": "s3-compatible-minio",
+      "postgres_version": "18.7",
+      "minio_version": "minio version RELEASE.2026-04-17T00-00-00Z (commit-id=f48dbe777d0e066d2e74d5e671a8ca21c2ec1664)",
+      "images": {
+        "postgres": {
+          "image": "postgres:18-alpine",
+          "image_id": "sha256:0115267ab5a509022df9319c77be365cef335adb71556c75f60f5360ee247e71",
+          "repo_digests": [
+            "postgres@sha256:0115267ab5a509022df9319c77be365cef335adb71556c75f60f5360ee247e71"
+          ]
+        },
+        "s3": {
+          "image": "pgsty/minio:RELEASE.2026-04-17T00-00-00Z",
+          "image_id": "sha256:83885c27b3b5b673049e33ddf4029afe2c134fd51ce4309e65e4f39d3b9ca282",
+          "repo_digests": [
+            "pgsty/minio@sha256:83885c27b3b5b673049e33ddf4029afe2c134fd51ce4309e65e4f39d3b9ca282"
+          ]
+        }
+      }
+    }
+  },
+  "request_byte_scope": "Actual change mutation request bodies: begin JSON + full tar or gzip manifest + missing part PUT bodies + commit body. Excludes headers, HTTP responses and transport overhead. upload_payload_bytes retains only PUT content/part bodies.",
+  "timing_scope": "CLI sync wall time through the loopback proxy; excludes input generation and download/restore checks",
+  "commit_timing_scope": "Proxy request entry to upstream commit response headers, including forwarding its request body; excludes downstream response consumption.",
+  "download_timing_scope": "Fixed-version public GET through the proxy to a local tar file; validation hashing and tar inventory are timed separately.",
+  "restore_timing_scope": "Real AgentMoor CLI restore version 1 wall time, including download, validation and atomic publish; excludes the subsequent inventory comparison.",
+  "fixed_version_comparisons": [
+    {
+      "input": {
+        "files": 8,
+        "file_bytes": 127,
+        "seed": 0
+      },
+      "raw_evidence_files": [
+        "workspace-incremental-local-8-tar-parts.v1-2026-11-26.json",
+        "workspace-incremental-postgres-s3-8-tar-parts.v1-2026-11-26.json"
+      ],
+      "same_fixed_version_tar_size_and_sha256": true,
+      "fixed_version_tar_sha256": {
+        "1": "7b2bd0489a4cbb43df0a318282775708bea8269aa9cadebcfac2db2a6adc27f7",
+        "2": "1a0f2f691f50f9441169f36a1cef1fdae9d180a347b8946be5a01735791db5af",
+        "3": "997379702cced9cc35079b4159e2a3022183a3e23bad122563c9e186b771e8f4"
+      },
+      "fixed_version_tar_bytes": {
+        "1": 10752,
+        "2": 10752,
+        "3": 9728
+      }
+    },
+    {
+      "input": {
+        "files": 5000,
+        "file_bytes": 4096,
+        "seed": 0
+      },
+      "raw_evidence_files": [
+        "workspace-incremental-local-5000-full-2026-11-26.json",
+        "workspace-incremental-local-5000-tar-parts.v1-2026-11-26.json",
+        "workspace-incremental-postgres-s3-5000-full-2026-11-26.json",
+        "workspace-incremental-postgres-s3-5000-tar-parts.v1-2026-11-26.json"
+      ],
+      "same_fixed_version_tar_size_and_sha256": true,
+      "fixed_version_tar_sha256": {
+        "1": "d10d96d4a9e9fceb9d93d82fe6e38bd1b82d2c998a839b5e702f2671aa323f29",
+        "2": "e0f0896c698fdff7406920eecae86ef147c688aa19dff11808357f2bca9e58a3",
+        "3": "e3cc106f06447cd9f25484c4f54f899c95f2eb898689b833d0aa9d196e1fc4dc"
+      },
+      "fixed_version_tar_bytes": {
+        "1": 23067648,
+        "2": 23067648,
+        "3": 23063040
+      }
+    },
+    {
+      "input": {
+        "files": 10000,
+        "file_bytes": 4096,
+        "seed": 0
+      },
+      "raw_evidence_files": [
+        "workspace-incremental-local-10000-full-2026-11-26.json",
+        "workspace-incremental-local-10000-tar-parts.v1-2026-11-26.json"
+      ],
+      "same_fixed_version_tar_size_and_sha256": true,
+      "fixed_version_tar_sha256": {
+        "1": "86c452c1a261e88e41674cfd16832fd0ceb3b53c11a557c26a768b4e871ac15d",
+        "2": "abb0b258ab4b7f333180cd2c8c07548f43036cfa9e1076c6ec72d7af7c3abd5e",
+        "3": "29f199da926843f04d555e1a015e50f744abb194c5383b72e7d12a3a5f02ddb3"
+      },
+      "fixed_version_tar_bytes": {
+        "1": 46133248,
+        "2": 46133248,
+        "3": 46128640
+      }
+    }
+  ],
+  "samples": [
+    {
+      "recorded_at_utc": "2026-11-26T14:17:52.677961+00:00",
+      "source_commit": "48e929074ba83680714557ac2744b0881d7a9e30",
+      "platform_revision": "48e929074ba83680714557ac2744b0881d7a9e30",
+      "binary_sha256": "1a7ec9b92daa58556a6b8b130e2efc60e3f550d30e50cc2bfa3fae5e13209860",
+      "input": {
+        "files": 8,
+        "file_bytes": 127,
+        "seed": 0,
+        "source_payload_bytes": 1016
+      },
+      "workspace_transfer": "tar-parts.v1",
+      "storage": {
+        "metadata": "sqlite",
+        "objects": "local-disk"
+      },
+      "stages": [
+        {
+          "phase": "initial",
+          "source_file_count": 8,
+          "source_payload_bytes": 1016,
+          "changed_payload_bytes": 1016,
+          "upload_requests": 8,
+          "upload_payload_bytes": 1016,
+          "change_mutation_requests": 11,
+          "change_mutation_payload_bytes": 2106,
+          "sync_elapsed_seconds": 0.123876,
+          "workspace_version": 1,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "7b2bd0489a4cbb43df0a318282775708bea8269aa9cadebcfac2db2a6adc27f7",
+          "workspace_archive_bytes": 10752,
+          "begin_requests": 1,
+          "begin_payload_bytes": 291,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 1,
+          "parts_manifest_payload_bytes": 799,
+          "part_body_requests": 8,
+          "part_body_payload_bytes": 1016,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 799,
+          "commit_response_headers_elapsed_seconds": [
+            0.000927
+          ]
+        },
+        {
+          "phase": "unchanged",
+          "source_file_count": 8,
+          "source_payload_bytes": 1016,
+          "changed_payload_bytes": 0,
+          "upload_requests": 0,
+          "upload_payload_bytes": 0,
+          "change_mutation_requests": 0,
+          "change_mutation_payload_bytes": 0,
+          "sync_elapsed_seconds": 0.044003,
+          "workspace_version": 1,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "7b2bd0489a4cbb43df0a318282775708bea8269aa9cadebcfac2db2a6adc27f7",
+          "workspace_archive_bytes": 10752,
+          "begin_requests": 0,
+          "begin_payload_bytes": 0,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 0,
+          "parts_manifest_payload_bytes": 0,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 0,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 0,
+          "commit_response_headers_elapsed_seconds": []
+        },
+        {
+          "phase": "single_file_update",
+          "source_file_count": 8,
+          "source_payload_bytes": 1016,
+          "changed_payload_bytes": 127,
+          "upload_requests": 1,
+          "upload_payload_bytes": 127,
+          "change_mutation_requests": 4,
+          "change_mutation_payload_bytes": 1217,
+          "sync_elapsed_seconds": 0.071054,
+          "workspace_version": 2,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "1a0f2f691f50f9441169f36a1cef1fdae9d180a347b8946be5a01735791db5af",
+          "workspace_archive_bytes": 10752,
+          "begin_requests": 1,
+          "begin_payload_bytes": 291,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 1,
+          "parts_manifest_payload_bytes": 799,
+          "part_body_requests": 1,
+          "part_body_payload_bytes": 127,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 799,
+          "commit_response_headers_elapsed_seconds": [
+            0.000681
+          ]
+        },
+        {
+          "phase": "single_file_delete",
+          "source_file_count": 7,
+          "source_payload_bytes": 889,
+          "changed_payload_bytes": 127,
+          "upload_requests": 0,
+          "upload_payload_bytes": 0,
+          "change_mutation_requests": 3,
+          "change_mutation_payload_bytes": 1037,
+          "sync_elapsed_seconds": 0.064133,
+          "workspace_version": 3,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "997379702cced9cc35079b4159e2a3022183a3e23bad122563c9e186b771e8f4",
+          "workspace_archive_bytes": 9728,
+          "begin_requests": 1,
+          "begin_payload_bytes": 290,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 1,
+          "parts_manifest_payload_bytes": 747,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 747,
+          "commit_response_headers_elapsed_seconds": [
+            0.000728
+          ]
+        }
+      ],
+      "fixed_version_downloads": {
+        "1": {
+          "download_elapsed_seconds": 0.004511,
+          "validation_elapsed_seconds": 0.003657
+        },
+        "2": {
+          "download_elapsed_seconds": 0.004322,
+          "validation_elapsed_seconds": 0.000397
+        },
+        "3": {
+          "download_elapsed_seconds": 0.004284,
+          "validation_elapsed_seconds": 0.000358
+        }
+      },
+      "old_version_cli_restore_elapsed_seconds": 0.056987,
+      "verification": {
+        "fixed_version_tar_sha256": {
+          "1": "7b2bd0489a4cbb43df0a318282775708bea8269aa9cadebcfac2db2a6adc27f7",
+          "2": "1a0f2f691f50f9441169f36a1cef1fdae9d180a347b8946be5a01735791db5af",
+          "3": "997379702cced9cc35079b4159e2a3022183a3e23bad122563c9e186b771e8f4"
+        },
+        "old_version_cli_restore": "all original file hashes matched",
+        "unchanged_workspace": "zero change mutation requests",
+        "single_file_mutations": "initial all file bodies; update one file body; delete zero file bodies; all manifests and metadata counted"
+      },
+      "backend": "local",
+      "raw_evidence_file": "workspace-incremental-local-8-tar-parts.v1-2026-11-26.json",
+      "raw_evidence_sha256": "5847ef4c98f97a1d2fef046b45904353365445be99925f8149f89211e906375c"
+    },
+    {
+      "recorded_at_utc": "2026-11-26T14:18:22.886462+00:00",
+      "source_commit": "48e929074ba83680714557ac2744b0881d7a9e30",
+      "platform_revision": "48e929074ba83680714557ac2744b0881d7a9e30",
+      "binary_sha256": "1a7ec9b92daa58556a6b8b130e2efc60e3f550d30e50cc2bfa3fae5e13209860",
+      "input": {
+        "files": 8,
+        "file_bytes": 127,
+        "seed": 0,
+        "source_payload_bytes": 1016
+      },
+      "workspace_transfer": "tar-parts.v1",
+      "storage": {
+        "metadata": "postgresql",
+        "objects": "s3-compatible-minio",
+        "owned_compose_project": "agentmoor-baseline-c4a512a5e1fe",
+        "cleanup_completed": true,
+        "postgres_version": "18.7",
+        "minio_version": "minio version RELEASE.2026-04-17T00-00-00Z (commit-id=f48dbe777d0e066d2e74d5e671a8ca21c2ec1664)",
+        "images": {
+          "postgres": {
+            "image": "postgres:18-alpine",
+            "image_id": "sha256:0115267ab5a509022df9319c77be365cef335adb71556c75f60f5360ee247e71",
+            "repo_digests": [
+              "postgres@sha256:0115267ab5a509022df9319c77be365cef335adb71556c75f60f5360ee247e71"
+            ]
+          },
+          "s3": {
+            "image": "pgsty/minio:RELEASE.2026-04-17T00-00-00Z",
+            "image_id": "sha256:83885c27b3b5b673049e33ddf4029afe2c134fd51ce4309e65e4f39d3b9ca282",
+            "repo_digests": [
+              "pgsty/minio@sha256:83885c27b3b5b673049e33ddf4029afe2c134fd51ce4309e65e4f39d3b9ca282"
+            ]
+          }
+        },
+        "postgres_revision_rows": 3,
+        "workspace_part_revisions": 3,
+        "s3_objects_present": true,
+        "sqlite_or_local_objects_present": false
+      },
+      "stages": [
+        {
+          "phase": "initial",
+          "source_file_count": 8,
+          "source_payload_bytes": 1016,
+          "changed_payload_bytes": 1016,
+          "upload_requests": 8,
+          "upload_payload_bytes": 1016,
+          "change_mutation_requests": 11,
+          "change_mutation_payload_bytes": 2106,
+          "sync_elapsed_seconds": 0.115784,
+          "workspace_version": 1,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "7b2bd0489a4cbb43df0a318282775708bea8269aa9cadebcfac2db2a6adc27f7",
+          "workspace_archive_bytes": 10752,
+          "begin_requests": 1,
+          "begin_payload_bytes": 291,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 1,
+          "parts_manifest_payload_bytes": 799,
+          "part_body_requests": 8,
+          "part_body_payload_bytes": 1016,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 799,
+          "commit_response_headers_elapsed_seconds": [
+            0.008731
+          ]
+        },
+        {
+          "phase": "unchanged",
+          "source_file_count": 8,
+          "source_payload_bytes": 1016,
+          "changed_payload_bytes": 0,
+          "upload_requests": 0,
+          "upload_payload_bytes": 0,
+          "change_mutation_requests": 0,
+          "change_mutation_payload_bytes": 0,
+          "sync_elapsed_seconds": 0.144728,
+          "workspace_version": 1,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "7b2bd0489a4cbb43df0a318282775708bea8269aa9cadebcfac2db2a6adc27f7",
+          "workspace_archive_bytes": 10752,
+          "begin_requests": 0,
+          "begin_payload_bytes": 0,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 0,
+          "parts_manifest_payload_bytes": 0,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 0,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 0,
+          "commit_response_headers_elapsed_seconds": []
+        },
+        {
+          "phase": "single_file_update",
+          "source_file_count": 8,
+          "source_payload_bytes": 1016,
+          "changed_payload_bytes": 127,
+          "upload_requests": 1,
+          "upload_payload_bytes": 127,
+          "change_mutation_requests": 4,
+          "change_mutation_payload_bytes": 1217,
+          "sync_elapsed_seconds": 0.119447,
+          "workspace_version": 2,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "1a0f2f691f50f9441169f36a1cef1fdae9d180a347b8946be5a01735791db5af",
+          "workspace_archive_bytes": 10752,
+          "begin_requests": 1,
+          "begin_payload_bytes": 291,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 1,
+          "parts_manifest_payload_bytes": 799,
+          "part_body_requests": 1,
+          "part_body_payload_bytes": 127,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 799,
+          "commit_response_headers_elapsed_seconds": [
+            0.012936
+          ]
+        },
+        {
+          "phase": "single_file_delete",
+          "source_file_count": 7,
+          "source_payload_bytes": 889,
+          "changed_payload_bytes": 127,
+          "upload_requests": 0,
+          "upload_payload_bytes": 0,
+          "change_mutation_requests": 3,
+          "change_mutation_payload_bytes": 1037,
+          "sync_elapsed_seconds": 0.10189,
+          "workspace_version": 3,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "997379702cced9cc35079b4159e2a3022183a3e23bad122563c9e186b771e8f4",
+          "workspace_archive_bytes": 9728,
+          "begin_requests": 1,
+          "begin_payload_bytes": 290,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 1,
+          "parts_manifest_payload_bytes": 747,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 747,
+          "commit_response_headers_elapsed_seconds": [
+            0.007744
+          ]
+        }
+      ],
+      "fixed_version_downloads": {
+        "1": {
+          "download_elapsed_seconds": 0.0087,
+          "validation_elapsed_seconds": 0.001763
+        },
+        "2": {
+          "download_elapsed_seconds": 0.008282,
+          "validation_elapsed_seconds": 0.000449
+        },
+        "3": {
+          "download_elapsed_seconds": 0.007618,
+          "validation_elapsed_seconds": 0.000421
+        }
+      },
+      "old_version_cli_restore_elapsed_seconds": 0.052375,
+      "verification": {
+        "fixed_version_tar_sha256": {
+          "1": "7b2bd0489a4cbb43df0a318282775708bea8269aa9cadebcfac2db2a6adc27f7",
+          "2": "1a0f2f691f50f9441169f36a1cef1fdae9d180a347b8946be5a01735791db5af",
+          "3": "997379702cced9cc35079b4159e2a3022183a3e23bad122563c9e186b771e8f4"
+        },
+        "old_version_cli_restore": "all original file hashes matched",
+        "unchanged_workspace": "zero change mutation requests",
+        "single_file_mutations": "initial all file bodies; update one file body; delete zero file bodies; all manifests and metadata counted"
+      },
+      "backend": "postgres-s3",
+      "raw_evidence_file": "workspace-incremental-postgres-s3-8-tar-parts.v1-2026-11-26.json",
+      "raw_evidence_sha256": "456b4b6c3f55c323112ed4c579f803cb4d1fab2a4d7e278ba109123a1ad19b75"
+    },
+    {
+      "recorded_at_utc": "2026-11-26T14:19:55.454078+00:00",
+      "source_commit": "48e929074ba83680714557ac2744b0881d7a9e30",
+      "platform_revision": "48e929074ba83680714557ac2744b0881d7a9e30",
+      "binary_sha256": "1a7ec9b92daa58556a6b8b130e2efc60e3f550d30e50cc2bfa3fae5e13209860",
+      "input": {
+        "files": 5000,
+        "file_bytes": 4096,
+        "seed": 0,
+        "source_payload_bytes": 20480000
+      },
+      "workspace_transfer": "full",
+      "storage": {
+        "metadata": "sqlite",
+        "objects": "local-disk"
+      },
+      "stages": [
+        {
+          "phase": "initial",
+          "source_file_count": 5000,
+          "source_payload_bytes": 20480000,
+          "changed_payload_bytes": 20480000,
+          "upload_requests": 1,
+          "upload_payload_bytes": 23067648,
+          "change_mutation_requests": 3,
+          "change_mutation_payload_bytes": 23067942,
+          "sync_elapsed_seconds": 0.536611,
+          "workspace_version": 1,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "d10d96d4a9e9fceb9d93d82fe6e38bd1b82d2c998a839b5e702f2671aa323f29",
+          "workspace_archive_bytes": 23067648,
+          "begin_requests": 1,
+          "begin_payload_bytes": 294,
+          "full_content_requests": 1,
+          "full_content_payload_bytes": 23067648,
+          "parts_manifest_requests": 0,
+          "parts_manifest_payload_bytes": 0,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 0,
+          "commit_response_headers_elapsed_seconds": [
+            0.000727
+          ]
+        },
+        {
+          "phase": "unchanged",
+          "source_file_count": 5000,
+          "source_payload_bytes": 20480000,
+          "changed_payload_bytes": 0,
+          "upload_requests": 0,
+          "upload_payload_bytes": 0,
+          "change_mutation_requests": 0,
+          "change_mutation_payload_bytes": 0,
+          "sync_elapsed_seconds": 0.487895,
+          "workspace_version": 1,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "d10d96d4a9e9fceb9d93d82fe6e38bd1b82d2c998a839b5e702f2671aa323f29",
+          "workspace_archive_bytes": 23067648,
+          "begin_requests": 0,
+          "begin_payload_bytes": 0,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 0,
+          "parts_manifest_payload_bytes": 0,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 0,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 0,
+          "commit_response_headers_elapsed_seconds": []
+        },
+        {
+          "phase": "single_file_update",
+          "source_file_count": 5000,
+          "source_payload_bytes": 20480000,
+          "changed_payload_bytes": 4096,
+          "upload_requests": 1,
+          "upload_payload_bytes": 23067648,
+          "change_mutation_requests": 3,
+          "change_mutation_payload_bytes": 23067942,
+          "sync_elapsed_seconds": 0.535416,
+          "workspace_version": 2,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "e0f0896c698fdff7406920eecae86ef147c688aa19dff11808357f2bca9e58a3",
+          "workspace_archive_bytes": 23067648,
+          "begin_requests": 1,
+          "begin_payload_bytes": 294,
+          "full_content_requests": 1,
+          "full_content_payload_bytes": 23067648,
+          "parts_manifest_requests": 0,
+          "parts_manifest_payload_bytes": 0,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 0,
+          "commit_response_headers_elapsed_seconds": [
+            0.00054
+          ]
+        },
+        {
+          "phase": "single_file_delete",
+          "source_file_count": 4999,
+          "source_payload_bytes": 20475904,
+          "changed_payload_bytes": 4096,
+          "upload_requests": 1,
+          "upload_payload_bytes": 23063040,
+          "change_mutation_requests": 3,
+          "change_mutation_payload_bytes": 23063334,
+          "sync_elapsed_seconds": 0.556117,
+          "workspace_version": 3,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "e3cc106f06447cd9f25484c4f54f899c95f2eb898689b833d0aa9d196e1fc4dc",
+          "workspace_archive_bytes": 23063040,
+          "begin_requests": 1,
+          "begin_payload_bytes": 294,
+          "full_content_requests": 1,
+          "full_content_payload_bytes": 23063040,
+          "parts_manifest_requests": 0,
+          "parts_manifest_payload_bytes": 0,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 0,
+          "commit_response_headers_elapsed_seconds": [
+            0.00047
+          ]
+        }
+      ],
+      "fixed_version_downloads": {
+        "1": {
+          "download_elapsed_seconds": 0.015502,
+          "validation_elapsed_seconds": 0.070526
+        },
+        "2": {
+          "download_elapsed_seconds": 0.017517,
+          "validation_elapsed_seconds": 0.067574
+        },
+        "3": {
+          "download_elapsed_seconds": 0.014954,
+          "validation_elapsed_seconds": 0.070341
+        }
+      },
+      "old_version_cli_restore_elapsed_seconds": 20.352552,
+      "verification": {
+        "fixed_version_tar_sha256": {
+          "1": "d10d96d4a9e9fceb9d93d82fe6e38bd1b82d2c998a839b5e702f2671aa323f29",
+          "2": "e0f0896c698fdff7406920eecae86ef147c688aa19dff11808357f2bca9e58a3",
+          "3": "e3cc106f06447cd9f25484c4f54f899c95f2eb898689b833d0aa9d196e1fc4dc"
+        },
+        "old_version_cli_restore": "all original file hashes matched",
+        "unchanged_workspace": "zero change mutation requests",
+        "single_file_mutations": "complete workspace tar uploaded"
+      },
+      "backend": "local",
+      "raw_evidence_file": "workspace-incremental-local-5000-full-2026-11-26.json",
+      "raw_evidence_sha256": "d2feb9dae9458b4aee2ad5d54a18c39bf59075d614e99067eebee1b5dfdb0f85"
+    },
+    {
+      "recorded_at_utc": "2026-11-26T14:21:04.926500+00:00",
+      "source_commit": "48e929074ba83680714557ac2744b0881d7a9e30",
+      "platform_revision": "48e929074ba83680714557ac2744b0881d7a9e30",
+      "binary_sha256": "1a7ec9b92daa58556a6b8b130e2efc60e3f550d30e50cc2bfa3fae5e13209860",
+      "input": {
+        "files": 5000,
+        "file_bytes": 4096,
+        "seed": 0,
+        "source_payload_bytes": 20480000
+      },
+      "workspace_transfer": "tar-parts.v1",
+      "storage": {
+        "metadata": "sqlite",
+        "objects": "local-disk"
+      },
+      "stages": [
+        {
+          "phase": "initial",
+          "source_file_count": 5000,
+          "source_payload_bytes": 20480000,
+          "changed_payload_bytes": 20480000,
+          "upload_requests": 5000,
+          "upload_payload_bytes": 20480000,
+          "change_mutation_requests": 5003,
+          "change_mutation_payload_bytes": 20720398,
+          "sync_elapsed_seconds": 44.430274,
+          "workspace_version": 1,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "d10d96d4a9e9fceb9d93d82fe6e38bd1b82d2c998a839b5e702f2671aa323f29",
+          "workspace_archive_bytes": 23067648,
+          "begin_requests": 1,
+          "begin_payload_bytes": 294,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 1,
+          "parts_manifest_payload_bytes": 240104,
+          "part_body_requests": 5000,
+          "part_body_payload_bytes": 20480000,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 240104,
+          "commit_response_headers_elapsed_seconds": [
+            0.497228
+          ]
+        },
+        {
+          "phase": "unchanged",
+          "source_file_count": 5000,
+          "source_payload_bytes": 20480000,
+          "changed_payload_bytes": 0,
+          "upload_requests": 0,
+          "upload_payload_bytes": 0,
+          "change_mutation_requests": 0,
+          "change_mutation_payload_bytes": 0,
+          "sync_elapsed_seconds": 0.859021,
+          "workspace_version": 1,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "d10d96d4a9e9fceb9d93d82fe6e38bd1b82d2c998a839b5e702f2671aa323f29",
+          "workspace_archive_bytes": 23067648,
+          "begin_requests": 0,
+          "begin_payload_bytes": 0,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 0,
+          "parts_manifest_payload_bytes": 0,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 0,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 0,
+          "commit_response_headers_elapsed_seconds": []
+        },
+        {
+          "phase": "single_file_update",
+          "source_file_count": 5000,
+          "source_payload_bytes": 20480000,
+          "changed_payload_bytes": 4096,
+          "upload_requests": 1,
+          "upload_payload_bytes": 4096,
+          "change_mutation_requests": 4,
+          "change_mutation_payload_bytes": 244497,
+          "sync_elapsed_seconds": 0.814642,
+          "workspace_version": 2,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "e0f0896c698fdff7406920eecae86ef147c688aa19dff11808357f2bca9e58a3",
+          "workspace_archive_bytes": 23067648,
+          "begin_requests": 1,
+          "begin_payload_bytes": 294,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 1,
+          "parts_manifest_payload_bytes": 240107,
+          "part_body_requests": 1,
+          "part_body_payload_bytes": 4096,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 240107,
+          "commit_response_headers_elapsed_seconds": [
+            0.148727
+          ]
+        },
+        {
+          "phase": "single_file_delete",
+          "source_file_count": 4999,
+          "source_payload_bytes": 20475904,
+          "changed_payload_bytes": 4096,
+          "upload_requests": 0,
+          "upload_payload_bytes": 0,
+          "change_mutation_requests": 3,
+          "change_mutation_payload_bytes": 240354,
+          "sync_elapsed_seconds": 0.803133,
+          "workspace_version": 3,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "e3cc106f06447cd9f25484c4f54f899c95f2eb898689b833d0aa9d196e1fc4dc",
+          "workspace_archive_bytes": 23063040,
+          "begin_requests": 1,
+          "begin_payload_bytes": 294,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 1,
+          "parts_manifest_payload_bytes": 240060,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 240060,
+          "commit_response_headers_elapsed_seconds": [
+            0.147834
+          ]
+        }
+      ],
+      "fixed_version_downloads": {
+        "1": {
+          "download_elapsed_seconds": 0.171623,
+          "validation_elapsed_seconds": 0.071341
+        },
+        "2": {
+          "download_elapsed_seconds": 0.167173,
+          "validation_elapsed_seconds": 0.075133
+        },
+        "3": {
+          "download_elapsed_seconds": 0.167439,
+          "validation_elapsed_seconds": 0.068618
+        }
+      },
+      "old_version_cli_restore_elapsed_seconds": 20.308725,
+      "verification": {
+        "fixed_version_tar_sha256": {
+          "1": "d10d96d4a9e9fceb9d93d82fe6e38bd1b82d2c998a839b5e702f2671aa323f29",
+          "2": "e0f0896c698fdff7406920eecae86ef147c688aa19dff11808357f2bca9e58a3",
+          "3": "e3cc106f06447cd9f25484c4f54f899c95f2eb898689b833d0aa9d196e1fc4dc"
+        },
+        "old_version_cli_restore": "all original file hashes matched",
+        "unchanged_workspace": "zero change mutation requests",
+        "single_file_mutations": "initial all file bodies; update one file body; delete zero file bodies; all manifests and metadata counted"
+      },
+      "backend": "local",
+      "raw_evidence_file": "workspace-incremental-local-5000-tar-parts.v1-2026-11-26.json",
+      "raw_evidence_sha256": "99675f1c3021bc81b8ef4459f8c29288f17813923b2a38aec7ede60cd4dd0d15"
+    },
+    {
+      "recorded_at_utc": "2026-11-26T14:21:51.679781+00:00",
+      "source_commit": "48e929074ba83680714557ac2744b0881d7a9e30",
+      "platform_revision": "48e929074ba83680714557ac2744b0881d7a9e30",
+      "binary_sha256": "1a7ec9b92daa58556a6b8b130e2efc60e3f550d30e50cc2bfa3fae5e13209860",
+      "input": {
+        "files": 10000,
+        "file_bytes": 4096,
+        "seed": 0,
+        "source_payload_bytes": 40960000
+      },
+      "workspace_transfer": "full",
+      "storage": {
+        "metadata": "sqlite",
+        "objects": "local-disk"
+      },
+      "stages": [
+        {
+          "phase": "initial",
+          "source_file_count": 10000,
+          "source_payload_bytes": 40960000,
+          "changed_payload_bytes": 40960000,
+          "upload_requests": 1,
+          "upload_payload_bytes": 46133248,
+          "change_mutation_requests": 3,
+          "change_mutation_payload_bytes": 46133542,
+          "sync_elapsed_seconds": 1.009245,
+          "workspace_version": 1,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "86c452c1a261e88e41674cfd16832fd0ceb3b53c11a557c26a768b4e871ac15d",
+          "workspace_archive_bytes": 46133248,
+          "begin_requests": 1,
+          "begin_payload_bytes": 294,
+          "full_content_requests": 1,
+          "full_content_payload_bytes": 46133248,
+          "parts_manifest_requests": 0,
+          "parts_manifest_payload_bytes": 0,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 0,
+          "commit_response_headers_elapsed_seconds": [
+            0.000587
+          ]
+        },
+        {
+          "phase": "unchanged",
+          "source_file_count": 10000,
+          "source_payload_bytes": 40960000,
+          "changed_payload_bytes": 0,
+          "upload_requests": 0,
+          "upload_payload_bytes": 0,
+          "change_mutation_requests": 0,
+          "change_mutation_payload_bytes": 0,
+          "sync_elapsed_seconds": 0.923842,
+          "workspace_version": 1,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "86c452c1a261e88e41674cfd16832fd0ceb3b53c11a557c26a768b4e871ac15d",
+          "workspace_archive_bytes": 46133248,
+          "begin_requests": 0,
+          "begin_payload_bytes": 0,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 0,
+          "parts_manifest_payload_bytes": 0,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 0,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 0,
+          "commit_response_headers_elapsed_seconds": []
+        },
+        {
+          "phase": "single_file_update",
+          "source_file_count": 10000,
+          "source_payload_bytes": 40960000,
+          "changed_payload_bytes": 4096,
+          "upload_requests": 1,
+          "upload_payload_bytes": 46133248,
+          "change_mutation_requests": 3,
+          "change_mutation_payload_bytes": 46133542,
+          "sync_elapsed_seconds": 1.023146,
+          "workspace_version": 2,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "abb0b258ab4b7f333180cd2c8c07548f43036cfa9e1076c6ec72d7af7c3abd5e",
+          "workspace_archive_bytes": 46133248,
+          "begin_requests": 1,
+          "begin_payload_bytes": 294,
+          "full_content_requests": 1,
+          "full_content_payload_bytes": 46133248,
+          "parts_manifest_requests": 0,
+          "parts_manifest_payload_bytes": 0,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 0,
+          "commit_response_headers_elapsed_seconds": [
+            0.000511
+          ]
+        },
+        {
+          "phase": "single_file_delete",
+          "source_file_count": 9999,
+          "source_payload_bytes": 40955904,
+          "changed_payload_bytes": 4096,
+          "upload_requests": 1,
+          "upload_payload_bytes": 46128640,
+          "change_mutation_requests": 3,
+          "change_mutation_payload_bytes": 46128934,
+          "sync_elapsed_seconds": 1.014299,
+          "workspace_version": 3,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "29f199da926843f04d555e1a015e50f744abb194c5383b72e7d12a3a5f02ddb3",
+          "workspace_archive_bytes": 46128640,
+          "begin_requests": 1,
+          "begin_payload_bytes": 294,
+          "full_content_requests": 1,
+          "full_content_payload_bytes": 46128640,
+          "parts_manifest_requests": 0,
+          "parts_manifest_payload_bytes": 0,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 0,
+          "commit_response_headers_elapsed_seconds": [
+            0.000509
+          ]
+        }
+      ],
+      "fixed_version_downloads": {
+        "1": {
+          "download_elapsed_seconds": 0.026538,
+          "validation_elapsed_seconds": 0.137892
+        },
+        "2": {
+          "download_elapsed_seconds": 0.026359,
+          "validation_elapsed_seconds": 0.135603
+        },
+        "3": {
+          "download_elapsed_seconds": 0.028192,
+          "validation_elapsed_seconds": 0.136011
+        }
+      },
+      "old_version_cli_restore_elapsed_seconds": 40.224116,
+      "verification": {
+        "fixed_version_tar_sha256": {
+          "1": "86c452c1a261e88e41674cfd16832fd0ceb3b53c11a557c26a768b4e871ac15d",
+          "2": "abb0b258ab4b7f333180cd2c8c07548f43036cfa9e1076c6ec72d7af7c3abd5e",
+          "3": "29f199da926843f04d555e1a015e50f744abb194c5383b72e7d12a3a5f02ddb3"
+        },
+        "old_version_cli_restore": "all original file hashes matched",
+        "unchanged_workspace": "zero change mutation requests",
+        "single_file_mutations": "complete workspace tar uploaded"
+      },
+      "backend": "local",
+      "raw_evidence_file": "workspace-incremental-local-10000-full-2026-11-26.json",
+      "raw_evidence_sha256": "53e4b43d3d9d373b4aee041098839d85374760a4fbc1386bacceacb34d57d482"
+    },
+    {
+      "recorded_at_utc": "2026-11-26T14:24:15.165977+00:00",
+      "source_commit": "48e929074ba83680714557ac2744b0881d7a9e30",
+      "platform_revision": "48e929074ba83680714557ac2744b0881d7a9e30",
+      "binary_sha256": "1a7ec9b92daa58556a6b8b130e2efc60e3f550d30e50cc2bfa3fae5e13209860",
+      "input": {
+        "files": 10000,
+        "file_bytes": 4096,
+        "seed": 0,
+        "source_payload_bytes": 40960000
+      },
+      "workspace_transfer": "tar-parts.v1",
+      "storage": {
+        "metadata": "sqlite",
+        "objects": "local-disk"
+      },
+      "stages": [
+        {
+          "phase": "initial",
+          "source_file_count": 10000,
+          "source_payload_bytes": 40960000,
+          "changed_payload_bytes": 40960000,
+          "upload_requests": 10000,
+          "upload_payload_bytes": 40960000,
+          "change_mutation_requests": 10003,
+          "change_mutation_payload_bytes": 41440130,
+          "sync_elapsed_seconds": 92.035717,
+          "workspace_version": 1,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "86c452c1a261e88e41674cfd16832fd0ceb3b53c11a557c26a768b4e871ac15d",
+          "workspace_archive_bytes": 46133248,
+          "begin_requests": 1,
+          "begin_payload_bytes": 294,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 1,
+          "parts_manifest_payload_bytes": 479836,
+          "part_body_requests": 10000,
+          "part_body_payload_bytes": 40960000,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 479836,
+          "commit_response_headers_elapsed_seconds": [
+            1.392773
+          ]
+        },
+        {
+          "phase": "unchanged",
+          "source_file_count": 10000,
+          "source_payload_bytes": 40960000,
+          "changed_payload_bytes": 0,
+          "upload_requests": 0,
+          "upload_payload_bytes": 0,
+          "change_mutation_requests": 0,
+          "change_mutation_payload_bytes": 0,
+          "sync_elapsed_seconds": 2.182183,
+          "workspace_version": 1,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "86c452c1a261e88e41674cfd16832fd0ceb3b53c11a557c26a768b4e871ac15d",
+          "workspace_archive_bytes": 46133248,
+          "begin_requests": 0,
+          "begin_payload_bytes": 0,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 0,
+          "parts_manifest_payload_bytes": 0,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 0,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 0,
+          "commit_response_headers_elapsed_seconds": []
+        },
+        {
+          "phase": "single_file_update",
+          "source_file_count": 10000,
+          "source_payload_bytes": 40960000,
+          "changed_payload_bytes": 4096,
+          "upload_requests": 1,
+          "upload_payload_bytes": 4096,
+          "change_mutation_requests": 4,
+          "change_mutation_payload_bytes": 484228,
+          "sync_elapsed_seconds": 1.680668,
+          "workspace_version": 2,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "abb0b258ab4b7f333180cd2c8c07548f43036cfa9e1076c6ec72d7af7c3abd5e",
+          "workspace_archive_bytes": 46133248,
+          "begin_requests": 1,
+          "begin_payload_bytes": 294,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 1,
+          "parts_manifest_payload_bytes": 479838,
+          "part_body_requests": 1,
+          "part_body_payload_bytes": 4096,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 479838,
+          "commit_response_headers_elapsed_seconds": [
+            0.34732
+          ]
+        },
+        {
+          "phase": "single_file_delete",
+          "source_file_count": 9999,
+          "source_payload_bytes": 40955904,
+          "changed_payload_bytes": 4096,
+          "upload_requests": 0,
+          "upload_payload_bytes": 0,
+          "change_mutation_requests": 3,
+          "change_mutation_payload_bytes": 480079,
+          "sync_elapsed_seconds": 1.876048,
+          "workspace_version": 3,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "29f199da926843f04d555e1a015e50f744abb194c5383b72e7d12a3a5f02ddb3",
+          "workspace_archive_bytes": 46128640,
+          "begin_requests": 1,
+          "begin_payload_bytes": 294,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 1,
+          "parts_manifest_payload_bytes": 479785,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 479785,
+          "commit_response_headers_elapsed_seconds": [
+            0.318786
+          ]
+        }
+      ],
+      "fixed_version_downloads": {
+        "1": {
+          "download_elapsed_seconds": 0.32656,
+          "validation_elapsed_seconds": 0.143126
+        },
+        "2": {
+          "download_elapsed_seconds": 0.357555,
+          "validation_elapsed_seconds": 0.144756
+        },
+        "3": {
+          "download_elapsed_seconds": 0.325938,
+          "validation_elapsed_seconds": 0.141033
+        }
+      },
+      "old_version_cli_restore_elapsed_seconds": 41.061767,
+      "verification": {
+        "fixed_version_tar_sha256": {
+          "1": "86c452c1a261e88e41674cfd16832fd0ceb3b53c11a557c26a768b4e871ac15d",
+          "2": "abb0b258ab4b7f333180cd2c8c07548f43036cfa9e1076c6ec72d7af7c3abd5e",
+          "3": "29f199da926843f04d555e1a015e50f744abb194c5383b72e7d12a3a5f02ddb3"
+        },
+        "old_version_cli_restore": "all original file hashes matched",
+        "unchanged_workspace": "zero change mutation requests",
+        "single_file_mutations": "initial all file bodies; update one file body; delete zero file bodies; all manifests and metadata counted"
+      },
+      "backend": "local",
+      "raw_evidence_file": "workspace-incremental-local-10000-tar-parts.v1-2026-11-26.json",
+      "raw_evidence_sha256": "0e64d23f1f63b0a4da7d4b9122076d130c960f931068604b661a520ae2d95b01"
+    },
+    {
+      "recorded_at_utc": "2026-11-26T14:26:16.917604+00:00",
+      "source_commit": "48e929074ba83680714557ac2744b0881d7a9e30",
+      "platform_revision": "48e929074ba83680714557ac2744b0881d7a9e30",
+      "binary_sha256": "1a7ec9b92daa58556a6b8b130e2efc60e3f550d30e50cc2bfa3fae5e13209860",
+      "input": {
+        "files": 5000,
+        "file_bytes": 4096,
+        "seed": 0,
+        "source_payload_bytes": 20480000
+      },
+      "workspace_transfer": "full",
+      "storage": {
+        "metadata": "postgresql",
+        "objects": "s3-compatible-minio",
+        "owned_compose_project": "agentmoor-baseline-8438ae1e283c",
+        "cleanup_completed": true,
+        "postgres_version": "18.7",
+        "minio_version": "minio version RELEASE.2026-04-17T00-00-00Z (commit-id=f48dbe777d0e066d2e74d5e671a8ca21c2ec1664)",
+        "images": {
+          "postgres": {
+            "image": "postgres:18-alpine",
+            "image_id": "sha256:0115267ab5a509022df9319c77be365cef335adb71556c75f60f5360ee247e71",
+            "repo_digests": [
+              "postgres@sha256:0115267ab5a509022df9319c77be365cef335adb71556c75f60f5360ee247e71"
+            ]
+          },
+          "s3": {
+            "image": "pgsty/minio:RELEASE.2026-04-17T00-00-00Z",
+            "image_id": "sha256:83885c27b3b5b673049e33ddf4029afe2c134fd51ce4309e65e4f39d3b9ca282",
+            "repo_digests": [
+              "pgsty/minio@sha256:83885c27b3b5b673049e33ddf4029afe2c134fd51ce4309e65e4f39d3b9ca282"
+            ]
+          }
+        },
+        "postgres_revision_rows": 3,
+        "workspace_part_revisions": 0,
+        "s3_objects_present": true,
+        "sqlite_or_local_objects_present": false
+      },
+      "stages": [
+        {
+          "phase": "initial",
+          "source_file_count": 5000,
+          "source_payload_bytes": 20480000,
+          "changed_payload_bytes": 20480000,
+          "upload_requests": 1,
+          "upload_payload_bytes": 23067648,
+          "change_mutation_requests": 3,
+          "change_mutation_payload_bytes": 23067942,
+          "sync_elapsed_seconds": 0.620921,
+          "workspace_version": 1,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "d10d96d4a9e9fceb9d93d82fe6e38bd1b82d2c998a839b5e702f2671aa323f29",
+          "workspace_archive_bytes": 23067648,
+          "begin_requests": 1,
+          "begin_payload_bytes": 294,
+          "full_content_requests": 1,
+          "full_content_payload_bytes": 23067648,
+          "parts_manifest_requests": 0,
+          "parts_manifest_payload_bytes": 0,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 0,
+          "commit_response_headers_elapsed_seconds": [
+            0.005096
+          ]
+        },
+        {
+          "phase": "unchanged",
+          "source_file_count": 5000,
+          "source_payload_bytes": 20480000,
+          "changed_payload_bytes": 0,
+          "upload_requests": 0,
+          "upload_payload_bytes": 0,
+          "change_mutation_requests": 0,
+          "change_mutation_payload_bytes": 0,
+          "sync_elapsed_seconds": 0.489601,
+          "workspace_version": 1,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "d10d96d4a9e9fceb9d93d82fe6e38bd1b82d2c998a839b5e702f2671aa323f29",
+          "workspace_archive_bytes": 23067648,
+          "begin_requests": 0,
+          "begin_payload_bytes": 0,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 0,
+          "parts_manifest_payload_bytes": 0,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 0,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 0,
+          "commit_response_headers_elapsed_seconds": []
+        },
+        {
+          "phase": "single_file_update",
+          "source_file_count": 5000,
+          "source_payload_bytes": 20480000,
+          "changed_payload_bytes": 4096,
+          "upload_requests": 1,
+          "upload_payload_bytes": 23067648,
+          "change_mutation_requests": 3,
+          "change_mutation_payload_bytes": 23067942,
+          "sync_elapsed_seconds": 0.605877,
+          "workspace_version": 2,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "e0f0896c698fdff7406920eecae86ef147c688aa19dff11808357f2bca9e58a3",
+          "workspace_archive_bytes": 23067648,
+          "begin_requests": 1,
+          "begin_payload_bytes": 294,
+          "full_content_requests": 1,
+          "full_content_payload_bytes": 23067648,
+          "parts_manifest_requests": 0,
+          "parts_manifest_payload_bytes": 0,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 0,
+          "commit_response_headers_elapsed_seconds": [
+            0.004571
+          ]
+        },
+        {
+          "phase": "single_file_delete",
+          "source_file_count": 4999,
+          "source_payload_bytes": 20475904,
+          "changed_payload_bytes": 4096,
+          "upload_requests": 1,
+          "upload_payload_bytes": 23063040,
+          "change_mutation_requests": 3,
+          "change_mutation_payload_bytes": 23063334,
+          "sync_elapsed_seconds": 0.637791,
+          "workspace_version": 3,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "e3cc106f06447cd9f25484c4f54f899c95f2eb898689b833d0aa9d196e1fc4dc",
+          "workspace_archive_bytes": 23063040,
+          "begin_requests": 1,
+          "begin_payload_bytes": 294,
+          "full_content_requests": 1,
+          "full_content_payload_bytes": 23063040,
+          "parts_manifest_requests": 0,
+          "parts_manifest_payload_bytes": 0,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 0,
+          "commit_response_headers_elapsed_seconds": [
+            0.00472
+          ]
+        }
+      ],
+      "fixed_version_downloads": {
+        "1": {
+          "download_elapsed_seconds": 0.030213,
+          "validation_elapsed_seconds": 0.074134
+        },
+        "2": {
+          "download_elapsed_seconds": 0.027564,
+          "validation_elapsed_seconds": 0.068176
+        },
+        "3": {
+          "download_elapsed_seconds": 0.03286,
+          "validation_elapsed_seconds": 0.067695
+        }
+      },
+      "old_version_cli_restore_elapsed_seconds": 20.224209,
+      "verification": {
+        "fixed_version_tar_sha256": {
+          "1": "d10d96d4a9e9fceb9d93d82fe6e38bd1b82d2c998a839b5e702f2671aa323f29",
+          "2": "e0f0896c698fdff7406920eecae86ef147c688aa19dff11808357f2bca9e58a3",
+          "3": "e3cc106f06447cd9f25484c4f54f899c95f2eb898689b833d0aa9d196e1fc4dc"
+        },
+        "old_version_cli_restore": "all original file hashes matched",
+        "unchanged_workspace": "zero change mutation requests",
+        "single_file_mutations": "complete workspace tar uploaded"
+      },
+      "backend": "postgres-s3",
+      "raw_evidence_file": "workspace-incremental-postgres-s3-5000-full-2026-11-26.json",
+      "raw_evidence_sha256": "32e1b16c6d46fbddf84bc1f7135f3409d35ad6523f54ff4752b9de72789c5260"
+    },
+    {
+      "recorded_at_utc": "2026-11-26T14:27:18.476531+00:00",
+      "source_commit": "48e929074ba83680714557ac2744b0881d7a9e30",
+      "platform_revision": "48e929074ba83680714557ac2744b0881d7a9e30",
+      "binary_sha256": "1a7ec9b92daa58556a6b8b130e2efc60e3f550d30e50cc2bfa3fae5e13209860",
+      "input": {
+        "files": 5000,
+        "file_bytes": 4096,
+        "seed": 0,
+        "source_payload_bytes": 20480000
+      },
+      "workspace_transfer": "tar-parts.v1",
+      "storage": {
+        "metadata": "postgresql",
+        "objects": "s3-compatible-minio",
+        "owned_compose_project": "agentmoor-baseline-b5a5985c001b",
+        "cleanup_completed": true,
+        "postgres_version": "18.7",
+        "minio_version": "minio version RELEASE.2026-04-17T00-00-00Z (commit-id=f48dbe777d0e066d2e74d5e671a8ca21c2ec1664)",
+        "images": {
+          "postgres": {
+            "image": "postgres:18-alpine",
+            "image_id": "sha256:0115267ab5a509022df9319c77be365cef335adb71556c75f60f5360ee247e71",
+            "repo_digests": [
+              "postgres@sha256:0115267ab5a509022df9319c77be365cef335adb71556c75f60f5360ee247e71"
+            ]
+          },
+          "s3": {
+            "image": "pgsty/minio:RELEASE.2026-04-17T00-00-00Z",
+            "image_id": "sha256:83885c27b3b5b673049e33ddf4029afe2c134fd51ce4309e65e4f39d3b9ca282",
+            "repo_digests": [
+              "pgsty/minio@sha256:83885c27b3b5b673049e33ddf4029afe2c134fd51ce4309e65e4f39d3b9ca282"
+            ]
+          }
+        },
+        "postgres_revision_rows": 3,
+        "workspace_part_revisions": 3,
+        "s3_objects_present": true,
+        "sqlite_or_local_objects_present": false
+      },
+      "stages": [
+        {
+          "phase": "initial",
+          "source_file_count": 5000,
+          "source_payload_bytes": 20480000,
+          "changed_payload_bytes": 20480000,
+          "upload_requests": 5000,
+          "upload_payload_bytes": 20480000,
+          "change_mutation_requests": 5003,
+          "change_mutation_payload_bytes": 20720398,
+          "sync_elapsed_seconds": 16.736334,
+          "workspace_version": 1,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "d10d96d4a9e9fceb9d93d82fe6e38bd1b82d2c998a839b5e702f2671aa323f29",
+          "workspace_archive_bytes": 23067648,
+          "begin_requests": 1,
+          "begin_payload_bytes": 294,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 1,
+          "parts_manifest_payload_bytes": 240104,
+          "part_body_requests": 5000,
+          "part_body_payload_bytes": 20480000,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 240104,
+          "commit_response_headers_elapsed_seconds": [
+            2.116996
+          ]
+        },
+        {
+          "phase": "unchanged",
+          "source_file_count": 5000,
+          "source_payload_bytes": 20480000,
+          "changed_payload_bytes": 0,
+          "upload_requests": 0,
+          "upload_payload_bytes": 0,
+          "change_mutation_requests": 0,
+          "change_mutation_payload_bytes": 0,
+          "sync_elapsed_seconds": 0.673386,
+          "workspace_version": 1,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "d10d96d4a9e9fceb9d93d82fe6e38bd1b82d2c998a839b5e702f2671aa323f29",
+          "workspace_archive_bytes": 23067648,
+          "begin_requests": 0,
+          "begin_payload_bytes": 0,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 0,
+          "parts_manifest_payload_bytes": 0,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 0,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 0,
+          "commit_response_headers_elapsed_seconds": []
+        },
+        {
+          "phase": "single_file_update",
+          "source_file_count": 5000,
+          "source_payload_bytes": 20480000,
+          "changed_payload_bytes": 4096,
+          "upload_requests": 1,
+          "upload_payload_bytes": 4096,
+          "change_mutation_requests": 4,
+          "change_mutation_payload_bytes": 244497,
+          "sync_elapsed_seconds": 4.496119,
+          "workspace_version": 2,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "e0f0896c698fdff7406920eecae86ef147c688aa19dff11808357f2bca9e58a3",
+          "workspace_archive_bytes": 23067648,
+          "begin_requests": 1,
+          "begin_payload_bytes": 294,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 1,
+          "parts_manifest_payload_bytes": 240107,
+          "part_body_requests": 1,
+          "part_body_payload_bytes": 4096,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 240107,
+          "commit_response_headers_elapsed_seconds": [
+            2.113034
+          ]
+        },
+        {
+          "phase": "single_file_delete",
+          "source_file_count": 4999,
+          "source_payload_bytes": 20475904,
+          "changed_payload_bytes": 4096,
+          "upload_requests": 0,
+          "upload_payload_bytes": 0,
+          "change_mutation_requests": 3,
+          "change_mutation_payload_bytes": 240354,
+          "sync_elapsed_seconds": 5.000674,
+          "workspace_version": 3,
+          "workspace_format": "workspace-tar.v1",
+          "workspace_sha256": "e3cc106f06447cd9f25484c4f54f899c95f2eb898689b833d0aa9d196e1fc4dc",
+          "workspace_archive_bytes": 23063040,
+          "begin_requests": 1,
+          "begin_payload_bytes": 294,
+          "full_content_requests": 0,
+          "full_content_payload_bytes": 0,
+          "parts_manifest_requests": 1,
+          "parts_manifest_payload_bytes": 240060,
+          "part_body_requests": 0,
+          "part_body_payload_bytes": 0,
+          "commit_requests": 1,
+          "commit_payload_bytes": 0,
+          "parts_manifest_gzip_payload_bytes": 240060,
+          "commit_response_headers_elapsed_seconds": [
+            2.544936
+          ]
+        }
+      ],
+      "fixed_version_downloads": {
+        "1": {
+          "download_elapsed_seconds": 1.275989,
+          "validation_elapsed_seconds": 0.077399
+        },
+        "2": {
+          "download_elapsed_seconds": 1.237392,
+          "validation_elapsed_seconds": 0.075747
+        },
+        "3": {
+          "download_elapsed_seconds": 1.245356,
+          "validation_elapsed_seconds": 0.074449
+        }
+      },
+      "old_version_cli_restore_elapsed_seconds": 23.342302,
+      "verification": {
+        "fixed_version_tar_sha256": {
+          "1": "d10d96d4a9e9fceb9d93d82fe6e38bd1b82d2c998a839b5e702f2671aa323f29",
+          "2": "e0f0896c698fdff7406920eecae86ef147c688aa19dff11808357f2bca9e58a3",
+          "3": "e3cc106f06447cd9f25484c4f54f899c95f2eb898689b833d0aa9d196e1fc4dc"
+        },
+        "old_version_cli_restore": "all original file hashes matched",
+        "unchanged_workspace": "zero change mutation requests",
+        "single_file_mutations": "initial all file bodies; update one file body; delete zero file bodies; all manifests and metadata counted"
+      },
+      "backend": "postgres-s3",
+      "raw_evidence_file": "workspace-incremental-postgres-s3-5000-tar-parts.v1-2026-11-26.json",
+      "raw_evidence_sha256": "8f216be53f4023cfa0b8b8190cc0689bba3279e4cd08e22f4b8d5c4b920402b3"
+    }
+  ],
+  "kubernetes_validation": {
+    "command": "make test-k8s-workspace-parts",
+    "status": "not_run_for_this_evidence",
+    "note": "These are host CLI/HTTP measurements. Integrated Kubernetes validation is a separate pending run; no cluster success is claimed here."
+  },
+  "limitations": [
+    "All samples are single sequential synthetic runs on one host, not repeated controlled trials or a production performance SLO.",
+    "Counts include actual change mutation request bodies: begin metadata, gzip manifest or full tar, missing body PUTs and commit. They exclude HTTP headers, response bodies and transport overhead; they are not total network traffic.",
+    "The measurement proxy creates a new upstream HTTPConnection per request and closes both directions; the threaded proxy and connection setup amplify many-small-request costs. Times are not direct production latency.",
+    "The client already uploads up to 8 bodies concurrently. Catalog UploadPart serializes object Put and each per-body operations.updated write under its lock. Local object file/directory Sync and SQLite FULL autocommit costs exist, but their individual runtime shares were not profiled.",
+    "Preparation and commit perform per-object existence checks; commit fully rereads and hashes the logical tar. S3 additionally incurs per-object HEAD/GET requests. Savings in upload bytes do not imply faster sync or restore.",
+    "Unchanged workspaces return before the transfer mode is selected and send no change mutations; the observed no-op time differences do not establish a parts-algorithm regression.",
+    "Large samples use distinct 4096-byte synthetic bodies. A single-file change may affect multiple chunks for larger files, and manifest cost depends on file count, paths and tar framing.",
+    "No native runtime CLI, model, Kubernetes Job, restart, cancellation, publication fault injection or Worker Pod loss is executed by these benchmark runs.",
+    "PostgreSQL/S3 backend identity is independently attested by server versions, image IDs/digests, revision rows, S3 object presence, and absence of SQLite/local objects; this is fixture attestation, while sync/download/restore use public HTTP.",
+    "Local SQLite library version was not recorded. Existing baseline evidence keeps its original source identity and is not replaced by this aggregate."
+  ]
+}
