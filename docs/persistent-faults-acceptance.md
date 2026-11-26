@@ -2,9 +2,11 @@
 
 本入口把文件块发布故障和活跃 Worker 突然丢失放在同一套 PostgreSQL/S3 环境中验证。它使用固定版本的真实 Codex CLI、脚本 Responses 模型和合成数据，不需要模型密钥。
 
-**本次组合验收通过。** 源码 `109b534a5e9d65dcd19ffb34cab4c118f18406b7` 的长入口已成功结束并清理专属集群：八个发布边界、三次 manifest 失败耗尽及新 UUID 恢复、SIGKILL 137、真实生产期限、旧 UUID 不重建 Job、新 UUID 恢复和最终 PG/S3 核验均通过。[完整结果](#2026-11-26实际结果) · [原始结构化证据](evidence/postgres-s3-faults-2026-11-26.json)
+**第一轮组合验收通过（109b534）。** 源码 `109b534a5e9d65dcd19ffb34cab4c118f18406b7` 的长入口已成功结束并清理专属集群：八个发布边界、三次 manifest 失败耗尽及新 UUID 恢复、SIGKILL 137、真实生产期限、旧 UUID 不重建 Job、新 UUID 恢复和最终 PG/S3 核验均通过。[完整结果](#2026-11-26实际结果) · [原始结构化证据](evidence/postgres-s3-faults-2026-11-26.json)
 
 这还不是整个 V2/P1 退出证明：本次没有把例 1–3 放在同一 suite 命令中，也没有明确验证另一合法租户凭据拒读这些旧固定引用。后续同套件和租户隔离结果需要独立来源证据，不能回填为本次 `109b534` 已通过的项目。[V2 退出门槛](verification-matrix.md#v2-退出门槛)
+
+后续 `54cb556` 完整套件尝试在最后的跨租户读取发生 TLS 握手超时，命令退出 2，**整套仍未通过**。其已完成阶段与缺失结果分别保留在[失败记录](#2026-11-26完整-v2-套件失败记录)，不据部分成功关闭 V2/P1。
 
 ## 怎样运行
 
@@ -17,6 +19,8 @@ make test-k8s-persistent-faults
 这条命令显式包含生产环境的 **900 秒** Worker 期限等待，构建和其他场景另计时间。它创建专属 kind 集群、kubeconfig、命名空间和镜像标签；退出时由夹具清理，不切换用户当前 Kubernetes context。PostgreSQL 与 MinIO 使用隔离的合成凭据和测试桶。
 
 `make test-k8s`、`make test-k8s-persistent`、`make test-k8s-workspace-parts` 等普通入口保持原行为，不加入这段 15 分钟等待。独立的 `make test-k8s-pod-loss` 仍保留原用途。
+
+完整套件另有 `make test-k8s-v2`：同一命令共用一个 kind 集群和一份 Codex 镜像，依次跑 parts 文件、固定 Skill、长故障/Pod 丢失三个场景。每个场景使用自己的命名空间、数据库和桶；第三个场景内部继续共用同一套 PG/S3。当前这条完整命令尚无成功退出记录，不能把前两场通过当作整套通过。
 
 ## 同一个环境中的执行顺序
 
@@ -81,3 +85,24 @@ barrier 出现后，夹具修改当前 Worker 中已经冻结的非 Artifact 文
 同源码的 `make test-k8s` 另跑默认文本工作流：四个 CLI 均验证交付、两次新 Pod 连续追问、活跃追问和原生执行取消；原生取消约为 4.6、3.1、3.8、3.9 秒。各 CLI 的固定版本与实际镜像 ID，以及长组合全部九个 case 的完整 ledger、14 个计数、Pod 身份、摘要和后端信息，均保存在[证据 JSON](evidence/postgres-s3-faults-2026-11-26.json)，两份真实 RESULT 原样保留。
 
 `make fmt`、`make check`、`make demo` 在创建该源码提交前、相同 Go/Python 源码树上通过，不冒称文档更新后又重跑。组合故障与 Pod 丢失本次覆盖的是 Codex + `tar-parts.v1` + PG/S3；默认四 CLI 回归是另一条文本工作流，不据此扩成所有 CLI 的同一故障组合。真实模型、多控制面副本和生产高可用仍未验收。
+
+## 2026-11-26 完整 V2 套件失败记录
+
+来源 `54cb556a3786b055e1f6f927196b069109b26e07` 的 `make test-k8s-v2` 实际退出 **2**，专属集群已清理。[独立失败证据](evidence/postgres-s3-v2-suite-failed-2026-11-26.json) 保存全部已输出 RESULT、完整九个故障台账和最终异常链；没有生成该来源的成功套件证明，也不修改第一轮 `109b534` 证据。
+
+| 场景或阶段 | 该次实际范围 |
+| --- | --- |
+| parts 文件流程 | 契约、合法外租户拒读和后端检查均已完成；外租户对 16 份旧固定版本返回 404，owner 重读不变 |
+| parts 固定 Skill 流程 | 契约、合法外租户拒读和后端检查均已完成；外租户对 17 份旧固定版本返回 404，含 Skill v1/v2 |
+| 长场景 `POD_LOSS_RESULT` | 已成功输出，含九个故障台账、14 个原生计数、SIGKILL 137、旧 UUID 两次重投零新 Job、新 UUID 恢复及旧引用核验 |
+| 该次真实期限 | deadline `2026-11-26T16:00:03.945143143Z`；观察 interrupted 为 `2026-11-26T16:00:05.292061+00:00`，约晚 1.35 秒 |
+| 最终长场景租户隔离 | 对外租户固定版本内容 GET 的 TLS 握手超时，尚未输出第三份 `CROSS_TENANT_RESULT`；不能把超时计为拒读 404 |
+| 最终长场景存储核验 | 位于租户检查之后，未执行到完整结果；只有前两份 `PERSISTENT_RESULT`，不能推算第三份通过 |
+
+异常为 `urllib.error.URLError: <urlopen error _ssl.c:1129: The handshake operation timed out>`，发生于 `verify_tenant_isolation → require_404 → foreign GET`。此前已完成多少次长场景的外租户拒读没有独立计数输出，故不补猜数字；该 traceback 本身也不能确定底层原因。需要处理原因后重新跑完整套件，再以新运行来源记录结果。
+
+### 活跃回合原 UUID 重投的独立补充
+
+另一次短文件复验以 host `75b44a181b75bd59f13e38b0d4ed02965bda9c5a`、预构建镜像来源 `54cb556`，在同一 kind 的新命名空间通过。真实 running 且工具阻塞时原 UUID PUT 两次，再观察 2.387 秒，完整记录与 checkpoint 保持，Job 1、Pod 1、同一容器、重启 0；随后取消与文件流程、外租户对 16 份版本拒读均通过。[独立证据](evidence/postgres-s3-active-replay-2026-11-26.json)
+
+该短复验没有原生命令计数包装器，也没有重跑 SIGKILL/900 秒期限；它证明 Job/Pod/容器执行归属，不能改写成 `54cb556` 完整套件当时已经执行了活跃重投断言，也不能替代完整套件缺失的最终租户和后端结果。Docker 与运行时各自报告的镜像身份应分别记录，不据不同工具的 SHA 值推断未观察的类型或不匹配。
