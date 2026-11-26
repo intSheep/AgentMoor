@@ -9,4 +9,7 @@
 !tests/fixture_provider.py
 !tests/kubernetes
 !tests/kubernetes/*.py
+!examples
+!examples/file-report
+!examples/file-report/summarize.py
 **/*_test.go

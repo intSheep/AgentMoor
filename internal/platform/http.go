@@ -17,11 +17,12 @@ import (
 )
 
 type API struct {
-	Catalog      *Catalog
-	Secret       []byte
-	TaskAdapters map[string]bool
-	TurnEnabled  func(asset.Scope) bool
-	Temp         string
+	Catalog          *Catalog
+	Secret           []byte
+	TaskAdapters     map[string]bool
+	FileTaskAdapters map[string]bool
+	TurnEnabled      func(asset.Scope) bool
+	Temp             string
 }
 
 func (a *API) Handler() http.Handler {

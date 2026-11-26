@@ -20,5 +20,5 @@ for agent in $agents; do
     echo "Running Kubernetes contract for $agent"
     docker build -f tests/kubernetes/Dockerfile --build-arg AGENT="$agent" -t "$image" .
     kind load docker-image "$image" --name "$name"
-    python3 tests/kubernetes/contract.py --adapter "$agent" --context "kind-$name" --kubeconfig "$KUBECONFIG" --image "$image"
+    python3 tests/kubernetes/contract.py --adapter "$agent" --context "kind-$name" --kubeconfig "$KUBECONFIG" --image "$image" "$@"
 done

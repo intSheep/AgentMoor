@@ -1,0 +1,172 @@
+diff --git a/internal/adapters/codex/task.go b/internal/adapters/codex/task.go
+index 212c1c9..189d597 100644
+--- a/internal/adapters/codex/task.go
++++ b/internal/adapters/codex/task.go
+@@ -71 +71,5 @@ func runTurn(ctx context.Context, env task.Environment, prompt []byte, id string
+-	if err := adapter.RunCLIInput(ctx, env.Executable, env.Workspace, vars, bytes.NewReader(prompt), &out, 2<<20, append(args, "-")...); err != nil {
++	err := adapter.RunCLIInput(ctx, env.Executable, env.Workspace, vars, bytes.NewReader(prompt), &out, 2<<20, append(args, "-")...)
++	if fileSettings != nil {
++		probeNative(out.Bytes())
++	}
++	if err != nil {
+@@ -78,0 +83,44 @@ func runTurn(ctx context.Context, env task.Environment, prompt []byte, id string
++// Keep only known event labels and the native identity from this synthetic run.
++// In particular, do not log prompts, tool arguments, arbitrary errors or stdout.
++func probeNative(data []byte) {
++	dec := json.NewDecoder(bytes.NewReader(data))
++	for {
++		var e struct {
++			Type   string
++			Thread string `json:"thread_id"`
++			Item   struct {
++				Type, Server, Tool, Status string
++				Error                      *struct{ Message string }
++				Result                     json.RawMessage
++			}
++		}
++		if err := dec.Decode(&e); err != nil {
++			return
++		}
++		switch e.Type {
++		case "thread.started":
++			if sessionfile.UUID(e.Thread) {
++				fmt.Fprintln(os.Stderr, "FILE_PROBE session", e.Thread)
++			}
++		case "item.started", "item.completed":
++			if e.Item.Type != "mcp_tool_call" || e.Item.Server != "report" || e.Item.Tool != "render" {
++				continue
++			}
++			status := e.Item.Status
++			if status != "in_progress" && status != "completed" && status != "failed" {
++				status = "unknown"
++			}
++			reason := "none"
++			if e.Item.Error != nil {
++				reason = "other_error"
++				if e.Item.Error.Message == "MCP tool call requires approval, but approval policy is never" {
++					reason = "approval_required_policy_never"
++				}
++			}
++			fmt.Fprintf(os.Stderr, "FILE_PROBE native %s %s %s %t\n", e.Type, status, reason, string(e.Item.Result) == "null")
++		case "turn.failed":
++			fmt.Fprintln(os.Stderr, "FILE_PROBE turn failed")
++		}
++	}
++}
++
+diff --git a/internal/worker/task.go b/internal/worker/task.go
+index 5acf162..a5b25ad 100644
+--- a/internal/worker/task.go
++++ b/internal/worker/task.go
+@@ -105,0 +106 @@ func (e *Engine) runTask(ctx context.Context, wait time.Duration, turn string) e
++	fmt.Fprintf(os.Stderr, "FILE_PROBE finish acknowledged=%t failed=%t assets=%d\n", finishErr == nil, record.State == task.Failed, len(record.Assets))
+@@ -191,0 +193 @@ func (e *Engine) execute(ctx context.Context, executor task.Executor, record tas
++		fmt.Fprintln(os.Stderr, "FILE_PROBE version", info.RuntimeVersion)
+@@ -221,0 +224,7 @@ func (e *Engine) execute(ctx context.Context, executor task.Executor, record tas
++		_, stageErr := root.Lstat(staged)
++		_, targetErr := root.Lstat(target)
++		fmt.Fprintf(os.Stderr, "FILE_PROBE files stage_absent=%t report_absent=%t\n", os.IsNotExist(stageErr), os.IsNotExist(targetErr))
++		for _, method := range []string{"initialize", "tools_list", "render_call"} {
++			_, observed := root.Lstat(".probe_" + method)
++			fmt.Fprintf(os.Stderr, "FILE_PROBE rpc %s observed=%t absent=%t\n", method, observed == nil, os.IsNotExist(observed))
++		}
+@@ -250,0 +260 @@ func (e *Engine) execute(ctx context.Context, executor task.Executor, record tas
++	fmt.Fprintln(os.Stderr, "FILE_PROBE publication entered")
+diff --git a/tests/kubernetes/contract.py b/tests/kubernetes/contract.py
+index 61662d2..1bf0f25 100644
+--- a/tests/kubernetes/contract.py
++++ b/tests/kubernetes/contract.py
+@@ -67,0 +68 @@ def main(opts, temp):
++    print("FILE_REPORT_STAGE namespace_created", flush=True)
+@@ -91,0 +93 @@ def main(opts, temp):
++        print("FILE_REPORT_STAGE deployments_ready", flush=True)
+@@ -95,0 +98 @@ def main(opts, temp):
++            print("FILE_REPORT_STAGE worker_job_created", flush=True)
+@@ -181,0 +185 @@ def run_file_report(client, kube, temp, cert):
++    print("FILE_REPORT_STAGE task_submitted", flush=True)
+@@ -213,4 +217,59 @@ def run_file_report(client, kube, temp, cert):
+-        print(kube("logs", "deployment/model")[-1500:], file=sys.stderr)
+-        for pod in json.loads(kube("get", "pods", "-o", "json"))["items"]:
+-            if "job-name" in pod["metadata"].get("labels", {}):
+-                print(kube("logs", "pod/" + pod["metadata"]["name"])[-1500:], file=sys.stderr)
++        # Query the terminal API record independently; the Worker reports its
++        # own finish acknowledgement. Never copy raw native or model logs.
++        try:
++            record = json.loads(client.request("GET", client.route))
++        except (OSError, ValueError):
++            record = {}
++        deadline = time.monotonic() + 20
++        pod = terminal = None
++        while True:
++            pods = json.loads(kube("get", "pods", "-l", "job-name=produce", "-o", "json"))["items"]
++            if len(pods) == 1:
++                pod = pods[0]
++                terminal = next((c["state"].get("terminated") for c in pod["status"].get("containerStatuses", [])
++                                 if c["name"] == "worker"), None)
++            if terminal or time.monotonic() >= deadline:
++                break
++            time.sleep(.2)
++        try:
++            logs = kube("logs", "pod/" + pod["metadata"]["name"]) if pod else ""
++        except subprocess.SubprocessError:
++            logs = ""
++        lines = [line.removeprefix("FILE_PROBE ") for line in logs.splitlines()
++                 if line.startswith("FILE_PROBE ")]
++        sessions = [str(uuid.UUID(line.split()[1])) for line in lines if line.startswith("session ")]
++        expected = [
++            "version codex-cli 0.171.0-alpha.13",
++            "native item.started in_progress none true",
++            "native item.completed failed approval_required_policy_never true",
++            "turn failed",
++            "rpc initialize observed=true absent=false",
++            "rpc tools_list observed=true absent=false",
++            "rpc render_call observed=false absent=true",
++            "files stage_absent=true report_absent=true",
++            "finish acknowledged=true failed=true assets=0",
++        ]
++        matched = [line for line in lines if line in expected]
++        assets = len(record.get("assets", [])) if record else None
++        turns = len(json.loads(kube("get", "jobs", "-l", "agentmoor.io/turn", "-o", "json"))["items"])
++        confirmed = (all(matched.count(line) == 1 for line in expected)
++                     and matched.index(expected[1]) < matched.index(expected[2])
++                     and len(sessions) == 1 and "publication entered" not in lines
++                     and record.get("state") == "failed" and assets == 0 and turns == 0
++                     and terminal is not None and terminal["exitCode"] != 0)
++        # Preserve known observations even if they differ from the expected failure.
++        # Unknown and incomplete observations carry no tool/publishing verdict.
++        safe = re.compile(r"(?:native item\.(?:started|completed) (?:in_progress|completed|failed|unknown) "
++                          r"(?:none|other_error|approval_required_policy_never) (?:true|false)"
++                          r"|rpc (?:initialize|tools_list|render_call) observed=(?:true|false) absent=(?:true|false)"
++                          r"|files stage_absent=(?:true|false) report_absent=(?:true|false)"
++                          r"|finish acknowledged=(?:true|false) failed=(?:true|false) assets=\d+"
++                          r"|version codex-cli 0\.171\.0-alpha\.13|turn failed|publication entered)")
++        selected = [line for line in lines if safe.fullmatch(line)]
++        print("FILE_REPORT_DIAG " + json.dumps({
++            "confirmed": confirmed and sorted(selected) == sorted(expected),
++            "pod_uid": str(uuid.UUID(pod["metadata"]["uid"])) if pod else None,
++            "native_sessions": sessions, "observed": selected,
++            "api_failed": record.get("state") == "failed" if record else None, "api_assets": assets, "turn_jobs": turns,
++            "worker_exit": terminal["exitCode"] if terminal else None,
++        }, sort_keys=True), flush=True)
+diff --git a/tests/kubernetes/report_tool.py b/tests/kubernetes/report_tool.py
+index 1bc989d..09e34cb 100755
+--- a/tests/kubernetes/report_tool.py
++++ b/tests/kubernetes/report_tool.py
+@@ -12,0 +13,7 @@ def handle(method, params):
++    # Observe discovery and delivery separately. Stop at the RPC boundary if
++    # client behavior changes; this diagnostic never performs a render.
++    if method in ("initialize", "tools/list"):
++        Path(".probe_" + method.replace("/", "_")).touch()
++    if method == "tools/call" and params.get("name") == "render":
++        Path(".probe_render_call").touch()
++        raise ValueError("observer stopped before render")
+diff --git a/tests/kubernetes/run.sh b/tests/kubernetes/run.sh
+index d9b1daf..1b4ba45 100644
+--- a/tests/kubernetes/run.sh
++++ b/tests/kubernetes/run.sh
+@@ -16,0 +17 @@ kind create cluster --image kindest/node:v1.35.0 --name "$name" --kubeconfig "$K
++echo FILE_REPORT_STAGE cluster_ready
+@@ -21,0 +23 @@ for agent in $agents; do
++    echo FILE_REPORT_STAGE image_built
+@@ -22,0 +25 @@ for agent in $agents; do
++    echo FILE_REPORT_STAGE image_loaded

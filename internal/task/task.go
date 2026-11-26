@@ -25,6 +25,10 @@ const ReplyFile = "reply.txt"
 
 const TextTurn = "text-turn.v1"
 const ContinueTurn = "continue-turn.v1"
+const FileTurn = "file-turn.v1"
+
+// MaxArtifacts bounds the delivery receipt carried by the Worker finish call.
+const MaxArtifacts = 128
 
 // Prompt contains only the two SaaS fields passed to the native CLI on stdin.
 func (s Spec) Prompt() []byte {
@@ -39,13 +43,14 @@ const Timeout = 15 * time.Minute
 
 // Spec is immutable within a task. A new logical runtime id allocates a new task.
 type Spec struct {
+	Mode        string `json:"mode,omitempty"`
 	Instruction string `json:"instruction"`
 	Input       string `json:"input"`
 	Output      string `json:"output"`
 }
 
 func (s Spec) Valid() bool {
-	return strings.TrimSpace(s.Instruction) != "" && len(s.Instruction) <= 8192 && len(s.Input) <= 65536 && asset.SafePath(s.Output) && path.Base(s.Output) == s.Output && len(s.Output) <= 128
+	return (s.Mode == "" || s.Mode == TextTurn || s.Mode == FileTurn) && strings.TrimSpace(s.Instruction) != "" && len(s.Instruction) <= 8192 && len(s.Input) <= 65536 && asset.SafePath(s.Output) && path.Base(s.Output) == s.Output && len(s.Output) <= 128
 }
 
 // Executor implements one non-interactive text turn and reports its native history.
@@ -53,6 +58,12 @@ type Executor interface {
 	ExecuteTask(context.Context, Environment, Spec) (Execution, error)
 }
 type Environment struct{ Executable, Workspace, Home string }
+
+// FileExecutor writes the delivery to a fresh workspace-relative result path.
+// A continuation receives the immutable parent session and restored workspace.
+type FileExecutor interface {
+	ExecuteFile(ctx context.Context, env Environment, spec Spec, result, session string, restore RestoreHistory) (Execution, error)
+}
 type Execution struct{ Text, SessionID, HistoryDir string }
 
 // Continuation restores the pinned native transcript into the adapter's private layout.
@@ -107,4 +118,7 @@ type Finish struct {
 	Attempt   string `json:"attempt"`
 	SessionID string `json:"session_id,omitempty"`
 	Error     string `json:"error,omitempty"`
+	// Artifacts pins the complete delivery directory for this successful turn.
+	// An omitted list retains the original single-output worker protocol.
+	Artifacts []Ref `json:"artifacts,omitempty"`
 }

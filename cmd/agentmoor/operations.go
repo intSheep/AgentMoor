@@ -136,13 +136,15 @@ func platformCommand(ctx context.Context, args []string, out io.Writer, registry
 			}
 		}
 		enabled := map[string]bool{}
+		files := map[string]bool{}
 		for _, a := range registry.All() {
 			_, enabled[a.Descriptor().ID] = a.(task.Executor)
+			_, files[a.Descriptor().ID] = a.(task.FileExecutor)
 		}
 		if (*cert == "") != (*keyFile == "") {
 			return errors.New("TLS requires certificate and key")
 		}
-		api := platform.API{Catalog: catalog, Secret: key, Temp: incoming, TaskAdapters: enabled}
+		api := platform.API{Catalog: catalog, Secret: key, Temp: incoming, TaskAdapters: enabled, FileTaskAdapters: files}
 		if *jobsFile != "" {
 			dispatch, err := kubejobs.InCluster(*jobsFile)
 			if err != nil {

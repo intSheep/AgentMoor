@@ -1,0 +1,85 @@
+{
+  "source_commit": "b153a3d33f8845cd843cf400f6ad40b30cfa9947",
+  "recorded_at_utc": "2026-11-26T10:13:45Z",
+  "host": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "go": "1.27.4",
+    "docker": "29.8.2",
+    "kind": "0.33.0",
+    "kubectl": "v1.33.9"
+  },
+  "cluster_image": "kindest/node:v1.35.0",
+  "backends": "SQLite metadata and local immutable objects in Kubernetes; PostgreSQL/S3 separately verified by make test-services",
+  "checks": {
+    "make fmt": "passed",
+    "make check": "passed",
+    "make demo": "passed",
+    "make test-services": "passed",
+    "make test-k8s": {
+      "passed": [
+        "codex",
+        "gemini-cli",
+        "opencode",
+        "claude-code"
+      ]
+    },
+    "make test-k8s-file-report": "passed",
+    "make test-worker-file-report": "passed",
+    "python3 examples/report-consumer/test_ingest.py": "10 tests passed",
+    "native_roundtrip codex": "passed on macOS codex-cli 0.171.0-alpha.13.2"
+  },
+  "codex_file_report": {
+    "active_mcp_cancel": "cancelled-with-checkpoint-preserved",
+    "artifacts": [
+      {
+        "content_path": "/v1/content?id=out%2Freport.json&kind=artifact&version=1",
+        "id": "out/report.json",
+        "kind": "artifact",
+        "sha256": "9ff6adafeb0cb99ca79a546ed02272f312a4140c76b1db47f593317cc8c469bc",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2Ff940db5e-dc6a-4683-91a4-4b935468b350%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/f940db5e-dc6a-4683-91a4-4b935468b350/out/report.json",
+        "kind": "artifact",
+        "sha256": "45e2ae257cfb30ffc9c9e036ec59fbf30914c6caa4e37ac43b7cb90d41eb1d0b",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2F0fefa8cf-a588-45ba-b24a-cd9b645af7e7%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/0fefa8cf-a588-45ba-b24a-cd9b645af7e7/out/report.json",
+        "kind": "artifact",
+        "sha256": "e6772bfd70bf3ac1133f6d1199874d2ac2de0eac49be57c704fa5be0cd1a167f",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2Fe3ca59fc-1260-4079-8601-23c460f07e50%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/e3ca59fc-1260-4079-8601-23c460f07e50/out/report.json",
+        "kind": "artifact",
+        "sha256": "e6772bfd70bf3ac1133f6d1199874d2ac2de0eac49be57c704fa5be0cd1a167f",
+        "version": 1
+      }
+    ],
+    "business_rows": 2,
+    "cli": "codex-cli 0.171.0-alpha.13",
+    "database_write_retry": "trigger-failure-then-imported-and-already-imported",
+    "missing_input": "failed-without-assets",
+    "model": "scripted-responses",
+    "pod_uids": [
+      "ce0d7b56-670a-4516-8b56-65ed4495f492",
+      "a5db9578-bb41-4ff3-a74f-4102acf9135e",
+      "89b962aa-c4fc-4ea3-bee6-c0946c8afc41"
+    ],
+    "recovery_pod_uid": "9c82006c-4aca-4e77-9e2d-c86beffcca10",
+    "session_sha256": "9b396ae4bac350bbe9816b31d9a52cda244d14f7c498bc2e1b9108a00889ecf3",
+    "workspace_loss_simulation": "same-session-required-files-removed-before-tool"
+  },
+  "limitations": [
+    "Scripted model only; live model smoke was not run.",
+    "Workspace-loss negative case removes required restored files inside the synthetic tool; it does not disable production restore.",
+    "Abrupt Worker Pod loss during a live tool call was not tested.",
+    "Pinned Skill installation and actual native loading are not implemented.",
+    "PostgreSQL and S3 were tested separately, not as the backends of this Kubernetes workflow."
+  ]
+}

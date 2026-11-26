@@ -49,10 +49,18 @@ func (c *Catalog) submitTurn(ctx context.Context, a taskAddress, q task.Question
 	if q.SessionID != cp.SessionID {
 		return task.Record{}, ErrMissing
 	}
+	parentTask, err := c.readTask(ctx, taskAddress{Scope: a.Scope})
+	if err != nil {
+		return task.Record{}, err
+	}
+	spec := task.Spec{Instruction: q.Message, Output: task.ReplyFile}
+	if parentTask.Spec.Mode == task.FileTurn {
+		spec.Mode, spec.Output = task.FileTurn, parentTask.Spec.Output
+	}
 	rec := task.Record{
 		ID: a.Runtime, TurnID: a.turn, State: task.Queued,
 		Deadline: time.Now().UTC().Add(task.Timeout),
-		Spec:     task.Spec{Instruction: q.Message, Output: task.ReplyFile},
+		Spec:     spec,
 		Parent:   &cp,
 	}
 	raw, err := json.Marshal(rec)

@@ -16,6 +16,8 @@ import uuid
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 from saas_contract import ReportClient
+from saas_file_contract import FileReportClient
+from file_report_contract import run as run_file_report
 from runtimes import BINARIES, environment
 
 
@@ -33,6 +35,8 @@ def main(opts, temp):
     config = {"endpoint": "https://agentmoor:7401", "scope": scope,
               "workspace": "/run/task/work", "state_dir": "/run/task/state",
               "runtime_cli": "/usr/local/bin/" + BINARIES[opts.adapter]}
+    if opts.file_report and opts.adapter != "codex":
+        raise ValueError("the file tool contract requires Codex")
     cfg = temp / "worker.json"
     cfg.write_text(json.dumps(config))
     platform = temp / "platform"
@@ -51,7 +55,10 @@ def main(opts, temp):
     def manifest_for(name, credential, command, config_name="configuration"):
         manifest = (HERE / "job.yaml").read_text().replace("CONTRACT_IMAGE", opts.image)
         manifest = manifest.replace("JOB_CONFIG", config_name).replace("JOB_NAME", name).replace("JOB_CREDENTIAL", credential)
-        extra = [{"name": key, "value": value} for key, value in environment(opts.adapter).items()]
+        native_env = environment(opts.adapter)
+        if opts.file_report:
+            native_env["CODEX_FILE_TOOL"] = "/opt/test/report_tool.py"
+        extra = [{"name": key, "value": value} for key, value in native_env.items()]
         manifest = manifest.replace("NATIVE_ENV", "\n".join("        - " + json.dumps(var) for var in extra))
         return manifest.replace("JOB_COMMAND", json.dumps(command))
 
@@ -78,13 +85,24 @@ def main(opts, temp):
         profiles = temp / "profiles.json"
         profiles.write_text(json.dumps([{"scope": scope, "pod_spec": template["spec"]["template"]["spec"]}]))
         kube("create", "configmap", "turn-profiles", "--from-file=" + str(profiles))
-        kube("apply", "-f", "-", data=(HERE / "workloads.yaml").read_text().replace("CONTRACT_IMAGE", opts.image))
+        workloads = (HERE / "workloads.yaml").read_text().replace("CONTRACT_IMAGE", opts.image)
+        if opts.file_report:
+            workloads = workloads.replace("/opt/test/model.py", "/opt/test/file_model.py")
+        kube("apply", "-f", "-", data=workloads)
         for deploy in ("agentmoor", "model"):
             kube("rollout", "status", "deployment/" + deploy, "--timeout=150s")
         with forward(base, ns) as endpoint:
-            client = ReportClient(endpoint, issue("--submit"), scope["runtime"],
+            client_class = FileReportClient if opts.file_report else ReportClient
+            client = client_class(endpoint, issue("--submit"), scope["runtime"],
                                   ssl.create_default_context(cafile=str(cert)))
             apply_job("produce", "executor", ["agentmoor", "run-task", "--config", "/config/worker.json"])
+            if opts.file_report:
+                negative = (issue("--submit", allocation=cancellation_scope),
+                            lambda: apply_job("missing-input", "cancel-executor",
+                                              ["agentmoor", "run-task", "--config", "/config/worker.json"],
+                                              config_name="cancel-configuration"))
+                run_file_report(client, kube, temp, cert, wait_job, negative)
+                return
             client.submit()
             try:
                 first = client.await_result()
@@ -209,6 +227,7 @@ def forward(base, ns):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--adapter", choices=BINARIES, required=True)
+    parser.add_argument("--file-report", action="store_true")
     for key in ("context", "kubeconfig", "image"):
         parser.add_argument("--" + key, required=True)
     with tempfile.TemporaryDirectory(prefix="agentmoor-saas-") as tmp:

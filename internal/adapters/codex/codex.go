@@ -13,7 +13,7 @@ func New() Adapter {
 		ReadSessions:  sessions,
 		TestedRuntime: "codex-cli 0.171.0-alpha.13",
 		ID:            "codex",
-		Version:       "0.3.0",
+		Version:       "0.4.0",
 		Markers:       []string{".codex/"},
 		SkillParents:  []string{".agents"},
 		MaxDepth:      1,
@@ -22,6 +22,6 @@ func New() Adapter {
 
 func (a Adapter) Descriptor() adapter.Descriptor {
 	d := a.Layout.Descriptor()
-	d.TaskModes = []string{task.TextTurn, task.ContinueTurn}
+	d.TaskModes = []string{task.TextTurn, task.ContinueTurn, task.FileTurn}
 	return d
 }

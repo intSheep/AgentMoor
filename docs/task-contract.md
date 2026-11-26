@@ -32,7 +32,19 @@
 }
 ```
 
-指令最多 8 KiB，文本最多 64 KiB，交付文件名最长 128 字节且只有一级。成功响应的 `assets` 包含 `artifact`、`workspace`、`session`。每条引用有 `kind`、`id`、`version`、`sha256` 和 `content_path`。消费者按 `kind` 选择资产。
+指令最多 8 KiB，文本最多 64 KiB，交付文件名最长 128 字节且只有一级。成功响应的 `assets` 包含 `artifact`、`workspace`、`session`。每条引用有 `kind`、`id`、`version`、`sha256` 和 `content_path`。消费者按 `kind` 和完整路径选择资产。
+
+### 文件交付和多份产物
+
+`file-turn.v1` 要求适配器生成磁盘上的新文件。Worker 验证临时结果是普通文件后，将它放到 `out/<output>`；最终文本不会代替这个文件。首轮和追问都以 `out/` 为交付目录，包含子目录中的全部普通文件，每轮最多 128 份。符号链接等特殊文件导致发布失败。`output` 指定的主文件必须存在，消费者按路径选择主文件，不能假定成功记录只有一份 Artifact。
+
+每轮的 `assets` 是该轮 `out/` 的完整交付集，包含从上轮恢复后未修改的文件。修改同名文件会产生本轮独立引用；删除的文件不进入新回合集，旧引用仍可下载；重命名视为新路径，旧路径的历史版本仍可读。首轮使用 `out/<path>`，追问使用 `turns/<uuid>/out/<path>`。任务作用域确定 Tenant、Project、Runtime 和 Adapter；Artifact 元数据保存原生 SessionID、Adapter/CLI 版本、MediaType 和 SHA-256，资产键中的 UUID 标识来源回合。Skill 继续独立扫描与归档，不因发布主文件而跳过。
+
+发布时，Worker 冻结并上传文件字节，再向 `finish` 提交本轮实际扫描所得的固定版本清单。平台验证每条引用属于本回合 `out/`、关联同一原生会话且摘要与存储一致，同时要求主文件、工作区和会话都已提交。清单不会自动吸收其他回合或未列出的部分发布文件。只有成功记录中的清单代表业务交付；失败、取消或失联回合不产生成功清单。
+
+Codex 文件模式由部署端设置 `CODEX_FILE_TOOL=/absolute/path/to/tool`。此可执行文件必须在 Agent 工作区之外，提供 stdio MCP 服务器 `report` 的 `render` 工具；模型不能选择程序或输出路径。Worker 经环境变量 `REPORT_RESULT` 提供新的工作区相对结果路径，`REPORT_PREVIOUS` 提供上一份 `out/<output>`。工具成功后，适配器还要求原生 `mcp_tool_call` 完成事件；缺文件、工具失败或仅回复 `done` 都不会成为成功交付。
+
+固定 Codex `0.171.0-alpha.13` 使用 `mcp_servers.report.tools.render.approval_mode="approve"` 仅授权这个部署端工具，同时保留 `read-only` 和禁用 shell、apps、hooks、多 Agent 的设置。[固定版本的工具审批实现](https://github.com/openai/codex/blob/rust-v0.171.0-alpha.13/codex-rs/codex-mcp/src/mcp/mod.rs#L96)。MCP 程序由部署方信任并约束自己的文件读写与外部动作；原生 shell 的沙箱不替这个程序提供隔离。集群测试使用只接受有限操作、不能接收任意路径或命令的合成报告工具，不把它注册为通用业务工具。
 
 ## SaaS 追问同一个会话
 
@@ -76,13 +88,13 @@ print(json.dumps([{"scope":scope,"pod_spec":job["spec"]["template"]["spec"]}]))
 
 部署方使用 `issue --execute` 签发带读写资产权限的执行凭据，用 `agentmoor run-task --config FILE [--wait 2m]` 运行一次。配置沿用[运行手册](operations.md)，需要 `runtime_cli` 指向已验证的原生程序。`workspace` 是父目录中尚未创建的新路径。`sessions` 由执行器发现，产物目录由 Worker 设置为 `out`。跨 Pod 通信可以用 `serve --tls-cert PEM --tls-key PEM` 提供 HTTPS。
 
-Worker 调用 `POST /v1/tasks/{id}/claim`，传入随机 `attempt`。并发争抢只有一个执行者获准，相同 attempt 可安全重发。它以相同 attempt 调用 `POST /v1/tasks/{id}/finish`，成功时提交 `session_id`，失败时提交 `error`。平台检查三个资产的已提交版本以及交付文件与会话的关联后，才对外发布成功记录。SaaS 客户端使用提交凭据，不持有执行权限。
+Worker 调用 `POST /v1/tasks/{id}/claim`，传入随机 `attempt`。并发争抢只有一个执行者获准，相同 attempt 可安全重发。它以相同 attempt 调用 `POST /v1/tasks/{id}/finish`，成功时提交 `session_id` 和 `artifacts` 固定版本引用数组，失败时提交 `error`。`finish` 请求体最多 1 MiB，清单最多 128 项，不允许重复路径。平台检查清单及工作区、会话版本后，才对外发布成功记录。旧 Worker 省略 `artifacts` 时，仍按原协议仅交付 `out/<output>`。成功应答丢失后重发 `finish` 返回已冻结的成功记录，不读取更新的资产 head。SaaS 客户端使用提交凭据，不持有执行权限。
 
-Worker 每秒检查一次取消请求。运行中失联且未确认结束时，15 分钟执行期限后查询显示 `interrupted`。这时重新执行业务需要显式分配新任务。取消与中断不会撤销已产生的外部动作。该文本执行模式只在完成回合后归档，任务中途丢失 Pod 时，未发布的本地字节仍会丢失。
+Worker 每秒检查一次取消请求。运行中失联且未确认结束时，15 分钟执行期限后查询显示 `interrupted`。这时重新执行业务需要显式分配新任务。取消与中断不会撤销已产生的外部动作。当前执行模式只在完成回合后归档，任务中途丢失 Pod 时，未发布的本地字节仍会丢失。
 
 ## 一条命令复验
 
-从项目根目录运行 `make test-k8s`。需要 Go、C 编译器、Docker、kind、kubectl、Python 3 和 OpenSSL。脚本构建本地测试镜像，创建专属 kind 集群及 kubeconfig，并在退出时回收。每个镜像只装一种固定版本的 CLI，构建时校验其 SHA-512。默认依次运行 Codex、Gemini CLI、OpenCode，再回归 Claude Code。单独复验可用 `make test-k8s AGENT=gemini-cli`，其他适配器 ID 见下表。测试使用 kind v0.31.0 和 Kubernetes v1.35.0，模型由集群内的确定性服务模拟。
+从项目根目录运行 `make test-k8s`。需要 Go、C 编译器、Docker、kind、kubectl、Python 3 和 OpenSSL。脚本构建本地测试镜像，创建专属 kind 集群及 kubeconfig，并在退出时回收。每个镜像只装一种固定版本的 CLI，构建时校验其 SHA-512。默认依次运行 Codex、Gemini CLI、OpenCode，再回归 Claude Code。单独复验可用 `make test-k8s AGENT=gemini-cli`，其他适配器 ID 见下表。2026-11-26 复验使用 kind v0.33.0 和 Kubernetes v1.35.0，模型由集群内的确定性服务模拟。
 
 1. 独立的 [SaaS 测试客户端](../tests/saas_contract.py) 只发 HTTP 请求，提交含随机金额、重复地区和负数的 CSV，检查重复提交和冲突。
 2. Pod A 领取任务，选定版本的真实 CLI 发起模型请求。SaaS 轮询任务、下载报告、校验摘要，并用独立的预期金额验算。
@@ -90,6 +102,14 @@ Worker 每秒检查一次取消请求。运行中失联且未确认结束时，1
 4. 对已到达模型端点的追问提交取消，确认最近成功的会话版本不变。同时对独立首轮任务提交取消请求，检查 `cancelling → cancelled`、执行 Job 在 25 秒内退出且成功资产列表为空。测试模型保持请求 60 秒，确保检验的是执行中取消。
 
 ## 部署方需要提供的运行时设置
+
+Codex 文件工具专项使用相同的主机依赖，无需模型密钥：
+
+```sh
+make test-k8s-file-report
+```
+
+它依次运行生成、修订、审计三个不同的 Pod，保留原生会话 ID；每轮通过公开 HTTP 下载两份文件并核对摘要。金额由独立 SaaS 客户端计算。后续注入业务数据库写入失败、同会话所需恢复文件丢失和活跃 MCP 工具取消，再用新 Pod 从最近成功版本继续。恢复丢失负例是在合成工具开始前移除所需文件，并非关闭生产 Worker 的恢复流程。测试在退出时删除专属集群、镜像标签和 kubeconfig；失败时先检查输出中的 Worker/模型日志及 `docker info`。成功输出 `FILE_REPORT_RESULT`，包含不同 Pod UID、会话 ID 摘要、固定 Artifact 引用与文件 SHA-256。冷启动耗时取决于下载与构建，本项目尚未给出启动时间承诺。
 
 首轮和追问分别使用上面的请求格式，四种适配器共享这两种格式。部署方把模型凭据注入 Worker，并在接手续聊的 Pod 提供相同模型配置。归档保存原生会话和交付数据。示例里的 `fixture` 是集群内测试服务使用的假密钥。
 

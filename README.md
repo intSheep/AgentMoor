@@ -8,6 +8,8 @@ Codex CLI, Gemini CLI, OpenCode, and Claude Code share one HTTPS API for submitt
 
 **v0.1 technical preview** · [MIT license](LICENSE). The acceptance tests run real agent CLIs against a simulated model endpoint in a local kind cluster. They cover task delivery, cancellation during execution, and two consecutive follow-ups in fresh Pods. If you try your own SaaS workflow with a live model, include the CLI and model versions when sharing results. [Test results](docs/mvp.md) · [Contributing](CONTRIBUTING.md)
 
+For a consumer-side example, see [Import a verified report](examples/report-consumer/README.md).
+
 ## Quick start
 
 On macOS or Linux, install Go 1.27.4, a C compiler, Make, and Python 3. Run the local asset recovery demo from the repository root.
@@ -43,10 +45,27 @@ A runtime hook can invoke `sync` once. For continuous sync, `watch` listens for 
 make check          # Check formatting, run go vet and tests with the race detector, then build
 make demo           # Upload, sync again, and restore assets using the local server
 make test-k8s       # Test delivery, cancellation, and cross-Pod follow-ups in a disposable kind cluster
+make test-k8s-file-report # Test Codex file tools and edits across fresh Pods
 make test-services  # Test PostgreSQL and S3-compatible storage with Docker Compose
 ```
 
-To try the Kubernetes workflow with a single adapter, run `make test-k8s AGENT=codex`. The native CLI recovery tests can also run outside Kubernetes. They require the matching CLI version and start a local model endpoint. Each test creates a conversation, removes the original directories, restores the session, and checks that the next model request contains a random marker from the first turn. [Reproduction steps](docs/operations.md)
+To try the Kubernetes workflow with Codex:
+
+```sh
+make check-kind-prereqs  # Check host tools and Docker without building or creating a cluster
+make test-k8s AGENT=codex
+```
+
+The second command also runs the preflight before it builds. The kind test uses a deterministic model endpoint and needs no model API key. It does need network access for first-time image and CLI downloads. See the [prerequisites and expected results](docs/task-contract.md#一条命令复验).
+
+The native CLI recovery tests can also run outside Kubernetes. They require the matching CLI version and start a local model endpoint. Each test creates a conversation, removes the original directories, restores the session, and checks that the next model request contains a random marker from the first turn. [Reproduction steps](docs/operations.md)
+
+The Codex file test uses a scripted model to request a deployment-selected MCP
+tool. The tool reads CSV data, writes real report files, and revises them in new
+Pods with the same native session. The SaaS client downloads pinned versions,
+checks their bytes and amounts, and imports reports into its own SQLite database.
+It also checks database failure retries and cancellation during a tool call.
+No model account or API key is needed. [File task contract](docs/task-contract.md#文件交付和多份产物)
 
 ## Project documentation
 

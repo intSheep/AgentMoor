@@ -30,7 +30,11 @@ func command[T any](t *testing.T, args ...string) T {
 func TestBuiltinAdapters(t *testing.T) {
 	var ids []string
 	for _, d := range command[[]adapter.Descriptor](t, "adapters") {
-		if !slices.Equal(d.TaskModes, []string{task.TextTurn, task.ContinueTurn}) {
+		modes := []string{task.TextTurn, task.ContinueTurn}
+		if d.ID == "codex" {
+			modes = append(modes, task.FileTurn)
+		}
+		if !slices.Equal(d.TaskModes, modes) {
 			t.Errorf("%s task modes = %v", d.ID, d.TaskModes)
 		}
 		ids = append(ids, d.ID)
