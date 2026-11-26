@@ -50,6 +50,8 @@ Codex 文件模式由部署端设置 `CODEX_FILE_TOOL=/absolute/path/to/tool`。
 
 ### 固定版本 Skill
 
+无模型密钥的集群复验入口是 `make test-k8s-skills`。它经公开 API 发布完整的合成 Skill 包，三次换新 Pod 实际加载原生规则，并由规则驱动工具执行包内脚本、读取参考文件；发布 v2 后仍选择 v1；使用相同 CSV 和指令但未安装 Skill 的负例明确失败。
+
 Skill 由受信部署配置的 `skill_pins` 选择，SaaS 的任务指令不能指定包版本或安装位置。每项包含原 Skill 的完整固定版本 `source` 引用（`kind=skill`、ID、version、SHA-256、content_path）和安全的 `name`，最多 16 项。当前任务安装只接受 `skill-tar.v1` 包；单文件 `skill-markdown.v1` 会明确失败。清单中的名称必须与包内 `SKILL.md` 的 frontmatter name 相同。
 
 Worker 在首次 `claim` 用执行凭据提交选定 pins；平台验证本作用域的版本与摘要，将它们冻结到任务记录。成功 checkpoint 和之后的追问记录包含同一份 `skills`。同一 attempt 重试、替换 Worker 或后续配置不得改动或省略既定 pins，否则返回冲突。发布 Skill 新版本不会升级正在接续的会话；采用新版本需要部署方显式选择新的逻辑任务与对应作用域资产。

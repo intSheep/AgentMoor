@@ -51,3 +51,7 @@
 ## 2026-11-26：Codex 文件工作流补充验收
 
 Codex CLI `0.171.0-alpha.13` 在 kind 0.33.0 / Kubernetes v1.35.0 中，经脚本模型请求受信 MCP 工具，完成真实 CSV 文件读写、三次不同 Pod 的同会话接续、两份 Artifact 的固定版本交付、旧版下载、业务数据库写入失败后重试及活跃工具取消。`make test-k8s-file-report` 通过；四 CLI 的 `make test-k8s` 文本矩阵、`make check`、`make demo`、`make test-services` 和本机 Codex `.13.2` 的 native roundtrip 也通过。[完整结果与边界](verification-matrix.md#2026-11-26codex-文件工具集群验收通过) · [结构化证据](evidence/codex-file-report-2026-11-26.json)。真实模型、Skill 固定版本注入及活跃工具中 Pod 突然丢失仍未验收。
+
+## 2026-11-26：固定 Skill 包补充验收
+
+Codex Adapter `0.5.0` 的 `make test-k8s-skills` 通过。真实 Linux Codex `0.171.0-alpha.13` 在三个新 Pod 中加载相同 v1 原生 Skill，工具实际执行恢复包内脚本并读取参考文件；来源 head 升到 v2 后不漂移，相同输入没有 Skill 的负例明确失败。来源包、工作区原生 Skill 和旧报告未被覆盖。[完整证据与边界](verification-matrix.md#2026-11-26固定-skill-版本与原生加载)。
