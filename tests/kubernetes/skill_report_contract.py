@@ -136,6 +136,8 @@ def run(client, catalog, kube, temp, cert, wait_job, negative):
         missing = FileReportClient(client.endpoint, negative[0], "cancel-job", client.ssl_context)
         # The same valid CSV/instruction reaches the same tool without a Skill.
         # Native injection cannot provide the policy and the required tool fails.
+        missing.amount = client.amount
+        missing.spec = dict(client.spec)
         missing.submit()
         negative[1]()
         deadline = time.monotonic() + 90
