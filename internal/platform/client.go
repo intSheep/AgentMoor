@@ -30,6 +30,35 @@ type Client struct {
 	http            *http.Client
 }
 
+// HTTPError exposes the status without requiring callers to parse error text.
+// Error and Unwrap preserve the existing messages and missing/conflict identity.
+type HTTPError struct {
+	StatusCode int
+	Message    string
+}
+
+func (e *HTTPError) Error() string {
+	switch e.StatusCode {
+	case http.StatusNotFound:
+		return ErrMissing.Error()
+	case http.StatusConflict:
+		return fmt.Sprintf("%s: %s", ErrConflict, e.Message)
+	default:
+		return fmt.Sprintf("platform HTTP %d: %s", e.StatusCode, e.Message)
+	}
+}
+
+func (e *HTTPError) Unwrap() error {
+	switch e.StatusCode {
+	case http.StatusNotFound:
+		return ErrMissing
+	case http.StatusConflict:
+		return ErrConflict
+	default:
+		return nil
+	}
+}
+
 func NewClient(endpoint, token string) (*Client, error) {
 	u, err := url.Parse(endpoint)
 	if err != nil || u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" || token == "" {
@@ -82,13 +111,7 @@ func (c *Client) requestEncoded(ctx context.Context, method, path string, body i
 	if resp.StatusCode/100 != 2 {
 		defer resp.Body.Close()
 		msg, _ := io.ReadAll(io.LimitReader(resp.Body, 256))
-		if resp.StatusCode == http.StatusNotFound {
-			return nil, ErrMissing
-		}
-		if resp.StatusCode == 409 {
-			return nil, fmt.Errorf("%w: %s", ErrConflict, strings.TrimSpace(string(msg)))
-		}
-		return nil, fmt.Errorf("platform HTTP %d: %s", resp.StatusCode, strings.TrimSpace(string(msg)))
+		return nil, &HTTPError{StatusCode: resp.StatusCode, Message: strings.TrimSpace(string(msg))}
 	}
 	return resp, nil
 }

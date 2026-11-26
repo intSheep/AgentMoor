@@ -63,3 +63,9 @@ Codex Adapter `0.5.0` 的 `make test-k8s-skills` 通过。真实 Linux Codex `0.
 ## 2026-11-26：PostgreSQL / S3 下的 Codex 任务与队列恢复
 
 `make test-k8s-persistent` 在同一专属 kind 集群和 Codex 镜像中，依次跑通 PostgreSQL 18.7 + MinIO RELEASE.2026-04-17T00-00-00Z 的文件与固定 Skill SaaS 契约，包括 queued 追问接受后真实更换控制面 Pod、原 UUID 重投与单 Job 调度。文件、取消、业务数据库失败重试、旧版下载、Skill v1 不随 v2 head 漂移等断言保持；直接核对真实后端，确认没有 SQLite / 本地对象回退。[结果与剩余边界](verification-matrix.md#2026-11-26postgresql--s3-联合集群与队列恢复) · [结构化证据](evidence/postgres-s3-contract-2026-11-26.json)。未组合活跃 Worker Pod 丢失及发布边界故障，不视为 V2 整体完成。
+
+## 2026-11-26：任务发布边界补充验收
+
+`84461dd` 为任务发布增加最多三次的局部瞬态重试，复用冻结字节和原操作键，不重新执行 Agent、不重扫目录；普通 Sync 仍在首次错误后依靠下一轮 journal 恢复。SQLite + 真实 HTTP/Worker 的 Begin/Upload/Commit 前后、实际元数据失败、取消/期限、永久错误和耗尽场景均通过，单次执行、单版本、旧 checkpoint 与 pending 游标均有断言。Artifact/完整 Skill 的非 head 历史版本在 GC 后仍能通过 HTTP 读回，SQLite 和 PostgreSQL/S3 服务测试都通过。[详细结果和范围](verification-matrix.md#2026-11-26任务冻结发布重试与历史引用回收) · [结构化证据](evidence/task-publication-retries-2026-11-26.json)。PG/S3 的同一发布故障注入组合仍未验收。
+
+PG/S3 集群复验的前两次 HTTP 500 保留为失败记录。补充诊断及 PostgreSQL 任务读连接隔离后，真实并发/取消读取和丢失写租约测试通过，`62106e5` 的文件与固定 Skill 两场景全部通过；未回退本地存储。四 CLI 完整矩阵来自较早的 `3c497396`，本次未把它写成最终提交重跑。[资产生命周期](asset-lifecycle.md) 另说明本地删除、历史版本与 GC 的现有边界。

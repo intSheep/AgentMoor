@@ -4,6 +4,7 @@ import json
 import subprocess
 import time
 
+from diagnostics import dump_failure_logs
 from saas_file_contract import FileReportClient
 
 
@@ -146,8 +147,5 @@ def run(client, kube, temp, cert, wait_job, negative, queued_restart=None):
             "missing_input": "failed-without-assets", "model": "scripted-responses",
             "cli": "codex-cli 0.171.0-alpha.13"}, sort_keys=True), flush=True)
     except Exception:
-        print(kube("logs", "deployment/model")[-2500:], flush=True)
-        for pod in json.loads(kube("get", "pods", "-o", "json"))["items"]:
-            if "job-name" in pod["metadata"].get("labels", {}):
-                print(kube("logs", "pod/" + pod["metadata"]["name"])[-2500:], flush=True)
+        dump_failure_logs(kube)
         raise

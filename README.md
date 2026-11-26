@@ -81,6 +81,7 @@ The linked guides are in Chinese.
 | Guide | What's inside |
 | --- | --- |
 | [Operations guide](docs/operations.md) | Start the platform, configure workers, restore sessions, and resolve version conflicts. |
+| [Asset lifecycle](docs/asset-lifecycle.md) | Creation, updates, local deletion, fixed references, recovery, and garbage collection. |
 | [v0.1 acceptance results](docs/mvp.md) | Tested CLI versions, product requirements, test coverage, and known limits. |
 | [Adapter research](docs/research.md) | Design references from Magpie, CC Switch, and the four supported agents. |
 | [Repository guide](AGENTS.md) | Code layout, adapter conventions, and checks to run before submitting a change. |
