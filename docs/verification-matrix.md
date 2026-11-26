@@ -11,7 +11,7 @@
 | Worker 交付工具文件，业务端下载并去重 | `make test-worker-file-report` | 本地真实 HTTP 平台、两个独立 Worker 进程、SQLite 导入器通过。测试适配器提供会话及最终文本。[本次证据](#2026-11-25worker-文件交付) |
 | Codex 文件工具、文件恢复后再编辑 | `make test-k8s-file-report`，例 1–2 | 2026-11-26：固定 Linux CLI + 脚本模型通过；三个全新 Pod 接续、多文件下载、旧版不变。真实模型未跑。[证据](#2026-11-26codex-文件工具集群验收通过) |
 | 固定版本 Skill 安装与原生加载 | `make test-k8s-skills` | 2026-11-26：Linux Codex + 脚本模型、三个新 Pod 使用同一 v1，发布 v2 不漂移；相同输入无 Skill 负例失败。[证据](#2026-11-26固定-skill-版本与原生加载) |
-| Codex 文件任务取消、失联及重试 | 例 3 | 活跃 MCP 工具取消、恢复后新回合、业务数据库失败重试已通过；工具运行中 Pod 突然丢失仍未验收。 |
+| Codex 文件任务取消、失联及重试 | 例 3、`make test-k8s-pod-loss` | 活跃 MCP 工具取消、SIGKILL 后等待原生产期限进入 interrupted、原 UUID 重投和新 UUID 恢复、业务数据库失败重试均已通过。[Pod 丢失验收](pod-loss-acceptance.md) |
 | PostgreSQL + 对象存储下的完整 Kubernetes 契约 | V2 退出门槛 | 计划。不据后端测试推断跨 Pod 端到端已过。 |
 
 ## 待落地的可运行示例
@@ -82,9 +82,9 @@ python3 tests/kubernetes/diagnose_file_report.py --check
 
 两份业务报告各自 `imported → already-imported`。修订报告入库前，用真实 SQLite BEFORE INSERT Trigger 触发写入失败，确认此前记录未变；移除 Trigger 后重试只产生第二条记录，没有重新运行 Agent。迟到重放第一份仍是 `already-imported`，数据库保持两行。`make test-worker-file-report` 也验证了真实 Worker 销毁后业务数据库失败恢复；独立消费者的 10 项 HTTP 测试通过，包括拒绝失败、取消、运行中和中断记录。
 
-同会话负例在合成工具开始前移除恢复出的 CSV/state 后执行修订，明确失败且 checkpoint 不变。这是在恢复后模拟所需文件缺失，不是关闭生产 Worker 恢复的实测。另在真实 MCP 进程写出启动标志并进入阻塞后取消，观察到 cancelling/cancelled，25 秒内 Job 退出，没有成功资产；新 UUID 和 Pod `9c82006c-4aca-4e77-9e2d-c86beffcca10` 从最近成功版本继续审计，未归档草稿没有混入。直接杀掉活跃 Worker Pod 的 interrupted/恢复场景仍未跑。
+同会话负例在合成工具开始前移除恢复出的 CSV/state 后执行修订，明确失败且 checkpoint 不变。这是在恢复后模拟所需文件缺失，不是关闭生产 Worker 恢复的实测。另在真实 MCP 进程写出启动标志并进入阻塞后取消，观察到 cancelling/cancelled，25 秒内 Job 退出，没有成功资产；新 UUID 和 Pod `9c82006c-4aca-4e77-9e2d-c86beffcca10` 从最近成功版本继续审计，未归档草稿没有混入。这次短验收没有跑直接杀掉活跃 Worker Pod 的场景；后续保留生产 15 分钟期限的独立[Pod 丢失验收](pod-loss-acceptance.md)已通过。
 
-同一代码的 `make fmt`、`make check`（含 race）、`make demo`、`make test-services` 与四 CLI `make test-k8s` 全部通过。后者仍是四个 CLI 的文本交付、连续新 Pod 追问及运行中取消；本节文件能力仅声明 Codex 已测。真实模型 smoke、固定版本 Skill 注入和 PostgreSQL/S3 下完整跨 Pod 流程均未验收，不据本次通过推断支持。
+同一代码的 `make fmt`、`make check`（含 race）、`make demo`、`make test-services` 与四 CLI `make test-k8s` 全部通过。后者仍是四个 CLI 的文本交付、连续新 Pod 追问及运行中取消；本节文件能力仅声明 Codex 已测。上述短验收未覆盖真实模型 smoke、固定版本 Skill 注入和 PostgreSQL/S3 下完整跨 Pod 流程，不据本次通过推断支持；固定 Skill 的后续独立结果见下一节，真实模型和后端组合仍未验收。
 
 ### 2026-11-26：固定 Skill 版本与原生加载
 

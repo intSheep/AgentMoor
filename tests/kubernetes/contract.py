@@ -18,6 +18,7 @@ sys.path.insert(0, str(HERE.parent))
 from saas_contract import ReportClient
 from saas_file_contract import FileReportClient
 from file_report_contract import run as run_file_report
+from pod_loss_contract import run as run_pod_loss
 from skill_report_contract import SkillCatalog, SkillReportClient, run as run_skill_report
 from runtimes import BINARIES, environment
 
@@ -27,7 +28,7 @@ def check(*args, data=None):
 
 
 def main(opts, temp):
-    if opts.skill_report:
+    if opts.pod_loss or opts.skill_report:
         opts.file_report = True
     ns = "agentmoor-contract-" + uuid.uuid4().hex[:10]
     base = ["kubectl", "--context", opts.context, "--kubeconfig", opts.kubeconfig]
@@ -106,6 +107,9 @@ def main(opts, temp):
                 client_class = FileReportClient if opts.file_report else ReportClient
                 client = client_class(endpoint, issue("--submit"), scope["runtime"], context)
             apply_job("produce", "executor", ["agentmoor", "run-task", "--config", "/config/worker.json"])
+            if opts.pod_loss:
+                run_pod_loss(client, kube, temp, cert, wait_job)
+                return
             if opts.skill_report:
                 negative = (issue("--submit", allocation=cancellation_scope),
                             lambda: apply_job("no-skill", "cancel-executor",
@@ -245,7 +249,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--adapter", choices=BINARIES, required=True)
     parser.add_argument("--file-report", action="store_true")
-    parser.add_argument("--skill-report", action="store_true")
+    special = parser.add_mutually_exclusive_group()
+    special.add_argument("--pod-loss", action="store_true")
+    special.add_argument("--skill-report", action="store_true")
     for key in ("context", "kubeconfig", "image"):
         parser.add_argument("--" + key, required=True)
     with tempfile.TemporaryDirectory(prefix="agentmoor-saas-") as tmp:

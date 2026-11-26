@@ -17,7 +17,8 @@ class FileModel(Handler):
         history = body["input"]
         users = [str(msg.get("content")) for msg in history if msg.get("role") == "user"]
         latest = users[-1] if users else ""
-        operation = next((op for text, op in (("Hold the report tool", "hold"),
+        operation = next((op for text, op in (("Lose the active report Pod", "pod_loss"),
+                                              ("Hold the report tool", "hold"),
                                               ("Simulate missing restored workspace", "lost_workspace"),
                                               ("Audit the saved report", "audit"),
                                               ("Revise the saved report", "revise"),
