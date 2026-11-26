@@ -11,6 +11,8 @@ import re
 import subprocess
 import time
 
+from active_replay_contract import verify_active_replay
+
 
 def command(*args):
     return subprocess.check_output(args, timeout=30).strip()
@@ -159,6 +161,7 @@ def run(client, kube, temp, cert, wait_job, publication_hook=None, queued_restar
     pod = active_pod(job)
     active = record(route)
     assert active["state"] == "running" and active["parent"] == cp and not active.get("assets")
+    verify_active_replay(client, kube, lost, message, cp)
     declared_deadline = datetime.fromisoformat(active["deadline"].replace("Z", "+00:00"))
     remaining = (declared_deadline - datetime.now(timezone.utc)).total_seconds()
     assert 0 < remaining <= 900, remaining

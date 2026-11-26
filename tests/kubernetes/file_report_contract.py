@@ -5,6 +5,7 @@ import subprocess
 import time
 
 from diagnostics import dump_failure_logs
+from active_replay_contract import verify_active_replay
 from saas_file_contract import FileReportClient
 
 
@@ -103,9 +104,11 @@ def run(client, kube, temp, cert, wait_job, negative, queued_restart=None):
         assert json.loads(client.request("GET", client.route + "/checkpoint")) == cp
         client.verify_stored(deliveries, temp)
 
-        held = client.ask(session, "Hold the report tool until cancelled.")
+        held_message = "Hold the report tool until cancelled."
+        held = client.ask(session, held_message)
         held_route = client.route + "/turns/" + held
         active_tool(held)
+        verify_active_replay(client, kube, held, held_message, cp)
         begin = time.monotonic()
         assert json.loads(client.request("POST", held_route + "/cancel"))["state"] == "cancelling"
         cancelled = terminal(client, held_route, "cancelled", seconds=25)
