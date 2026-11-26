@@ -225,5 +225,55 @@
     "No abrupt Worker loss or full publication-boundary fault injection on this Kubernetes backend combination; INT-67 tracks that work.",
     "Parts task publication faults were tested separately over real HTTP with SQLite and a child-process fixture, not a vendor CLI.",
     "Large-workspace transfer and timing measurements were run at preserved source 48e9290; see workspace-incremental-2026-11-26.json."
-  ]
+  ],
+  "full_four_cli_matrix": {
+    "source_commit": "e8deb796be4014a8aa5224eb20ac4102db7d3b4c",
+    "entrypoint": "make test-k8s",
+    "status": "passed",
+    "workspace_transfer": "full (default)",
+    "runtimes": [
+      "codex",
+      "gemini-cli",
+      "opencode",
+      "claude-code"
+    ],
+    "versions": [
+      "0.171.0-alpha.13",
+      "0.70.0",
+      "1.19.6",
+      "2.1.330"
+    ],
+    "native_cancellation_seconds": {
+      "codex": 2.3,
+      "gemini-cli": 3.1,
+      "opencode": 3.9,
+      "claude-code": 3.8
+    },
+    "assertions": [
+      "delivery remains readable after original Pod deletion",
+      "two sequential follow-ups in independent automatically created Pods, then deletion and readback",
+      "active follow-up cancellation preserves checkpoint",
+      "initial native execution cancellation"
+    ],
+    "images": [
+      {
+        "tag": "agentmoor-contract:agentmoor-db334f461e71-codex",
+        "id": "sha256:7f39fa11420e5e003501a617b5f2875e1c7d39dfd395b9219667eae8030e6a25"
+      },
+      {
+        "tag": "agentmoor-contract:agentmoor-db334f461e71-gemini-cli",
+        "id": "sha256:2c84bb3964436b6f90557b79677a8f294d40358d7f4ee2cc74342ee0b97da35d"
+      },
+      {
+        "tag": "agentmoor-contract:agentmoor-db334f461e71-opencode",
+        "id": "sha256:0d1d6dd73655c771933c909870e2b8e3210383d98e9505b4bf5cc54d3cb3a103"
+      },
+      {
+        "tag": "agentmoor-contract:agentmoor-db334f461e71-claude-code",
+        "id": "sha256:c7f210cd6f0fb3f8593c09065564461ace2234288d810c275084a46c96295818"
+      }
+    ],
+    "cluster_cleanup_completed": true,
+    "temporary_image_aliases_removed": true
+  }
 }

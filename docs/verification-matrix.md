@@ -150,6 +150,8 @@ PG/S3 专项先在 `84461dd`、诊断增强后的 `852166d` 各失败一次，�
 
 集成源码 `e8deb796` 的 `make test-k8s-workspace-parts` 通过：同一 kind 和 Codex 镜像下，两套独立 PG/S3 文件、固定 Skill 场景分别记录 4/3 份分片工作区版本，以及 14/16 个实际引用的 S3 body 对象。旧报告、跨 Pod 工作区恢复、取消后恢复、缺输入/缺 Skill 负例、业务数据库重试、来源升级后固定 Skill v1，以及 queued 状态 API 重建均通过；没有 SQLite/本地对象回退。已清理集群。[结构化集群证据](evidence/workspace-parts-cluster-2026-11-26.json)。
 
+同一干净源码 `e8deb796` 的完整 `make test-k8s` 也通过：Codex、Gemini CLI、OpenCode、Claude Code 四个真实固定版本 CLI 均完成原 Pod 删除后交付、两次自动新 Pod 续聊及两种取消。初始原生执行取消约 2.3、3.1、3.9、3.8 秒；自有集群和临时镜像已清理。该矩阵使用默认全量传输与脚本模型，分片的真实文件/Skill 能力由上述 PG/S3 专项验证。
+
 任务重试另在真实 HTTP/SQLite 上覆盖清单、分片及 Commit 的前后错误与真实 TCP 应答丢失、永久错误及三次耗尽，确认一次原生测试子进程、固定操作/清单/内容、唯一版本、成功 primary 与工作区一致、checkpoint 及 `pending.Transfer` 保留。平台服务测试覆盖新旧表示、重启、依赖损坏/跨 scope 拒绝、历史与 pending 的 GC 保护和真实孤儿删除；并行上传失败会取消其他活动请求。真实模型和 PG/S3 中同一发布边界、Worker 无应答丢失的联合场景仍由 INT-67 承接，不关闭 V2 整体。
 
 ## V2 退出门槛

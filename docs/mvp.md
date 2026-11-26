@@ -75,3 +75,5 @@ PG/S3 集群复验的前两次 HTTP 500 保留为失败记录。补充诊断及 
 显式开启 `workspace_transfer: tar-parts.v1` 后，Worker 从冻结 tar 上传缺失的文件 body 和压缩清单；公开下载、摘要和恢复继续使用完整 `workspace-tar.v1`。5,000/10,000 文件同尺寸改单文件的总变更请求体约减少 99%，包括清单和元数据；首次上传与完整后端校验存在额外成本，默认保持关闭。历史版本、改名/权限/删除/相对链接、冻结重试、恢复和 GC 已有测试及真实测量。[使用、限制与原始结果](workspace-incremental.md)。
 
 `e8deb796` 的 PG/S3 分片专项通过真实 Codex 文件和固定 Skill 的新 Pod 接续、取消后恢复、旧下载与 queued API 重建；S3 中确认实际分片引用且没有本地存储回退。[集群证据](evidence/workspace-parts-cluster-2026-11-26.json)。真实模型及 PG/S3 发布故障与无应答 Worker 丢失组合尚未执行，不据此关闭整个 P1/V2。
+
+同一 `e8deb796` 的四 CLI 完整 `make test-k8s` 文本矩阵通过，含两次自动新 Pod 追问与两种取消；`make fmt/check/demo` 与集成 PostgreSQL/S3 服务回归也通过。固定版本、镜像及各自范围均在上述结构化证据中，原始大工作区测量仍保留此前的 `48e9290` 来源。
