@@ -2,10 +2,10 @@
 import argparse
 import contextlib
 import json
+import os
 from pathlib import Path
 import re
 import secrets
-import select
 import ssl
 import subprocess
 import sys
@@ -19,9 +19,12 @@ from saas_contract import ReportClient
 from saas_file_contract import FileReportClient
 from file_report_contract import run as run_file_report
 from pod_loss_contract import run as run_pod_loss
+from publication_fault_contract import run as run_publication_faults
+from diagnostics import dump_failure_logs
 from skill_report_contract import SkillCatalog, SkillReportClient, run as run_skill_report
 from runtimes import BINARIES, environment
 from persistent_contract import PersistentContract
+from tenant_isolation_contract import verify as verify_tenant_isolation
 
 
 def check(*args, data=None):
@@ -31,8 +34,10 @@ def check(*args, data=None):
 def main(opts, temp):
     if opts.pod_loss or opts.skill_report:
         opts.file_report = True
-    if opts.backend == "postgres-s3" and (opts.pod_loss or not opts.file_report):
-        raise ValueError("PostgreSQL/S3 acceptance requires --file-report or --skill-report; Pod-loss is a separate local-backend contract")
+    if opts.publication_faults and not (opts.pod_loss and opts.workspace_parts and opts.backend == "postgres-s3" and opts.adapter == "codex"):
+        raise ValueError("publication faults require Codex, PostgreSQL/S3, --pod-loss and --workspace-parts")
+    if opts.backend == "postgres-s3" and (not opts.file_report or (opts.pod_loss and not opts.publication_faults)):
+        raise ValueError("PostgreSQL/S3 requires file/Skill mode or the explicit persistent publication/Pod-loss contract")
     ns = "agentmoor-contract-" + uuid.uuid4().hex[:10]
     base = ["kubectl", "--context", opts.context, "--kubeconfig", opts.kubeconfig]
     def kube(*args, data=None):
@@ -44,6 +49,9 @@ def main(opts, temp):
               "runtime_cli": "/usr/local/bin/" + BINARIES[opts.adapter]}
     if opts.workspace_parts:
         config["workspace_transfer"] = "tar-parts.v1"
+    if opts.publication_faults:
+        config["endpoint"] = "https://publication-proxy:7443"
+        config["runtime_cli"] = "/opt/test/native_count.sh"
     if opts.file_report and opts.adapter != "codex":
         raise ValueError("the file tool contract requires Codex")
     cfg = temp / "worker.json"
@@ -57,8 +65,9 @@ def main(opts, temp):
 
     cert, key = temp / "cert.pem", temp / "key.pem"
     conf = temp / "openssl.cnf"
+    names = "DNS:agentmoor,IP:127.0.0.1" + (",DNS:publication-proxy" if opts.publication_faults else "")
     conf.write_text("[req]\ndistinguished_name=dn\nx509_extensions=ext\nprompt=no\n[dn]\nCN=agentmoor\n"
-                    "[ext]\nsubjectAltName=DNS:agentmoor,IP:127.0.0.1\nbasicConstraints=critical,CA:TRUE\n")
+                    "[ext]\nsubjectAltName=" + names + "\nbasicConstraints=critical,CA:TRUE\n")
     subprocess.run(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "1",
                     "-keyout", key, "-out", cert, "-config", conf], check=True, stderr=subprocess.DEVNULL)
     def manifest_for(name, credential, command, config_name="configuration"):
@@ -108,8 +117,17 @@ def main(opts, temp):
         kube("apply", "-f", "-", data=workloads)
         for deploy in ("agentmoor", "model"):
             kube("rollout", "status", "deployment/" + deploy, "--timeout=150s")
+        if opts.publication_faults:
+            proxy = (HERE / "publication-proxy.yaml").read_text().replace("CONTRACT_IMAGE", opts.image)
+            kube("apply", "-f", "-", data=proxy)
+            kube("rollout", "status", "deployment/publication-proxy", "--timeout=150s")
         with forward(base, ns) as endpoint:
             context = ssl.create_default_context(cafile=str(cert))
+            def verify_storage(scenario, **options):
+                foreign_scope = {**scope, "tenant": "other-saas"}
+                foreign = ReportClient(endpoint, issue(allocation=foreign_scope), scope["runtime"], context)
+                verify_tenant_isolation(client, foreign, scope, storage.restart_evidence, scenario=scenario)
+                storage.verify(scenario, workspace_parts=opts.workspace_parts, **options)
             if opts.skill_report:
                 catalog = SkillCatalog(endpoint, issue("--write"), context)
                 config["skill_pins"] = [catalog.pin]
@@ -121,7 +139,26 @@ def main(opts, temp):
                 client = client_class(endpoint, issue("--submit"), scope["runtime"], context)
             apply_job("produce", "executor", ["agentmoor", "run-task", "--config", "/config/worker.json"])
             if opts.pod_loss:
-                run_pod_loss(client, kube, temp, cert, wait_job)
+                try:
+                    if opts.publication_faults:
+                        collector = ReportClient(endpoint, issue("--gc"), scope["runtime"], context)
+                        def collect():
+                            return json.loads(collector.request("POST", "/v1/gc"))
+                        run_pod_loss(client, kube, temp, cert, wait_job,
+                                     publication_hook=run_publication_faults,
+                                     queued_restart=storage.restart_queued_turn, collect=collect)
+                        verify_storage("persistent-faults", min_tasks=1,
+                                       require_queued_restart=True, pod_loss=True)
+                    else:
+                        run_pod_loss(client, kube, temp, cert, wait_job)
+                except Exception:
+                    dump_failure_logs(kube)
+                    if opts.publication_faults:
+                        try:
+                            print(kube("logs", "deployment/publication-proxy", "--all-containers=true", "--tail=200"), flush=True)
+                        except Exception as error:
+                            print("CONTRACT_DIAGNOSTIC_FAILED publication-proxy " + str(error), flush=True)
+                    raise
                 return
             if opts.skill_report:
                 negative = (issue("--submit", allocation=cancellation_scope),
@@ -131,7 +168,7 @@ def main(opts, temp):
                 run_skill_report(client, catalog, kube, temp, cert, wait_job, negative,
                                  queued_restart=storage.restart_queued_turn if storage else None)
                 if storage:
-                    storage.verify("skill-report", workspace_parts=opts.workspace_parts)
+                    verify_storage("skill-report")
                 return
             if opts.file_report:
                 negative = (issue("--submit", allocation=cancellation_scope),
@@ -141,7 +178,7 @@ def main(opts, temp):
                 run_file_report(client, kube, temp, cert, wait_job, negative,
                                 queued_restart=storage.restart_queued_turn if storage else None)
                 if storage:
-                    storage.verify("file-report", workspace_parts=opts.workspace_parts)
+                    verify_storage("file-report")
                 return
             client.submit()
             try:
@@ -248,32 +285,50 @@ class ForwardedEndpoint(str):
 
 @contextlib.contextmanager
 def forward(base, ns, service="agentmoor", port=7401, scheme="https"):
-    errors = tempfile.TemporaryFile(mode="w+")
+    output = tempfile.TemporaryFile(mode="w+b")
+    errors = tempfile.TemporaryFile(mode="w+b")
     proc = None
 
-    def start(local=""):
-        process = subprocess.Popen([*base, "-n", ns, "port-forward", "svc/" + service, str(local) + ":" + str(port),
-                                    "--address", "127.0.0.1"], stdout=subprocess.PIPE, stderr=errors, text=True)
+    def stop_process(process):
+        if process.poll() is None:
+            process.terminate()
         try:
-            if not select.select([process.stdout], [], [], 15)[0]:
-                raise TimeoutError("port-forward did not start")
-            match = re.search(r"127\.0\.0\.1:(\d+)", process.stdout.readline())
-            if not match:
-                raise RuntimeError("no forwarded port")
-            return process, match[1]
-        except Exception:
-            if process.poll() is None:
-                process.terminate()
             process.wait(timeout=10)
-            process.stdout.close()
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=10)
+
+    def start(local=""):
+        offset = os.fstat(output.fileno()).st_size
+        process = subprocess.Popen([*base, "-n", ns, "port-forward", "svc/" + service, str(local) + ":" + str(port),
+                                    "--address", "127.0.0.1"], stdout=output, stderr=errors)
+        try:
+            until = time.monotonic() + 15
+            pending = b""
+            while time.monotonic() < until:
+                # kubectl logs every new connection. A PIPE whose readiness
+                # line is its only consumed output eventually stalls kubectl.
+                # pread leaves the child's shared file position untouched.
+                data = os.pread(output.fileno(), 64 << 10, offset)
+                offset += len(data)
+                pending += data
+                lines = pending.split(b"\n")
+                pending = lines.pop()
+                for line in lines:
+                    match = re.search(rb"^Forwarding from 127\.0\.0\.1:(\d+) -> ", line)
+                    if match and process.poll() is None:
+                        return process, match[1].decode("ascii")
+                if process.poll() is not None:
+                    raise RuntimeError("port-forward exited before readiness")
+                time.sleep(.02)
+            raise TimeoutError("port-forward did not start")
+        except Exception:
+            stop_process(process)
             raise
 
     def stop():
         if proc is not None:
-            if proc.poll() is None:
-                proc.terminate()
-            proc.wait(timeout=10)
-            proc.stdout.close()
+            stop_process(proc)
 
     try:
         proc, local = start()
@@ -288,11 +343,17 @@ def forward(base, ns, service="agentmoor", port=7401, scheme="https"):
         endpoint.reconnect = reconnect
         yield endpoint
     finally:
-        stop()
-        if sys.exc_info()[0] is not None:
-            errors.seek(0)
-            print(errors.read()[-1200:], file=sys.stderr)
-        errors.close()
+        try:
+            stop()
+        finally:
+            if sys.exc_info()[0] is not None:
+                for stream in (output, errors):
+                    offset = max(0, os.fstat(stream.fileno()).st_size - 1200)
+                    tail = os.pread(stream.fileno(), 1200, offset)
+                    if tail:
+                        print(tail.decode("utf-8", errors="replace"), file=sys.stderr)
+            output.close()
+            errors.close()
 
 
 if __name__ == "__main__":
@@ -300,6 +361,7 @@ if __name__ == "__main__":
     parser.add_argument("--adapter", choices=BINARIES, required=True)
     parser.add_argument("--file-report", action="store_true")
     parser.add_argument("--workspace-parts", action="store_true")
+    parser.add_argument("--publication-faults", action="store_true")
     special = parser.add_mutually_exclusive_group()
     special.add_argument("--pod-loss", action="store_true")
     special.add_argument("--skill-report", action="store_true")

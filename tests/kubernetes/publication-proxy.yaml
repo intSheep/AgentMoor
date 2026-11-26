@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: publication-proxy
+spec:
+  selector: {app: publication-proxy}
+  ports: [{port: 7443}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: publication-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: publication-proxy}
+  template:
+    metadata:
+      labels: {app: publication-proxy}
+    spec:
+      automountServiceAccountToken: false
+      securityContext: {runAsNonRoot: true, runAsUser: 65532}
+      containers:
+      - name: proxy
+        image: CONTRACT_IMAGE
+        imagePullPolicy: Never
+        command: ["/opt/test/faultproxy", "--listen", ":7443", "--upstream", "https://agentmoor:7401",
+                  "--ca", "/tls/cert.pem", "--cert", "/tls/cert.pem", "--key", "/tls/key.pem"]
+        ports: [{containerPort: 7443}]
+        readinessProbe: {tcpSocket: {port: 7443}, periodSeconds: 1}
+        resources:
+          requests: {cpu: 25m, memory: 32Mi}
+          limits: {cpu: 500m, memory: 256Mi}
+        volumeMounts:
+        - {name: tls, mountPath: /tls, readOnly: true}
+      volumes:
+      - {name: tls, secret: {secretName: tls}}

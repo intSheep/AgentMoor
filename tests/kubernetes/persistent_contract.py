@@ -96,14 +96,16 @@ class PersistentContract:
         print("PERSISTENT_STAGE queued_turn_survived_control_plane_restart", flush=True)
         return turn
 
-    def verify(self, scenario, workspace_parts=False):
-        assert self.restart_evidence is not None
+    def verify(self, scenario, workspace_parts=False, *, require_queued_restart=True, min_tasks=2, pod_loss=False):
+        assert min_tasks >= 1
+        if require_queued_restart:
+            assert self.restart_evidence is not None
         # Physical backend inspection is only evidence of backend selection;
         # all business amounts, versions and checkpoints remain HTTP assertions.
         sql = lambda query: self.kube("exec", "deployment/postgres", "--", "psql", "-U", "postgres", "-d", "agentmoor", "-At", "-c", query)
         version = sql("SHOW server_version")
         counts = [int(value) for value in sql("SELECT (SELECT count(*) FROM tasks), (SELECT count(*) FROM turns), (SELECT count(*) FROM revisions), (SELECT count(*) FROM operations)").split("|")]
-        assert counts[0] >= 2 and counts[1] >= 2 and counts[2] > 0 and counts[3] > 0
+        assert counts[0] >= min_tasks and counts[1] >= 2 and counts[2] > 0 and counts[3] > 0
         object_keys = set(sql("SELECT DISTINCT r.scope || '/objects/' || r.digest FROM revisions r WHERE NOT EXISTS (SELECT 1 FROM revision_parts p WHERE p.scope=r.scope AND p.kind=r.kind AND p.asset_id=r.asset_id AND p.version=r.version)").splitlines())
         part_keys = set(sql("SELECT DISTINCT p.scope || '/parts/' || p.digest FROM operation_parts p JOIN revision_parts r ON r.scope=p.scope AND r.op=p.op").splitlines())
         representations = int(sql("SELECT count(*) FROM revision_parts"))
@@ -123,6 +125,11 @@ class PersistentContract:
         for label in ("postgres", "s3"):
             pod, = json.loads(self.kube("get", "pods", "-l", "app=" + label, "-o", "json"))["items"]
             images[label] = [{"image": item["image"], "image_id": item["imageID"]} for item in pod["status"]["containerStatuses"]]
+        limitations = ["No live model; fixed real Codex CLI uses a scripted Responses endpoint."]
+        if not pod_loss:
+            limitations.insert(0, "No abrupt Worker Pod-loss combination on PostgreSQL/S3; separate P0 acceptance covers it.")
+        else:
+            limitations.append("Public GC checks retain the 24-hour orphan window; post-window orphan deletion is covered by service tests, not this cluster run.")
         evidence = {"scenario": scenario, "metadata_backend": "postgresql", "postgres_version": version,
                     "object_backend": "s3-compatible-minio", "minio_version": self.kube("exec", "deployment/s3", "--", "minio", "--version").splitlines()[0],
                     "images": images, "postgres_rows": dict(zip(("tasks", "turns", "revisions", "operations"), counts)),
@@ -131,5 +138,5 @@ class PersistentContract:
                     "workspace_transfer": "tar-parts.v1" if workspace_parts else "full",
                     "sqlite_or_local_objects_present": False,
                     "queued_restart": self.restart_evidence,
-                    "limitations": ["No abrupt Worker Pod-loss combination on PostgreSQL/S3; separate P0 acceptance covers it.", "No live model; fixed real Codex CLI uses a scripted Responses endpoint."]}
+                    "limitations": limitations}
         print("PERSISTENT_RESULT " + json.dumps(evidence, sort_keys=True), flush=True)

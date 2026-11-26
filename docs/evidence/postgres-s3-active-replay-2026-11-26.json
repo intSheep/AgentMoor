@@ -1,0 +1,217 @@
+{
+  "status": "passed",
+  "recorded_at_utc": "2026-11-26T15:52:05.656417+00:00",
+  "source_commit": "75b44a181b75bd59f13e38b0d4ed02965bda9c5a",
+  "source_provenance": {
+    "host_fixture_commit": "75b44a181b75bd59f13e38b0d4ed02965bda9c5a",
+    "prebuilt_worker_api_image_commit": "54cb556a3786b055e1f6f927196b069109b26e07",
+    "same_commit_for_host_and_image": false,
+    "description": "The host loaded the new active replay helper and call sites. The already-built image remained from 54cb556; 75b44a1 changed only host Python acceptance fixtures."
+  },
+  "execution": {
+    "command": "PATH=/Applications/OrbStack.app/Contents/MacOS/xbin:$PATH python3 tests/kubernetes/contract.py --adapter codex --context kind-agentmoor-47539d18f7f9 --kubeconfig \"$KUBECONFIG\" --image agentmoor-contract:agentmoor-47539d18f7f9-codex --backend postgres-s3 --workspace-parts --file-report > /private/tmp/agentmoor-v2-active-replay-k8s.log 2>&1",
+    "kubeconfig": "Dedicated kubeconfig owned by the already-running V2 suite; represented by $KUBECONFIG rather than its disposable host path.",
+    "root_tool_session": 67124,
+    "exit_code": 0,
+    "exit_code_observation": "Confirmed by the root agent from the completed real command session.",
+    "existing_kind_cluster": "agentmoor-47539d18f7f9",
+    "new_dedicated_namespace": true,
+    "namespace_id_recorded": false,
+    "created_a_second_kind_cluster": false,
+    "full_v2_suite_rerun": false
+  },
+  "fixture": {
+    "native_cli": "codex-cli 0.171.0-alpha.13",
+    "model": "scripted-responses",
+    "live_model_credentials_used": false,
+    "workspace_transfer": "tar-parts.v1",
+    "image": "agentmoor-contract:agentmoor-47539d18f7f9-codex",
+    "image_id": "sha256:13bbc418f34a9ba700c280e3ee2932508ad9d6ef711b6ae9779fe76bdb0dce10",
+    "kubernetes_node_image": "kindest/node:v1.35.0"
+  },
+  "coverage": {
+    "v2_exit_gate": "2: replay an active follow-up without creating another execution owner",
+    "public_put_same_uuid_while_running": 2,
+    "unchanged_full_task_record_and_checkpoint": true,
+    "one_job_one_pod_same_container_zero_restarts": true,
+    "observed_two_additional_dispatcher_cycles": true,
+    "active_mcp_cancel_within_25_seconds_checkpoint_preserved": true,
+    "exact_native_execution_count_claimed": false,
+    "pod_loss_or_900_second_deadline_retested": false
+  },
+  "cleanup_at_probe_exit": {
+    "namespace_cleanup_reported_by_root": true,
+    "namespace_deletion_requested_by_contract_finally": true,
+    "namespace_deletion_waited": false,
+    "observation_basis": "The root confirmed exit 0 and namespace cleanup. contract.py finally uses kubectl delete namespace --wait=false; no namespace identity or separate synchronous deletion check is recorded here.",
+    "whole_cluster_cleaned_by_this_probe": false,
+    "existing_cluster_retained_for_long_suite_session": 90712
+  },
+  "host_checks": {
+    "source_commit": "75b44a181b75bd59f13e38b0d4ed02965bda9c5a",
+    "commands": [
+      "make fmt",
+      "make check",
+      "make demo"
+    ],
+    "status": "passed",
+    "observation_basis": "Root reported all three commands exited 0 with no Go/Python source difference from this commit."
+  },
+  "limitations": [
+    "This is a separate short probe using host source 75b44a1 and the prebuilt 54cb556 image; it does not retrofit an active-replay assertion into the earlier full-suite run.",
+    "No native command execution counter was enabled for this file-report probe. The proof checks Job/Pod/container identity and zero Worker restarts, not an exact native execution count.",
+    "No Worker SIGKILL, lost-Pod deadline, or publication-fault matrix was rerun by this short probe. The separate long suite was still running at probe exit.",
+    "Codex with scripted Responses only; this evidence does not establish live-model behavior, other CLI combinations, or production high availability."
+  ],
+  "raw_log": {
+    "path_at_execution": "/private/tmp/agentmoor-v2-active-replay-k8s.log",
+    "sha256": "4be5a975ecffa63ce67cdb94bb05e893028b3b2f54238a7e631b3b203f47b89f"
+  },
+  "raw_result_lines": [
+    "ACTIVE_REPLAY_RESULT {\"assets_empty\": true, \"checkpoint_sha256\": \"db6e25c69109f4beefeefd3a8dee74936471e6c5440ce082a98fe6a266c8c96b\", \"checkpoint_unchanged\": true, \"image_id\": \"sha256:13bbc418f34a9ba700c280e3ee2932508ad9d6ef711b6ae9779fe76bdb0dce10\", \"job_count\": 1, \"job_uid\": \"431fe724-b600-4cf8-bd40-c20c386c282a\", \"observation_seconds\": 2.387, \"pod_count\": 1, \"pod_uid\": \"af1e5c71-453b-4a72-93b6-c88374c295c0\", \"record_unchanged\": true, \"same_uuid_replays\": 2, \"state\": \"running\", \"turn_id\": \"b808bd42-856f-4a0e-8218-2023e49ef145\", \"worker_container_id\": \"containerd://b56f52610951f8f935e4b71fb738698884a1314879df4d96ab777ce2526cef12\", \"worker_restart_count\": 0}",
+    "FILE_REPORT_RESULT {\"active_mcp_cancel\": \"cancelled-with-checkpoint-preserved\", \"artifacts\": [{\"content_path\": \"/v1/content?id=out%2Freport.json&kind=artifact&version=1\", \"id\": \"out/report.json\", \"kind\": \"artifact\", \"sha256\": \"9605e9e783e6b1056348301df6e07b6f30c3226fb20e7ea7ebf82e8bf2f0263f\", \"version\": 1}, {\"content_path\": \"/v1/content?id=turns%2Fdcc85158-3428-4833-94af-cc7d6605f1d6%2Fout%2Freport.json&kind=artifact&version=1\", \"id\": \"turns/dcc85158-3428-4833-94af-cc7d6605f1d6/out/report.json\", \"kind\": \"artifact\", \"sha256\": \"2e92118fcd93d53d26583e11172f056e8e7cffb8b06b2befa388e55378759e0f\", \"version\": 1}, {\"content_path\": \"/v1/content?id=turns%2F894caaf3-7dca-4b18-bec1-349a46786c72%2Fout%2Freport.json&kind=artifact&version=1\", \"id\": \"turns/894caaf3-7dca-4b18-bec1-349a46786c72/out/report.json\", \"kind\": \"artifact\", \"sha256\": \"d0c251d1c35e7bacf0160b168e3ef2449b9a696f6106332440f6bbf593411aab\", \"version\": 1}, {\"content_path\": \"/v1/content?id=turns%2F263e6d3b-1955-4597-990f-fcff5dd813a3%2Fout%2Freport.json&kind=artifact&version=1\", \"id\": \"turns/263e6d3b-1955-4597-990f-fcff5dd813a3/out/report.json\", \"kind\": \"artifact\", \"sha256\": \"d0c251d1c35e7bacf0160b168e3ef2449b9a696f6106332440f6bbf593411aab\", \"version\": 1}], \"business_rows\": 2, \"cli\": \"codex-cli 0.171.0-alpha.13\", \"database_write_retry\": \"trigger-failure-then-imported-and-already-imported\", \"missing_input\": \"failed-without-assets\", \"model\": \"scripted-responses\", \"pod_uids\": [\"8946cfba-2417-48d9-a329-296cad60fa2e\", \"782e37a8-1aa7-4c83-a121-eb1589cd6742\", \"7264ed6d-550c-4957-aef9-896b5407c1b8\"], \"recovery_pod_uid\": \"52737215-965b-46a6-a850-4ae636f47104\", \"session_sha256\": \"fe1ce6f2dc7b518f3d29d0c355ef3300d317e0c3716dee5f3ca300e0eda1d121\", \"workspace_loss_simulation\": \"same-session-required-files-removed-before-tool\"}",
+    "CROSS_TENANT_RESULT {\"accepted_state\": \"queued\", \"api_pod_uids\": [\"de389919-508e-4634-99db-2ad47bb868ff\", \"c1bac22c-288f-430f-a3b3-c84efc60bc29\"], \"asset_kinds\": [\"artifact\", \"session\", \"workspace\"], \"asset_versions_checked\": 16, \"checkpoint_denial_status\": 404, \"content_denial_status\": 404, \"content_denials\": 16, \"foreign_assets_empty\": true, \"foreign_context_read\": true, \"foreign_heads_empty\": true, \"foreign_read_only\": true, \"kind_counts\": {\"artifact\": 8, \"session\": 4, \"workspace\": 4}, \"only_tenant_differs\": true, \"owner_rechecked_versions\": 16, \"restored_state\": \"queued\", \"revision_header_absent\": true, \"same_uuid_replays\": 2, \"scenario\": \"file-report\", \"task_denial_status\": 404}",
+    "PERSISTENT_RESULT {\"images\": {\"postgres\": [{\"image\": \"docker.io/library/postgres:18-alpine\", \"image_id\": \"sha256:d4e55489302f9c75af116f3b3147f613e712f07e5eb8dabec82d9147dd0a00e5\"}], \"s3\": [{\"image\": \"docker.io/pgsty/minio:RELEASE.2026-04-17T00-00-00Z\", \"image_id\": \"sha256:c007f271acf939425e3b553813c2c4531069cd467a59f84ec96121937ff414d9\"}]}, \"limitations\": [\"No abrupt Worker Pod-loss combination on PostgreSQL/S3; separate P0 acceptance covers it.\", \"No live model; fixed real Codex CLI uses a scripted Responses endpoint.\"], \"metadata_backend\": \"postgresql\", \"minio_version\": \"minio version RELEASE.2026-04-17T00-00-00Z (commit-id=f48dbe777d0e066d2e74d5e671a8ca21c2ec1664)\", \"object_backend\": \"s3-compatible-minio\", \"postgres_rows\": {\"operations\": 16, \"revisions\": 16, \"tasks\": 2, \"turns\": 5}, \"postgres_version\": \"18.7\", \"queued_restart\": {\"accepted_state\": \"queued\", \"api_pod_uids\": [\"de389919-508e-4634-99db-2ad47bb868ff\", \"c1bac22c-288f-430f-a3b3-c84efc60bc29\"], \"restored_state\": \"queued\", \"same_uuid_replays\": 2, \"turn_id\": \"dcc85158-3428-4833-94af-cc7d6605f1d6\"}, \"scenario\": \"file-report\", \"sqlite_or_local_objects_present\": false, \"verified_object_count\": 24, \"verified_part_object_count\": 14, \"workspace_part_revisions\": 4, \"workspace_transfer\": \"tar-parts.v1\"}"
+  ],
+  "active_replay_result": {
+    "assets_empty": true,
+    "checkpoint_sha256": "db6e25c69109f4beefeefd3a8dee74936471e6c5440ce082a98fe6a266c8c96b",
+    "checkpoint_unchanged": true,
+    "image_id": "sha256:13bbc418f34a9ba700c280e3ee2932508ad9d6ef711b6ae9779fe76bdb0dce10",
+    "job_count": 1,
+    "job_uid": "431fe724-b600-4cf8-bd40-c20c386c282a",
+    "observation_seconds": 2.387,
+    "pod_count": 1,
+    "pod_uid": "af1e5c71-453b-4a72-93b6-c88374c295c0",
+    "record_unchanged": true,
+    "same_uuid_replays": 2,
+    "state": "running",
+    "turn_id": "b808bd42-856f-4a0e-8218-2023e49ef145",
+    "worker_container_id": "containerd://b56f52610951f8f935e4b71fb738698884a1314879df4d96ab777ce2526cef12",
+    "worker_restart_count": 0
+  },
+  "file_report_result": {
+    "active_mcp_cancel": "cancelled-with-checkpoint-preserved",
+    "artifacts": [
+      {
+        "content_path": "/v1/content?id=out%2Freport.json&kind=artifact&version=1",
+        "id": "out/report.json",
+        "kind": "artifact",
+        "sha256": "9605e9e783e6b1056348301df6e07b6f30c3226fb20e7ea7ebf82e8bf2f0263f",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2Fdcc85158-3428-4833-94af-cc7d6605f1d6%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/dcc85158-3428-4833-94af-cc7d6605f1d6/out/report.json",
+        "kind": "artifact",
+        "sha256": "2e92118fcd93d53d26583e11172f056e8e7cffb8b06b2befa388e55378759e0f",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2F894caaf3-7dca-4b18-bec1-349a46786c72%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/894caaf3-7dca-4b18-bec1-349a46786c72/out/report.json",
+        "kind": "artifact",
+        "sha256": "d0c251d1c35e7bacf0160b168e3ef2449b9a696f6106332440f6bbf593411aab",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2F263e6d3b-1955-4597-990f-fcff5dd813a3%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/263e6d3b-1955-4597-990f-fcff5dd813a3/out/report.json",
+        "kind": "artifact",
+        "sha256": "d0c251d1c35e7bacf0160b168e3ef2449b9a696f6106332440f6bbf593411aab",
+        "version": 1
+      }
+    ],
+    "business_rows": 2,
+    "cli": "codex-cli 0.171.0-alpha.13",
+    "database_write_retry": "trigger-failure-then-imported-and-already-imported",
+    "missing_input": "failed-without-assets",
+    "model": "scripted-responses",
+    "pod_uids": [
+      "8946cfba-2417-48d9-a329-296cad60fa2e",
+      "782e37a8-1aa7-4c83-a121-eb1589cd6742",
+      "7264ed6d-550c-4957-aef9-896b5407c1b8"
+    ],
+    "recovery_pod_uid": "52737215-965b-46a6-a850-4ae636f47104",
+    "session_sha256": "fe1ce6f2dc7b518f3d29d0c355ef3300d317e0c3716dee5f3ca300e0eda1d121",
+    "workspace_loss_simulation": "same-session-required-files-removed-before-tool"
+  },
+  "cross_tenant_result": {
+    "accepted_state": "queued",
+    "api_pod_uids": [
+      "de389919-508e-4634-99db-2ad47bb868ff",
+      "c1bac22c-288f-430f-a3b3-c84efc60bc29"
+    ],
+    "asset_kinds": [
+      "artifact",
+      "session",
+      "workspace"
+    ],
+    "asset_versions_checked": 16,
+    "checkpoint_denial_status": 404,
+    "content_denial_status": 404,
+    "content_denials": 16,
+    "foreign_assets_empty": true,
+    "foreign_context_read": true,
+    "foreign_heads_empty": true,
+    "foreign_read_only": true,
+    "kind_counts": {
+      "artifact": 8,
+      "session": 4,
+      "workspace": 4
+    },
+    "only_tenant_differs": true,
+    "owner_rechecked_versions": 16,
+    "restored_state": "queued",
+    "revision_header_absent": true,
+    "same_uuid_replays": 2,
+    "scenario": "file-report",
+    "task_denial_status": 404
+  },
+  "persistent_result": {
+    "images": {
+      "postgres": [
+        {
+          "image": "docker.io/library/postgres:18-alpine",
+          "image_id": "sha256:d4e55489302f9c75af116f3b3147f613e712f07e5eb8dabec82d9147dd0a00e5"
+        }
+      ],
+      "s3": [
+        {
+          "image": "docker.io/pgsty/minio:RELEASE.2026-04-17T00-00-00Z",
+          "image_id": "sha256:c007f271acf939425e3b553813c2c4531069cd467a59f84ec96121937ff414d9"
+        }
+      ]
+    },
+    "limitations": [
+      "No abrupt Worker Pod-loss combination on PostgreSQL/S3; separate P0 acceptance covers it.",
+      "No live model; fixed real Codex CLI uses a scripted Responses endpoint."
+    ],
+    "metadata_backend": "postgresql",
+    "minio_version": "minio version RELEASE.2026-04-17T00-00-00Z (commit-id=f48dbe777d0e066d2e74d5e671a8ca21c2ec1664)",
+    "object_backend": "s3-compatible-minio",
+    "postgres_rows": {
+      "operations": 16,
+      "revisions": 16,
+      "tasks": 2,
+      "turns": 5
+    },
+    "postgres_version": "18.7",
+    "queued_restart": {
+      "accepted_state": "queued",
+      "api_pod_uids": [
+        "de389919-508e-4634-99db-2ad47bb868ff",
+        "c1bac22c-288f-430f-a3b3-c84efc60bc29"
+      ],
+      "restored_state": "queued",
+      "same_uuid_replays": 2,
+      "turn_id": "dcc85158-3428-4833-94af-cc7d6605f1d6"
+    },
+    "scenario": "file-report",
+    "sqlite_or_local_objects_present": false,
+    "verified_object_count": 24,
+    "verified_part_object_count": 14,
+    "workspace_part_revisions": 4,
+    "workspace_transfer": "tar-parts.v1"
+  }
+}

@@ -77,3 +77,15 @@ PG/S3 集群复验的前两次 HTTP 500 保留为失败记录。补充诊断及 
 `e8deb796` 的 PG/S3 分片专项通过真实 Codex 文件和固定 Skill 的新 Pod 接续、取消后恢复、旧下载与 queued API 重建；S3 中确认实际分片引用且没有本地存储回退。[集群证据](evidence/workspace-parts-cluster-2026-11-26.json)。真实模型及 PG/S3 发布故障与无应答 Worker 丢失组合尚未执行，不据此关闭整个 P1/V2。
 
 同一 `e8deb796` 的四 CLI 完整 `make test-k8s` 文本矩阵通过，含两次自动新 Pod 追问与两种取消；`make fmt/check/demo` 与集成 PostgreSQL/S3 服务回归也通过。固定版本、镜像及各自范围均在上述结构化证据中，原始大工作区测量仍保留此前的 `48e9290` 来源。
+
+## 2026-11-26 UTC：持久化故障套件与转发回归
+
+新增 `make test-k8s-v2`，同一 kind 集群和固定 Codex 镜像依次运行 PG/S3 文件、固定 Skill、发布故障及真实 Worker 失联。每场景重启 queued 状态的 API，再检查合法外租户凭据对历史固定版本、任务和 checkpoint 的拒读。执行中原 UUID 重投另检查完整记录和唯一 Job/Pod/容器不变。
+
+`109b534` 的独立故障/失联入口已通过；完整套件 `54cb556` 最后一次外租户读取遇到 TLS 握手超时，整体失败，原始结果保留为[失败证据](evidence/postgres-s3-v2-suite-failed-2026-11-26.json)。离线子进程复现了旧转发夹具只消费启动首行、后续 stdout 管道填满时卡住的问题；`89c3c155` 改用临时文件和 `pread` 检查完整启动行。五项回归加入 `make check`，没有增加 HTTP 重试、放宽 404 或缩短生产期限。该复现与原超时相符，原异常链本身不直接证明同一原因。
+
+`89c3c155` 的 `make fmt/check/demo`、五项转发回归及完整四 CLI `make test-k8s` 已通过；四 CLI 原生取消约为 2.3、3.0、3.8、3.8 秒，自有矩阵集群已清理。
+
+同一干净源码的 `make test-k8s-v2` 最终退出 0：文件、固定 Skill、故障/失联三个 PG/S3 场景全部通过，各自完成 queued API 重建和合法外租户拒读，分别重读 16、17、48 份固定版本并核摘要。两个真实 running 回合原 UUID 重投各两次，Job/Pod/容器身份不变且零重启。八个发布边界恢复、三次 manifest 失败耗尽、14 个独立 Pod 原生计数各为 1，以及真实 SIGKILL 137 后的生产 900 秒期限均通过；观察 interrupted 比公开期限晚约 1.66 秒，新 UUID/Pod 沿原会话恢复，旧 UUID 不创建替代 Job。最终核验 PostgreSQL 18.7、MinIO 固定版本及实际 S3 parts，无本地后端回退，专属集群已清理。[完整套件证据](evidence/postgres-s3-v2-suite-2026-11-26.json) · [复验与限制](persistent-faults-acceptance.md)。
+
+本次达到 P1/V2 无模型密钥工程门槛。真实模型按用户选择后补；多控制面副本、生产 HA、不可信代码沙箱和凭据治理仍属后续阶段。分钟级公开 GC 只验证 24 小时窗口内的历史/pending 保护，过期孤儿实际删除由服务测试另证，不扩大本次结果范围。
