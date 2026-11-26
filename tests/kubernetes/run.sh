@@ -6,7 +6,16 @@ agents=${AGENT:-"codex gemini-cli opencode claude-code"}
 images=""
 persistent=0
 persistent_faults=0
-if [ "${1:-}" = "--persistent-faults" ]; then
+persistent_v2=0
+if [ "${1:-}" = "--persistent-v2" ]; then
+    persistent=1
+    persistent_v2=1
+    shift
+    if [ "$agents" != "codex" ] || [ "$#" -ne 0 ]; then
+        echo "V2 contract requires AGENT=codex and no extra flags" >&2
+        exit 1
+    fi
+elif [ "${1:-}" = "--persistent-faults" ]; then
     persistent=1
     persistent_faults=1
     shift
@@ -51,7 +60,12 @@ for agent in $agents; do
     echo "Running Kubernetes contract for $agent"
     docker build -f tests/kubernetes/Dockerfile --build-arg AGENT="$agent" -t "$image" .
     kind load docker-image "$image" --name "$name"
-    if [ "$persistent_faults" -eq 1 ]; then
+    if [ "$persistent_v2" -eq 1 ]; then
+        for scenario in --file-report --skill-report; do
+            python3 tests/kubernetes/contract.py --adapter "$agent" --context "kind-$name" --kubeconfig "$KUBECONFIG" --image "$image" --backend postgres-s3 --workspace-parts "$scenario"
+        done
+        python3 tests/kubernetes/contract.py --adapter "$agent" --context "kind-$name" --kubeconfig "$KUBECONFIG" --image "$image" --backend postgres-s3 --pod-loss --workspace-parts --publication-faults
+    elif [ "$persistent_faults" -eq 1 ]; then
         python3 tests/kubernetes/contract.py --adapter "$agent" --context "kind-$name" --kubeconfig "$KUBECONFIG" --image "$image" --backend postgres-s3 --pod-loss --workspace-parts --publication-faults
     elif [ "$persistent" -eq 1 ]; then
         for scenario in --file-report --skill-report; do

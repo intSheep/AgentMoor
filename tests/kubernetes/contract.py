@@ -24,6 +24,7 @@ from diagnostics import dump_failure_logs
 from skill_report_contract import SkillCatalog, SkillReportClient, run as run_skill_report
 from runtimes import BINARIES, environment
 from persistent_contract import PersistentContract
+from tenant_isolation_contract import verify as verify_tenant_isolation
 
 
 def check(*args, data=None):
@@ -122,6 +123,11 @@ def main(opts, temp):
             kube("rollout", "status", "deployment/publication-proxy", "--timeout=150s")
         with forward(base, ns) as endpoint:
             context = ssl.create_default_context(cafile=str(cert))
+            def verify_storage(scenario, **options):
+                foreign_scope = {**scope, "tenant": "other-saas"}
+                foreign = ReportClient(endpoint, issue(allocation=foreign_scope), scope["runtime"], context)
+                verify_tenant_isolation(client, foreign, scope, storage.restart_evidence, scenario=scenario)
+                storage.verify(scenario, workspace_parts=opts.workspace_parts, **options)
             if opts.skill_report:
                 catalog = SkillCatalog(endpoint, issue("--write"), context)
                 config["skill_pins"] = [catalog.pin]
@@ -141,7 +147,7 @@ def main(opts, temp):
                         run_pod_loss(client, kube, temp, cert, wait_job,
                                      publication_hook=run_publication_faults,
                                      queued_restart=storage.restart_queued_turn, collect=collect)
-                        storage.verify("persistent-faults", workspace_parts=True, min_tasks=1,
+                        verify_storage("persistent-faults", min_tasks=1,
                                        require_queued_restart=True, pod_loss=True)
                     else:
                         run_pod_loss(client, kube, temp, cert, wait_job)
@@ -162,7 +168,7 @@ def main(opts, temp):
                 run_skill_report(client, catalog, kube, temp, cert, wait_job, negative,
                                  queued_restart=storage.restart_queued_turn if storage else None)
                 if storage:
-                    storage.verify("skill-report", workspace_parts=opts.workspace_parts)
+                    verify_storage("skill-report")
                 return
             if opts.file_report:
                 negative = (issue("--submit", allocation=cancellation_scope),
@@ -172,7 +178,7 @@ def main(opts, temp):
                 run_file_report(client, kube, temp, cert, wait_job, negative,
                                 queued_restart=storage.restart_queued_turn if storage else None)
                 if storage:
-                    storage.verify("file-report", workspace_parts=opts.workspace_parts)
+                    verify_storage("file-report")
                 return
             client.submit()
             try:

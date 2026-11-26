@@ -2,7 +2,9 @@
 
 本入口把文件块发布故障和活跃 Worker 突然丢失放在同一套 PostgreSQL/S3 环境中验证。它使用固定版本的真实 Codex CLI、脚本 Responses 模型和合成数据，不需要模型密钥。
 
-**当前为阶段性结果，尚未记为整体验收通过。** 源码 `109b534a5e9d65dcd19ffb34cab4c118f18406b7` 已完成八个发布边界、三次 manifest 失败耗尽及其新 UUID 恢复，随后真实 SIGKILL 退出 137；截至 2026-11-26 15:20 UTC，仍在等待公开的生产 deadline `2026-11-26T15:30:25.760940572Z`。期限后的 interrupted、旧 UUID 重投、新 UUID 恢复和最终后端核验尚无本次成功结果，见[阶段记录](#2026-11-26阶段记录)。
+**本次组合验收通过。** 源码 `109b534a5e9d65dcd19ffb34cab4c118f18406b7` 的长入口已成功结束并清理专属集群：八个发布边界、三次 manifest 失败耗尽及新 UUID 恢复、SIGKILL 137、真实生产期限、旧 UUID 不重建 Job、新 UUID 恢复和最终 PG/S3 核验均通过。[完整结果](#2026-11-26实际结果) · [原始结构化证据](evidence/postgres-s3-faults-2026-11-26.json)
+
+这还不是整个 V2/P1 退出证明：本次没有把例 1–3 放在同一 suite 命令中，也没有明确验证另一合法租户凭据拒读这些旧固定引用。后续同套件和租户隔离结果需要独立来源证据，不能回填为本次 `109b534` 已通过的项目。[V2 退出门槛](verification-matrix.md#v2-退出门槛)
 
 ## 怎样运行
 
@@ -56,21 +58,26 @@ barrier 出现后，夹具修改当前 Worker 中已经冻结的非 Artifact 文
 
 测试在发布暂停、存在 pending 以及恢复成功后，用单独的作用域 GC 凭据调用公开 `/v1/gc`，再经公开 HTTP 重新下载此前全部固定版本，核对身份、大小和摘要。文件块的历史引用不只看 head；最终后端检查同时核对普通 `/objects/` 和历史 `/parts/` 对象。
 
-公开 GC 仍保留 **24 小时**孤儿窗口。约 15–25 分钟的本次组合只能验证历史版本及有效 pending 在这一窗口内不被误删，不能证明 24 小时后真的删除孤儿。过期孤儿的真实删除正控制和失败重试仍由 `make test-services` 中的存储测试覆盖。没有改数据库时间、任务状态、生产超时或测试时钟。
+公开 GC 仍保留 **24 小时**孤儿窗口。本次分钟级组合只验证历史版本及有效 pending 在这一窗口内不被误删，不能证明 24 小时后真的删除孤儿。过期孤儿的真实删除正控制和失败重试仍由 `make test-services` 中的存储测试覆盖。没有改数据库时间、任务状态、生产超时或测试时钟。
 
-## 2026-11-26 阶段记录
+## 2026-11-26 实际结果
 
-当前记录来源为 `109b534a5e9d65dcd19ffb34cab4c118f18406b7` 的实际运行。固定原生 CLI 为 Codex `0.171.0-alpha.13`，模型为脚本 Responses；配置的服务镜像为 PostgreSQL `18-alpine` 和 MinIO `RELEASE.2026-04-17T00-00-00Z`，实际后端版本、对象计数与完整镜像身份须等待最终 `PERSISTENT_RESULT`。
+运行源码固定为 `109b534a5e9d65dcd19ffb34cab4c118f18406b7`，不替换成后续文档提交。固定原生 CLI 为 Codex `0.171.0-alpha.13`，模型为脚本 Responses。实际 PostgreSQL 为 `18.7`，MinIO 为 `RELEASE.2026-04-17T00-00-00Z`。命令退出码为 0，已输出完整 `POD_LOSS_RESULT`、`PERSISTENT_RESULT`，自有集群已清理。
 
-| 已观察阶段 | 当前结果 |
+| 验收项 | 本次结果 |
 | --- | --- |
-| 首份报告与换 Pod 修订 | 已完成；queued 追问更换控制面、原 UUID 重投阶段已完成 |
-| Begin / manifest / part / commit 的 before、after 共八个回合 | 已完成；每个选中故障命中一次，同操作/清单、冻结 marker、checkpoint 和原生计数断言通过 |
-| manifest-before 连续三次 503 | 按预期 failed，无成功资产，checkpoint 保持；随后新 UUID 恢复已完成 |
-| 发布阶段汇总 | 已记录 `successful_rounds=11`、`failed_rounds=1`，包含初始、修订、八个故障恢复及耗尽后的恢复 |
-| 活跃工具 Worker 突然丢失 | 已核对退出 137、删除专属 Job/Pod；公开状态仍为 running，无 Worker 失败确认 |
-| 900 秒生产 deadline | `2026-11-26T15:30:25.760940572Z`；截至 15:20 UTC 仍在等待，尚未观察 interrupted |
-| 丢失后的原 UUID 不重建 Job、新 UUID 新 Pod 恢复 | 尚未完成本次断言 |
-| 最终 PG/S3 核验、完整结果与清理 | 尚未完成，未生成成功证据 JSON |
+| 首份报告与换 Pod 修订 | 通过；queued 追问更换控制面后仍为 queued，原 UUID 重投两次并恢复单 Job 调度 |
+| Begin / manifest / part / commit 的 before、after 共八个回合 | 全部成功；各命中一次，固定操作、manifest、冻结 marker 与 checkpoint 断言通过 |
+| manifest-before 连续三次 503 | 按预期 failed，无成功资产、checkpoint 不前进；随后新 UUID 恢复成功 |
+| 原生执行计数 | 全部 14 个独立 Pod 各计数 1：12 个成功、1 个发布耗尽失败、1 个真实丢失 |
+| 活跃工具 Worker 突然丢失 | SIGKILL 退出 137，删除专属 Job/Pod；最初公开状态仍为 running，无 Worker 确认 |
+| 900 秒生产 deadline | 声明 `2026-11-26T15:30:25.760940572Z`；观察 interrupted 为 `2026-11-26T15:30:27.127846+00:00`，约晚 1.37 秒 |
+| 丢失后的同 UUID 与新 UUID | 原 UUID 重投两次，新增 Job 为 0；新 UUID、新 Pod 恢复成功，沿用原会话，未恢复未发布脏文件 |
+| checkpoint、业务结果与历史引用 | checkpoint 保持，业务库仍两行；GC 和丢失后恢复阶段逐一重读此前 44 份历史引用并核 SHA-256 |
+| PostgreSQL 实际记录 | tasks 1、turns 13、revisions 48、operations 49 |
+| S3 与文件块表示 | 12 份 Workspace parts 版本；核对 40 个被引用对象，其中 part 对象 22 个；无 SQLite/本地对象回退 |
+| 同源码默认四 CLI 回归 | Codex、Gemini CLI、OpenCode、Claude Code 全部通过，专属集群已清理 |
 
-只有本次运行输出完整 `POD_LOSS_RESULT`、`PERSISTENT_RESULT` 且命令成功结束后，才能把本页更新为组合验收通过。现有阶段记录不能替代该结果，也不代表真实模型、多控制面副本或生产高可用验收。
+同源码的 `make test-k8s` 另跑默认文本工作流：四个 CLI 均验证交付、两次新 Pod 连续追问、活跃追问和原生执行取消；原生取消约为 4.6、3.1、3.8、3.9 秒。各 CLI 的固定版本与实际镜像 ID，以及长组合全部九个 case 的完整 ledger、14 个计数、Pod 身份、摘要和后端信息，均保存在[证据 JSON](evidence/postgres-s3-faults-2026-11-26.json)，两份真实 RESULT 原样保留。
+
+`make fmt`、`make check`、`make demo` 在创建该源码提交前、相同 Go/Python 源码树上通过，不冒称文档更新后又重跑。组合故障与 Pod 丢失本次覆盖的是 Codex + `tar-parts.v1` + PG/S3；默认四 CLI 回归是另一条文本工作流，不据此扩成所有 CLI 的同一故障组合。真实模型、多控制面副本和生产高可用仍未验收。

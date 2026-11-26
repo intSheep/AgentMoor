@@ -2,6 +2,7 @@
 .PHONY: test-worker-file-report test-k8s-file-report test-k8s-skills test-k8s-persistent test-k8s-pod-loss
 .PHONY: test-k8s-workspace-parts
 .PHONY: test-k8s-persistent-faults
+.PHONY: test-k8s-v2
 
 check: test-file-report
 	sh tests/check-kind-prereqs.sh
@@ -58,6 +59,11 @@ test-k8s-workspace-parts: check-kind-prereqs
 test-k8s-persistent-faults: check-kind-prereqs
 	$(MAKE) build
 	AGENT=codex sh tests/kubernetes/run.sh --persistent-faults
+
+# One kind/image: files, pinned Skills, cross-tenant denial, faults and 900s loss.
+test-k8s-v2: check-kind-prereqs
+	$(MAKE) build
+	AGENT=codex sh tests/kubernetes/run.sh --persistent-v2
 
 # Uses the production 15-minute deadline. Keep this separate from the short smoke.
 test-k8s-pod-loss: check-kind-prereqs
