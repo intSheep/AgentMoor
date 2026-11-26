@@ -15,19 +15,20 @@ import (
 )
 
 type Config struct {
-	Scope           asset.Scope     `json:"scope"`
-	Endpoint        string          `json:"endpoint"`
-	Workspace       string          `json:"workspace"`
-	Sessions        string          `json:"sessions,omitempty"`
-	Artifacts       string          `json:"artifacts,omitempty"` // Relative to Workspace.
-	ArtifactSession string          `json:"artifact_session,omitempty"`
-	ManagedSkills   []string        `json:"managed_skills,omitempty"`
-	SkillPins       []task.SkillPin `json:"skill_pins,omitempty"`
-	StateDir        string          `json:"state_dir"`
-	AdapterVersion  string          `json:"adapter_version,omitempty"`
-	RuntimeCLI      string          `json:"runtime_cli,omitempty"`
-	RuntimeVersion  string          `json:"runtime_version,omitempty"`
-	NativeSessions  bool            `json:"native_sessions,omitempty"`
+	Scope             asset.Scope     `json:"scope"`
+	Endpoint          string          `json:"endpoint"`
+	Workspace         string          `json:"workspace"`
+	Sessions          string          `json:"sessions,omitempty"`
+	Artifacts         string          `json:"artifacts,omitempty"` // Relative to Workspace.
+	ArtifactSession   string          `json:"artifact_session,omitempty"`
+	ManagedSkills     []string        `json:"managed_skills,omitempty"`
+	SkillPins         []task.SkillPin `json:"skill_pins,omitempty"`
+	StateDir          string          `json:"state_dir"`
+	AdapterVersion    string          `json:"adapter_version,omitempty"`
+	RuntimeCLI        string          `json:"runtime_cli,omitempty"`
+	RuntimeVersion    string          `json:"runtime_version,omitempty"`
+	NativeSessions    bool            `json:"native_sessions,omitempty"`
+	WorkspaceTransfer string          `json:"workspace_transfer,omitempty"`
 }
 
 func LoadConfig(name string) (Config, error) {
@@ -71,6 +72,9 @@ func resolve(p string) (string, error) {
 }
 
 func (c Config) Validate() error {
+	if c.WorkspaceTransfer != "" && c.WorkspaceTransfer != asset.TarPartsFormat {
+		return fmt.Errorf("unsupported workspace_transfer")
+	}
 	if err := task.ValidSkillPins(c.SkillPins); err != nil {
 		return err
 	}

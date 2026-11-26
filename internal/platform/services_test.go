@@ -37,6 +37,8 @@ func TestPostgresAndS3(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer c.Close()
+	checkTarPartsStorage(t, c, scope("integration-parts"))
+	checkTarPartsCollection(t, c, scope("integration-parts-gc"))
 	checkTurnQueue(t, c, scope("followup"))
 	s := scope("integration")
 	spec := task.Spec{Instruction: "summarize rows", Input: "one,two", Output: "summary.txt"}

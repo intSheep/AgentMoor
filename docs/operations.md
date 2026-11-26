@@ -150,3 +150,19 @@ python3 tests/native_roundtrip.py codex /absolute/path/to/codex
 ```
 
 第一个参数也可以是 `claude-code`、`gemini-cli` 或 `opencode`。本次使用的精确版本见[验收矩阵](mvp.md)。测试给 CLI 创建独立临时主目录和合成凭据，并让它向本机模拟模型发出两轮请求。
+
+## 可选：开启工作区增量上传
+
+先升级到实现该协议的平台和 Worker，再在原 Worker 配置中加入以下字段；默认省略时仍上传完整工作区 tar。
+
+```json
+{
+  "workspace_transfer": "tar-parts.v1"
+}
+```
+
+这个片段需要合并进已有配置。首轮 Worker 与追问 Job 如需都使用增量传输，须更新各自部署配置。之后正常运行 `sync` 或 `watch`：Worker 上传缺少的文件 body 块和 gzip 清单，公开工作区内容仍是原来的完整 `workspace-tar.v1`，旧客户端的下载和恢复命令不变。
+
+关闭时省略该字段或设为空字符串。开关只作用于新建操作；已有 pending 会先按它记录的旧传输方式、操作键和冻结字节恢复，再处理新内容。保留同一 `state_dir`，不要删除 journal 来切换。旧平台不支持该模式，大小上限或协议错误会明确失败，不会自动退回整包。
+
+文件改名、权限和删除会产生新的工作区版本，相同 body 可复用，历史版本继续保留。恢复仍必须使用新目标路径。增量上传仍有完整本地扫描、打包，以及平台提交时的完整后端读取成本，不能据上传量减少承诺耗时变短。限制、GC、可复制的测量命令和 `make test-k8s-workspace-parts` 入口见[工作区增量上传](workspace-incremental.md)。

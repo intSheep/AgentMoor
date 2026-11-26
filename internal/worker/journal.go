@@ -19,8 +19,9 @@ type cursor struct {
 }
 
 type pending struct {
-	Change asset.Change `json:"change"`
-	Blob   string       `json:"blob"`
+	Change   asset.Change `json:"change"`
+	Blob     string       `json:"blob"`
+	Transfer string       `json:"transfer,omitempty"`
 }
 
 type Journal struct {
@@ -65,6 +66,9 @@ func load(c Config) (Journal, error) {
 	}
 	if j.Pending != nil && (!strings.HasPrefix(j.Pending.Blob, "asset-") || filepath.Base(j.Pending.Blob) != j.Pending.Blob || j.Pending.Change.Validate() != nil) {
 		return j, fmt.Errorf("invalid pending journal")
+	}
+	if p := j.Pending; p != nil && p.Transfer != "" && (p.Transfer != asset.TarPartsFormat || p.Change.Kind != "workspace" || p.Change.Format != "workspace-tar.v1" || p.Change.MediaType != "application/x-tar") {
+		return j, fmt.Errorf("invalid pending workspace transfer")
 	}
 	return j, nil
 }

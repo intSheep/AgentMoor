@@ -52,6 +52,10 @@ func NewFileClient(endpoint, file string) (*Client, error) {
 }
 
 func (c *Client) request(ctx context.Context, method, path string, body io.Reader, length int64) (*http.Response, error) {
+	return c.requestEncoded(ctx, method, path, body, length, "")
+}
+
+func (c *Client) requestEncoded(ctx context.Context, method, path string, body io.Reader, length int64, encoding string) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(ctx, method, c.endpoint+path, body)
 	if err != nil {
 		return nil, err
@@ -65,6 +69,9 @@ func (c *Client) request(ctx context.Context, method, path string, body io.Reade
 		token = strings.TrimSpace(string(b))
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
+	if encoding != "" {
+		req.Header.Set("Content-Encoding", encoding)
+	}
 	if length >= 0 {
 		req.ContentLength = length
 	}

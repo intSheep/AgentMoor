@@ -42,6 +42,8 @@ def main(opts, temp):
     config = {"endpoint": "https://agentmoor:7401", "scope": scope,
               "workspace": "/run/task/work", "state_dir": "/run/task/state",
               "runtime_cli": "/usr/local/bin/" + BINARIES[opts.adapter]}
+    if opts.workspace_parts:
+        config["workspace_transfer"] = "tar-parts.v1"
     if opts.file_report and opts.adapter != "codex":
         raise ValueError("the file tool contract requires Codex")
     cfg = temp / "worker.json"
@@ -129,7 +131,7 @@ def main(opts, temp):
                 run_skill_report(client, catalog, kube, temp, cert, wait_job, negative,
                                  queued_restart=storage.restart_queued_turn if storage else None)
                 if storage:
-                    storage.verify("skill-report")
+                    storage.verify("skill-report", workspace_parts=opts.workspace_parts)
                 return
             if opts.file_report:
                 negative = (issue("--submit", allocation=cancellation_scope),
@@ -139,7 +141,7 @@ def main(opts, temp):
                 run_file_report(client, kube, temp, cert, wait_job, negative,
                                 queued_restart=storage.restart_queued_turn if storage else None)
                 if storage:
-                    storage.verify("file-report")
+                    storage.verify("file-report", workspace_parts=opts.workspace_parts)
                 return
             client.submit()
             try:
@@ -297,6 +299,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--adapter", choices=BINARIES, required=True)
     parser.add_argument("--file-report", action="store_true")
+    parser.add_argument("--workspace-parts", action="store_true")
     special = parser.add_mutually_exclusive_group()
     special.add_argument("--pod-loss", action="store_true")
     special.add_argument("--skill-report", action="store_true")
