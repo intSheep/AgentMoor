@@ -69,3 +69,9 @@ Codex Adapter `0.5.0` 的 `make test-k8s-skills` 通过。真实 Linux Codex `0.
 `84461dd` 为任务发布增加最多三次的局部瞬态重试，复用冻结字节和原操作键，不重新执行 Agent、不重扫目录；普通 Sync 仍在首次错误后依靠下一轮 journal 恢复。SQLite + 真实 HTTP/Worker 的 Begin/Upload/Commit 前后、实际元数据失败、取消/期限、永久错误和耗尽场景均通过，单次执行、单版本、旧 checkpoint 与 pending 游标均有断言。Artifact/完整 Skill 的非 head 历史版本在 GC 后仍能通过 HTTP 读回，SQLite 和 PostgreSQL/S3 服务测试都通过。[详细结果和范围](verification-matrix.md#2026-11-26任务冻结发布重试与历史引用回收) · [结构化证据](evidence/task-publication-retries-2026-11-26.json)。PG/S3 的同一发布故障注入组合仍未验收。
 
 PG/S3 集群复验的前两次 HTTP 500 保留为失败记录。补充诊断及 PostgreSQL 任务读连接隔离后，真实并发/取消读取和丢失写租约测试通过，`62106e5` 的文件与固定 Skill 两场景全部通过；未回退本地存储。四 CLI 完整矩阵来自较早的 `3c497396`，本次未把它写成最终提交重跑。[资产生命周期](asset-lifecycle.md) 另说明本地删除、历史版本与 GC 的现有边界。
+
+## 2026-11-26：工作区文件内容复用
+
+显式开启 `workspace_transfer: tar-parts.v1` 后，Worker 从冻结 tar 上传缺失的文件 body 和压缩清单；公开下载、摘要和恢复继续使用完整 `workspace-tar.v1`。5,000/10,000 文件同尺寸改单文件的总变更请求体约减少 99%，包括清单和元数据；首次上传与完整后端校验存在额外成本，默认保持关闭。历史版本、改名/权限/删除/相对链接、冻结重试、恢复和 GC 已有测试及真实测量。[使用、限制与原始结果](workspace-incremental.md)。
+
+`e8deb796` 的 PG/S3 分片专项通过真实 Codex 文件和固定 Skill 的新 Pod 接续、取消后恢复、旧下载与 queued API 重建；S3 中确认实际分片引用且没有本地存储回退。[集群证据](evidence/workspace-parts-cluster-2026-11-26.json)。真实模型及 PG/S3 发布故障与无应答 Worker 丢失组合尚未执行，不据此关闭整个 P1/V2。

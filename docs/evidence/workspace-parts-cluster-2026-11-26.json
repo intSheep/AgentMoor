@@ -1,0 +1,229 @@
+{
+  "recorded_at_utc": "2026-11-26T14:49:32.313205+00:00",
+  "source_commit": "e8deb796be4014a8aa5224eb20ac4102db7d3b4c",
+  "entrypoint": "make test-k8s-workspace-parts",
+  "status": "passed",
+  "cli": "codex-cli 0.171.0-alpha.13",
+  "model": "scripted-responses",
+  "workspace_transfer": "tar-parts.v1",
+  "worker_image": {
+    "tag": "agentmoor-contract:agentmoor-55bb4006b9cd-codex",
+    "id": "sha256:7f39fa11420e5e003501a617b5f2875e1c7d39dfd395b9219667eae8030e6a25"
+  },
+  "file_report": {
+    "active_mcp_cancel": "cancelled-with-checkpoint-preserved",
+    "artifacts": [
+      {
+        "content_path": "/v1/content?id=out%2Freport.json&kind=artifact&version=1",
+        "id": "out/report.json",
+        "kind": "artifact",
+        "sha256": "a49e97dda3f42351e670701fbe9265d6cae8097f88d1e94c09cd2c9b5efee707",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2F7f208b15-ecbe-41fc-b053-a58786a2bdb5%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/7f208b15-ecbe-41fc-b053-a58786a2bdb5/out/report.json",
+        "kind": "artifact",
+        "sha256": "504a810185720d8091eb3123b30d3ec882e060dacb5de9d04cb1bd84ce4d020f",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2F4ea036d6-c363-4216-9b0d-bc4b4a31107d%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/4ea036d6-c363-4216-9b0d-bc4b4a31107d/out/report.json",
+        "kind": "artifact",
+        "sha256": "95dcbc4779c5d3ea88369ec15a34f9a3e67b1fe3896f4ded25e3c95e02c1ad11",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2Ffcbeacd1-b605-4e01-a692-ec89b13a8ad4%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/fcbeacd1-b605-4e01-a692-ec89b13a8ad4/out/report.json",
+        "kind": "artifact",
+        "sha256": "95dcbc4779c5d3ea88369ec15a34f9a3e67b1fe3896f4ded25e3c95e02c1ad11",
+        "version": 1
+      }
+    ],
+    "business_rows": 2,
+    "cli": "codex-cli 0.171.0-alpha.13",
+    "database_write_retry": "trigger-failure-then-imported-and-already-imported",
+    "missing_input": "failed-without-assets",
+    "model": "scripted-responses",
+    "pod_uids": [
+      "7be8a31b-af2c-4a01-9de0-da15220b6e4e",
+      "1f9b744c-d9d2-4a85-a2e9-a89fb761618c",
+      "e5ca3a92-b9c5-49c1-afe0-c87bb47f7883"
+    ],
+    "recovery_pod_uid": "edb4269c-a0bb-426d-8ecc-3a0e6bb7f593",
+    "session_sha256": "999ee2de8cb4f31e7307c3b62c17780a82a16c50ca78cda3c4bdbe74d82d5147",
+    "workspace_loss_simulation": "same-session-required-files-removed-before-tool"
+  },
+  "skill_report": {
+    "artifacts": [
+      {
+        "content_path": "/v1/content?id=out%2Freport.json&kind=artifact&version=1",
+        "id": "out/report.json",
+        "kind": "artifact",
+        "sha256": "0ffa052c73aeb575ba1ca616a9a25d1628d0b1fd62b4e1b787f26f5d94f8d8fb",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2F5c525c64-6107-4ddd-995b-78593b5b2b14%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/5c525c64-6107-4ddd-995b-78593b5b2b14/out/report.json",
+        "kind": "artifact",
+        "sha256": "11369792d87328a079ae18bcc4caa6fe72e72a96f17f0ef18bce9ec0380dfee2",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2F3d24a504-d160-418f-83cb-997d60a8f85e%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/3d24a504-d160-418f-83cb-997d60a8f85e/out/report.json",
+        "kind": "artifact",
+        "sha256": "59caa73e47514ccb4d67886ccd11ac8f31fd658cd71c47eae8af32949a8a0428",
+        "version": 1
+      }
+    ],
+    "business_rows": 2,
+    "cli": "codex-cli 0.171.0-alpha.13",
+    "member_sha256": {
+      "SKILL.md": "9b35cccec9feb70975737a42112da1029bced70759ed4f51b2c9ab11b964b2ff",
+      "references/rule.json": "da2d210a42baf26d2aed583e628760e428aa6f5274181e9b07d335ee87d643d7",
+      "scripts/check.py": "69fbf32f2d1319c7111d4cacb8290f3b0226ec3bd8e1de27af6ac0d2a40b07ab"
+    },
+    "model": "scripted-responses",
+    "native_skill_rule": "verified-by-installed-script-and-reference",
+    "newer_unselected_skill": {
+      "content_path": "/v1/content?id=catalog%2Fskills%2Fpinned-report&kind=skill&version=2",
+      "id": "catalog/skills/pinned-report",
+      "kind": "skill",
+      "sha256": "010f30ae4fa7abf1d5cc9adce1ffe6b856b4b392d06a04be447d94c860993e12",
+      "version": 2
+    },
+    "no_skill_control": "failed-without-assets",
+    "pod_uids": [
+      "d1850f68-bdf0-4443-b212-47bf118a8ed7",
+      "93339d07-1669-42b1-badf-a5260ffad284",
+      "6251e9be-8960-42fa-a7e2-ed39443b9dbd"
+    ],
+    "session_sha256": "76c031de56efb6207670ab6a25ab079e72f021ecfead8e8664c62185c281de7a",
+    "skill_pin": {
+      "name": "pinned-report",
+      "source": {
+        "content_path": "/v1/content?id=catalog%2Fskills%2Fpinned-report&kind=skill&version=1",
+        "id": "catalog/skills/pinned-report",
+        "kind": "skill",
+        "sha256": "1a98764177765f2957f392890b2a30839ffbb1c098628054d5c7a9fef092cb33",
+        "version": 1
+      }
+    }
+  },
+  "storage_scenarios": [
+    {
+      "images": {
+        "postgres": [
+          {
+            "image": "docker.io/library/postgres:18-alpine",
+            "image_id": "sha256:d4e55489302f9c75af116f3b3147f613e712f07e5eb8dabec82d9147dd0a00e5"
+          }
+        ],
+        "s3": [
+          {
+            "image": "docker.io/pgsty/minio:RELEASE.2026-04-17T00-00-00Z",
+            "image_id": "sha256:c007f271acf939425e3b553813c2c4531069cd467a59f84ec96121937ff414d9"
+          }
+        ]
+      },
+      "limitations": [
+        "No abrupt Worker Pod-loss combination on PostgreSQL/S3; separate P0 acceptance covers it.",
+        "No live model; fixed real Codex CLI uses a scripted Responses endpoint."
+      ],
+      "metadata_backend": "postgresql",
+      "minio_version": "minio version RELEASE.2026-04-17T00-00-00Z (commit-id=f48dbe777d0e066d2e74d5e671a8ca21c2ec1664)",
+      "object_backend": "s3-compatible-minio",
+      "postgres_rows": {
+        "operations": 16,
+        "revisions": 16,
+        "tasks": 2,
+        "turns": 5
+      },
+      "postgres_version": "18.7",
+      "queued_restart": {
+        "accepted_state": "queued",
+        "api_pod_uids": [
+          "1d6d963e-09ff-4004-a0fa-306c7b3c895a",
+          "b54174e6-d0a3-4321-a166-947f2dc220b2"
+        ],
+        "restored_state": "queued",
+        "same_uuid_replays": 2,
+        "turn_id": "7f208b15-ecbe-41fc-b053-a58786a2bdb5"
+      },
+      "scenario": "file-report",
+      "sqlite_or_local_objects_present": false,
+      "verified_object_count": 24,
+      "verified_part_object_count": 14,
+      "workspace_part_revisions": 4,
+      "workspace_transfer": "tar-parts.v1"
+    },
+    {
+      "images": {
+        "postgres": [
+          {
+            "image": "docker.io/library/postgres:18-alpine",
+            "image_id": "sha256:d4e55489302f9c75af116f3b3147f613e712f07e5eb8dabec82d9147dd0a00e5"
+          }
+        ],
+        "s3": [
+          {
+            "image": "docker.io/pgsty/minio:RELEASE.2026-04-17T00-00-00Z",
+            "image_id": "sha256:c007f271acf939425e3b553813c2c4531069cd467a59f84ec96121937ff414d9"
+          }
+        ]
+      },
+      "limitations": [
+        "No abrupt Worker Pod-loss combination on PostgreSQL/S3; separate P0 acceptance covers it.",
+        "No live model; fixed real Codex CLI uses a scripted Responses endpoint."
+      ],
+      "metadata_backend": "postgresql",
+      "minio_version": "minio version RELEASE.2026-04-17T00-00-00Z (commit-id=f48dbe777d0e066d2e74d5e671a8ca21c2ec1664)",
+      "object_backend": "s3-compatible-minio",
+      "postgres_rows": {
+        "operations": 17,
+        "revisions": 17,
+        "tasks": 2,
+        "turns": 2
+      },
+      "postgres_version": "18.7",
+      "queued_restart": {
+        "accepted_state": "queued",
+        "api_pod_uids": [
+          "c1f44647-fda9-41cb-82a7-ed415d6f4cf8",
+          "cc56e6d4-ee8d-4915-8adf-c9c042b3541e"
+        ],
+        "restored_state": "queued",
+        "same_uuid_replays": 2,
+        "turn_id": "5c525c64-6107-4ddd-995b-78593b5b2b14"
+      },
+      "scenario": "skill-report",
+      "sqlite_or_local_objects_present": false,
+      "verified_object_count": 30,
+      "verified_part_object_count": 16,
+      "workspace_part_revisions": 3,
+      "workspace_transfer": "tar-parts.v1"
+    }
+  ],
+  "checks": {
+    "make fmt/check (race)/demo": {
+      "status": "passed",
+      "source_commit": "e8deb796be4014a8aa5224eb20ac4102db7d3b4c"
+    },
+    "make test-services": {
+      "status": "passed",
+      "source_commit": "acfbe21",
+      "scope": "Integrated PostgreSQL/S3 parts persistence, historical GC, task read isolation and lost-writer-lease refusal; platform code identical to e8deb79. Worker-only test additions were being prepared separately."
+    }
+  },
+  "cluster_cleanup_completed": true,
+  "limitations": [
+    "No live model or external model key.",
+    "No abrupt Worker loss or full publication-boundary fault injection on this Kubernetes backend combination; INT-67 tracks that work.",
+    "Parts task publication faults were tested separately over real HTTP with SQLite and a child-process fixture, not a vendor CLI.",
+    "Large-workspace transfer and timing measurements were run at preserved source 48e9290; see workspace-incremental-2026-11-26.json."
+  ]
+}

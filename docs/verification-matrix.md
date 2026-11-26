@@ -15,6 +15,7 @@
 | PostgreSQL + 对象存储下的 Kubernetes 文件/Skill 契约 | `make test-k8s-persistent` | 2026-11-26：同一次命令中两场景均通过，含 queued 追问的控制面 Pod 重启和原 UUID 重投；V2 的 Pod 丢失组合、发布边界故障注入仍待验收。[证据](#2026-11-26postgresql--s3-联合集群与队列恢复) |
 | 任务冻结资产的发布重试 | `go test -race ./internal/worker` | SQLite + 真实 HTTP/Worker 故障矩阵通过：Begin/Upload/Commit 前后、真实元数据失败恢复、取消/期限、永久错误与重试耗尽。Agent 每轮只执行一次，冻结字节和操作身份不变；PG/S3 同一边界故障组合尚未注入。[证据](#2026-11-26任务冻结发布重试与历史引用回收) |
 | 非 head 历史 Artifact/Skill 的 GC 保护 | `TestHistoricalArtifactAndSkillReferencesSurviveGC`、`make test-services` | SQLite 与 PostgreSQL/S3 均通过：v1 被 v2 替代为历史后仍保留完整字节；同次 GC 确实删除孤儿对象，旧版本经 HTTP 下载并核 SHA-256。 |
+| 可选工作区增量上传 | `make test-k8s-workspace-parts`、上传测量脚本 | `tar-parts.v1` 默认关闭；PG/S3 文件与固定 Skill 集群通过，公开下载仍是原 tar。5,000/10,000 文件的单文件修改请求体减少约 99%，清单流量和更高的首次/读取成本均已记录。[实测与边界](workspace-incremental.md) |
 
 ## 待落地的可运行示例
 
@@ -142,6 +143,14 @@ PG/S3 专项先在 `84461dd`、诊断增强后的 `852166d` 各失败一次，�
 保留历史合入 `origin/main@ab6c72a` 后，集成源码 `ef8855ed22565b2ffe1f96feea2aae07c4d4faca` 的 `make fmt`、`make check`（含 race、真实 HTTP 头超时回归）和 `make demo` 再次通过；与 `62106e5` 相比没有生产 Go 差异。此处不宣称又重跑过集群矩阵。
 
 发布边界故障矩阵仍限 SQLite/本地对象；不据独立存储服务测试推断 PostgreSQL/S3 同一故障组合已过。真实模型和剩余 V2 组合仍单独记录。
+
+### 2026-11-26：兼容完整 tar 的工作区增量上传
+
+测量源码 `48e9290` 在 SQLite/本地对象与 PostgreSQL 18.7/MinIO 上通过真实 CLI 和 HTTP 代理测量：5,000 个 4 KiB 文件中只改一个，总变更请求体由 23,067,942 B 降至 244,497 B；10,000 文件本地样本由 46,133,542 B 降至 484,228 B。数字包括 Begin、gzip 清单、缺失 body 和 Commit，不包含响应、HTTP 头和传输层。配对样本的三个固定版本完整 tar SHA/长度相同，旧版 CLI 恢复的全部文件摘要正确。[原始数据与成本](workspace-incremental.md#2026-11-26-实测结果)。首次需要许多对象写入，平台提交还会完整读回；代理逐请求新建连接，不能把单次回环时延当生产直连性能。默认保留全量配置。
+
+集成源码 `e8deb796` 的 `make test-k8s-workspace-parts` 通过：同一 kind 和 Codex 镜像下，两套独立 PG/S3 文件、固定 Skill 场景分别记录 4/3 份分片工作区版本，以及 14/16 个实际引用的 S3 body 对象。旧报告、跨 Pod 工作区恢复、取消后恢复、缺输入/缺 Skill 负例、业务数据库重试、来源升级后固定 Skill v1，以及 queued 状态 API 重建均通过；没有 SQLite/本地对象回退。已清理集群。[结构化集群证据](evidence/workspace-parts-cluster-2026-11-26.json)。
+
+任务重试另在真实 HTTP/SQLite 上覆盖清单、分片及 Commit 的前后错误与真实 TCP 应答丢失、永久错误及三次耗尽，确认一次原生测试子进程、固定操作/清单/内容、唯一版本、成功 primary 与工作区一致、checkpoint 及 `pending.Transfer` 保留。平台服务测试覆盖新旧表示、重启、依赖损坏/跨 scope 拒绝、历史与 pending 的 GC 保护和真实孤儿删除；并行上传失败会取消其他活动请求。真实模型和 PG/S3 中同一发布边界、Worker 无应答丢失的联合场景仍由 INT-67 承接，不关闭 V2 整体。
 
 ## V2 退出门槛
 

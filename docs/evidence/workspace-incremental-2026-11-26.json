@@ -1498,5 +1498,6 @@
     "No native runtime CLI, model, Kubernetes Job, restart, cancellation, publication fault injection or Worker Pod loss is executed by these benchmark runs.",
     "PostgreSQL/S3 backend identity is independently attested by server versions, image IDs/digests, revision rows, S3 object presence, and absence of SQLite/local objects; this is fixture attestation, while sync/download/restore use public HTTP.",
     "Local SQLite library version was not recorded. Existing baseline evidence keeps its original source identity and is not replaced by this aggregate."
-  ]
+  ],
+  "separate_cluster_evidence": "workspace-parts-cluster-2026-11-26.json"
 }
