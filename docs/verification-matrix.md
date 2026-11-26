@@ -12,7 +12,7 @@
 | Codex 文件工具、文件恢复后再编辑 | `make test-k8s-file-report`，例 1–2 | 2026-11-26：固定 Linux CLI + 脚本模型通过；三个全新 Pod 接续、多文件下载、旧版不变。真实模型未跑。[证据](#2026-11-26codex-文件工具集群验收通过) |
 | 固定版本 Skill 安装与原生加载 | `make test-k8s-skills` | 2026-11-26：Linux Codex + 脚本模型、三个新 Pod 使用同一 v1，发布 v2 不漂移；相同输入无 Skill 负例失败。[证据](#2026-11-26固定-skill-版本与原生加载) |
 | Codex 文件任务取消、失联及重试 | 例 3 | 活跃 MCP 工具取消、恢复后新回合、业务数据库失败重试已通过；工具运行中 Pod 突然丢失仍未验收。 |
-| PostgreSQL + 对象存储下的完整 Kubernetes 契约 | V2 退出门槛 | 计划。不据后端测试推断跨 Pod 端到端已过。 |
+| PostgreSQL + 对象存储下的 Kubernetes 文件/Skill 契约 | `make test-k8s-persistent` | 2026-11-26：同一次命令中两场景均通过，含 queued 追问的控制面 Pod 重启和原 UUID 重投；V2 的 Pod 丢失组合、发布边界故障注入仍待验收。[证据](#2026-11-26postgresql--s3-联合集群与队列恢复) |
 
 ## 待落地的可运行示例
 
@@ -101,6 +101,23 @@ python3 tests/kubernetes/diagnose_file_report.py --check
 从已完成的首轮出发。第一次追问先进入一个可观测的长工具步骤，等待工具启动后发取消。第二个独立追问在等到工具启动后直接删除 Worker Pod，不给正常收尾机会。待终态可见后，用新 UUID 从最近成功的引用继续；先前请求 UUID 仅用于原请求重试，不作为重跑手段。
 
 **通过：** 取消经过可观察的 `cancelling`，终态 `cancelled`；进程在用例声明的超时内退出。Pod 丢失后在文档规定的期限内进入 `interrupted`，不能被误报为成功。两次失败回合均无成功交付引用，之前的工作区/会话引用和版本摘要不变，新回合在新 Pod 从最近成功状态恢复。失败公开记录可识别，说明未发布本地内容会丢失，取消也不撤销外部副作用。
+
+### 2026-11-26：PostgreSQL + S3 联合集群与队列恢复
+
+源代码提交 `64522e6ace4710fc2cbc46639e0a1d70b88c12cd` 的 `make test-k8s-persistent` 通过。一个专属 kind 集群、一份固定 Linux Codex `0.171.0-alpha.13` 镜像，先后在两个独立命名空间运行文件任务和固定 Skill 任务。两者均使用 PostgreSQL **18.7** 元数据与 MinIO **RELEASE.2026-04-17T00-00-00Z** 不可变对象，原生 CLI 连接脚本 Responses 模型。[结构化结果及镜像身份](evidence/postgres-s3-contract-2026-11-26.json)。
+
+| 同次命令场景 | PostgreSQL 成功存储记录 | 核对到 S3 的不同版本对象 | 控制面重启前 / 后 Pod UID |
+| --- | --- | --- | --- |
+| 文件交付、修订与取消恢复 | 2 tasks、5 turns、16 revisions、16 operations | 14 | `51f7d14d-2271-495d-b651-77c8b3562a95` / `891140d5-ac5f-4f42-a986-77c6b2e2d5a8` |
+| 固定 Skill、修订与版本不漂移 | 2 tasks、2 turns、17 revisions、17 operations | 17 | `c1107900-4ece-4059-892f-31c364caacb2` / `17883f69-998c-4f75-add4-1758e2b64ced` |
+
+每个场景的正常 SaaS 追问先被命名空间 Job 配额暂缓调度；公开 API 已持久接受 queued 回合后，再真实替换控制面 Pod。转发器重连同一个回环端口，SaaS 服务身份保持不变。重启后读取相同 queued 回执、parent/checkpoint，原 UUID 重投两次仍是同一记录；解除配额后只有一个对应 Job。新 Worker 从已归档的工作区/会话继续，早期 Artifact 的固定下载及摘要始终不变。
+
+基础设施层直接核对 PostgreSQL 中实际存在 task/turn/revision/operation，所有 revision 的不同内容键都能在 S3 测试桶找到；API 数据卷没有 `catalog.sqlite` 或本地 `objects`，没有回退到默认存储。业务金额、文件内容、版本、checkpoint 与数据库导入断言仍由公开 HTTP 客户端完成，没有拿后端读数代替业务验算。服务镜像版本沿用 `tests/services.compose.yml`，记录包含实际镜像 ID。
+
+完整保留 P0 的文件三 Pod 接续、两份交付物、旧版不变、真实业务 SQLite 写入失败后重试、活跃 MCP 工具取消及成功 checkpoint 恢复。Skill 场景的三个新 Pod 仍固定同一 v1，源包发布 v2 后不会升级；相同输入但未安装 Skill 的负例明确失败、没有成功产物。两份业务报告各导入一次且迟到重放不覆盖新结果。`make fmt`、`make check`（race）和 `make demo` 也通过。
+
+这是 P1.1 后端组合与队列恢复的验收，不关闭整个 V2 门槛。尚未在 PostgreSQL/S3 下组合活跃 Worker Pod 突然丢失，或对象上传/数据库发布边界的故障注入；真实模型、多控制面副本和生产 HA 也未验证。独立 P0 Pod 丢失证据不能代替这些组合。
 
 ## V2 退出门槛
 

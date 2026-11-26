@@ -1,0 +1,211 @@
+{
+  "source_commit": "64522e6ace4710fc2cbc46639e0a1d70b88c12cd",
+  "recorded_at_utc": "2026-11-26T13:25:21Z",
+  "command": "make test-k8s-persistent",
+  "cluster_image": "kindest/node:v1.35.0",
+  "cli": "codex-cli 0.171.0-alpha.13",
+  "model": "scripted-responses",
+  "backend_scenarios": [
+    {
+      "images": {
+        "postgres": [
+          {
+            "image": "docker.io/library/postgres:18-alpine",
+            "image_id": "sha256:d4e55489302f9c75af116f3b3147f613e712f07e5eb8dabec82d9147dd0a00e5"
+          }
+        ],
+        "s3": [
+          {
+            "image": "docker.io/pgsty/minio:RELEASE.2026-04-17T00-00-00Z",
+            "image_id": "sha256:c007f271acf939425e3b553813c2c4531069cd467a59f84ec96121937ff414d9"
+          }
+        ]
+      },
+      "limitations": [
+        "No abrupt Worker Pod-loss combination on PostgreSQL/S3; separate P0 acceptance covers it.",
+        "No live model; fixed real Codex CLI uses a scripted Responses endpoint."
+      ],
+      "metadata_backend": "postgresql",
+      "minio_version": "minio version RELEASE.2026-04-17T00-00-00Z (commit-id=f48dbe777d0e066d2e74d5e671a8ca21c2ec1664)",
+      "object_backend": "s3-compatible-minio",
+      "postgres_rows": {
+        "operations": 16,
+        "revisions": 16,
+        "tasks": 2,
+        "turns": 5
+      },
+      "postgres_version": "18.7",
+      "queued_restart": {
+        "accepted_state": "queued",
+        "api_pod_uids": [
+          "51f7d14d-2271-495d-b651-77c8b3562a95",
+          "891140d5-ac5f-4f42-a986-77c6b2e2d5a8"
+        ],
+        "restored_state": "queued",
+        "same_uuid_replays": 2,
+        "turn_id": "8e5333d1-def7-4d05-8395-87cf551be114"
+      },
+      "scenario": "file-report",
+      "sqlite_or_local_objects_present": false,
+      "verified_object_count": 14
+    },
+    {
+      "images": {
+        "postgres": [
+          {
+            "image": "docker.io/library/postgres:18-alpine",
+            "image_id": "sha256:d4e55489302f9c75af116f3b3147f613e712f07e5eb8dabec82d9147dd0a00e5"
+          }
+        ],
+        "s3": [
+          {
+            "image": "docker.io/pgsty/minio:RELEASE.2026-04-17T00-00-00Z",
+            "image_id": "sha256:c007f271acf939425e3b553813c2c4531069cd467a59f84ec96121937ff414d9"
+          }
+        ]
+      },
+      "limitations": [
+        "No abrupt Worker Pod-loss combination on PostgreSQL/S3; separate P0 acceptance covers it.",
+        "No live model; fixed real Codex CLI uses a scripted Responses endpoint."
+      ],
+      "metadata_backend": "postgresql",
+      "minio_version": "minio version RELEASE.2026-04-17T00-00-00Z (commit-id=f48dbe777d0e066d2e74d5e671a8ca21c2ec1664)",
+      "object_backend": "s3-compatible-minio",
+      "postgres_rows": {
+        "operations": 17,
+        "revisions": 17,
+        "tasks": 2,
+        "turns": 2
+      },
+      "postgres_version": "18.7",
+      "queued_restart": {
+        "accepted_state": "queued",
+        "api_pod_uids": [
+          "c1107900-4ece-4059-892f-31c364caacb2",
+          "17883f69-998c-4f75-add4-1758e2b64ced"
+        ],
+        "restored_state": "queued",
+        "same_uuid_replays": 2,
+        "turn_id": "329d24ea-48b8-426e-b08a-a57c471783e3"
+      },
+      "scenario": "skill-report",
+      "sqlite_or_local_objects_present": false,
+      "verified_object_count": 17
+    }
+  ],
+  "file_workflow": {
+    "active_mcp_cancel": "cancelled-with-checkpoint-preserved",
+    "artifacts": [
+      {
+        "content_path": "/v1/content?id=out%2Freport.json&kind=artifact&version=1",
+        "id": "out/report.json",
+        "kind": "artifact",
+        "sha256": "a0ca9584b5edd5be8933da368c9e7abddd1a29a0f44e5b3be56eef2343ff5ffa",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2F8e5333d1-def7-4d05-8395-87cf551be114%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/8e5333d1-def7-4d05-8395-87cf551be114/out/report.json",
+        "kind": "artifact",
+        "sha256": "b9ffa4e832608f50bee2b6f144c5757f98a6b3d1e7048793872bc8d95bcd76ca",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2Fd32853e7-bf60-4673-af54-8b6b245d60e1%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/d32853e7-bf60-4673-af54-8b6b245d60e1/out/report.json",
+        "kind": "artifact",
+        "sha256": "11d7ee73048866983bc910d08495bbbccb0bdc0598beb28aefef140fec751f82",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2F62aa8c66-b780-472a-a1d5-8fd6518bf1a5%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/62aa8c66-b780-472a-a1d5-8fd6518bf1a5/out/report.json",
+        "kind": "artifact",
+        "sha256": "11d7ee73048866983bc910d08495bbbccb0bdc0598beb28aefef140fec751f82",
+        "version": 1
+      }
+    ],
+    "business_rows": 2,
+    "cli": "codex-cli 0.171.0-alpha.13",
+    "database_write_retry": "trigger-failure-then-imported-and-already-imported",
+    "missing_input": "failed-without-assets",
+    "model": "scripted-responses",
+    "pod_uids": [
+      "0699bacc-048f-486c-8fd7-ca4955b135a5",
+      "8ced2e27-995e-42b0-8b7d-2f2eb2f13840",
+      "182dc305-e7bd-4243-b4c5-ea4f723ddcec"
+    ],
+    "recovery_pod_uid": "3826b5fb-600c-4ed4-957f-ece2e13d94a2",
+    "session_sha256": "e86506a2621522bd4c5763c81ad4604f174c880c8db8171bda3997bf3684eb6c",
+    "workspace_loss_simulation": "same-session-required-files-removed-before-tool"
+  },
+  "skill_workflow": {
+    "artifacts": [
+      {
+        "content_path": "/v1/content?id=out%2Freport.json&kind=artifact&version=1",
+        "id": "out/report.json",
+        "kind": "artifact",
+        "sha256": "57c855b97c3511d2a3d553346cfa8a0f72688ed69fe13416d4d458db323a12ce",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2F329d24ea-48b8-426e-b08a-a57c471783e3%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/329d24ea-48b8-426e-b08a-a57c471783e3/out/report.json",
+        "kind": "artifact",
+        "sha256": "8225ea1371f87aa3b860c971198ef02d108a9689b05859c1648c28051d67893e",
+        "version": 1
+      },
+      {
+        "content_path": "/v1/content?id=turns%2Fe773c11e-078f-4b79-83d3-c76d970083bb%2Fout%2Freport.json&kind=artifact&version=1",
+        "id": "turns/e773c11e-078f-4b79-83d3-c76d970083bb/out/report.json",
+        "kind": "artifact",
+        "sha256": "845277e1aef1e5ea1fc9770854eaf27e7ee9de085fc34f2a2d815bcce713bb4d",
+        "version": 1
+      }
+    ],
+    "business_rows": 2,
+    "cli": "codex-cli 0.171.0-alpha.13",
+    "member_sha256": {
+      "SKILL.md": "9b87618de52133547ced0b4214ce1dc159ed8e15fc9c94a27fae548b5b30257d",
+      "references/rule.json": "9e7c1d1c549ae14e4d78b8fcd3bbbf0264dd848a20f7b4d6ace0ce282635f0b0",
+      "scripts/check.py": "69fbf32f2d1319c7111d4cacb8290f3b0226ec3bd8e1de27af6ac0d2a40b07ab"
+    },
+    "model": "scripted-responses",
+    "native_skill_rule": "verified-by-installed-script-and-reference",
+    "newer_unselected_skill": {
+      "content_path": "/v1/content?id=catalog%2Fskills%2Fpinned-report&kind=skill&version=2",
+      "id": "catalog/skills/pinned-report",
+      "kind": "skill",
+      "sha256": "d0068ed795ed830105fe652ed50cc6f30b4117b8100bb81e94013a5261099b84",
+      "version": 2
+    },
+    "no_skill_control": "failed-without-assets",
+    "pod_uids": [
+      "0419156f-bb89-42b9-95af-7c89faf9a5cd",
+      "beac01c1-1342-4c8f-a420-6b8e561fb65a",
+      "cf853e84-7ed0-4796-8887-0dca264b1874"
+    ],
+    "session_sha256": "557a7ab349d3ed02b8113d5d789290d61759e469ad597b5adae8f0b7be97efed",
+    "skill_pin": {
+      "name": "pinned-report",
+      "source": {
+        "content_path": "/v1/content?id=catalog%2Fskills%2Fpinned-report&kind=skill&version=1",
+        "id": "catalog/skills/pinned-report",
+        "kind": "skill",
+        "sha256": "397f5014e66ee14ed06f80cb7bbdafe2a468d6128b862e50cda818649db6b824",
+        "version": 1
+      }
+    }
+  },
+  "checks": {
+    "make fmt": "passed",
+    "make check": "passed including race",
+    "make demo": "passed",
+    "make test-k8s-persistent": "passed both file-report and skill-report"
+  },
+  "limitations": [
+    "No live-model smoke.",
+    "No PostgreSQL/S3 combination of abrupt active Worker Pod loss or publication-boundary failure injection.",
+    "No claim of multiple control-plane replicas or production HA."
+  ]
+}
