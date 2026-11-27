@@ -50,6 +50,18 @@ Worker 按原私有 attempt 领取并交接任务，经专用 API 等待沙箱�
 
 空策略及 `trusted-local.v1` 仍用于受信开发；普通原生导入/导出是独立的受信维护操作。本提供方不自动扩展到其他 CLI，不宣称生产 HA、硬件虚拟机边界或任意系统调用兼容。
 
+## 复验命令
+
+先按本页准备 Linux/Docker、Go、Python 3.12+、kind、kubectl、curl 和 OpenSSL。输出路径必须尚不存在，父目录必须已存在：
+
+```sh
+PROVIDER_OUTPUT=/absolute/new/file-skill.json make test-k8s-sandbox-provider
+PROVIDER_OUTPUT=/absolute/new/text.json PROVIDER_SCENARIO=text make test-k8s-sandbox-provider
+QUOTA_OUTPUT=/absolute/new/quota.json make test-k8s-sandbox-quota
+```
+
+`GVISOR_SECURITY_BUNDLE`、`GVISOR_SECURITY_CALICO_MANIFEST` 和 `GVISOR_SECURITY_CONTAINERD_CACHE` 可复用已下载的固定依赖；每次仍核对固定摘要。`make check` 另执行模型、Skill 证明和配额夹具的离线正反例，不启动供应商 CLI 或集群。
+
 ## 2026-11-27 实际验收
 
 干净源码 `19d0d5b40a48226402768f49d49228f9845901a3` 的 [production SaaS 探针](../tests/kubernetes/sandbox_provider_smoke.py) 退出 0。它实际启动 `serve --sandbox-config`、独立 TLS 能力/模型网关、固定 Pod controller、data-only Worker 和 Linux Codex `0.171.0-alpha.13`；SaaS 只用公开 HTTP 提交、下载、验算和写入独立业务数据库。模型服务使用随机合成共享 key，仅挂给可信控制面/模型服务，guest 镜像只带公开 CA。此次存储是 SQLite/本地对象，不将此前的 PostgreSQL/S3 组件结果当作同一组合通过。

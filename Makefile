@@ -5,12 +5,16 @@
 .PHONY: test-k8s-v2
 .PHONY: test-k8s-gvisor-feasibility
 .PHONY: test-k8s-native-guest test-k8s-gvisor-security
+.PHONY: test-k8s-sandbox-provider test-k8s-sandbox-quota
 
 check: test-file-report
 	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p test_forward.py -v
 	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p gvisor_probe_test.py -v
 	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p gvisor_security_probe_test.py -v
 	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p sandbox_controller_smoke_test.py -v
+	PYTHONDONTWRITEBYTECODE=1 python3 tests/kubernetes/sandbox_provider_model.py --check
+	PYTHONDONTWRITEBYTECODE=1 python3 tests/kubernetes/sandbox_provider_skill.py --check
+	PYTHONDONTWRITEBYTECODE=1 python3 tests/kubernetes/sandbox_provider_quota.py --check
 	sh tests/check-kind-prereqs.sh
 	@unformatted=$$(gofmt -l cmd internal) && test -z "$$unformatted" || { echo "Run make fmt"; exit 1; }
 	go vet ./...
@@ -75,7 +79,7 @@ test-k8s-v2: check-kind-prereqs
 test-k8s-gvisor-feasibility:
 	python3 tests/kubernetes/gvisor_probe.py
 
-# Real Codex + scripted model in fresh gVisor guests; provider stays closed.
+# Standalone native guest core; the application provider has its own target.
 test-k8s-native-guest:
 	python3 tests/kubernetes/native_guest_smoke.py
 
@@ -88,3 +92,12 @@ test-k8s-pod-loss: check-kind-prereqs
 STAGE ?= all
 test-k8s-gvisor-security:
 	python3 tests/kubernetes/gvisor_security_probe.py --stage $(STAGE)
+
+PROVIDER_SCENARIO ?= both
+test-k8s-sandbox-provider:
+	@test -n "$(PROVIDER_OUTPUT)" || { echo "Set PROVIDER_OUTPUT to a new evidence file path"; exit 2; }
+	python3 tests/kubernetes/sandbox_provider_smoke.py --scenario $(PROVIDER_SCENARIO) --output "$(PROVIDER_OUTPUT)" $(if $(GVISOR_SECURITY_BUNDLE),--bundle "$(GVISOR_SECURITY_BUNDLE)") $(if $(GVISOR_SECURITY_CALICO_MANIFEST),--calico-manifest "$(GVISOR_SECURITY_CALICO_MANIFEST)")
+
+test-k8s-sandbox-quota:
+	@test -n "$(QUOTA_OUTPUT)" || { echo "Set QUOTA_OUTPUT to a new evidence file path"; exit 2; }
+	python3 tests/kubernetes/sandbox_provider_quota.py --output "$(QUOTA_OUTPUT)" $(if $(GVISOR_SECURITY_BUNDLE),--bundle "$(GVISOR_SECURITY_BUNDLE)") $(if $(GVISOR_SECURITY_CALICO_MANIFEST),--calico-manifest "$(GVISOR_SECURITY_CALICO_MANIFEST)")
