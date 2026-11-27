@@ -14,7 +14,10 @@ if sys.argv[1:2] == ["exec"]:
     pod = socket.gethostname()
     previous = json.loads(path.read_text()) if path.is_file() else {}
     record = {"pod": pod, "nonce": str(uuid.uuid4()), "count": 1,
-              "rlimit_nproc": list(resource.getrlimit(resource.RLIMIT_NPROC))}
+              "rlimit_nproc": list(resource.getrlimit(resource.RLIMIT_NPROC)),
+              "forbidden_environment_present": [name for name in (
+                  "AGENTMOOR_POSTGRES_DSN", "AGENTMOOR_S3_ENDPOINT", "AGENTMOOR_S3_BUCKET",
+                  "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN") if name in os.environ]}
     if previous.get("pod") == pod:
         record["count"] += previous["count"]
     path.write_text(json.dumps(record, sort_keys=True) + "\n")

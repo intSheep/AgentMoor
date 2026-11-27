@@ -219,3 +219,5 @@ python3 tests/native_roundtrip.py codex /absolute/path/to/codex
 关闭时省略该字段或设为空字符串。开关只作用于新建操作；已有 pending 会先按它记录的旧传输方式、操作键和冻结字节恢复，再处理新内容。保留同一 `state_dir`，不要删除 journal 来切换。旧平台不支持该模式，大小上限或协议错误会明确失败，不会自动退回整包。
 
 文件改名、权限和删除会产生新的工作区版本，相同 body 可复用，历史版本继续保留。恢复仍必须使用新目标路径。增量上传仍有完整本地扫描、打包，以及平台提交时的完整后端读取成本，不能据上传量减少承诺耗时变短。限制、GC、可复制的测量命令和 `make test-k8s-workspace-parts` 入口见[工作区增量上传](workspace-incremental.md)。
+
+生产隔离提供方与 PostgreSQL/S3 的组合复验使用 `PERSISTENT_OUTPUT=/absolute/new/evidence.json make test-k8s-sandbox-persistent`。它创建专属节点，运行真实 Codex 三轮，在前两轮后重建 API 并核对持久数据与运维审计；服务镜像缓存、所需固定运行时缓存及实际边界见[组合验收说明](sandbox-persistent-acceptance.md)。

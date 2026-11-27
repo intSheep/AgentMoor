@@ -1,0 +1,16 @@
+{
+  "source_commit": "1afa1ea86347aa98ff50db593e78fdd96ce56ec3",
+  "checks": [
+    {
+      "target": "check",
+      "exit_code": 0,
+      "seconds": 88.079
+    },
+    {
+      "target": "demo",
+      "exit_code": 0,
+      "seconds": 2.023
+    }
+  ],
+  "status": "passed"
+}

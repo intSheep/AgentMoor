@@ -1,0 +1,114 @@
+{
+  "status": "verified",
+  "source_commit": "1afa1ea86347aa98ff50db593e78fdd96ce56ec3",
+  "raw_json": {
+    "path": "/private/tmp/agentmoor-isolated-persistent-1afa1ea-20261127-r1.json",
+    "bytes": 670999,
+    "sha256": "abc88ab7ffdeffba4aa81a1a24bf56eb590f443ffa089ad2c1d8f7fe4f97f217"
+  },
+  "api_replacements": [
+    {
+      "after_round": "initial",
+      "api_pod_uids": [
+        "ec2eb8c9-4e08-4082-b2b0-444b46d8e9e6",
+        "c130985d-d11e-42d7-b68a-728ea9a600f3"
+      ],
+      "audit_events_before_after_equal": 23,
+      "audit_matches_final_prefix": true,
+      "checkpoint_sha256_recomputed": "1bf6cf174f0968c3ad3ef409729059bbb170ddfa340a49ffaa41b2ac0b4be16c",
+      "task_receipt_sha256": "039740f0e5ec6a949a297537bc0da2e30c42ef9d1b7b1ff47c4c4a13f6beb9e5",
+      "exact_initial_task_refs_rechecked": 3
+    },
+    {
+      "after_round": "confirmation",
+      "api_pod_uids": [
+        "c130985d-d11e-42d7-b68a-728ea9a600f3",
+        "9ae60e71-0b2e-4056-b342-8e75be0f3c9c"
+      ],
+      "audit_events_before_after_equal": 48,
+      "audit_matches_final_prefix": true,
+      "checkpoint_sha256_recomputed": "71c1fab424873ed7b689377a4076f42f8f46f28095ad995a9d937dbcd91fbb1e",
+      "task_receipt_sha256": "039740f0e5ec6a949a297537bc0da2e30c42ef9d1b7b1ff47c4c4a13f6beb9e5",
+      "exact_initial_task_refs_rechecked": 3
+    }
+  ],
+  "audit_events": 73,
+  "joins": [
+    {
+      "run_id": "b89ac8dcb226c147cb6c4207fe29f1a3befbb9ba6a90e71fb75420943cafd971",
+      "turn_id": "",
+      "pod_uid": "47ae8f19-b036-4523-884a-412df023faff",
+      "terminal_cursor": 13,
+      "stop_proven_cursor": 14,
+      "deleted_cursor": 15,
+      "accepted_cursor": 20,
+      "asset_links": 3
+    },
+    {
+      "run_id": "3748a8cd39c6d8ed367926ca3fe88d40be7fa895f9da5f6d425d852b3be007d1",
+      "turn_id": "83363c44-ff60-4080-ae95-b1d5ea317b6d",
+      "pod_uid": "08889a00-8ccf-467b-ae33-83421b6d2fd4",
+      "terminal_cursor": 36,
+      "stop_proven_cursor": 37,
+      "deleted_cursor": 38,
+      "accepted_cursor": 44,
+      "asset_links": 4
+    },
+    {
+      "run_id": "dda3d2a797b7b3ab01c46a22ac353bd0473ca6d13e793de401a62d6f0af2979a",
+      "turn_id": "a8c231e2-f269-4837-8917-ec8734ba3028",
+      "pod_uid": "c60c3121-a350-4a0d-b4c0-64de46e232b1",
+      "terminal_cursor": 61,
+      "stop_proven_cursor": 62,
+      "deleted_cursor": 63,
+      "accepted_cursor": 69,
+      "asset_links": 4
+    }
+  ],
+  "native_counts": [
+    1,
+    1,
+    1
+  ],
+  "storage_environment_names_absent": true,
+  "guarded_environment_names": [
+    "AGENTMOOR_POSTGRES_DSN",
+    "AGENTMOOR_S3_ENDPOINT",
+    "AGENTMOOR_S3_BUCKET",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_SESSION_TOKEN"
+  ],
+  "immutable_downloads_rechecked": 11,
+  "postgres_version": "18.7",
+  "images": {
+    "postgres": [
+      {
+        "image": "docker.io/library/postgres:18-alpine",
+        "image_id": "docker.io/library/import-2026-11-27@sha256:acd216e12f817ac7b584a5ba0bd192875d96c1772746a56b9f70823c312738b6"
+      }
+    ],
+    "s3": [
+      {
+        "image": "docker.io/pgsty/minio:RELEASE.2026-04-17T00-00-00Z",
+        "image_id": "docker.io/library/import-2026-11-27@sha256:d1eef3d62c35c1d381ffcee9e0e5f7622a8058c614863a345ef32bacd117b48c"
+      }
+    ]
+  },
+  "postgres_revision_objects": 9,
+  "listed_s3_objects": 15,
+  "public_uuid_replays_without_events": 3,
+  "proof_verifier_negative_controls": [
+    "sandbox.result_accepted/run_id",
+    "asset.linked/version",
+    "sandbox.output_sealed/actor"
+  ],
+  "boundaries": [
+    "Independent local recheck of already retained evidence only; no additional DB/object/cluster access. Root separately owns process exit and actual resource cleanup verification.",
+    "Both replacement hooks compare the initial Task receipt and its three exact refs. Each current checkpoint hash is independently recomputed from the corresponding public initial/confirmation Session and Workspace refs; final 11-ref rereads and following continuation cover confirmation content. The confirmation Turn full receipt is not directly compared at that hook.",
+    "Full Task receipt JSON is not retained in this snapshot, so its digest is runtime evidence and not independently reconstructed here.",
+    "PostgreSQL image/tag and SHOW version18.7, and Minio exact tag/imageID are observed; no official digest verification beyond the recorded fixture images is claimed.",
+    "PG sslmode=disable and S3 HTTP are disposable in-cluster fixture transport; no production HA, service-process restart, network partition, or real model quality claim.",
+    "Audit proves stop-proven/deleted/accepted order and server acceptance contract. No new private proof exit-code observation was added for this run. Trusted Worker remains the output-to-asset byte publisher."
+  ]
+}

@@ -92,3 +92,7 @@ QUOTA_OUTPUT=/absolute/new/quota.json make test-k8s-sandbox-quota
 上述验收使用真实原生 CLI、脚本模型和合成业务/Skill，不证明真实模型质量、任意恶意程序不会逃逸、生产 HA 或全部系统调用兼容。其他 CLI 隔离路径、真实模型及 PostgreSQL/S3 与完整隔离提供方的组合分别验收；早期组件页所写“未接线”描述该页当时的独立组件范围，当前接线状态以本页为准。
 
 最终合入主分支后的 `f1ec8c8` 再次通过 `make fmt/check/demo`，包含模型、Skill 证明与配额离线检查。已逐项确认 `cmd`、`internal`、`go.mod` 和 `go.sum` 与两份实际集群来源完全相同；没有把原集群测试改写成新的提交来源。[最终整合检查](evidence/sandbox-provider-integration-2026-11-27.json)
+
+### PostgreSQL/S3 与 API 重建组合
+
+`1afa1ea` 的真实隔离文本三轮已组合 PostgreSQL 18.7/S3，通过两次 API Pod 重建、检查点与旧字节保持、73 条运维审计链及原 UUID 重放。数据库凭据只进入可信 API；未回退 SQLite 或本地对象。API 正常重建、Worker SIGKILL 和节点失联分别保留各自证据，复验入口为 `make test-k8s-sandbox-persistent`。[命令、实际来源与边界](sandbox-persistent-acceptance.md)
