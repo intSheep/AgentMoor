@@ -3,9 +3,11 @@
 .PHONY: test-k8s-workspace-parts
 .PHONY: test-k8s-persistent-faults
 .PHONY: test-k8s-v2
+.PHONY: test-k8s-gvisor-feasibility
 
 check: test-file-report
 	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p test_forward.py -v
+	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p gvisor_probe_test.py -v
 	sh tests/check-kind-prereqs.sh
 	@unformatted=$$(gofmt -l cmd internal) && test -z "$$unformatted" || { echo "Run make fmt"; exit 1; }
 	go vet ./...
@@ -65,6 +67,10 @@ test-k8s-persistent-faults: check-kind-prereqs
 test-k8s-v2: check-kind-prereqs
 	$(MAKE) build
 	AGENT=codex sh tests/kubernetes/run.sh --persistent-v2
+
+# Independent runtime feasibility, not AgentMoor/CLI/tenant isolation acceptance.
+test-k8s-gvisor-feasibility:
+	python3 tests/kubernetes/gvisor_probe.py
 
 # Uses the production 15-minute deadline. Keep this separate from the short smoke.
 test-k8s-pod-loss: check-kind-prereqs
