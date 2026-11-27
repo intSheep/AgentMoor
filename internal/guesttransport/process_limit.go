@@ -9,7 +9,9 @@ import (
 
 // GuestProcessLimit bounds virtual guest tasks. gVisor guest processes are not
 // host processes, so the kubelet's host pids.max is a separate required bound.
-const GuestProcessLimit uint64 = 32
+// This includes threads belonging to the Go bootstrap, native CLI and its
+// tools. A 32-task budget aborted the real fixed Codex flow at pthread_create.
+const GuestProcessLimit uint64 = 64
 
 // LimitGuestProcesses must run in the unprivileged Linux guest before any
 // native command. The hard limit survives exec and cannot be raised by the
