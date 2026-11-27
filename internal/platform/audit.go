@@ -56,6 +56,7 @@ type AuditEvent struct {
 	PodUID           string      `json:"pod_uid,omitempty"`
 	AssetKind        string      `json:"asset_kind,omitempty"`
 	AssetIDSHA256    string      `json:"asset_id_sha256,omitempty"`
+	SessionIDSHA256  string      `json:"session_id_sha256,omitempty"`
 	Version          int64       `json:"version,omitempty"`
 	Digest           string      `json:"digest,omitempty"`
 	PreviousState    string      `json:"previous_state,omitempty"`
@@ -173,7 +174,7 @@ func (e AuditEvent) valid() bool {
 	if e.Schema != AuditSchema || e.Cursor < 1 || e.TimeUnixNano < 1 || !e.Scope.Valid() || e.TaskID != e.Scope.Runtime || !auditState(e.State) || !auditState(e.PreviousState) {
 		return false
 	}
-	for _, digest := range []string{e.Actor.CredentialSHA256, e.AttemptSHA256, e.RunID, e.AssetIDSHA256, e.Digest, e.ObjectIDSHA256} {
+	for _, digest := range []string{e.Actor.CredentialSHA256, e.AttemptSHA256, e.RunID, e.AssetIDSHA256, e.SessionIDSHA256, e.Digest, e.ObjectIDSHA256} {
 		if digest != "" && !sandboxDigest(digest) {
 			return false
 		}
@@ -182,6 +183,9 @@ func (e AuditEvent) valid() bool {
 		return false
 	}
 	if !strings.HasPrefix(e.Action, "object.collection_") && (e.OperationID != "" || e.ObjectKind != "" || e.ObjectIDSHA256 != "" || e.CollectionProof != "") {
+		return false
+	}
+	if e.SessionIDSHA256 != "" && e.Action != "asset.linked" {
 		return false
 	}
 	if e.Actor.Source == "http" {
@@ -258,6 +262,10 @@ func (e AuditEvent) valid() bool {
 		return e.Component == "task-store" && (strings.HasPrefix(e.Action, "turn.") == (e.TurnID != "")) && e.State == state && e.RunID == "" && e.AssetKind == "" && e.AssetIDSHA256 == "" && e.Version == 0 && e.Digest == "" && e.PodUID == "" && e.ModelRequests == 0 && e.ModelInputBytes == 0 && e.ModelOutputBytes == 0
 	case "revision.committed":
 		return e.Component == "revision-store" && e.AssetIDSHA256 != "" && e.Digest != "" && e.Version > 0 && (asset.Key{Kind: e.AssetKind, ID: "audit"}).Valid() && e.RunID == "" && e.State == "" && e.PreviousState == "" && e.PodUID == "" && e.ModelRequests == 0 && e.ModelInputBytes == 0 && e.ModelOutputBytes == 0
+	case "asset.linked":
+		return e.Component == "task-store" && e.AttemptSHA256 != "" && e.AssetIDSHA256 != "" && e.SessionIDSHA256 != "" && e.Digest != "" && e.Version > 0 &&
+			(e.AssetKind == "artifact" || e.AssetKind == "workspace" || e.AssetKind == "session") && e.State == task.Succeeded && e.PreviousState == "" &&
+			e.RunID == "" && e.PodUID == "" && e.ModelRequests == 0 && e.ModelInputBytes == 0 && e.ModelOutputBytes == 0
 	case "sandbox.begun", "sandbox.collected", "sandbox.create_fenced", "sandbox.template_sealed", "sandbox.pod_bound", "sandbox.terminated", "sandbox.deleted", "sandbox.output_sealed", "sandbox.output_declared", "sandbox.input_sealed", "sandbox.cancelled", "sandbox.failed", "sandbox.expired", "sandbox.ready":
 		return e.Component == "sandbox-controller" && e.RunID != "" && e.AttemptSHA256 != "" && e.State != "" && e.AssetKind == "" && e.AssetIDSHA256 == "" && e.Version == 0 && e.ModelRequests == 0 && e.ModelInputBytes == 0 && e.ModelOutputBytes == 0
 	case "model.reserved":
@@ -281,7 +289,7 @@ func appendAudit(ctx context.Context, tx *sql.Tx, event AuditEvent) error {
 	switch {
 	case strings.HasPrefix(event.Action, "object.collection_"):
 		event.Component = "object-collector"
-	case strings.HasPrefix(event.Action, "task."), strings.HasPrefix(event.Action, "turn."):
+	case strings.HasPrefix(event.Action, "task."), strings.HasPrefix(event.Action, "turn."), event.Action == "asset.linked":
 		event.Component = "task-store"
 	case event.Action == "revision.committed":
 		event.Component = "revision-store"

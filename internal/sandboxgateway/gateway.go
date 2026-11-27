@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"agentmoor/internal/asset"
+	"agentmoor/internal/httptrace"
 	"agentmoor/internal/platform"
 )
 
@@ -56,7 +57,8 @@ type Profile struct {
 }
 
 type Config struct {
-	Profiles []Profile `json:"profiles"`
+	Profiles   []Profile      `json:"profiles"`
+	RequestLog httptrace.Sink `json:"-"`
 }
 
 type boundProfile struct {
@@ -68,9 +70,10 @@ type boundProfile struct {
 }
 
 type Gateway struct {
-	catalog  *platform.Catalog
-	profiles map[string]*boundProfile
-	active   chan struct{}
+	catalog    *platform.Catalog
+	profiles   map[string]*boundProfile
+	active     chan struct{}
+	requestLog httptrace.Sink
 }
 
 func profileKey(scope asset.Scope, fingerprint string) string {
@@ -81,7 +84,7 @@ func New(catalog *platform.Catalog, config *Config) (*Gateway, error) {
 	if catalog == nil || config == nil || len(config.Profiles) == 0 || len(config.Profiles) > MaxProfiles {
 		return nil, fmt.Errorf("invalid sandbox gateway configuration")
 	}
-	g := &Gateway{catalog: catalog, profiles: make(map[string]*boundProfile), active: make(chan struct{}, 32)}
+	g := &Gateway{catalog: catalog, profiles: make(map[string]*boundProfile), active: make(chan struct{}, 32), requestLog: config.RequestLog}
 	for _, p := range config.Profiles {
 		u, err := url.Parse(p.UpstreamURL)
 		if err != nil || u.Scheme != "https" || u.Hostname() == "" || !validUpstreamPort(u) || u.User != nil || u.Path != "/v1/responses" || u.RawPath != "" || u.RawQuery != "" || u.ForceQuery || u.Fragment != "" || u.Opaque != "" || u.String() != p.UpstreamURL ||
@@ -209,6 +212,14 @@ func catalogStatus(err error) int {
 }
 
 func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	var sink httptrace.Sink
+	if g != nil {
+		sink = g.requestLog
+	}
+	httptrace.Handler("sandbox-gateway", http.HandlerFunc(g.serveHTTP), sink).ServeHTTP(w, r)
+}
+
+func (g *Gateway) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	if g == nil || r.TLS == nil || r.TLS.Version < tls.VersionTLS12 {
@@ -223,10 +234,13 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method + " " + r.URL.Path {
 	case "GET /input":
 		purpose = platform.SandboxInput
+		httptrace.Route(r.Context(), "GET /input")
 	case "PUT /output":
 		purpose = platform.SandboxOutput
+		httptrace.Route(r.Context(), "PUT /output")
 	case "POST /v1/responses":
 		purpose = platform.SandboxModel
+		httptrace.Route(r.Context(), "POST /v1/responses")
 	default:
 		replyError(w, 404)
 		return
@@ -262,6 +276,7 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		replyError(w, catalogStatus(err))
 		return
 	}
+	httptrace.Capability(r.Context(), run.Scope, run.ID, run.TurnID, string(purpose))
 	profile := g.profiles[profileKey(run.Scope, run.ProfileFingerprint)]
 	if profile == nil {
 		replyError(w, 403)

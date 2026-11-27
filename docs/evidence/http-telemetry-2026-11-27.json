@@ -1,0 +1,210 @@
+{
+  "schema": "agentmoor-http-telemetry-evidence.v1",
+  "issue": "INT-86",
+  "recorded_utc": "2026-11-27T08:37:13.350853+00:00",
+  "implementation_source_sha": "a1b9bc0a295f0e3f7e20311242bed5873c717f18",
+  "verification": [
+    {
+      "target": "make fmt",
+      "source_sha": "a1b9bc0a295f0e3f7e20311242bed5873c717f18",
+      "exit_code": 0,
+      "log": {
+        "path": "/private/tmp/agentmoor-http-telemetry-fmt-20261127.log",
+        "bytes": 22,
+        "sha256": "9ba9a3ce39410b82cffdcafff24a52faa1612e3a34b2a29885a7007b1bbfbc33",
+        "tail": [
+          "gofmt -w cmd internal"
+        ]
+      }
+    },
+    {
+      "target": "make check",
+      "source_sha": "a1b9bc0a295f0e3f7e20311242bed5873c717f18",
+      "exit_code": 0,
+      "log": {
+        "path": "/private/tmp/agentmoor-http-telemetry-check-20261127.log",
+        "bytes": 9303,
+        "sha256": "f4ae72c9383047445f60b69832165b7f941bbabcb65156f6c9e04d7b5a47116a",
+        "tail": [
+          "ok  \tagentmoor/internal/snapshot\t1.521s",
+          "ok  \tagentmoor/internal/task\t1.064s",
+          "ok  \tagentmoor/internal/worker\t67.970s",
+          "?   \tagentmoor/tests/kubernetes/controllerfixture\t[no test files]",
+          "ok  \tagentmoor/tests/kubernetes/faultproxy\t2.269s",
+          "?   \tagentmoor/tests/kubernetes/faultproxy/cmd/faultproxy\t[no test files]",
+          "?   \tagentmoor/tests/kubernetes/gvisor_network_check\t[no test files]",
+          "?   \tagentmoor/tests/kubernetes/gvisor_process_limit\t[no test files]",
+          "go build ./..."
+        ]
+      }
+    },
+    {
+      "target": "make demo",
+      "source_sha": "a1b9bc0a295f0e3f7e20311242bed5873c717f18",
+      "exit_code": 0,
+      "log": {
+        "path": "/private/tmp/agentmoor-http-telemetry-demo-20261127.log",
+        "bytes": 10164,
+        "sha256": "3ceacab571579ee395368d71d9e2d9f2e1f6c4f1a700769069afe96fd7683e34",
+        "tail": [
+          "{\"schema\":\"http-request.v1\",\"time_unix_nano\":1795768261891697000,\"request_id\":\"a1513d01-d4ac-4523-a718-6debcfa049af\",\"component\":\"platform-api\",\"method\":\"GET\",\"route\":\"GET /v1/context\",\"status\":200,\"outcome\":\"ok\",\"duration_nanos\":28958,\"response_bytes\":138,\"actor\":\"platform-credential\",\"requested_role\":\"context\",\"credential_sha256\":\"7ae09540f1f62280c38d297915dec1b1f5d0067efcd560c5c8836817f4b856c5\",\"scope\":{\"tenant\":\"example\",\"project\":\"demo\",\"runtime\":\"primary\",\"adapter\":\"claude-code\"}}",
+          "{\"schema\":\"http-request.v1\",\"time_unix_nano\":1795768261891999000,\"request_id\":\"912aa06f-b124-4e92-880f-839dd5b7e7e3\",\"component\":\"platform-api\",\"method\":\"GET\",\"route\":\"GET /v1/assets\",\"status\":200,\"outcome\":\"ok\",\"duration_nanos\":165792,\"response_bytes\":2149,\"actor\":\"platform-credential\",\"requested_role\":\"read\",\"credential_sha256\":\"7ae09540f1f62280c38d297915dec1b1f5d0067efcd560c5c8836817f4b856c5\",\"scope\":{\"tenant\":\"example\",\"project\":\"demo\",\"runtime\":\"primary\",\"adapter\":\"claude-code\"}}",
+          "artifact v1  out/result.txt",
+          "session v1  921b456d-939b-43c3-bb69-ff2e9138ff0b",
+          "skill v1  .claude/skills/greeting/SKILL.md",
+          "workspace v1  root",
+          "{\"schema\":\"http-request.v1\",\"time_unix_nano\":1795768261915104000,\"request_id\":\"c6d79888-277b-4fd8-b8ec-e56e22834547\",\"component\":\"platform-api\",\"method\":\"GET\",\"route\":\"GET /v1/context\",\"status\":200,\"outcome\":\"ok\",\"duration_nanos\":30458,\"response_bytes\":138,\"actor\":\"platform-credential\",\"requested_role\":\"context\",\"credential_sha256\":\"7ae09540f1f62280c38d297915dec1b1f5d0067efcd560c5c8836817f4b856c5\",\"scope\":{\"tenant\":\"example\",\"project\":\"demo\",\"runtime\":\"primary\",\"adapter\":\"claude-code\"}}",
+          "{\"schema\":\"http-request.v1\",\"time_unix_nano\":1795768261915343000,\"request_id\":\"de141830-7715-49e1-8821-9511ef64b4a4\",\"component\":\"platform-api\",\"method\":\"GET\",\"route\":\"GET /v1/content\",\"status\":200,\"outcome\":\"ok\",\"duration_nanos\":228334,\"response_bytes\":5632,\"actor\":\"platform-credential\",\"requested_role\":\"read\",\"credential_sha256\":\"7ae09540f1f62280c38d297915dec1b1f5d0067efcd560c5c8836817f4b856c5\",\"scope\":{\"tenant\":\"example\",\"project\":\"demo\",\"runtime\":\"primary\",\"adapter\":\"claude-code\"}}",
+          "Workspace restored and verified."
+        ]
+      }
+    },
+    {
+      "target": "make test-k8s",
+      "source_sha": "a1b9bc0a295f0e3f7e20311242bed5873c717f18",
+      "exit_code": 0,
+      "log": {
+        "path": "/private/tmp/agentmoor-http-telemetry-k8s-20261127.log",
+        "bytes": 13861,
+        "sha256": "35d9d3506851a82a22eea119e9aacb8563f87190e2e82c2c1919a9f6a9ebdc1f",
+        "tail": [
+          "Successfully built 5223862b852d",
+          "Successfully tagged agentmoor-contract:agentmoor-b0b30ffee303-claude-code",
+          "Image: \"agentmoor-contract:agentmoor-b0b30ffee303-claude-code\" with ID \"sha256:5223862b852dbb09870c74b6e5c436b210caa73dae763f3ca57c3ae3d09fe610\" not yet present on node \"agentmoor-b0b30ffee303-control-plane\", loading...",
+          "SaaS verified the versioned report after deletion of the original Pod and emptyDir.",
+          "SaaS recovered two consecutive turns from automatically created Jobs and read both replies after Pod deletion.",
+          "SaaS cancelled an active follow-up and retained the last committed conversation.",
+          "SaaS cancelled an active native turn; worker acknowledged and Job exited in 3.0s.",
+          "Deleting cluster \"agentmoor-b0b30ffee303\" ...",
+          "Deleted nodes: [\"agentmoor-b0b30ffee303-control-plane\"]"
+        ]
+      }
+    },
+    {
+      "target": "focused race / TLS / 64MiB blocked download / SSE cancellation / original deadlines",
+      "source_sha": "a1b9bc0a295f0e3f7e20311242bed5873c717f18",
+      "exit_code": 0,
+      "log": {
+        "path": "/private/tmp/agentmoor-http-telemetry-focused-r3-20261127.log",
+        "bytes": 127,
+        "sha256": "26201920df622d727a961bc0a808cbacb74e6255e5a6c95bb33ac2bdfc7c70ca",
+        "tail": [
+          "ok  \tagentmoor/internal/httptrace\t4.124s",
+          "ok  \tagentmoor/internal/platform\t4.297s",
+          "ok  \tagentmoor/internal/sandboxgateway\t6.722s"
+        ]
+      }
+    }
+  ],
+  "negative_controls": [
+    {
+      "control": "no_unwrap",
+      "base_source_sha": "a1b9bc0a295f0e3f7e20311242bed5873c717f18",
+      "expected_exit_code": 1,
+      "observed_exit_code": 1,
+      "log": {
+        "path": "/private/tmp/agentmoor-http-telemetry-negative-20261127/no_unwrap.log",
+        "bytes": 204,
+        "sha256": "9aa55cadcd4ba0f112ccda726d4d7ea96097ba2b9c530e117707bdf7bd328c61",
+        "tail": [
+          "--- FAIL: TestTraceRealTLSControllerAndStreaming (0.01s)",
+          "    httptrace_test.go:25: feature not supported",
+          "    httptrace_test.go:28: feature not supported",
+          "FAIL",
+          "FAIL\tagentmoor/internal/httptrace\t0.097s",
+          "FAIL"
+        ]
+      },
+      "overlay_sha256": "6d00598cd0eceb9b42e7373f550b6bc77a849aa6f0cb2862294a8e2edc1d3be1",
+      "replacement_sha256": {
+        "no_unwrap.go": "d5df768f445ad7b4f80abdd4b5ceb15eee8240cbf63de3efbd7598f52258201c"
+      }
+    },
+    {
+      "control": "raw_error",
+      "base_source_sha": "a1b9bc0a295f0e3f7e20311242bed5873c717f18",
+      "expected_exit_code": 1,
+      "observed_exit_code": 1,
+      "log": {
+        "path": "/private/tmp/agentmoor-http-telemetry-negative-20261127/raw_error.log",
+        "bytes": 224,
+        "sha256": "e43e58eb6d435ed7bcbada71790555a704ea32c27b067a83c9b015f1ca7985c7",
+        "tail": [
+          "--- FAIL: TestAPITelemetryScopesOnlyAuthenticatedCredentialAndUsesFixedRoute (0.04s)",
+          "    http_telemetry_test.go:81: object-store error leaked through response or diagnostics",
+          "FAIL",
+          "FAIL\tagentmoor/internal/platform\t0.171s",
+          "FAIL"
+        ]
+      },
+      "overlay_sha256": "b5e92ed58947ac02c425fa4dc09a81cb43a547799b34c02157de00f852b2d11f",
+      "replacement_sha256": {
+        "raw_error.go": "b4cbd05ea733b52e35a913afabb5ae198317d7f2ba01f146a6f2c87cc8d597ec"
+      }
+    }
+  ],
+  "full_kubernetes_matrix": {
+    "cluster": "agentmoor-b0b30ffee303",
+    "adapters": [
+      "codex",
+      "gemini-cli",
+      "opencode",
+      "claude-code"
+    ],
+    "report_delivered_after_pod_delete": 4,
+    "two_followup_turns": 4,
+    "followup_cancel_preserved_checkpoint": 4,
+    "native_cancel_seconds": [
+      "4.6",
+      "3.7",
+      "3.8",
+      "3.0"
+    ],
+    "cleanup": [
+      {
+        "type": "container",
+        "name": "agentmoor-b0b30ffee303-control-plane",
+        "absent": true,
+        "inspect_exit_code": 1
+      },
+      {
+        "type": "image",
+        "name": "agentmoor-contract:agentmoor-b0b30ffee303-codex",
+        "absent": true,
+        "inspect_exit_code": 1
+      },
+      {
+        "type": "image",
+        "name": "agentmoor-contract:agentmoor-b0b30ffee303-gemini-cli",
+        "absent": true,
+        "inspect_exit_code": 1
+      },
+      {
+        "type": "image",
+        "name": "agentmoor-contract:agentmoor-b0b30ffee303-opencode",
+        "absent": true,
+        "inspect_exit_code": 1
+      },
+      {
+        "type": "image",
+        "name": "agentmoor-contract:agentmoor-b0b30ffee303-claude-code",
+        "absent": true,
+        "inspect_exit_code": 1
+      }
+    ]
+  },
+  "boundaries": [
+    "Best effort stderr JSON, not transactional audit or immutable retention.",
+    "Response byte count does not prove client receipt.",
+    "Scripted models with actual fixed CLIs; no live model API or production deployment.",
+    "Four-CLI regression uses the ordinary task provider, not all four runtimes in gVisor.",
+    "Pre-handler HTTP parsing and TLS handshakes excluded."
+  ],
+  "integration": {
+    "main_merge": "43e454cb58d3d92f7f2c39df80db029000505949",
+    "integration_commit": "cd3a2ffc255b01ed0f757bd86988bf85917cc210",
+    "code_diff_from_verified_source": "empty for cmd internal go.mod go.sum",
+    "reviewed_commit": "90f396a",
+    "independent_code_review": "No blocker; verified identity timing, fixed templates, no raw capability/hash/content, ResponseController unwrap and abort semantics; no extra runtime tests claimed."
+  }
+}
