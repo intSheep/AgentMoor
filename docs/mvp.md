@@ -172,3 +172,7 @@ INT-90 保留旧实现 R2/R3 的真实失败：只停止自有节点 kubelet，A
 `3c901611485b2d20460644129bc98cd7b0665ee2` 的默认 serve 在有界主键分页后，仅把原期限已到的运行/取消中 Task、Turn 及排队 Turn 转为中断，与固定 `deadline-controller/system` 审计同一 leased SQL 事务；原 JSON 仅替换唯一顶层 state，保留旧 checkpoint、pins、资产、attempt 与期限，不调度执行或伪造清理 ACK。SQLite/真实 PG 的审计/租约故障、Finish 原期限并发、旧字节、分页/坏记录、重启幂等及服务退出通过。真实 BEGIN/已执行 SELECT 回应黑洞分别按 4/2 秒 I/O 边界退出；普通慢 SQL、取消和预算耗尽后原写者 PID/租约与合法写入保持。旧 NUL 键截断和维护预算杀死写者的真实负例单列保留。[实现、验收与边界](deadline-sweep.md)
 
 同一干净源码 fmt/check/demo/services 与完整四 CLI 默认受信矩阵全部退出 0，16 个阶段、八次追问通过；取消为 2.3/3.1/3.0/3.8 秒，本轮节点/存储资源/镜像标签已独立确认清理。此回归使用脚本模型，不重标为真实模型、HA 或新的隔离资源验收。[真实事件、准确来源与原日志摘要](evidence/deadline-sweep-2026-11-27.json)
+
+## 2026-11-27：隔离提供方与 PostgreSQL/S3 组合
+
+干净 `1afa1ea` 的真实 Codex 同一 Session 三轮，各自新 gVisor Pod 且原生计数为 1；第一、二轮后各重建 API Pod，23/48 条已有审计和当前检查点精确保持。最终 73 条运维事件、11 个精确资产链接及旧字节复读、三次原公开 UUID 重放零新增事件通过。实际 PostgreSQL 18.7 和 S3 保留九个唯一 revision 对象（共 15 键），无 SQLite/本地对象回退；六个明确检查的存储环境变量均未进入原生执行。独立只读核对与实际专属资源清理均通过。[完整验收与准确边界](sandbox-persistent-acceptance.md) · [原始记录及来源索引](evidence/isolated-persistent-provider-2026-11-27.json)

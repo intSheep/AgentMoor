@@ -1,0 +1,21 @@
+{
+  "source_commit": "b39ad16cc0419eb058f1333387978ecf107630c2",
+  "checks": [
+    {
+      "target": "fmt",
+      "exit_code": 0,
+      "seconds": 0.035
+    },
+    {
+      "target": "check",
+      "exit_code": 0,
+      "seconds": 15.333
+    },
+    {
+      "target": "demo",
+      "exit_code": 0,
+      "seconds": 1.8
+    }
+  ],
+  "status": "passed"
+}

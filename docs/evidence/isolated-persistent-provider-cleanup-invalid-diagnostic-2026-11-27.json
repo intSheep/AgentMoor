@@ -1,0 +1,49 @@
+{
+  "source_commit": "1afa1ea86347aa98ff50db593e78fdd96ce56ec3",
+  "checked_at_utc": "2026-11-27T10:46:45.189206+00:00",
+  "status": "passed",
+  "checks": [
+    {
+      "kind": "container",
+      "target": "agentmoor-e848330a86be-control-plane",
+      "absent": true,
+      "exit_code": 1,
+      "diagnostic": "Error response from daemon: No such container: agentmoor-e848330a86be-control-plane"
+    },
+    {
+      "kind": "container",
+      "target": "agentmoor-outside-agentmoor-e848330a86be",
+      "absent": true,
+      "exit_code": 1,
+      "diagnostic": "Error response from daemon: No such container: agentmoor-outside-agentmoor-e848330a86be"
+    },
+    {
+      "kind": "image",
+      "target": "agentmoor-provider:agentmoor-e848330a86be",
+      "absent": true,
+      "exit_code": 1,
+      "diagnostic": "Error response from daemon: No such image: agentmoor-provider:agentmoor-e848330a86be"
+    },
+    {
+      "kind": "image",
+      "target": "agentmoor-provider-base:agentmoor-e848330a86be",
+      "absent": true,
+      "exit_code": 1,
+      "diagnostic": "Error response from daemon: No such image: agentmoor-provider-base:agentmoor-e848330a86be"
+    },
+    {
+      "kind": "image",
+      "target": "agentmoor-security:agentmoor-e848330a86be",
+      "absent": true,
+      "exit_code": 1,
+      "diagnostic": "Error response from daemon: No such image: agentmoor-security:agentmoor-e848330a86be"
+    },
+    {
+      "kind": "owned_cluster_label",
+      "target": "agentmoor-e848330a86be",
+      "absent": true,
+      "remaining_ids": []
+    }
+  ],
+  "shared_dependency_caches_retained": true
+}

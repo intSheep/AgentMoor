@@ -1,0 +1,163 @@
+{
+  "schema": "isolated-persistent-provider-evidence.v1",
+  "issue": "INT-93",
+  "synthetic_data_only": true,
+  "actual_source": "1afa1ea86347aa98ff50db593e78fdd96ce56ec3",
+  "production_equivalent_source": "c383c8525c024d7e9fd55a05dbeab1a01f19b7dd",
+  "post_pr27_integration_source": "b39ad16cc0419eb058f1333387978ecf107630c2",
+  "source_boundary": "Actual source includes reviewed storage/restart fixture and INT90+91 production. Later PR27 integration changes only the existing timeout unit test and documentation; actual acceptance is not relabelled.",
+  "result": {
+    "status": "passed",
+    "native_rounds": 3,
+    "fresh_guest_pods": 3,
+    "native_exec_count_each": 1,
+    "same_native_session": true,
+    "immutable_downloads_rechecked": 11,
+    "operator_audit_events": 73,
+    "public_uuid_replays": 3,
+    "replay_new_events": 0,
+    "api_replacements": 2,
+    "audit_counts_before_replacement": [
+      23,
+      48
+    ],
+    "postgres_version": "18.7",
+    "unique_revision_objects": 9,
+    "listed_s3_objects": 15,
+    "no_local_fallback": true
+  },
+  "restart_boundaries": [
+    {
+      "after_round": "initial",
+      "api_pod_uids": [
+        "ec2eb8c9-4e08-4082-b2b0-444b46d8e9e6",
+        "c130985d-d11e-42d7-b68a-728ea9a600f3"
+      ],
+      "audit_events": 23,
+      "checkpoint_sha256": "1bf6cf174f0968c3ad3ef409729059bbb170ddfa340a49ffaa41b2ac0b4be16c",
+      "task_receipt_sha256": "039740f0e5ec6a949a297537bc0da2e30c42ef9d1b7b1ff47c4c4a13f6beb9e5",
+      "direct_download_refs": 3
+    },
+    {
+      "after_round": "confirmation",
+      "api_pod_uids": [
+        "c130985d-d11e-42d7-b68a-728ea9a600f3",
+        "9ae60e71-0b2e-4056-b342-8e75be0f3c9c"
+      ],
+      "audit_events": 48,
+      "checkpoint_sha256": "71c1fab424873ed7b689377a4076f42f8f46f28095ad995a9d937dbcd91fbb1e",
+      "task_receipt_sha256": "039740f0e5ec6a949a297537bc0da2e30c42ef9d1b7b1ff47c4c4a13f6beb9e5",
+      "direct_download_refs": 3
+    }
+  ],
+  "guest_environment_probe_names": [
+    "AGENTMOOR_POSTGRES_DSN",
+    "AGENTMOOR_S3_ENDPOINT",
+    "AGENTMOOR_S3_BUCKET",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_SESSION_TOKEN"
+  ],
+  "verification_boundary": "Both restart hooks directly compare the initial Task receipt and its three refs. The second separately compares the current confirmation checkpoint; final 11 immutable downloads, exact audit links and next-turn restore cover later refs. No claim of direct pre/post full confirmation Turn receipt comparison.",
+  "cleanup": {
+    "cluster": "agentmoor-e848330a86be",
+    "accepted_artifact": "isolated-persistent-provider-cleanup-2026-11-27.json",
+    "invalid_first_diagnostic": "isolated-persistent-provider-cleanup-invalid-diagnostic-2026-11-27.json",
+    "public_dependency_and_service_image_caches_retained": true
+  },
+  "limitations": [
+    "Single owned ARM64 Linux kind node; no production HA, node fencing or database disaster recovery.",
+    "Disposable PostgreSQL/S3 fixture uses cleartext internal connections; no database/object TLS acceptance.",
+    "Fixed real Codex and synthetic TLS model; no real model keys or quality claim.",
+    "API Pod replacement is normal deletion and recreation; Worker SIGKILL and stopped-kubelet evidence remain separate runs.",
+    "No claim of all CLI isolated providers or arbitrary destination/escape proof."
+  ],
+  "artifacts": [
+    {
+      "path": "isolated-persistent-provider-raw-2026-11-27.json",
+      "bytes": 670999,
+      "sha256": "abc88ab7ffdeffba4aa81a1a24bf56eb590f443ffa089ad2c1d8f7fe4f97f217",
+      "purpose": "actual acceptance"
+    },
+    {
+      "path": "isolated-persistent-provider-independent-2026-11-27.json",
+      "bytes": 4775,
+      "sha256": "684e0633d386cdbab7206f312dfafb22d477ea7050a61de6d2c7166cbdda5fb7",
+      "purpose": "independent read-only comparison"
+    },
+    {
+      "path": "isolated-persistent-provider-cleanup-2026-11-27.json",
+      "bytes": 2203,
+      "sha256": "4e8b7abad160ff5c8022e9f43511963350498dfd7ff6dedb64c8d82e74988188",
+      "purpose": "actual source-named resource and owner-label absence"
+    },
+    {
+      "path": "isolated-persistent-provider-cleanup-invalid-diagnostic-2026-11-27.json",
+      "bytes": 1601,
+      "sha256": "6369cee3a95ed772b6f0bee93a31f4dec5d26a4b15f71c15754f1638da40680d",
+      "purpose": "INVALID diagnostic: guessed outside/security target names; not cleanup acceptance"
+    },
+    {
+      "path": "isolated-persistent-provider-checks-2026-11-27.json",
+      "bytes": 272,
+      "sha256": "b23ca5963cff177e6392b9a9bbf289a2316b5f52ac48369a1d021df3510f4c72",
+      "purpose": "actual source check/demo"
+    },
+    {
+      "path": "isolated-persistent-provider-run-2026-11-27.log.gz",
+      "encoding": "lossless gzip",
+      "raw_bytes": 234632,
+      "raw_sha256": "b8e5bc0a645991b22776fd4df09d1b0d3bded01e3a0d4dd6e17a31f79ef0446d",
+      "bytes": 19267,
+      "sha256": "327d53be07c5115bf9cd571ecf7de4dfa5e46a1fa7a375cefd297d0aa3d291bd"
+    },
+    {
+      "path": "isolated-persistent-provider-checks-2026-11-27.log.gz",
+      "encoding": "lossless gzip",
+      "raw_bytes": 21737,
+      "raw_sha256": "74059f8306569f9074251c9bb597c16638e6ab53d7d6b5582a88abf603927f27",
+      "bytes": 4131,
+      "sha256": "2ddcf04a3af250f091ba510d2a7c4051842193ea5a1b0feb17709fbc87d8f0b7"
+    },
+    {
+      "path": "isolated-persistent-provider-main-checks-2026-11-27.json",
+      "raw_bytes": 351,
+      "raw_sha256": "ea994581252363216e6d63c0d2d3237d850e0604956c46b27d88f74eda969126",
+      "bytes": 351,
+      "sha256": "ea994581252363216e6d63c0d2d3237d850e0604956c46b27d88f74eda969126",
+      "encoding": "JSON"
+    },
+    {
+      "path": "isolated-persistent-provider-main-checks-2026-11-27.log.gz",
+      "raw_bytes": 21916,
+      "raw_sha256": "2e9b2ebd47836a87f65c8a1674eb8a3dc18aa2162db177003c7e29cc09076d2b",
+      "bytes": 4095,
+      "sha256": "9987536386e29f7fddfa4cc9aa6ddbedb7b9df5845caadc4d3049d56a8bfaf2e",
+      "encoding": "lossless gzip"
+    }
+  ],
+  "post_main_checks": {
+    "source_commit": "b39ad16cc0419eb058f1333387978ecf107630c2",
+    "checks": [
+      {
+        "target": "fmt",
+        "exit_code": 0,
+        "seconds": 0.035
+      },
+      {
+        "target": "check",
+        "exit_code": 0,
+        "seconds": 15.333
+      },
+      {
+        "target": "demo",
+        "exit_code": 0,
+        "seconds": 1.8
+      }
+    ],
+    "status": "passed"
+  },
+  "post_main_go_diff_paths": [
+    "internal/sandboxkube/controller_test.go"
+  ]
+}
