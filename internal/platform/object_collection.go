@@ -168,6 +168,13 @@ func (c *Catalog) collectObject(ctx context.Context, s asset.Scope, kind, digest
 	}
 	proof, count := "absence", 0
 	if exists {
+		// Exists may have blocked after loading an old pending intent. Check
+		// the exact leased writer again before beginning Remove; do not use a
+		// pooled fallback. This cannot retract I/O sent after the check.
+		var alive int
+		if err = c.writer.QueryRowContext(ctx, "SELECT 1").Scan(&alive); err != nil {
+			return 0, err
+		}
 		if err = c.objects.Remove(ctx, key); err != nil {
 			return 0, err
 		}
