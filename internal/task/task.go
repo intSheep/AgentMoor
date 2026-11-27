@@ -29,6 +29,11 @@ const TextTurn = "text-turn.v1"
 const ContinueTurn = "continue-turn.v1"
 const FileTurn = "file-turn.v1"
 
+const (
+	ExecutionTrustedLocal      = "trusted-local.v1"
+	ExecutionUntrustedIsolated = "untrusted-isolated.v1"
+)
+
 // MaxArtifacts bounds the delivery receipt carried by the Worker finish call.
 const MaxArtifacts = 128
 
@@ -145,19 +150,21 @@ type Ref struct {
 	ContentPath string `json:"content_path"`
 }
 type Record struct {
-	TurnID   string      `json:"turn_id,omitempty"`
-	Parent   *Checkpoint `json:"parent,omitempty"`
-	ID       string      `json:"id"`
-	State    string      `json:"state"`
-	Spec     Spec        `json:"spec"`
-	Deadline time.Time   `json:"deadline,omitempty,omitzero"`
-	Assets   []Ref       `json:"assets,omitempty"`
-	Skills   []SkillPin  `json:"skills,omitempty"`
-	Error    string      `json:"error,omitempty"`
+	ExecutionPolicy string      `json:"execution_policy,omitempty"`
+	TurnID          string      `json:"turn_id,omitempty"`
+	Parent          *Checkpoint `json:"parent,omitempty"`
+	ID              string      `json:"id"`
+	State           string      `json:"state"`
+	Spec            Spec        `json:"spec"`
+	Deadline        time.Time   `json:"deadline,omitempty,omitzero"`
+	Assets          []Ref       `json:"assets,omitempty"`
+	Skills          []SkillPin  `json:"skills,omitempty"`
+	Error           string      `json:"error,omitempty"`
 }
 type Claim struct {
-	Attempt string     `json:"attempt"`
-	Skills  []SkillPin `json:"skills,omitempty"`
+	ExecutionPolicy string     `json:"execution_policy,omitempty"`
+	Attempt         string     `json:"attempt"`
+	Skills          []SkillPin `json:"skills,omitempty"`
 }
 type Finish struct {
 	Attempt   string `json:"attempt"`

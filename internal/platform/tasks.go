@@ -94,12 +94,23 @@ func (c *Catalog) submitTask(ctx context.Context, s taskAddress, spec task.Spec)
 	})
 }
 func (c *Catalog) claimTask(ctx context.Context, s taskAddress, claim task.Claim) (task.Record, error) {
+	policy := claim.ExecutionPolicy
+	if policy == "" {
+		policy = task.ExecutionTrustedLocal
+	}
 	if uuid.Validate(claim.Attempt) != nil || task.ValidSkillPins(claim.Skills) != nil {
+		return task.Record{}, errBadRequest
+	}
+	if policy != task.ExecutionTrustedLocal && policy != task.ExecutionUntrustedIsolated {
 		return task.Record{}, errBadRequest
 	}
 	return c.changeTask(ctx, s, false, func(slot *taskSlot) error {
 		if slot.State == task.Running && slot.attempt == claim.Attempt {
-			if !slices.Equal(slot.Skills, claim.Skills) {
+			previous := slot.ExecutionPolicy
+			if previous == "" {
+				previous = task.ExecutionTrustedLocal
+			}
+			if !slices.Equal(slot.Skills, claim.Skills) || previous != policy {
 				return ErrConflict
 			}
 			return nil
@@ -131,6 +142,7 @@ func (c *Catalog) claimTask(ctx context.Context, s taskAddress, claim task.Claim
 			}
 		}
 		slot.Skills = slices.Clone(claim.Skills)
+		slot.ExecutionPolicy = policy
 		slot.State = task.Running
 		slot.attempt = claim.Attempt
 		slot.Deadline = time.Now().UTC().Add(task.Timeout)

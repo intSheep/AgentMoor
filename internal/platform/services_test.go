@@ -78,6 +78,7 @@ func TestPostgresAndS3(t *testing.T) {
 		t.Fatal(n, err)
 	}
 	checkSandboxStorage(t, c, scope("sandbox-integration"))
+	checkSandboxPreparedInput(t, c, scope("sandbox-input-integration"))
 	checkSandboxModelBudget(t, c, scope("model-budget-integration"))
 	checkModelRestart := prepareSandboxModelRestart(t, c, scope("model-budget-integration-restart"))
 	// Exercise actual PostgreSQL persistence and S3 bytes across service restart.
