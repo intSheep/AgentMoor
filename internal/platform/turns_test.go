@@ -2,6 +2,7 @@ package platform
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"reflect"
 	"testing"
@@ -19,10 +20,13 @@ func checkTurnQueue(t *testing.T, c *Catalog, s asset.Scope) {
 	base := taskAddress{Scope: s}
 	native := "ses_original"
 	checkpoint := []task.Ref{{Key: asset.Key{Kind: "session", ID: native}, Version: 2}, {Key: asset.Key{Kind: "workspace", ID: "root"}, Version: 3}}
-	_, err := c.changeTask(ctx, base, true, func(row *taskSlot) error {
-		row.Record = task.Record{ID: s.Runtime, State: task.Succeeded, Assets: checkpoint}
-		return nil
-	})
+	// Seed a legacy successful checkpoint without inventing modern Finish
+	// authority or historical link events. Queue transitions are isolated here.
+	raw, err := json.Marshal(task.Record{ID: s.Runtime, State: task.Succeeded, Assets: checkpoint})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.writer.ExecContext(ctx, "INSERT INTO tasks(scope,record,attempt) VALUES($1,$2,'')", base.Prefix(), string(raw))
 	if err != nil {
 		t.Fatal(err)
 	}

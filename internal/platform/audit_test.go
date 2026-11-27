@@ -333,7 +333,7 @@ func TestAuditHTTPActorsContainHashesAndNoSensitivePayloads(t *testing.T) {
 		if event.Action == "task.queued" {
 			wantToken, wantRole = submitToken, "submit"
 		}
-		if event.Action == "task.claimed" || event.Action == "task.succeeded" {
+		if event.Action == "task.claimed" || event.Action == "task.succeeded" || event.Action == "asset.linked" {
 			wantRole = "execute"
 		}
 		if event.Actor.Source != "http" || event.Actor.Role != wantRole || event.Actor.CredentialSHA256 != auditHash("credential", wantToken) {

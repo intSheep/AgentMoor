@@ -56,6 +56,7 @@ type AuditEvent struct {
 	PodUID           string      `json:"pod_uid,omitempty"`
 	AssetKind        string      `json:"asset_kind,omitempty"`
 	AssetIDSHA256    string      `json:"asset_id_sha256,omitempty"`
+	SessionIDSHA256  string      `json:"session_id_sha256,omitempty"`
 	Version          int64       `json:"version,omitempty"`
 	Digest           string      `json:"digest,omitempty"`
 	PreviousState    string      `json:"previous_state,omitempty"`
@@ -63,6 +64,10 @@ type AuditEvent struct {
 	ModelRequests    int64       `json:"model_requests,omitempty"`
 	ModelInputBytes  int64       `json:"model_input_bytes,omitempty"`
 	ModelOutputBytes int64       `json:"model_output_bytes,omitempty"`
+	OperationID      string      `json:"operation_id,omitempty"`
+	ObjectKind       string      `json:"object_kind,omitempty"`
+	ObjectIDSHA256   string      `json:"object_id_sha256,omitempty"`
+	CollectionProof  string      `json:"collection_proof,omitempty"`
 }
 
 type auditActorContext struct{}
@@ -169,12 +174,18 @@ func (e AuditEvent) valid() bool {
 	if e.Schema != AuditSchema || e.Cursor < 1 || e.TimeUnixNano < 1 || !e.Scope.Valid() || e.TaskID != e.Scope.Runtime || !auditState(e.State) || !auditState(e.PreviousState) {
 		return false
 	}
-	for _, digest := range []string{e.Actor.CredentialSHA256, e.AttemptSHA256, e.RunID, e.AssetIDSHA256, e.Digest} {
+	for _, digest := range []string{e.Actor.CredentialSHA256, e.AttemptSHA256, e.RunID, e.AssetIDSHA256, e.SessionIDSHA256, e.Digest, e.ObjectIDSHA256} {
 		if digest != "" && !sandboxDigest(digest) {
 			return false
 		}
 	}
-	if e.TurnID != "" && !sandboxUUID(e.TurnID) || e.PodUID != "" && !sandboxUUID(e.PodUID) {
+	if e.TurnID != "" && !sandboxUUID(e.TurnID) || e.PodUID != "" && !sandboxUUID(e.PodUID) || e.OperationID != "" && !sandboxUUID(e.OperationID) {
+		return false
+	}
+	if !strings.HasPrefix(e.Action, "object.collection_") && (e.OperationID != "" || e.ObjectKind != "" || e.ObjectIDSHA256 != "" || e.CollectionProof != "") {
+		return false
+	}
+	if e.SessionIDSHA256 != "" && e.Action != "asset.linked" {
 		return false
 	}
 	if e.Actor.Source == "http" {
@@ -192,7 +203,8 @@ func (e AuditEvent) valid() bool {
 		}
 		switch e.Actor.Role {
 		case "output":
-			if e.Action != "sandbox.output_declared" && e.Action != "sandbox.output_sealed" {
+			if e.Action != "sandbox.output_declared" && e.Action != "sandbox.output_sealed" &&
+				(e.Action != "object.collection_superseded" || e.ObjectKind != objectSandboxOutput || e.AttemptSHA256 == "") {
 				return false
 			}
 		case "model":
@@ -213,12 +225,47 @@ func (e AuditEvent) valid() bool {
 		}
 	}
 	switch e.Action {
+	case "object.collection_planned", "object.collection_confirmed", "object.collection_superseded":
+		if e.Component != "object-collector" || e.OperationID == "" || e.ObjectIDSHA256 == "" ||
+			e.TurnID != "" || e.AssetKind != "" || e.AssetIDSHA256 != "" || e.Version != 0 || e.Digest != "" ||
+			e.State != "" || e.PreviousState != "" || e.PodUID != "" || e.ModelRequests != 0 || e.ModelInputBytes != 0 || e.ModelOutputBytes != 0 {
+			return false
+		}
+		switch e.ObjectKind {
+		case objectAssetBlob, objectWorkspacePart, objectSandboxInput, objectSandboxOutput:
+		default:
+			return false
+		}
+		if e.Action == "object.collection_confirmed" {
+			if e.CollectionProof != "remove_ack" && e.CollectionProof != "absence" {
+				return false
+			}
+		} else if e.CollectionProof != "" {
+			return false
+		}
+		if e.Actor.Source == "http" {
+			if e.Action == "object.collection_superseded" {
+				if e.Actor.Role != "write" && e.Actor.Role != "execute" {
+					return false
+				}
+			} else if e.Actor.Role != "collect" {
+				return false
+			}
+		}
+		if e.Actor.Source == "guest-capability" {
+			return e.Action == "object.collection_superseded" && e.ObjectKind == objectSandboxOutput && e.RunID != "" && e.AttemptSHA256 != ""
+		}
+		return e.RunID == "" && e.AttemptSHA256 == ""
 	case "task.queued", "task.claimed", "task.cancel_requested", "task.cancelled", "task.succeeded", "task.failed", "task.interrupted", "turn.queued", "turn.claimed", "turn.cancel_requested", "turn.cancelled", "turn.succeeded", "turn.failed", "turn.interrupted":
 		_, suffix, _ := strings.Cut(e.Action, ".")
 		state := map[string]string{"queued": task.Queued, "claimed": task.Running, "cancel_requested": task.Cancelling, "cancelled": task.Cancelled, "succeeded": task.Succeeded, "failed": task.Failed, "interrupted": task.Interrupted}[suffix]
 		return e.Component == "task-store" && (strings.HasPrefix(e.Action, "turn.") == (e.TurnID != "")) && e.State == state && e.RunID == "" && e.AssetKind == "" && e.AssetIDSHA256 == "" && e.Version == 0 && e.Digest == "" && e.PodUID == "" && e.ModelRequests == 0 && e.ModelInputBytes == 0 && e.ModelOutputBytes == 0
 	case "revision.committed":
 		return e.Component == "revision-store" && e.AssetIDSHA256 != "" && e.Digest != "" && e.Version > 0 && (asset.Key{Kind: e.AssetKind, ID: "audit"}).Valid() && e.RunID == "" && e.State == "" && e.PreviousState == "" && e.PodUID == "" && e.ModelRequests == 0 && e.ModelInputBytes == 0 && e.ModelOutputBytes == 0
+	case "asset.linked":
+		return e.Component == "task-store" && e.AttemptSHA256 != "" && e.AssetIDSHA256 != "" && e.SessionIDSHA256 != "" && e.Digest != "" && e.Version > 0 &&
+			(e.AssetKind == "artifact" || e.AssetKind == "workspace" || e.AssetKind == "session") && e.State == task.Succeeded && e.PreviousState == "" &&
+			e.RunID == "" && e.PodUID == "" && e.ModelRequests == 0 && e.ModelInputBytes == 0 && e.ModelOutputBytes == 0
 	case "sandbox.begun", "sandbox.collected", "sandbox.create_fenced", "sandbox.template_sealed", "sandbox.pod_bound", "sandbox.terminated", "sandbox.deleted", "sandbox.output_sealed", "sandbox.output_declared", "sandbox.input_sealed", "sandbox.cancelled", "sandbox.failed", "sandbox.expired", "sandbox.ready":
 		return e.Component == "sandbox-controller" && e.RunID != "" && e.AttemptSHA256 != "" && e.State != "" && e.AssetKind == "" && e.AssetIDSHA256 == "" && e.Version == 0 && e.ModelRequests == 0 && e.ModelInputBytes == 0 && e.ModelOutputBytes == 0
 	case "model.reserved":
@@ -240,7 +287,9 @@ func appendAudit(ctx context.Context, tx *sql.Tx, event AuditEvent) error {
 	event.Cursor, event.TimeUnixNano = last+1, time.Now().UTC().UnixNano()
 	event.Schema = AuditSchema
 	switch {
-	case strings.HasPrefix(event.Action, "task."), strings.HasPrefix(event.Action, "turn."):
+	case strings.HasPrefix(event.Action, "object.collection_"):
+		event.Component = "object-collector"
+	case strings.HasPrefix(event.Action, "task."), strings.HasPrefix(event.Action, "turn."), event.Action == "asset.linked":
 		event.Component = "task-store"
 	case event.Action == "revision.committed":
 		event.Component = "revision-store"
