@@ -112,20 +112,37 @@ class ProviderSmoke:
         (context / "Dockerfile").write_text(dockerfile)
         build_log = self.p.directory / "provider-image-build.log"
         with build_log.open("w") as stream:
-            # Retain only the pre-CA dependency image. Docker still hashes COPY
-            # of the current Go source; this cache is never the acceptance source.
-            subprocess.run(["docker", "build", "--cache-from", DEPENDENCY_CACHE,
-                            "--cache-from", "agentmoor-validation-cache:int79-e79066b-codex",
-                            "-f", str(ROOT / "tests/kubernetes/Dockerfile"), "--build-arg", "AGENT=codex",
-                            "-t", self.base_image, str(ROOT)],
-                           stdout=stream, stderr=subprocess.STDOUT, check=True, timeout=900)
-            self.p.run("docker", "tag", self.base_image, DEPENDENCY_CACHE)
-            self.result["dependency_cache"] = {"reference": DEPENDENCY_CACHE,
-                "image_id": json.loads(self.p.run("docker", "image", "inspect", self.base_image))[0]["Id"],
-                "contains_test_ca": False, "contains_run_secrets": False}
-            subprocess.run(["docker", "build", "-t", self.image, str(context)],
-                           stdout=stream, stderr=subprocess.STDOUT, check=True, timeout=900)
-        self.result["build_log_sha256"] = sha(build_log.read_bytes())
+            try:
+                # Cache hints are an optimization, never the acceptance source.
+                # COPY still hashes the exact current Go and fixture bytes.
+                command = ["docker", "build", "-f", str(ROOT / "tests/kubernetes/Dockerfile"),
+                           "--build-arg", "AGENT=codex", "-t", self.base_image, str(ROOT)]
+                hinted = command[:2] + ["--cache-from", DEPENDENCY_CACHE,
+                    "--cache-from", "agentmoor-validation-cache:int79-e79066b-codex"] + command[2:]
+                first = subprocess.run(hinted, stdout=stream, stderr=subprocess.STDOUT, timeout=900)
+                if first.returncode:
+                    stream.flush()
+                    failed = build_log.read_bytes()
+                    # A legacy Docker cache-import failure must not hide the
+                    # build diagnostic. Retry this exact failure once without
+                    # hints; all versions, files and assertions stay identical.
+                    if b"failed to restore cached image" not in failed or b"failed to create cache image" not in failed:
+                        raise subprocess.CalledProcessError(first.returncode, hinted)
+                    self.result["cache_restore_recovery"] = {"first_exit_code": first.returncode,
+                        "failed_log_sha256": sha(failed), "retry": "same build without cache hints"}
+                    stream.write("\nRetrying legacy Docker cache restore failure without cache hints.\n")
+                    stream.flush()
+                    subprocess.run(command, stdout=stream, stderr=subprocess.STDOUT, check=True, timeout=900)
+                self.p.run("docker", "tag", self.base_image, DEPENDENCY_CACHE)
+                self.result["dependency_cache"] = {"reference": DEPENDENCY_CACHE,
+                    "image_id": json.loads(self.p.run("docker", "image", "inspect", self.base_image))[0]["Id"],
+                    "contains_test_ca": False, "contains_run_secrets": False}
+                subprocess.run(["docker", "build", "-t", self.image, str(context)],
+                               stdout=stream, stderr=subprocess.STDOUT, check=True, timeout=900)
+            finally:
+                stream.flush()
+                self.result["build_log_sha256"] = sha(build_log.read_bytes())
+                self.result["build_log_tail"] = build_log.read_text(errors="replace")[-16384:]
         self.result["docker_image_id"] = json.loads(self.p.run("docker", "image", "inspect", self.image))[0]["Id"]
         self.p.run("kind", "load", "docker-image", self.image, "--name", self.p.cluster, timeout=180)
         reference = "docker.io/library/" + self.image
