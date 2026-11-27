@@ -30,6 +30,7 @@ const usage = `Usage:
   agentmoor auth-retire --policy FILE --key-id ID
   agentmoor auth-revoke --policy FILE --token-file FILE
   agentmoor guest-execute --adapter ID --runtime-cli ABS --root NEW_DIR [--max-input-bytes N] [--max-output-bytes N]
+  agentmoor guest-run --adapter codex --runtime-cli ABS --root NEW_DIR --gateway HTTPS_ORIGIN --ca-file ABS --capabilities ABS --input-sha256 HEX --input-size N --deadline RFC3339 --model ID [--file-tool ABS]
   agentmoor run-task --config FILE [--wait 2m | --turn UUID]
   agentmoor sync|assets|status|gc --config FILE
   agentmoor watch --config FILE [--interval 1m] [--periodic-only]
@@ -68,6 +69,8 @@ func run(ctx context.Context, args []string, out io.Writer) error {
 			return authCommand(ctx, args, out)
 		case "guest-execute":
 			return guestCommand(ctx, args, os.Stdin, out, registry)
+		case "guest-run":
+			return guestRunCommand(ctx, args, registry)
 		case "run-task", "sync", "watch", "restore", "restore-native", "restore-sessions", "assets", "status", "gc", "resolve":
 			return workerCommand(ctx, args, out, registry)
 		}
