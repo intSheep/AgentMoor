@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/url"
 	"time"
@@ -35,7 +36,7 @@ func sandboxTransient(err error) bool {
 		return status.StatusCode >= 500 || status.StatusCode == 429
 	}
 	var network net.Error
-	return errors.As(err, &network) || errors.Is(err, context.DeadlineExceeded)
+	return errors.As(err, &network) || errors.Is(err, io.ErrUnexpectedEOF) || errors.Is(err, context.DeadlineExceeded)
 }
 
 func sandboxPause(ctx context.Context, delay time.Duration) error {

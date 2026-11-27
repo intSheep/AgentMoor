@@ -193,15 +193,20 @@ func (h *isolatedExecutionHarness) serveIsolated(w http.ResponseWriter, r *http.
 		http.Error(w, "synthetic pre-start outage", 503)
 		return
 	}
-	if start && (h.fault == "after-start-503" || h.fault == "after-start-eof") && h.faultUsed.CompareAndSwap(false, true) {
+	if start && (h.fault == "after-start-503" || h.fault == "after-start-eof" || h.fault == "after-start-truncated") && h.faultUsed.CompareAndSwap(false, true) {
 		buffer := httptest.NewRecorder()
 		h.realAPI.ServeHTTP(buffer, r)
 		if buffer.Code != 200 {
 			h.t.Error("fault requires a real successful Start", buffer.Code)
 		}
-		if h.fault == "after-start-eof" {
+		if h.fault == "after-start-eof" || h.fault == "after-start-truncated" {
 			connection, _, err := w.(http.Hijacker).Hijack()
 			if err == nil {
+				if h.fault == "after-start-truncated" {
+					raw := buffer.Body.Bytes()
+					fmt.Fprintf(connection, "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: %d\r\nConnection: close\r\n\r\n", len(raw))
+					_, _ = connection.Write(raw[:len(raw)/2])
+				}
 				connection.Close()
 			}
 			return
@@ -340,7 +345,7 @@ func TestIsolatedProviderRunsTaskAndTurnsThroughActualHTTP(t *testing.T) {
 }
 
 func TestIsolatedProviderRecoversStartFailuresWithoutAnotherCreate(t *testing.T) {
-	for _, fault := range []string{"before-start-503", "after-start-503", "after-start-eof"} {
+	for _, fault := range []string{"before-start-503", "after-start-503", "after-start-eof", "after-start-truncated"} {
 		t.Run(fault, func(t *testing.T) {
 			h := newIsolatedExecutionHarness(t)
 			h.fault = fault
