@@ -5,6 +5,7 @@ package platform
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -13,6 +14,8 @@ import (
 	"time"
 
 	"agentmoor/internal/task"
+	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 // All destructive SQL faults use separate, disposable PostgreSQL databases.
@@ -25,6 +28,309 @@ func checkPostgresDeadlineSweep(t *testing.T, objects Objects, dsn string) {
 	checkPostgresDeadlineSweepFinishBarrier(t, objects, dsn, false)
 	checkPostgresDeadlineSweepFinishBarrier(t, objects, dsn, true)
 	checkPostgresDeadlineSweepAvailability(t, objects, dsn)
+	checkPostgresDeadlineSweepCallerCancellation(t, objects, dsn)
+	checkPostgresDeadlineSweepLowerStatementTimeout(t, objects, dsn)
+	checkPostgresDeadlineSweepLowerLockTimeout(t, objects, dsn)
+	checkPostgresDeadlineSweepSoftWriteBudget(t, objects, dsn)
+	checkPostgresMaintenanceBlackholes(t, objects, dsn)
+}
+
+type deadlineSweepPGOutcome struct {
+	result DeadlineSweepResult
+	err    error
+}
+
+func deadlineSweepPGPID(t *testing.T, c *Catalog) int {
+	t.Helper()
+	var pid int
+	if err := c.writer.QueryRowContext(t.Context(), "SELECT pg_backend_pid()").Scan(&pid); err != nil {
+		t.Fatal("cannot observe owned deadline writer PID", err)
+	}
+	return pid
+}
+
+func deadlineSweepPGSQLCode(err error) string {
+	var server *pq.Error
+	if errors.As(err, &server) {
+		return string(server.Code)
+	}
+	return ""
+}
+
+func deadlineSweepPGHealthy(t *testing.T, c *Catalog, originalPID int, scenario string) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
+	defer cancel()
+	var currentPID int
+	writerErr := c.writer.QueryRowContext(ctx, "SELECT pg_backend_pid()").Scan(&currentPID)
+	var alive, lease bool
+	if err := c.db.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE pid=$1),
+ EXISTS(SELECT 1 FROM pg_locks WHERE pid=$1 AND locktype='advisory' AND granted AND classid=193674738 AND objid=1)`, originalPID).Scan(&alive, &lease); err != nil {
+		t.Fatal(err)
+	}
+	_, submitErr := c.submitTask(ctx, taskAddress{Scope: scope("deadline-health-" + scenario)}, task.Spec{Instruction: "ordinary legal mutation after bounded maintenance", Output: "reply.txt"})
+	t.Logf("DEADLINE_SWEEP_WRITE_GUARD scenario=%s writer_query_ok=%t same_writer_pid=%t original_backend_alive=%t original_advisory_lease=%t subsequent_submit_ok=%t", scenario, writerErr == nil, currentPID == originalPID, alive, lease, submitErr == nil)
+	if writerErr != nil || currentPID != originalPID || !alive || !lease || submitErr != nil {
+		t.Fatal("ordinary maintenance cancellation or server timeout poisoned the leased writer", scenario)
+	}
+}
+
+func deadlineSweepPGAuditDelay(t *testing.T, c *Catalog, milliseconds int) func() {
+	t.Helper()
+	query := fmt.Sprintf(`CREATE FUNCTION delay_owned_deadline_guard() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
+ IF NEW.event::jsonb->>'action' IN ('task.interrupted','turn.interrupted') THEN PERFORM pg_sleep(%d.0/1000.0); END IF; RETURN NEW; END $$;
+ CREATE TRIGGER delay_owned_deadline_guard BEFORE INSERT ON audit_events FOR EACH ROW EXECUTE FUNCTION delay_owned_deadline_guard()`, milliseconds)
+	if _, err := c.writer.ExecContext(t.Context(), query); err != nil {
+		t.Fatal(err)
+	}
+	var removed sync.Once
+	drop := func() {
+		removed.Do(func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if _, err := c.db.ExecContext(ctx, "DROP TRIGGER delay_owned_deadline_guard ON audit_events; DROP FUNCTION delay_owned_deadline_guard()"); err != nil {
+				t.Error("cannot remove owned deadline delay", err)
+			}
+		})
+	}
+	t.Cleanup(drop)
+	return drop
+}
+
+func deadlineSweepPGWait(t *testing.T, c *Catalog, pid int, event, eventType string) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
+	defer cancel()
+	for {
+		var observed bool
+		if err := c.db.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM pg_stat_activity
+ WHERE pid=$1 AND ($2='' OR wait_event=$2) AND ($3='' OR wait_event_type=$3) AND query LIKE $4)`, pid, event, eventType, "%audit_events%").Scan(&observed); err != nil {
+			t.Fatal("cannot observe the real owned audit SQL boundary", err)
+		}
+		if observed {
+			return
+		}
+		select {
+		case <-ctx.Done():
+			t.Fatal("owned deadline writer never reached the required real audit SQL wait", event, eventType)
+		case <-time.After(2 * time.Millisecond):
+		}
+	}
+}
+
+func deadlineSweepPGRollback(t *testing.T, c *Catalog, rows []deadlineSweepRow) {
+	t.Helper()
+	for _, row := range rows {
+		deadlineSweepRequireStored(t, c, row, false)
+	}
+	if len(deadlineSweepRawAudit(t, c)) != 0 {
+		t.Fatal("failed maintenance write left any partial audit or transition")
+	}
+}
+
+func deadlineSweepPGRecover(t *testing.T, c *Catalog, reader *AuditReader, rows []deadlineSweepRow, scenario string) {
+	t.Helper()
+	result, err := c.SweepExpired(t.Context(), DeadlineSweepCursor{})
+	if err != nil || result.Interrupted != len(rows) {
+		t.Fatal("same healthy owner could not complete a fresh bounded pass", scenario, result, err)
+	}
+	for _, row := range rows {
+		deadlineSweepRequireStored(t, c, row, true)
+		events := auditEvents(t, reader, row.address.Scope)
+		if len(events) != 1 {
+			t.Fatal("fresh pass did not preserve one atomic expiry per allocation", scenario, len(events))
+		}
+		deadlineSweepRequireEvent(t, events[0], row)
+		raw, err := json.Marshal(events[0])
+		if err != nil || len(raw) > auditMaxEventBytes {
+			t.Fatal("cannot encode a bounded actual deadline audit event", err)
+		}
+		t.Logf("DEADLINE_SWEEP_EVENT %s", raw)
+	}
+	t.Logf("DEADLINE_SWEEP_WRITE_GUARD scenario=%s fresh_retry_interrupted=%d final_expiry_events=%d", scenario, result.Interrupted, len(rows))
+}
+
+func checkPostgresDeadlineSweepCallerCancellation(t *testing.T, objects Objects, dsn string) {
+	t.Helper()
+	c, reader, _ := openOwnedAuditLinksPostgres(t, objects, dsn)
+	row := deadlineSweepFixtureRow(t, scope("deadline-caller-cancel"), "", task.Running, time.Now().UTC().Add(-time.Hour))
+	deadlineSweepInsert(t, c, row)
+	pid := deadlineSweepPGPID(t, c)
+	drop := deadlineSweepPGAuditDelay(t, c, 200)
+	ctx, cancel := context.WithCancel(t.Context())
+	done := make(chan deadlineSweepPGOutcome, 1)
+	received := false
+	t.Cleanup(func() {
+		cancel()
+		if !received {
+			select {
+			case <-done:
+			case <-time.After(5 * time.Second):
+				t.Error("cancelled deadline sweep did not join during bounded cleanup")
+			}
+		}
+	})
+	go func() {
+		result, err := c.SweepExpired(ctx, DeadlineSweepCursor{})
+		done <- deadlineSweepPGOutcome{result, err}
+	}()
+	deadlineSweepPGWait(t, c, pid, "PgSleep", "")
+	cancel()
+	var outcome deadlineSweepPGOutcome
+	select {
+	case outcome = <-done:
+		received = true
+	case <-time.After(5 * time.Second):
+		t.Fatal("caller cancellation did not stop the bounded write")
+	}
+	if !errors.Is(outcome.err, context.Canceled) || outcome.result.Interrupted != 0 || outcome.result.Cursor != (DeadlineSweepCursor{}) {
+		t.Fatal("caller cancellation did not roll back the whole batch", outcome.result, outcome.err)
+	}
+	deadlineSweepPGRollback(t, c, []deadlineSweepRow{row})
+	t.Log("DEADLINE_SWEEP_WRITE_GUARD scenario=caller_cancel audit_pg_sleep_observed=true caller_cancelled=true atomic_rollback=true")
+	deadlineSweepPGHealthy(t, c, pid, "caller-cancel")
+	drop()
+	deadlineSweepPGRecover(t, c, reader, []deadlineSweepRow{row}, "caller-cancel")
+}
+
+func checkPostgresDeadlineSweepLowerStatementTimeout(t *testing.T, objects Objects, dsn string) {
+	t.Helper()
+	c, reader, _ := openOwnedAuditLinksPostgres(t, objects, dsn)
+	row := deadlineSweepFixtureRow(t, scope("deadline-lower-statement"), "", task.Running, time.Now().UTC().Add(-time.Hour))
+	deadlineSweepInsert(t, c, row)
+	pid := deadlineSweepPGPID(t, c)
+	drop := deadlineSweepPGAuditDelay(t, c, 150)
+	if _, err := c.writer.ExecContext(t.Context(), "SET statement_timeout='80ms'"); err != nil {
+		t.Fatal(err)
+	}
+	result, err := c.SweepExpired(t.Context(), DeadlineSweepCursor{})
+	code := deadlineSweepPGSQLCode(err)
+	var setting int
+	settingErr := c.writer.QueryRowContext(t.Context(), "SELECT setting::integer FROM pg_settings WHERE name='statement_timeout'").Scan(&setting)
+	t.Logf("DEADLINE_SWEEP_WRITE_GUARD scenario=lower_statement_timeout original_ms=80 audit_sleep_ms=150 sqlstate=%s interrupted=%d setting_after_ms=%d", code, result.Interrupted, setting)
+	if code != "57014" || result.Interrupted != 0 || result.Cursor != (DeadlineSweepCursor{}) || settingErr != nil || setting != 80 {
+		t.Fatal("maintenance widened the original statement timeout or lost the writer", result, setting, settingErr, err)
+	}
+	deadlineSweepPGRollback(t, c, []deadlineSweepRow{row})
+	deadlineSweepPGHealthy(t, c, pid, "lower-statement")
+	drop()
+	deadlineSweepPGRecover(t, c, reader, []deadlineSweepRow{row}, "lower-statement")
+}
+
+func checkPostgresDeadlineSweepLowerLockTimeout(t *testing.T, objects Objects, dsn string) {
+	t.Helper()
+	c, reader, _ := openOwnedAuditLinksPostgres(t, objects, dsn)
+	row := deadlineSweepFixtureRow(t, scope("deadline-lower-lock"), "", task.Running, time.Now().UTC().Add(-time.Hour))
+	deadlineSweepInsert(t, c, row)
+	pid := deadlineSweepPGPID(t, c)
+	if _, err := c.writer.ExecContext(t.Context(), "SET lock_timeout='50ms'"); err != nil {
+		t.Fatal(err)
+	}
+	blocker, err := c.db.BeginTx(t.Context(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := blocker.ExecContext(t.Context(), "LOCK TABLE audit_events IN ACCESS EXCLUSIVE MODE"); err != nil {
+		blocker.Rollback()
+		t.Fatal(err)
+	}
+	var released sync.Once
+	unblock := func() {
+		released.Do(func() {
+			if err := blocker.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
+				t.Error("cannot release owned audit table lock", err)
+			}
+		})
+	}
+	defer unblock()
+	done := make(chan deadlineSweepPGOutcome, 1)
+	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
+	received := false
+	t.Cleanup(func() {
+		unblock()
+		cancel()
+		if !received {
+			select {
+			case <-done:
+			case <-time.After(5 * time.Second):
+				t.Error("lock-timeout sweep did not join during bounded cleanup")
+			}
+		}
+	})
+	go func() {
+		result, err := c.SweepExpired(ctx, DeadlineSweepCursor{})
+		done <- deadlineSweepPGOutcome{result, err}
+	}()
+	deadlineSweepPGWait(t, c, pid, "", "Lock")
+	var outcome deadlineSweepPGOutcome
+	select {
+	case outcome = <-done:
+		received = true
+	case <-time.After(5 * time.Second):
+		t.Fatal("original lock timeout did not stop the actual audit SQL wait")
+	}
+	unblock()
+	cancel()
+	code := deadlineSweepPGSQLCode(outcome.err)
+	var setting int
+	settingErr := c.writer.QueryRowContext(t.Context(), "SELECT setting::integer FROM pg_settings WHERE name='lock_timeout'").Scan(&setting)
+	t.Logf("DEADLINE_SWEEP_WRITE_GUARD scenario=lower_lock_timeout original_ms=50 audit_table_lock_observed=true sqlstate=%s interrupted=%d setting_after_ms=%d", code, outcome.result.Interrupted, setting)
+	if code != "55P03" || outcome.result.Interrupted != 0 || outcome.result.Cursor != (DeadlineSweepCursor{}) || settingErr != nil || setting != 50 {
+		t.Fatal("maintenance widened the original lock timeout or lost the writer", outcome.result, setting, settingErr, outcome.err)
+	}
+	deadlineSweepPGRollback(t, c, []deadlineSweepRow{row})
+	deadlineSweepPGHealthy(t, c, pid, "lower-lock")
+	deadlineSweepPGRecover(t, c, reader, []deadlineSweepRow{row}, "lower-lock")
+}
+
+func checkPostgresDeadlineSweepSoftWriteBudget(t *testing.T, objects Objects, dsn string) {
+	t.Helper()
+	c, reader, _ := openOwnedAuditLinksPostgres(t, objects, dsn)
+	var rows []deadlineSweepRow
+	for i := range deadlineSweepWritesPerTable {
+		root := deadlineSweepFixtureRow(t, scope(fmt.Sprintf("a-deadline-soft-%d", i)), "", task.Running, time.Now().UTC().Add(-time.Hour))
+		turn := deadlineSweepFixtureRow(t, scope(fmt.Sprintf("z-deadline-soft-%d", i)), uuid.NewString(), task.Running, time.Now().UTC().Add(-time.Hour))
+		for _, row := range []deadlineSweepRow{root, turn} {
+			deadlineSweepInsert(t, c, row)
+			rows = append(rows, row)
+		}
+	}
+	pid := deadlineSweepPGPID(t, c)
+	// PostgreSQL sequences retain observations across rollback. They prove
+	// that the soft budget expired in real writes, not during keyset reads.
+	if _, err := c.writer.ExecContext(t.Context(), `CREATE SEQUENCE owned_deadline_update_calls; CREATE SEQUENCE owned_deadline_audit_calls;
+ CREATE FUNCTION slow_owned_deadline_update() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
+ IF NEW.record::jsonb->>'state'='interrupted' THEN PERFORM nextval('owned_deadline_update_calls'); PERFORM pg_sleep(0.1); END IF; RETURN NEW; END $$;
+ CREATE TRIGGER slow_owned_deadline_update BEFORE UPDATE ON tasks FOR EACH ROW EXECUTE FUNCTION slow_owned_deadline_update();
+ CREATE TRIGGER slow_owned_deadline_update BEFORE UPDATE ON turns FOR EACH ROW EXECUTE FUNCTION slow_owned_deadline_update();
+ CREATE FUNCTION slow_owned_deadline_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
+ IF NEW.event::jsonb->>'action' IN ('task.interrupted','turn.interrupted') THEN PERFORM nextval('owned_deadline_audit_calls'); PERFORM pg_sleep(0.2); END IF; RETURN NEW; END $$;
+ CREATE TRIGGER slow_owned_deadline_audit BEFORE INSERT ON audit_events FOR EACH ROW EXECUTE FUNCTION slow_owned_deadline_audit()`); err != nil {
+		t.Fatal(err)
+	}
+	start := time.Now()
+	result, err := c.SweepExpired(t.Context(), DeadlineSweepCursor{})
+	elapsed := time.Since(start)
+	var updates, audits int64
+	var updateCalled, auditCalled bool
+	if queryErr := c.db.QueryRowContext(t.Context(), "SELECT last_value,is_called FROM owned_deadline_update_calls").Scan(&updates, &updateCalled); queryErr != nil {
+		t.Fatal(queryErr)
+	}
+	if queryErr := c.db.QueryRowContext(t.Context(), "SELECT last_value,is_called FROM owned_deadline_audit_calls").Scan(&audits, &auditCalled); queryErr != nil {
+		t.Fatal(queryErr)
+	}
+	t.Logf("DEADLINE_SWEEP_WRITE_GUARD scenario=soft_write_budget elapsed_ms=%d update_calls=%d audit_calls=%d sqlstate=%s interrupted=%d", elapsed.Milliseconds(), updates, audits, deadlineSweepPGSQLCode(err), result.Interrupted)
+	if !errors.Is(err, context.DeadlineExceeded) || deadlineSweepPGSQLCode(err) != "" || result.Interrupted != 0 || result.Cursor != (DeadlineSweepCursor{}) ||
+		elapsed < deadlineSweepWriteBudget || !updateCalled || !auditCalled {
+		t.Fatal("real sub-statement delays did not exhaust the soft write budget safely", result, err)
+	}
+	deadlineSweepPGRollback(t, c, rows)
+	deadlineSweepPGHealthy(t, c, pid, "soft-budget")
+	if _, err := c.writer.ExecContext(t.Context(), `DROP TRIGGER slow_owned_deadline_update ON tasks; DROP TRIGGER slow_owned_deadline_update ON turns; DROP FUNCTION slow_owned_deadline_update();
+ DROP TRIGGER slow_owned_deadline_audit ON audit_events; DROP FUNCTION slow_owned_deadline_audit(); DROP SEQUENCE owned_deadline_update_calls; DROP SEQUENCE owned_deadline_audit_calls`); err != nil {
+		t.Fatal(err)
+	}
+	deadlineSweepPGRecover(t, c, reader, rows, "soft-budget")
 }
 
 // A slow read must not spend the leased writer's I/O cancellation allowance.
@@ -97,7 +403,7 @@ func checkPostgresDeadlineSweepAvailability(t *testing.T, objects Objects, dsn s
 	// rather than sleeping in the test while no production statement runs.
 	for until := time.Now().Add(time.Second); ; {
 		var waiting bool
-		if err := c.db.QueryRowContext(t.Context(), "SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid() AND wait_event_type='Lock' AND query LIKE $1)", "%FROM tasks WHERE scope%").Scan(&waiting); err != nil {
+		if err := c.db.QueryRowContext(t.Context(), "SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid() AND wait_event_type='Lock' AND query LIKE $1)", "% FROM tasks WHERE scope>%").Scan(&waiting); err != nil {
 			t.Fatal(err)
 		}
 		if waiting {
@@ -409,7 +715,7 @@ func checkPostgresDeadlineSweepFinishBarrier(t *testing.T, objects Objects, dsn 
 	// held Catalog.mu and its SQL transaction was uncommitted.
 	for until := time.Now().Add(time.Second); ; {
 		var scanned bool
-		if err := gate.QueryRowContext(t.Context(), "SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid() AND query LIKE $1)", "SELECT substr(scope,1,516),substr(id,1,37) FROM turns WHERE%").Scan(&scanned); err != nil {
+		if err := gate.QueryRowContext(t.Context(), "SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid() AND query LIKE $1)", "% FROM turns WHERE (scope,id)>%").Scan(&scanned); err != nil {
 			t.Fatal(err)
 		}
 		if scanned {

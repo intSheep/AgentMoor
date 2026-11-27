@@ -170,7 +170,6 @@ func TestDeadlineSweepStateTablePreservesOriginalJSONAndAuditBytes(t *testing.T)
 	}
 	var rows []deadlineSweepRow
 	eligible := make(map[string]bool)
-	wantBytes := int64(len(previousRaw))
 	wantInterrupted := 0
 	states := []string{task.Queued, task.Running, task.Cancelling, task.Succeeded, task.Failed, task.Cancelled, task.Interrupted}
 	for _, turn := range []bool{false, true} {
@@ -190,7 +189,6 @@ func TestDeadlineSweepStateTablePreservesOriginalJSONAndAuditBytes(t *testing.T)
 				row := deadlineSweepFixtureRow(t, s, id, state, deadline)
 				deadlineSweepInsert(t, f.c, row)
 				rows = append(rows, row)
-				wantBytes += int64(len(row.raw))
 				if when != "future" && (state == task.Running || state == task.Cancelling || (turn && state == task.Queued)) {
 					eligible[s.Prefix()] = true
 					wantInterrupted++
@@ -199,9 +197,50 @@ func TestDeadlineSweepStateTablePreservesOriginalJSONAndAuditBytes(t *testing.T)
 		}
 	}
 	ctx := auditHTTPContext(t.Context(), "owned-deadline-token-must-not-be-actor", "execute")
-	result, err := f.c.SweepExpired(ctx, DeadlineSweepCursor{})
-	if err != nil || result.Scanned != len(rows)+1 || result.Interrupted != wantInterrupted || result.RecordBytes != wantBytes {
-		t.Fatal("sweep did not examine the bounded state matrix exactly once", result, wantInterrupted, wantBytes, err)
+	var result DeadlineSweepResult
+	var err error
+	var cursor DeadlineSweepCursor
+	interrupted, tasksWrapped, turnsWrapped := 0, false, false
+	previousAudit := beforeAudit
+	for pass := range len(rows) + 2 {
+		result, err = f.c.SweepExpired(ctx, cursor)
+		if err != nil || result.Scanned > 2*deadlineSweepRowsPerTable || result.RecordBytes > 2*deadlineSweepBytesPerTable || result.Interrupted > 2*deadlineSweepWritesPerTable {
+			t.Fatal("state matrix sweep exceeded one bounded pass", pass, result, err)
+		}
+		audits := deadlineSweepRawAudit(t, f.c)
+		if len(audits) != len(previousAudit)+result.Interrupted || !reflect.DeepEqual(previousAudit, audits[:len(previousAudit)]) {
+			t.Fatal("one pass rewrote prior audit bytes or miscounted atomic transitions", pass)
+		}
+		taskChanges, turnChanges := 0, 0
+		for _, stored := range audits[len(previousAudit):] {
+			var event AuditEvent
+			if json.Unmarshal([]byte(stored.raw), &event) != nil {
+				t.Fatal("cannot decode actual new expiry event")
+			}
+			if event.Action == "task.interrupted" {
+				taskChanges++
+			} else if event.Action == "turn.interrupted" {
+				turnChanges++
+			} else {
+				t.Fatal("sweep emitted a non-expiry action", event.Action)
+			}
+		}
+		if taskChanges > deadlineSweepWritesPerTable || turnChanges > deadlineSweepWritesPerTable {
+			t.Fatal("one table consumed another table's transition allowance", taskChanges, turnChanges)
+		}
+		previousAudit, cursor = audits, result.Cursor
+		interrupted += result.Interrupted
+		tasksWrapped, turnsWrapped = tasksWrapped || result.TasksWrapped, turnsWrapped || result.TurnsWrapped
+		if tasksWrapped && turnsWrapped {
+			break
+		}
+	}
+	if !tasksWrapped || !turnsWrapped || interrupted != wantInterrupted {
+		t.Fatal("bounded passes did not finish the original state matrix once", interrupted, wantInterrupted, tasksWrapped, turnsWrapped)
+	}
+	var preservedHistory string
+	if err := f.c.db.QueryRowContext(t.Context(), "SELECT record FROM tasks WHERE scope=$1", history.Prefix()).Scan(&preservedHistory); err != nil || preservedHistory != previousRaw {
+		t.Fatal("revisited small-table history changed its literal record bytes", err)
 	}
 	for _, row := range rows {
 		changed := eligible[row.address.Prefix()]

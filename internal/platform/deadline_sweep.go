@@ -18,11 +18,15 @@ import (
 )
 
 const (
-	deadlineSweepRowsPerTable  = 32
-	deadlineSweepRecordBytes   = 8 << 20
-	deadlineSweepBytesPerTable = 16 << 20
-	deadlineSweepBudget        = 2 * time.Second
-	deadlineSweepInterval      = time.Second
+	deadlineSweepRowsPerTable   = 32
+	deadlineSweepRecordBytes    = 8 << 20
+	deadlineSweepBytesPerTable  = 16 << 20
+	deadlineSweepBudget         = 2 * time.Second
+	deadlineSweepInterval       = time.Second
+	deadlineSweepWritesPerTable = 4
+	deadlineSweepWriteBudget    = 2 * time.Second
+	deadlineSweepWriteIO        = 4 * time.Second
+	deadlineSweepStatementMS    = 250
 )
 
 var ErrDeadlineSweep = errors.New("deadline sweep record or cursor is invalid")
@@ -84,14 +88,22 @@ func deadlineScope(prefix string) (asset.Scope, error) {
 	return s, nil
 }
 
-func (c *Catalog) deadlineKeys(ctx context.Context, cursor DeadlineSweepCursor, turns bool) ([]deadlineKey, error) {
-	query := "SELECT substr(scope,1,516) FROM tasks WHERE scope>$1 ORDER BY scope LIMIT $2"
+// Keys use byte prefixes and original byte lengths too: SQLite TEXT substr
+// stops at NUL and must never turn a corrupt key into a valid allocation prefix.
+func (c *Catalog) deadlineKeys(ctx context.Context, reader deadlineSweepReader, cursor DeadlineSweepCursor, turns bool) ([]deadlineKey, error) {
+	scopeSize, scopeBytes := "length(CAST(scope AS BLOB))", "substr(CAST(scope AS BLOB),1,516)"
+	idSize, idBytes := "length(CAST(id AS BLOB))", "substr(CAST(id AS BLOB),1,37)"
+	if c.postgres {
+		scopeSize, scopeBytes = "octet_length(scope)", "substring(convert_to(scope,'UTF8') from 1 for 516)"
+		idSize, idBytes = "octet_length(id)", "substring(convert_to(id,'UTF8') from 1 for 37)"
+	}
+	query := "SELECT " + scopeSize + "," + scopeBytes + " FROM tasks WHERE scope>$1 ORDER BY scope LIMIT $2"
 	args := []any{cursor.TaskScope, deadlineSweepRowsPerTable}
 	if turns {
-		query = "SELECT substr(scope,1,516),substr(id,1,37) FROM turns WHERE (scope,id)>($1,$2) ORDER BY scope,id LIMIT $3"
+		query = "SELECT " + scopeSize + "," + scopeBytes + "," + idSize + "," + idBytes + " FROM turns WHERE (scope,id)>($1,$2) ORDER BY scope,id LIMIT $3"
 		args = []any{cursor.TurnScope, cursor.TurnID, deadlineSweepRowsPerTable}
 	}
-	rows, err := c.db.QueryContext(ctx, query, args...)
+	rows, err := reader.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -101,16 +113,21 @@ func (c *Catalog) deadlineKeys(ctx context.Context, cursor DeadlineSweepCursor, 
 		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
-		var key deadlineKey
+		var scopeRaw, idRaw []byte
+		var scopeLength, idLength int64
 		if turns {
-			err = rows.Scan(&key.scope, &key.turn)
+			err = rows.Scan(&scopeLength, &scopeRaw, &idLength, &idRaw)
 		} else {
-			err = rows.Scan(&key.scope)
+			err = rows.Scan(&scopeLength, &scopeRaw)
 		}
 		if err != nil {
 			return nil, err
 		}
-		if _, err := deadlineScope(key.scope); err != nil || len(key.scope) > 515 || turns && !sandboxUUID(key.turn) {
+		if scopeLength < 1 || scopeLength > 515 || int64(len(scopeRaw)) != scopeLength || turns && (idLength != 36 || int64(len(idRaw)) != idLength) {
+			return nil, ErrDeadlineSweep
+		}
+		key := deadlineKey{string(scopeRaw), string(idRaw)}
+		if _, err := deadlineScope(key.scope); err != nil || turns && !sandboxUUID(key.turn) {
 			return nil, ErrDeadlineSweep
 		}
 		keys = append(keys, key)
@@ -121,7 +138,7 @@ func (c *Catalog) deadlineKeys(ctx context.Context, cursor DeadlineSweepCursor, 
 // Bytea/blob is scanned directly. Oversized records are identified by their
 // original byte length; truncated UTF-8 is never converted back into SQL text
 // or passed to the JSON parser. One row is materialized at a time.
-func (c *Catalog) deadlineRecord(ctx context.Context, key deadlineKey, budget int64) (taskSlot, []byte, int64, string, error) {
+func (c *Catalog) deadlineRecord(ctx context.Context, reader deadlineSweepReader, key deadlineKey, budget int64) (taskSlot, []byte, int64, string, error) {
 	size := "length(CAST(record AS BLOB))"
 	body := "substr(CAST(record AS BLOB),1,$1)"
 	if c.postgres {
@@ -141,7 +158,7 @@ func (c *Catalog) deadlineRecord(ctx context.Context, key deadlineKey, budget in
 	var raw []byte
 	var length int64
 	var columnState string
-	row := c.db.QueryRowContext(ctx, query, args...)
+	row := reader.QueryRowContext(ctx, query, args...)
 	var err error
 	if key.turn == "" {
 		err = row.Scan(&length, &raw, &slot.attempt)
@@ -289,11 +306,44 @@ func (c *Catalog) lockDeadlineSweep(ctx context.Context) error {
 	}
 }
 
+// A PostgreSQL maintenance scan borrows one reader with its own socket window.
+// No ordinary pooled query inherits this deadline. Failed readers are discarded;
+// the independently leased writer remains untouched.
+type deadlineSweepReader interface {
+	querier
+	QueryContext(context.Context, string, ...any) (*sql.Rows, error)
+}
+
+func (c *Catalog) openDeadlineReader(ctx context.Context) (deadlineSweepReader, func() error, error) {
+	if !c.postgres {
+		return c.db, func() error { return nil }, nil
+	}
+	deadline, _ := ctx.Deadline()
+	connect := context.WithValue(ctx, postgresMaintenanceConnectContext{}, deadline)
+	conn, err := c.db.Conn(connect)
+	if err != nil {
+		return nil, nil, err
+	}
+	closeReader := func() error {
+		err := setPostgresMaintenance(conn, time.Time{})
+		closeErr := conn.Close()
+		if errors.Is(closeErr, sql.ErrConnDone) {
+			closeErr = nil // Raw already discarded an invalid reader.
+		}
+		return errors.Join(err, closeErr)
+	}
+	if err := setPostgresMaintenance(conn, deadline); err != nil {
+		return nil, nil, errors.Join(err, closeReader())
+	}
+	return conn, closeReader, nil
+}
+
 // SweepExpired is a trusted lifecycle operation, not an HTTP operation. It
 // performs no dispatch, execution, capability cleanup or checkpoint mutation.
 // Any failed transition rolls back this entire bounded batch and its audits.
-func (c *Catalog) SweepExpired(ctx context.Context, cursor DeadlineSweepCursor) (DeadlineSweepResult, error) {
-	result := DeadlineSweepResult{Cursor: cursor}
+func (c *Catalog) SweepExpired(ctx context.Context, cursor DeadlineSweepCursor) (result DeadlineSweepResult, resultErr error) {
+	result = DeadlineSweepResult{Cursor: cursor}
+	caller := ctx
 	ctx, cancel := context.WithTimeout(ctx, deadlineSweepBudget)
 	defer cancel()
 	if err := ctx.Err(); err != nil {
@@ -309,11 +359,20 @@ func (c *Catalog) SweepExpired(ctx context.Context, cursor DeadlineSweepCursor) 
 	if (cursor.TurnScope == "") != (cursor.TurnID == "") || cursor.TurnID != "" && !sandboxUUID(cursor.TurnID) {
 		return result, ErrDeadlineSweep
 	}
-	tasks, err := c.deadlineKeys(ctx, cursor, false)
+	reader, closeReader, err := c.openDeadlineReader(ctx)
 	if err != nil {
 		return result, err
 	}
-	turns, err := c.deadlineKeys(ctx, cursor, true)
+	defer func() {
+		if closeReader != nil {
+			resultErr = errors.Join(resultErr, closeReader())
+		}
+	}()
+	tasks, err := c.deadlineKeys(ctx, reader, cursor, false)
+	if err != nil {
+		return result, err
+	}
+	turns, err := c.deadlineKeys(ctx, reader, cursor, true)
 	if err != nil {
 		return result, err
 	}
@@ -328,13 +387,14 @@ func (c *Catalog) SweepExpired(ctx context.Context, cursor DeadlineSweepCursor) 
 		turns bool
 	}{{tasks, false}, {turns, true}} {
 		var used int64
+		writes := 0
 		all := true
 		for _, key := range group.keys {
 			if err := ctx.Err(); err != nil {
 				return result, err
 			}
 			result.Scanned++
-			slot, raw, size, state, err := c.deadlineRecord(ctx, key, deadlineSweepBytesPerTable-used)
+			slot, raw, size, state, err := c.deadlineRecord(ctx, reader, key, deadlineSweepBytesPerTable-used)
 			if err != nil && !errors.Is(err, ErrMissing) {
 				return result, err
 			}
@@ -355,6 +415,10 @@ func (c *Catalog) SweepExpired(ctx context.Context, cursor DeadlineSweepCursor) 
 				}
 				slot.Record = record
 				if (record.State == task.Running || record.State == task.Cancelling || key.turn != "" && record.State == task.Queued) && !time.Now().Before(record.Deadline) {
+					if writes == deadlineSweepWritesPerTable {
+						all = false
+						break
+					}
 					after := slot
 					after.State = task.Interrupted
 					var patched task.Record
@@ -365,6 +429,7 @@ func (c *Catalog) SweepExpired(ctx context.Context, cursor DeadlineSweepCursor) 
 						return result, err
 					}
 					changes = append(changes, deadlineChange{key, slot, after, raw, updated})
+					writes++
 				}
 			}
 			if group.turns {
@@ -381,20 +446,86 @@ func (c *Catalog) SweepExpired(ctx context.Context, cursor DeadlineSweepCursor) 
 			}
 		}
 	}
-	if len(changes) == 0 {
-		result.Cursor = next
-		return result, ctx.Err()
-	}
-	// Deliberately replace any request context with a fixed service identity.
-	ctx = context.WithValue(ctx, auditActorContext{}, AuditActor{Source: "deadline-controller", Role: "system"})
-	tx, err := c.writer.BeginTx(ctx, nil)
-	if err != nil {
+	if err := ctx.Err(); err != nil {
 		return result, err
 	}
-	defer tx.Rollback()
-	for _, change := range changes {
+	// Return the reader before independent write work can consume its window.
+	readErr := closeReader()
+	closeReader = nil
+	if readErr != nil {
+		return result, readErr
+	}
+	if len(changes) == 0 {
+		result.Cursor = next
+		return result, nil
+	}
+	if err := c.writeDeadlineSweep(caller, changes); err != nil {
+		return result, err
+	}
+	result.Cursor, result.Interrupted = next, len(changes)
+	return result, nil
+}
+
+// Read/parse time must not consume the leased writer's I/O deadline. PostgreSQL
+// statement/lock timeouts abort ordinary slow work without closing the session
+// that owns the advisory lease. The hard context is only an I/O failure fuse.
+func (c *Catalog) writeDeadlineSweep(caller context.Context, changes []deadlineChange) (resultErr error) {
+	ctx := caller
+	duration := deadlineSweepWriteBudget
+	if c.postgres {
+		ctx, duration = context.WithoutCancel(caller), deadlineSweepWriteIO
+	}
+	hardEnd := time.Now().Add(duration)
+	ctx, cancel := context.WithDeadline(ctx, hardEnd)
+	defer cancel()
+	if c.postgres {
+		// pq begins the transaction before installing its context watcher. The
+		// owned socket deadline also bounds BEGIN, COMMIT and ROLLBACK transport.
+		defer func() { resultErr = errors.Join(resultErr, c.setPostgresMaintenance(time.Time{})) }()
+		if err := c.setPostgresMaintenance(hardEnd); err != nil {
+			return err
+		}
+	}
+	softEnd := time.Now().Add(deadlineSweepWriteBudget)
+	check := func() error {
+		if err := caller.Err(); err != nil {
+			return err
+		}
 		if err := ctx.Err(); err != nil {
-			return result, err
+			return err
+		}
+		if !time.Now().Before(softEnd) {
+			return context.DeadlineExceeded
+		}
+		return nil
+	}
+	if err := check(); err != nil {
+		return err
+	}
+	// Deliberately replace request identity; the caller is a trusted lifecycle.
+	ctx = context.WithValue(ctx, auditActorContext{}, AuditActor{Source: "deadline-controller", Role: "system"})
+	ctx = context.WithValue(ctx, auditWriteStepContext{}, check)
+	tx, err := c.writer.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	// This executes before cancel(), so soft budget/caller cancellation performs
+	// a normal rollback instead of cancelling lib/pq's leased connection.
+	defer tx.Rollback()
+	if c.postgres {
+		if err := check(); err != nil {
+			return err
+		}
+		_, err := tx.ExecContext(ctx, `SELECT set_config(name,
+   (CASE WHEN setting::bigint=0 THEN $1 ELSE LEAST(setting::bigint,$1) END)::text,true)
+   FROM pg_settings WHERE name IN ('statement_timeout','lock_timeout')`, deadlineSweepStatementMS)
+		if err != nil {
+			return err
+		}
+	}
+	for _, change := range changes {
+		if err := check(); err != nil {
+			return err
 		}
 		args := []any{string(change.updated), change.key.scope, string(change.raw), change.before.attempt}
 		query := "UPDATE tasks SET record=$1 WHERE scope=$2 AND record=$3 AND attempt=$4"
@@ -404,21 +535,23 @@ func (c *Catalog) SweepExpired(ctx context.Context, cursor DeadlineSweepCursor) 
 		}
 		updated, err := tx.ExecContext(ctx, query, args...)
 		if err != nil {
-			return result, err
+			return err
 		}
 		if n, err := updated.RowsAffected(); err != nil || n != 1 {
-			return result, errors.Join(ErrConflict, err)
+			return errors.Join(ErrConflict, err)
+		}
+		if err := check(); err != nil {
+			return err
 		}
 		scope, _ := deadlineScope(change.key.scope)
 		if err := appendAudit(ctx, tx, auditTaskEvent(ctx, taskAddress{scope, change.key.turn}, change.before, change.after)); err != nil {
-			return result, err
+			return err
 		}
 	}
-	if err := tx.Commit(); err != nil {
-		return result, err
+	if err := check(); err != nil {
+		return err
 	}
-	result.Cursor, result.Interrupted = next, len(changes)
-	return result, nil
+	return tx.Commit()
 }
 
 // RunDeadlineController owns no goroutines. The caller starts and joins its

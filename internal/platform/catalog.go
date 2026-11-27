@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/sys/unix"
 
@@ -96,9 +96,18 @@ func OpenCatalog(ctx context.Context, dir, postgres string, objects Objects) (*C
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return nil, err
 	}
-	db, err := sql.Open(driver, dsn)
-	if err != nil {
-		return nil, err
+	var db *sql.DB
+	if postgres != "" {
+		config, err := pq.NewConfig(dsn)
+		if err != nil {
+			return nil, err
+		}
+		db = sql.OpenDB(&postgresConnector{config: config})
+	} else {
+		db, err = sql.Open(driver, dsn)
+		if err != nil {
+			return nil, err
+		}
 	}
 	c := &Catalog{db: db, writer: db, objects: objects, postgres: postgres != "", sandboxTemp: filepath.Join(dir, "sandbox-incoming")}
 	ok := false
