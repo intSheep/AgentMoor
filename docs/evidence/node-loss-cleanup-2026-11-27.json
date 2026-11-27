@@ -1651,7 +1651,9 @@
     "difference": "Only internal/sandboxgateway/audit_test.go adds an explicit synthetic trusted controller stop-proof to its existing positive fixture. Production and node-loss fixture/harness unchanged.",
     "pre_deadline_merge_checks_source": "3564b831ab536fc8bd5d5426545a102b7a82de22",
     "final_combined_checks_source": "c383c8525c024d7e9fd55a05dbeab1a01f19b7dd",
-    "deadline_merge_head": "4c2462d132b328210807c88befa6f21be317e3fd"
+    "deadline_merge_head": "4c2462d132b328210807c88befa6f21be317e3fd",
+    "formal_main": "4c224d4ea6a9ef4182a83626df1c8d3da164ed93",
+    "post_main_check_source": "5244e194913538e079442d39419cc6448f0eac53"
   },
   "limitations": [
     "One owned kind node; stopping kubelet is a partition surrogate, not physical power fencing or production multi-node HA.",
@@ -2199,6 +2201,29 @@
         "services_network_removed": true
       },
       "scope": "Integrated stop-proof and deadline-maintenance production source; full4 remains the default trusted-local text regression. Earlier R5 and real Codex results retain their original source hashes."
+    },
+    "post_main_merge": {
+      "source_commit": "5244e194913538e079442d39419cc6448f0eac53",
+      "formal_main": "4c224d4ea6a9ef4182a83626df1c8d3da164ed93",
+      "test_fix_commit": "ee1dea2670ff8cefb4e8e671d699c60221332c82",
+      "command": "make fmt && go test -race ./internal/sandboxkube -run '^TestControllerCreateTimeoutRecoversWithGETOnly$' -count=5 -v && make check",
+      "exit_code": 0,
+      "focused_pass_count": 5,
+      "focused_race_seconds": 22.565,
+      "whole_controller_race_seconds": 8.222,
+      "log": {
+        "filename": "agentmoor-nodeproof-main-final-check-20261127-r10.log",
+        "bytes": 17731,
+        "sha256": "b457df2062fa85ddcbcbde364d579ed526d8ec778e7c34da366bdaaaa175456d",
+        "committed_gzip": "node-loss-main-final-check-2026-11-27.log.gz",
+        "gzip_sha256": "ff1701478b47d30dae573349acd5636f4e165d7596802fa12826de5397bb8809"
+      },
+      "execution_file_diff_from_full_matrix_source": [
+        "internal/sandboxkube/controller_test.go"
+      ],
+      "production_and_acceptance_harness_changed": false,
+      "formal_main_merge_tree_diff": [],
+      "note": "Only the pre-existing unit timeout fixture changed: real POST accepted/release synchronization, real timeout preserved, then normal GET budget. Production parameters are unchanged. The complete five-command result stays attributed to c383c85; no R5/native/full4 retagging."
     }
   }
 }
