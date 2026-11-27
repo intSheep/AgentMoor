@@ -79,15 +79,14 @@ func (a *API) taskRoutes(handle func(string, string, apiHandler)) {
 			if !decodeInput(w, r, &claim, 1<<20) {
 				return task.Record{}, errBadRequest
 			}
-			isolated := false
 			if a.SandboxProfiles != nil {
-				_, isolated = a.SandboxProfiles(s.Scope)
-			}
-			if isolated {
+				// Configuring isolation is a server policy, including allocations
+				// whose profile is missing. Absence must never enable local work.
+				_, assigned := a.SandboxProfiles(s.Scope)
 				if !sandboxUUID(claim.Attempt) {
 					return task.Record{}, errBadRequest
 				}
-				if a.SandboxControl == nil || claim.ExecutionPolicy != task.ExecutionUntrustedIsolated {
+				if !assigned || a.SandboxControl == nil || claim.ExecutionPolicy != task.ExecutionUntrustedIsolated {
 					return task.Record{}, errUnsupported
 				}
 			} else if claim.ExecutionPolicy != "" && claim.ExecutionPolicy != task.ExecutionTrustedLocal {

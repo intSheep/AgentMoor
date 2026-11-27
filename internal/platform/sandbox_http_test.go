@@ -255,6 +255,17 @@ func TestSandboxClaimCannotSwitchBetweenLocalAndIsolatedExecution(t *testing.T) 
 			t.Fatal("isolated allocation accepted a local/unknown claim", w.Code, err)
 		}
 	}
+	selected := f.api.SandboxProfiles
+	f.api.SandboxProfiles = func(asset.Scope) (SandboxExecutionProfile, bool) { return SandboxExecutionProfile{}, false }
+	for _, policy := range []string{"", task.ExecutionTrustedLocal, task.ExecutionUntrustedIsolated} {
+		raw, _ := json.Marshal(task.Claim{Attempt: f.address.Attempt, ExecutionPolicy: policy})
+		w := f.request(t, grant, "POST", path, string(raw))
+		row, _ := f.c.readTask(t.Context(), taskAddress{Scope: f.scope})
+		if w.Code != 422 || row.State != task.Queued || row.attempt != "" {
+			t.Fatal("missing isolated profile silently enabled execution", policy, w.Code)
+		}
+	}
+	f.api.SandboxProfiles = selected
 	raw, _ := json.Marshal(task.Claim{Attempt: f.address.Attempt, ExecutionPolicy: task.ExecutionUntrustedIsolated})
 	w := f.request(t, grant, "POST", path, string(raw))
 	if w.Code != 200 {
