@@ -24,6 +24,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tests"))
 from saas_file_contract import FileReportClient
 from skill_report_contract import SkillCatalog, SkillReportClient
+from sandbox_provider_skill import IsolatedSkillCatalog, PROOF_PATH
 
 
 def now():
@@ -72,7 +73,8 @@ class ProviderSmoke:
     def build(self):
         self.stage("build_real_codex_with_public_ca_only")
         relevant = ["cmd", "internal", "tests/kubernetes/sandbox_provider_smoke.py",
-                    "tests/kubernetes/sandbox_provider_native.py", "tests/kubernetes/sandbox_provider_model.py"]
+                    "tests/kubernetes/sandbox_provider_native.py", "tests/kubernetes/sandbox_provider_model.py",
+                    "tests/kubernetes/sandbox_provider_skill.py", "tests/kubernetes/gvisor_security_probe.py"]
         require(not self.p.run("git", "-C", ROOT, "status", "--short", "--", *relevant).strip(),
                 "commit implementation and provider fixtures before acceptance")
         self.result["source_commit"] = self.p.run("git", "-C", ROOT, "rev-parse", "HEAD").strip()
@@ -96,6 +98,7 @@ class ProviderSmoke:
         dockerfile = "\n".join(["FROM " + self.base_image, "USER 0:0",
             "COPY ca.crt /usr/local/share/ca-certificates/agentmoor-provider.crt",
             "COPY ca.crt /etc/agentmoor/gateway-ca.pem", "RUN update-ca-certificates",
+            "RUN printf 'owned-readonly-sentinel\\n' > /etc/agentmoor/readonly-sentinel && chmod 666 /etc/agentmoor/readonly-sentinel",
             "COPY sandbox_provider_native.py sandbox_provider_model.py /opt/test/",
             "RUN chmod 755 /opt/test/sandbox_provider_native.py", "USER 65532:65532", ""])
         (context / "Dockerfile").write_text(dockerfile)
@@ -154,6 +157,7 @@ class ProviderSmoke:
                    {"apiVersion": "v1", "kind": "Service", "metadata": {"name": "model", "namespace": CONTROL_NS}, "spec": {"selector": {"app": "provider-model"}, "ports": [{"port": 8443}]}})
         service = json.loads(self.kube("get", "service", "agentmoor", "-o", "json"))
         self.gateway_ip = service["spec"]["clusterIP"]
+        self.kube_ip = json.loads(self.kube("get", "service", "kubernetes", "-o", "json", namespace="default"))["spec"]["clusterIP"]
         self.scopes, allocations, jobs = {}, [], []
         for scenario in ("file", "skill", "no-skill"):
             scope = {"tenant": "saas", "project": "reports", "runtime": scenario + "-job", "adapter": "codex"}
@@ -239,7 +243,8 @@ class ProviderSmoke:
         context = ssl.create_default_context(cafile=str(self.cert))
         directory = self.p.directory / (scenario + "-business")
         directory.mkdir()
-        catalog = SkillCatalog(endpoint, self.token(scope, "--write"), context) if scenario == "skill" else None
+        catalog = IsolatedSkillCatalog(endpoint, self.token(scope, "--write"), context,
+                                       self.gateway_ip + ":7401", self.kube_ip + ":443") if scenario == "skill" else None
         if catalog:
             configuration = json.loads(self.kube("get", "configmap", scenario + "-worker", "-o", "json"))["data"]
             worker = json.loads(configuration["worker.json"])
@@ -254,7 +259,7 @@ class ProviderSmoke:
         row = json.loads(client.request("GET", client.route))
         cp = json.loads(client.request("GET", client.route + "/checkpoint"))
         session, marker = cp["session_id"], None
-        deliveries, rounds = [], []
+        deliveries, rounds, isolation_proofs = [], [], []
         newer = None
         for operation in ("produce", "revise", "audit"):
             turn = ""
@@ -268,6 +273,8 @@ class ProviderSmoke:
             workspace = client.archive(client.refs(row)["workspace"])
             counter = json.loads(workspace[".agentmoor-native-count.json"])
             rounds.append({"operation": operation, **self.deleted(counter), "artifact": delivery[0]})
+            if catalog:
+                isolation_proofs.append(catalog.verify_proof(workspace[PROOF_PATH]))
             if operation != "audit":
                 client.ingest(row, delivery, directory, self.cert, fail_write=operation == "revise")
             cp = json.loads(client.request("GET", client.route + "/checkpoint"))
@@ -279,8 +286,63 @@ class ProviderSmoke:
         if catalog:
             require(catalog.request("GET", catalog.pin["source"]["content_path"]) == catalog.original, "old Skill package changed")
             result.update(skill_pin=catalog.pin, newer_unselected_skill=newer)
+            require(len({proof["probe_nonce"] for proof in isolation_proofs}) == 3, "Skill code did not run freshly in every Pod")
+            result.update(isolation_proofs=isolation_proofs,
+                          skill_member_sha256={name: sha(raw) for name, raw in catalog.members.items()})
         self.result["scenarios"].append(result)
         return client, cp, marker, deliveries, directory
+
+    def cancel_file(self, client, cp, marker, deliveries, directory):
+        self.stage("cancel_active_native_tool_and_recover_old_checkpoint")
+        session = cp["session_id"]
+        turn = client.ask(session, "Hold the report tool until cancelled.")
+        until = time.monotonic() + 90
+        counter = None
+        while time.monotonic() < until:
+            pods = json.loads(self.kube("get", "pods", "-l", "app.kubernetes.io/name=agentmoor-sandbox", "-o", "json", namespace=GUEST_NS))["items"]
+            for pod in pods:
+                if pod.get("status", {}).get("phase") != "Running":
+                    continue
+                # Only an injected synchronization marker and execution count
+                # are read through Kubernetes. Business data stays on HTTP.
+                try:
+                    observed = self.kube("exec", pod["metadata"]["name"], "--", "python3", "-c",
+                        "import json;from pathlib import Path;p=Path('/run/guest/run/workspace');print(json.dumps(json.loads((p/'.agentmoor-native-count.json').read_bytes()) if (p/'.hold-started').is_file() else None))",
+                        namespace=GUEST_NS)
+                except RuntimeError:
+                    continue
+                if json.loads(observed):
+                    counter = json.loads(observed)
+                    break
+            if counter:
+                break
+            time.sleep(.4)
+        require(counter is not None, "native MCP report never reached its active hold")
+        start = time.monotonic()
+        accepted = json.loads(client.request("POST", client.route + "/turns/" + turn + "/cancel"))
+        require(accepted["state"] == "cancelling", "cancellation skipped its active acknowledgement")
+        until = start + 25
+        while time.monotonic() < until:
+            stopped = json.loads(client.request("GET", client.route + "/turns/" + turn))
+            if stopped["state"] == "cancelled":
+                break
+            time.sleep(.3)
+        require(stopped["state"] == "cancelled" and not stopped.get("assets"), "cancelled task retained success assets or failed to stop")
+        cancel_seconds = round(time.monotonic() - start, 3)
+        require(json.loads(client.request("GET", client.route + "/checkpoint")) == cp, "cancellation advanced the old checkpoint")
+        receipt = self.deleted(counter)
+        client.verify_stored(deliveries, directory)
+        recovered_turn = client.ask(session, "Audit the saved report after cancellation.")
+        recovered, _ = client.answer(recovered_turn, seconds=240)
+        require(recovered["parent"] == cp, "new UUID did not restore the old successful checkpoint")
+        _, delivery = client.observe(recovered, session, "audit", marker, expected_operations=["produce", "revise", "audit", "audit"])
+        archive = client.archive(client.refs(recovered)["workspace"])
+        require("unpublished-draft.txt" not in archive and ".hold-started" not in archive, "cancelled local files leaked into recovery")
+        recovery = self.deleted(json.loads(archive[".agentmoor-native-count.json"]))
+        deliveries.append((recovered_turn, delivery))
+        client.verify_stored(deliveries, directory)
+        self.result["file_cancellation"] = {"turn_id": turn, "cancel_seconds": cancel_seconds,
+            "checkpoint_preserved": True, "cancelled": receipt, "recovery": recovery, "unpublished_files_restored": False}
 
     def execute(self, scenarios):
         self.build()
@@ -290,7 +352,9 @@ class ProviderSmoke:
         try:
             with forward(self.p.base, CONTROL_NS) as endpoint:
                 for scenario in scenarios:
-                    self.scenario(endpoint, scenario)
+                    state = self.scenario(endpoint, scenario)
+                    if scenario == "file":
+                        self.cancel_file(*state)
         finally:
             self.stop.set()
             observer.join(timeout=15)
@@ -323,9 +387,13 @@ class ProviderSmoke:
     def clean(self):
         for image in (self.image, self.base_image):
             subprocess.run(["docker", "image", "rm", image], capture_output=True, text=True, timeout=60)
+            remaining = subprocess.run(["docker", "image", "inspect", image], capture_output=True, text=True)
+            require(remaining.returncode != 0, "owned provider image tag remains after cleanup")
+        self.result["provider_image_tags_removed"] = True
 
 
 def main():
+    os.chdir(ROOT)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bundle", type=Path)
     parser.add_argument("--calico-manifest", type=Path)
