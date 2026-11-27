@@ -57,6 +57,11 @@ def skill_request(body):
 
 
 class SandboxProviderModel(Handler):
+    def send_error(self, code, message=None, explain=None):
+        # Record the branch without echoing headers, input, message or key.
+        print("SANDBOX_MODEL_REJECT code=" + str(int(code)), flush=True)
+        return super().send_error(code, message, explain)
+
     def do_GET(self):
         self.send_error(404)
 
@@ -85,6 +90,14 @@ class SandboxProviderModel(Handler):
         except (ValueError, TypeError, AttributeError):
             return self.send_error(400, "invalid model fixture request")
         print("SANDBOX_MODEL_AUTH verified kind=" + ("skill" if selected is SkillModel else "file"), flush=True)
+        advertised = any(isinstance(namespace, dict) and namespace.get("type") == "namespace" and
+                         namespace.get("name") == "mcp__report" and isinstance(namespace.get("tools"), list) and
+                         any(isinstance(tool, dict) and tool.get("name") == "render" for tool in namespace["tools"])
+                         for namespace in body["tools"])
+        shape = {"users": sum(isinstance(item, dict) and item.get("role") == "user" for item in body["input"]),
+                 "function_outputs": sum(isinstance(item, dict) and item.get("type") == "function_call_output" for item in body["input"]),
+                 "mcp_report_render": advertised}
+        print("SANDBOX_MODEL_SHAPE " + json.dumps(shape, sort_keys=True), flush=True)
         original = self.rfile
         self.rfile = io.BytesIO(raw)
         try:
