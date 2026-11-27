@@ -71,11 +71,20 @@ func (w *boundedWriter) Write(p []byte) (int, error) {
 	return n, err
 }
 
+const maxMetadataDepth, maxMetadataTokens = 64, 65536
+
 func strictJSON(raw []byte, dst any) error {
 	dec := json.NewDecoder(bytes.NewReader(raw))
 	dec.UseNumber()
-	var value func() error
-	value = func() error {
+	var tokens int
+	var value func(int) error
+	value = func(depth int) error {
+		// Token-by-token decoding does not inherit Decode's recursive scanner
+		// limit. The same codec now also handles results on the trusted Worker.
+		tokens++
+		if depth > maxMetadataDepth || tokens > maxMetadataTokens {
+			return fmt.Errorf("guest metadata exceeds its depth or token bound")
+		}
 		token, err := dec.Token()
 		if err != nil {
 			return err
@@ -91,6 +100,10 @@ func strictJSON(raw []byte, dst any) error {
 		case '{':
 			seen := map[string]bool{}
 			for dec.More() {
+				tokens++
+				if tokens > maxMetadataTokens {
+					return fmt.Errorf("guest metadata exceeds its token bound")
+				}
 				tok, err := dec.Token()
 				name, ok := tok.(string)
 				if err != nil || !ok || name == "" || seen[name] {
@@ -102,7 +115,7 @@ func strictJSON(raw []byte, dst any) error {
 					}
 				}
 				seen[name] = true
-				if err = value(); err != nil {
+				if err = value(depth + 1); err != nil {
 					return err
 				}
 			}
@@ -112,7 +125,7 @@ func strictJSON(raw []byte, dst any) error {
 			}
 		case '[':
 			for dec.More() {
-				if err := value(); err != nil {
+				if err := value(depth + 1); err != nil {
 					return err
 				}
 			}
@@ -125,7 +138,7 @@ func strictJSON(raw []byte, dst any) error {
 		}
 		return nil
 	}
-	if err := value(); err != nil {
+	if err := value(0); err != nil {
 		return err
 	}
 	if _, err := dec.Token(); err != io.EOF {

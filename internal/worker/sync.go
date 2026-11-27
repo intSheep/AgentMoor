@@ -52,7 +52,13 @@ type scan struct {
 
 func (e *Engine) Sync(ctx context.Context) error { return e.sync(ctx, "", nil) }
 
-func (e *Engine) sync(ctx context.Context, turn string, artifacts *[]task.Ref) (err error) {
+func (e *Engine) sync(ctx context.Context, turn string, artifacts *[]task.Ref) error {
+	return e.syncWithCapture(ctx, turn, artifacts, func(s *scan, root *os.Root) error { return s.captureLocal(ctx, root) })
+}
+
+// syncWithCapture keeps authorization, journal ownership and frozen retries in
+// one place. The capture function determines the trusted source of each blob.
+func (e *Engine) syncWithCapture(ctx context.Context, turn string, artifacts *[]task.Ref, capture func(*scan, *os.Root) error) (err error) {
 	c := e.Config
 	if err = c.Validate(); err != nil {
 		return err
@@ -136,6 +142,12 @@ func (e *Engine) sync(ctx context.Context, turn string, artifacts *[]task.Ref) (
 		return err
 	}
 	defer root.Close()
+	return capture(&s, root)
+}
+
+func (s *scan) captureLocal(ctx context.Context, root *os.Root) error {
+	e := s.engine
+	c := e.Config
 	if c.RuntimeCLI != "" {
 		info, err := adapter.Inspect(ctx, e.Adapter, root, c.RuntimeCLI)
 		if err != nil {
@@ -149,7 +161,7 @@ func (e *Engine) sync(ctx context.Context, turn string, artifacts *[]task.Ref) (
 			return fmt.Errorf("native session commands are unverified for %q", info.RuntimeVersion)
 		}
 	}
-	if err = s.workspace(ctx, root); err != nil {
+	if err := s.workspace(ctx, root); err != nil {
 		return err
 	}
 	if c.NativeSessions {
@@ -162,7 +174,7 @@ func (e *Engine) sync(ctx context.Context, turn string, artifacts *[]task.Ref) (
 			return err
 		}
 		defer os.RemoveAll(dir)
-		if err = native.ExportNative(ctx, c.RuntimeCLI, c.Workspace, dir); err != nil {
+		if err := native.ExportNative(ctx, c.RuntimeCLI, c.Workspace, dir); err != nil {
 			return err
 		}
 		return s.sessions(ctx, dir)
@@ -318,6 +330,12 @@ func (s *scan) workspace(ctx context.Context, root *os.Root) error {
 	if err := s.tree(ctx, root, asset.Key{Kind: "workspace", ID: "root"}, "workspace-tar.v1", []snapshot.Entry{{Source: ".", Name: "."}}); err != nil {
 		return err
 	}
+	return s.workspaceContents(ctx, root)
+}
+
+// workspaceContents only discovers project-local data. Native session import,
+// export, execution and runtime inspection are separate capture operations.
+func (s *scan) workspaceContents(ctx context.Context, root *os.Root) error {
 	c := s.engine.Config
 	if finder, ok := s.engine.Adapter.(adapter.SkillDiscoverer); ok {
 		skills, err := finder.DiscoverSkills(ctx, root)

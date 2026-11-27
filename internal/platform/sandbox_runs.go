@@ -141,7 +141,10 @@ func sandboxRecordFingerprint(a SandboxAddress, source task.Record) (string, err
 		Parent   *task.Checkpoint
 		Skills   []task.SkillPin
 		Deadline time.Time
-	}{a, source.Spec, source.Parent, source.Skills, source.Deadline})
+		// Omit the new field for legacy rows, preserving their exact original
+		// fingerprint and permanent create fence across upgrades.
+		Policy string `json:",omitempty"`
+	}{a, source.Spec, source.Parent, source.Skills, source.Deadline, source.ExecutionPolicy})
 	if err != nil {
 		return "", err
 	}
