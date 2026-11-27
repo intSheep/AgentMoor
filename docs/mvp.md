@@ -101,3 +101,11 @@ PG/S3 集群复验的前两次 HTTP 500 保留为失败记录。补充诊断及 
 独立的 `make test-k8s-gvisor-feasibility` 真实通过 runsc/systrap BusyBox 与缺 handler 拒绝，保留官方包校验、CRI、同 sandbox Sentry、实际用户及清理证据；八项离线反例已加入 check。它的实际脚本来源按基础提交和未提交文件 SHA 记录，不替换成后续文档头。[运行时验收](gvisor-feasibility.md)
 
 应用隔离提供方、无平台凭据的交接、模型网关、网络/资源与真实原生 CLI/Skill 的沙箱工作流尚未完成，因此不可信任务门禁继续关闭。运行时探针不改变该状态。
+
+## 2026-11-27：原生 Guest 核心的真实 gVisor 文件接续
+
+`b45250b` 的有界 `native-guest.v1` 核心，通过固定 Linux Codex 与脚本模型，在三个新 runsc/systrap Pod 中完成文件生成、恢复后修改和核验；原始 Session 与同一原生 ID 保持，实际工具报告和工作区变化独立验算，每 Pod 原生执行一次。完整输出封存后交接，工作区和会话捕获共用最多 64 MiB 输出预算。
+
+默认 Gofer 工作挂载的原子目录发布先失败，原始来源与诊断保留；仅换宿主 Memory 卷仍不够。受信运行时设置固定大小 Sentry 内存覆盖层后通过，并实测无覆盖碰撞、镜像根和 DownwardAPI 只读拒写。没有放宽公共快照的原子发布规则。[命令、实际来源、失败记录与边界](native-guest.md)
+
+同一核心源码的四 CLI 默认文本 `make test-k8s` 全部通过；合入存储组件后的 `4aef8c8` 的 fmt/check/demo 通过。生产 Pod 控制器、能力与模型网关、SaaS 发布、真实 Skill 的沙箱验证、取消及网络/资源对抗仍继续推进，`untrusted-isolated.v1` 保持关闭，真实模型后补。
