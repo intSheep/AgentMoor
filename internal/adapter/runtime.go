@@ -112,7 +112,11 @@ func RunCLIInput(ctx context.Context, exe, workspace string, env []string, input
 	cmd.Env = append(cmd.Env, env...)
 	cmd.Stdout = &outputLimit{out, limit}
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("runtime %s: %w", args[0], err)
+		operation := "command"
+		if len(args) != 0 {
+			operation = args[0]
+		}
+		return fmt.Errorf("runtime %s: %w", operation, err)
 	}
 	return nil
 }
