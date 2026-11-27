@@ -71,6 +71,8 @@ type SandboxRun struct {
 	CreateStarted      bool        `json:"create_started"`
 	PodName            string      `json:"pod_name,omitempty"`
 	PodUID             string      `json:"pod_uid,omitempty"`
+	PodTemplateSHA     string      `json:"pod_template_sha,omitempty"`
+	PodNamespace       string      `json:"pod_namespace,omitempty"`
 	PodTerminal        bool        `json:"pod_terminal"`
 	ExitCode           int         `json:"exit_code"`
 	PodDeleted         bool        `json:"pod_deleted"`
@@ -321,7 +323,7 @@ func (c *Catalog) BindSandboxPod(ctx context.Context, a SandboxAddress, uid stri
 		return SandboxRun{}, errBadRequest
 	}
 	return c.changeSandbox(ctx, a, func(r *SandboxRun) (string, error) {
-		if !r.CreateStarted || r.Collected || (r.PodUID != "" && r.PodUID != uid) {
+		if !r.CreateStarted || (r.PodUID != "" && r.PodUID != uid) {
 			return "", ErrConflict
 		}
 		r.PodUID = uid
@@ -332,12 +334,35 @@ func (c *Catalog) BindSandboxPod(ctx context.Context, a SandboxAddress, uid stri
 	})
 }
 
+// SealSandboxPodTemplate records the fixed creation template before the one
+// permitted Kubernetes POST. It never grants another create attempt.
+func (c *Catalog) SealSandboxPodTemplate(ctx context.Context, a SandboxAddress, namespace, digest string) (SandboxRun, error) {
+	if !sandboxDigest(digest) || len(namespace) == 0 || len(namespace) > 63 ||
+		strings.Trim(namespace, "abcdefghijklmnopqrstuvwxyz0123456789-") != "" ||
+		namespace[0] == '-' || namespace[len(namespace)-1] == '-' {
+		return SandboxRun{}, errBadRequest
+	}
+	return c.changeSandbox(ctx, a, func(r *SandboxRun) (string, error) {
+		if err := c.sandboxActive(ctx, *r); err != nil || !r.CreateStarted || !r.Input.Sealed {
+			return "", ErrConflict
+		}
+		if r.PodTemplateSHA == "" && (r.PodUID != "" || r.PodTerminal || r.PodDeleted) {
+			return "", ErrConflict
+		}
+		if r.PodTemplateSHA != "" && (r.PodTemplateSHA != digest || r.PodNamespace != namespace) {
+			return "", ErrConflict
+		}
+		r.PodTemplateSHA, r.PodNamespace = digest, namespace
+		return "", nil
+	})
+}
+
 func (c *Catalog) RecordSandboxTerminal(ctx context.Context, a SandboxAddress, uid string, exit int) (SandboxRun, error) {
 	if exit < 0 || exit > 255 {
 		return SandboxRun{}, errBadRequest
 	}
 	return c.changeSandbox(ctx, a, func(r *SandboxRun) (string, error) {
-		if r.PodUID == "" || r.PodUID != uid || r.Collected || (r.PodTerminal && r.ExitCode != exit) {
+		if r.PodUID == "" || r.PodUID != uid || (r.PodTerminal && r.ExitCode != exit) {
 			return "", ErrConflict
 		}
 		r.PodTerminal, r.ExitCode = true, exit
@@ -350,7 +375,7 @@ func (c *Catalog) RecordSandboxTerminal(ctx context.Context, a SandboxAddress, u
 
 func (c *Catalog) ConfirmSandboxDeleted(ctx context.Context, a SandboxAddress, uid string) (SandboxRun, error) {
 	return c.changeSandbox(ctx, a, func(r *SandboxRun) (string, error) {
-		if r.PodUID == "" || r.PodUID != uid || r.Collected {
+		if r.PodUID == "" || r.PodUID != uid {
 			return "", ErrConflict
 		}
 		r.PodDeleted = true
@@ -363,6 +388,33 @@ func (c *Catalog) ConfirmSandboxDeleted(ctx context.Context, a SandboxAddress, u
 		}
 		return "all", nil
 	})
+}
+
+// MatchSandboxCapabilities is an operator-only historical identity check for
+// recovery of an already-created Pod. It ignores expiry/revocation and grants
+// no guest authority; request handling must use AuthenticateSandboxCapability.
+func (c *Catalog) MatchSandboxCapabilities(ctx context.Context, a SandboxAddress, caps SandboxCapabilities) error {
+	r, err := c.loadSandbox(ctx, a)
+	if err != nil {
+		return err
+	}
+	if !r.CreateStarted {
+		return ErrConflict
+	}
+	for purpose, token := range map[SandboxPurpose]string{SandboxInput: caps.Input, SandboxOutput: caps.Output, SandboxModel: caps.Model} {
+		if len(token) != 48 || !strings.HasPrefix(token, "sbx1.") {
+			return ErrSandboxDenied
+		}
+		var count int
+		err := c.db.QueryRowContext(ctx, "SELECT count(*) FROM sandbox_caps WHERE scope=$1 AND run_id=$2 AND purpose=$3 AND token_hash=$4", r.Scope.Prefix(), r.ID, string(purpose), sandboxTokenHash(token)).Scan(&count)
+		if err != nil {
+			return err
+		}
+		if count != 1 {
+			return ErrSandboxDenied
+		}
+	}
+	return nil
 }
 
 func (c *Catalog) CancelSandbox(ctx context.Context, a SandboxAddress) (SandboxRun, error) {
