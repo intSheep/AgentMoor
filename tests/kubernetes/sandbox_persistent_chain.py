@@ -64,10 +64,19 @@ class PersistentAuditSmoke(AuditSmoke):
         events, _ = self.operator_pages(scope)
         self.no_local_fallback()
         old = json.loads(self.kube("get", "pod", "agentmoor", "-o", "json"))["metadata"]["uid"]
+        observation = {"status": "in_progress", "stage": "before_delete", "after_round": operation,
+            "api_pod_uids": [old], "audit_events_before": events,
+            "checkpoint_sha256": sha(json.dumps(checkpoint, sort_keys=True).encode()),
+            "receipt_sha256": sha(json.dumps(record, sort_keys=True).encode()),
+            "frozen_assets": [{"ref": ref, "download_sha256": sha(raw)} for ref, raw in frozen]}
+        self.result["persistent_backend"]["api_replacements"].append(observation)
         self.kube("delete", "pod", "agentmoor", "--wait=true", "--timeout=60s")
+        observation["stage"] = "old_api_deleted"
         self.apply(copy.deepcopy(self.platform_manifest))
         self.p.wait_ready(CONTROL_NS, "agentmoor")
         new = json.loads(self.kube("get", "pod", "agentmoor", "-o", "json"))["metadata"]["uid"]
+        observation["api_pod_uids"].append(new)
+        observation["stage"] = "new_api_ready"
         require(new != old, "API replacement retained its previous Pod UID")
         client.endpoint.reconnect()
         require(json.loads(client.request("GET", client.route)) == record, "API restart changed the public task receipt")
@@ -76,10 +85,10 @@ class PersistentAuditSmoke(AuditSmoke):
         for ref, raw in frozen:
             require(assets.download(ref) == raw, "API restart changed or lost an exact asset version")
         after, _ = self.operator_pages(scope)
+        observation["audit_events_after"] = after
         require(after == events, "API restart lost or appended a logical audit event")
         self.no_local_fallback()
-        self.result["persistent_backend"]["api_replacements"].append({"after_round": operation,
-            "api_pod_uids": [old, new], "audit_events_preserved": len(events),
+        observation.update({"status": "passed", "stage": "verified", "audit_events_preserved": len(events),
             "immutable_downloads_rechecked": len(frozen), "checkpoint_preserved": True,
             "receipt_preserved": True, "no_local_fallback_before_and_after": True})
 

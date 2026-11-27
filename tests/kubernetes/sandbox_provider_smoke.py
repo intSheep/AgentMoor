@@ -229,6 +229,8 @@ class ProviderSmoke:
             "containers": [{"name": "api", "image": self.image, "imagePullPolicy": "Never", "command": ["agentmoor", "serve", "--data", "/data", "--listen", "0.0.0.0:7401", "--tls-cert", "/tls/cert.pem", "--tls-key", "/tls/key.pem", "--sandbox-config", "/configuration/sandbox.json", "--turn-jobs", "/configuration/profiles.json"], "resources": {"limits": {"memory": "512Mi", "cpu": "1"}}, "volumeMounts": mounts}],
             "volumes": [{"name": "data", "emptyDir": {}}, {"name": "tls", "secret": {"secretName": "provider-tls"}}, {"name": "auth", "secret": {"secretName": "provider-model-auth"}}, {"name": "signing", "secret": {"secretName": "provider-signing"}}, {"name": "config", "configMap": {"name": "provider-config"}}]}}
         self.platform_manifest["spec"]["containers"][0]["env"] = self.platform_environment()
+        self.platform_manifest["spec"]["containers"][0]["readinessProbe"] = {
+            "tcpSocket": {"port": 7401}, "periodSeconds": 1, "timeoutSeconds": 1}
         self.apply(self.platform_manifest)
         self.p.wait_ready(CONTROL_NS, "provider-model")
         self.p.wait_ready(CONTROL_NS, "agentmoor")
