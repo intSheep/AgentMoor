@@ -58,28 +58,32 @@ type SandboxBlob struct {
 // SandboxRun is durable metadata, not an HTTP authorization or Pod template.
 // Collection retains this identity and its create fence as a tombstone.
 type SandboxRun struct {
-	ID                 string      `json:"run_id"`
-	Scope              asset.Scope `json:"scope"`
-	TurnID             string      `json:"turn_id,omitempty"`
-	Attempt            string      `json:"-"`
-	Source             task.Record `json:"source"`
-	RecordFingerprint  string      `json:"record_fingerprint"`
-	ProfileFingerprint string      `json:"profile_fingerprint"`
-	Input              SandboxBlob `json:"input"`
-	Output             SandboxBlob `json:"output"`
-	State              string      `json:"state"`
-	CreateStarted      bool        `json:"create_started"`
-	PodName            string      `json:"pod_name,omitempty"`
-	PodUID             string      `json:"pod_uid,omitempty"`
-	PodTemplateSHA     string      `json:"pod_template_sha,omitempty"`
-	PodNamespace       string      `json:"pod_namespace,omitempty"`
-	PodTerminal        bool        `json:"pod_terminal"`
-	ExitCode           int         `json:"exit_code"`
-	PodDeleted         bool        `json:"pod_deleted"`
-	Collected          bool        `json:"collected"`
-	Deadline           time.Time   `json:"deadline"`
-	UpdatedAt          time.Time   `json:"updated_at"`
-	ErrorCode          string      `json:"error_code,omitempty"`
+	ID                 string                 `json:"run_id"`
+	Scope              asset.Scope            `json:"scope"`
+	TurnID             string                 `json:"turn_id,omitempty"`
+	Attempt            string                 `json:"-"`
+	Source             task.Record            `json:"source"`
+	RecordFingerprint  string                 `json:"record_fingerprint"`
+	ProfileFingerprint string                 `json:"profile_fingerprint"`
+	Input              SandboxBlob            `json:"input"`
+	Output             SandboxBlob            `json:"output"`
+	State              string                 `json:"state"`
+	CreateStarted      bool                   `json:"create_started"`
+	PodName            string                 `json:"pod_name,omitempty"`
+	PodUID             string                 `json:"pod_uid,omitempty"`
+	PodTemplateSHA     string                 `json:"pod_template_sha,omitempty"`
+	PodNamespace       string                 `json:"pod_namespace,omitempty"`
+	PodTerminal        bool                   `json:"pod_terminal"`
+	ExitCode           int                    `json:"exit_code"`
+	PodDeleted         bool                   `json:"pod_deleted"`
+	PodNodeName        string                 `json:"pod_node_name,omitempty"`
+	GuestContainerID   string                 `json:"guest_container_id,omitempty"`
+	GuestStopProof     *SandboxGuestStopProof `json:"guest_stop_proof,omitempty"`
+	CleanupUnknown     bool                   `json:"cleanup_unknown,omitempty"`
+	Collected          bool                   `json:"collected"`
+	Deadline           time.Time              `json:"deadline"`
+	UpdatedAt          time.Time              `json:"updated_at"`
+	ErrorCode          string                 `json:"error_code,omitempty"`
 }
 
 func (r SandboxRun) Address() SandboxAddress { return SandboxAddress{r.Scope, r.TurnID, r.Attempt} }
@@ -389,9 +393,13 @@ func (c *Catalog) ConfirmSandboxDeleted(ctx context.Context, a SandboxAddress, u
 		if r.PodUID == "" || r.PodUID != uid {
 			return "", ErrConflict
 		}
+		if !r.GuestStopped() {
+			return "", ErrNotReady
+		}
 		r.PodDeleted = true
+		r.CleanupUnknown = false
 		if !sandboxStopped(*r) {
-			if r.PodTerminal && r.ExitCode == 0 && r.Output.Sealed {
+			if r.PodTerminal && r.ExitCode == 0 && r.Output.Sealed && r.GuestStopProof.Kind == SandboxGuestTerminated && r.GuestStopProof.ExitCode != nil && *r.GuestStopProof.ExitCode == 0 {
 				r.State = SandboxReady
 			} else {
 				r.State, r.ErrorCode = SandboxFailed, "pod-lost"
@@ -494,7 +502,7 @@ func (c *Catalog) AuthenticateSandboxCapability(ctx context.Context, token strin
 	if err != nil {
 		return SandboxRun{}, err
 	}
-	if !r.CreateStarted || r.PodTerminal || r.PodDeleted ||
+	if !r.CreateStarted || r.PodTerminal || r.PodDeleted || r.GuestStopped() || r.CleanupUnknown ||
 		(r.Output.Sealed && purpose != SandboxOutput) {
 		return SandboxRun{}, ErrSandboxDenied
 	}

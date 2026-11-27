@@ -33,8 +33,9 @@ type ClientConfig struct {
 	Timeout                time.Duration
 }
 
-// Client deliberately exposes only the three Pod operations needed by a
-// controller. Mutations have no retry path, including transport replay.
+// Client exposes fixed Pod operations including a narrowly constructed
+// conditional removal of only the platform's guest-stop finalizer.
+// Mutations have no retry path, including transport replay.
 type Client struct {
 	origin, tokenFile string
 	http              *http.Client
@@ -166,6 +167,9 @@ func (c *Client) request(ctx context.Context, operation, method, route string, b
 	request.Header.Set("Accept", "application/json")
 	if len(body) > 0 {
 		request.Header.Set("Content-Type", "application/json")
+		if method == http.MethodPatch {
+			request.Header.Set("Content-Type", "application/json-patch+json")
+		}
 	}
 	response, err := c.http.Do(request)
 	if err != nil {
@@ -183,6 +187,62 @@ func (c *Client) request(ctx context.Context, operation, method, route string, b
 		return 0, nil, fmt.Errorf("Kubernetes %s response exceeds limit", operation)
 	}
 	return response.StatusCode, data, nil
+}
+
+// releaseGuestFinalizer performs one atomic compare-and-remove. For an
+// unscheduled Pod the complete observed spec is tested too, so a concurrent
+// scheduler binding cannot authorize a never-scheduled stop-proof.
+func (c *Client) releaseGuestFinalizer(ctx context.Context, namespace, name string, p observedPod) error {
+	route, err := podRoute(namespace, name)
+	if err != nil || !canonicalUUID(p.uid) || !podResourceVersion(p.resourceVersion) || !p.deleting || p.deletionTimestamp == "" || !p.ownFinalizer || len(p.finalizers) == 0 || len(p.finalizers) > 32 || p.casSpec == nil {
+		return ErrPod
+	}
+	index := -1
+	for i, value := range p.finalizers {
+		if value == guestStopFinalizer {
+			if index != -1 {
+				return ErrPod
+			}
+			index = i
+		}
+	}
+	if index < 0 {
+		return ErrPod
+	}
+	type patch struct {
+		Op    string `json:"op"`
+		Path  string `json:"path"`
+		Value any    `json:"value,omitempty"`
+	}
+	operations := []patch{{"test", "/metadata/uid", p.uid}, {"test", "/metadata/resourceVersion", p.resourceVersion},
+		{"test", "/metadata/deletionTimestamp", p.deletionTimestamp}, {"test", "/metadata/finalizers", p.finalizers},
+		{"test", "/spec", p.casSpec}, {"remove", "/metadata/finalizers/" + strconv.Itoa(index), nil}}
+	body, err := json.Marshal(operations)
+	if err != nil {
+		return ErrPod
+	}
+	status, raw, err := c.request(ctx, "release guest finalizer", http.MethodPatch, route, body)
+	if err != nil {
+		return err
+	}
+	if status != http.StatusOK || !podJSON(raw) {
+		return fmt.Errorf("Kubernetes conditional guest finalizer release failed: HTTP %d", status)
+	}
+	var response struct {
+		Metadata struct {
+			UID        string   `json:"uid"`
+			Finalizers []string `json:"finalizers"`
+		} `json:"metadata"`
+	}
+	if json.Unmarshal(raw, &response) != nil || response.Metadata.UID != p.uid {
+		return ErrPod
+	}
+	for _, value := range response.Metadata.Finalizers {
+		if value == guestStopFinalizer {
+			return ErrPod
+		}
+	}
+	return nil
 }
 func podJSON(raw []byte) bool {
 	trimmed := bytes.TrimSpace(raw)

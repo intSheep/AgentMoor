@@ -52,6 +52,8 @@ make test-k8s-v2
 
 平台 API 和能力网关同时向 stderr 输出固定 JSON 请求遥测；用响应的 `X-Agentmoor-Request-ID` 查找拒绝、耗时或中断。运维配置日志采集、容量和保留；该日志不参与业务事务，不保存原始 URL、错误或正文。[遥测字段与流式边界](http-telemetry.md)
 
+默认 `serve` 还会运行[可信期限巡检](deadline-sweep.md)，无需租户轮询即可持久记录过期中断。后台失败只报告固定的 `deadline sweep failed`，不输出记录或原始错误。正常预算耗尽回滚；真实 PostgreSQL 写者 I/O 故障后保持失败关闭，需服务重新取得租约，不能自动借读池继续写。服务退出先取消并等待巡检，再关闭 Catalog；扫描/写入的异常 I/O 上限分别为 2/4 秒，不是整轮固定两秒的承诺。
+
 ## 2. 给 Worker 分配身份和目录
 
 在平台侧签发短期凭据，并通过挂载文件或密钥管理系统把它交给对应 Worker。以下命令的凭据文件父目录应已存在，且仅平台和获授权的 Worker 可访问。
@@ -117,6 +119,8 @@ HTTP 按以下能力分别授权；同一凭据可以组合多种能力。
 这个策略覆盖任务首轮和追问，不覆盖普通 `sync` 或 `restore-native` 等受信维护入口。隔离任务的原生导入/导出发生在 guest；独立维护命令仍要求受信输入。[执行边界](security-boundary.md)
 
 `make test-k8s-gvisor-feasibility` 仅检验运行时和缺 handler 拒绝。完整应用探针使用 `python3 tests/kubernetes/sandbox_provider_smoke.py --scenario both`，文本三轮另用 `--scenario text`，独立合成配额用 `python3 tests/kubernetes/sandbox_provider_quota.py`；两者支持 `--bundle`、`--calico-manifest`、`--containerd-cache` 和 `--output`，缓存仍按固定 SHA 验证。它们各建专属临时 kind 节点并在退出时清理；提供方探针明确保留不含本轮 CA/密钥的 `agentmoor-validation-cache:provider-codex-0.171-alpha.13` 依赖缓存，本轮镜像标签仍删除。需 OrbStack/Docker、kind、kubectl 和联网构建；不在已有生产节点上运行安装步骤。[固定源码、实际结果与限制](sandbox-provider.md#2026-11-27-实际验收)
+
+节点失联不会自动重跑原任务。平台自己的 finalizer 等待原 guest 停止证明后才释放对象；GET 404、PhaseFailed、NodeReady 都不能替代证明。无证明的历史或管理员越过锁的记录保留为未知，不能自动补造；优先恢复原 kubelet并让控制器观察真实终态。`NODE_LOSS_OUTPUT=/absolute/new/evidence.json make test-k8s-node-loss` 只在新建专属 kind 节点注入 kubelet 故障，不对已有集群执行。复验、`count/pods` 与旧记录恢复边界见[节点失联处理](node-loss-cleanup.md)。
 
 ### 可选：固定任务 Skill
 

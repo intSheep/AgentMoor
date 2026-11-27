@@ -110,6 +110,8 @@ claim 可携带受信的 `execution_policy`，与 pins 一起冻结；未配置�
 
 Worker 每秒检查一次取消请求。运行中失联且未确认结束时，15 分钟执行期限后查询显示 `interrupted`。这时重新执行业务需要显式分配新任务。取消与中断不会撤销已产生的外部动作。当前执行模式只在完成回合后归档，任务中途丢失 Pod 时，未发布的本地字节仍会丢失。
 
+默认 `serve` 的[可信期限巡检](deadline-sweep.md)会分页重读过期的运行/取消中 Task、Turn 及排队 Turn，把 `interrupted` 与运维事件同事务持久化；无执行期限的首轮排队 Task 不在此范围。原 deadline、attempt、Spec、Parent、pins、资产及最近成功 checkpoint 保持，不创建新 Job/Pod 或 attempt，也不生成清理 ACK。查询投影可能先于持久事件，检测延迟依存量与竞争而定，没有新增 RTO。
+
 ## 一条命令复验
 
 从项目根目录运行 `make test-k8s`。需要 Go、C 编译器、Docker、kind、kubectl、Python 3 和 OpenSSL。脚本构建本地测试镜像，创建专属 kind 集群及 kubeconfig，并在退出时回收。每个镜像只装一种固定版本的 CLI，构建时校验其 SHA-512。默认依次运行 Codex、Gemini CLI、OpenCode，再回归 Claude Code。单独复验可用 `make test-k8s AGENT=gemini-cli`，其他适配器 ID 见下表。2026-11-26 复验使用 kind v0.33.0 和 Kubernetes v1.35.0，模型由集群内的确定性服务模拟。

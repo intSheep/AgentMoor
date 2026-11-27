@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"agentmoor/internal/platform"
 	"agentmoor/internal/task"
@@ -21,9 +22,10 @@ import (
 var ErrPod = errors.New("sandbox Pod does not match its frozen template")
 
 const (
-	inputAnnotation  = "agentmoor.io/input-cap"
-	outputAnnotation = "agentmoor.io/output-cap"
-	modelAnnotation  = "agentmoor.io/model-cap"
+	inputAnnotation    = "agentmoor.io/input-cap"
+	outputAnnotation   = "agentmoor.io/output-cap"
+	modelAnnotation    = "agentmoor.io/model-cap"
+	guestStopFinalizer = "agentmoor.io/guest-stop"
 )
 
 func cpuQuantity(n int64) string {
@@ -68,7 +70,8 @@ func podTemplate(p Profile, r platform.SandboxRun, caps platform.SandboxCapabili
 	pod := map[string]any{
 		"apiVersion": "v1", "kind": "Pod",
 		"metadata": map[string]any{"name": r.PodName, "namespace": p.Namespace,
-			"labels": map[string]string{"app.kubernetes.io/name": "agentmoor-sandbox", "agentmoor.io/run": r.ID[:32]},
+			"finalizers": []any{guestStopFinalizer},
+			"labels":     map[string]string{"app.kubernetes.io/name": "agentmoor-sandbox", "agentmoor.io/run": r.ID[:32]},
 			"annotations": map[string]string{inputAnnotation: caps.Input, outputAnnotation: caps.Output, modelAnnotation: caps.Model,
 				"agentmoor.io/profile": profile, "agentmoor.io/record": r.RecordFingerprint}},
 		"spec": map[string]any{
@@ -171,10 +174,17 @@ func object(b []byte) (map[string]any, error) {
 }
 
 type observedPod struct {
-	uid      string
-	terminal bool
-	exit     int
-	deleting bool
+	uid                                                       string
+	terminal                                                  bool
+	exit                                                      int
+	deleting                                                  bool
+	failed                                                    bool
+	nodeName, containerID, resourceVersion, deletionTimestamp string
+	finalizers                                                []string
+	ownFinalizer                                              bool
+	casSpec                                                   map[string]any
+	stopProof                                                 *platform.SandboxGuestStopProof
+	neverScheduled                                            bool
 }
 
 func canonicalUUID(s string) bool {
@@ -307,7 +317,21 @@ func inspectPod(r platform.SandboxRun, raw []byte) (observedPod, platform.Sandbo
 		return result, caps, ErrPod
 	}
 	result.uid = uid
-	result.deleting = meta["deletionTimestamp"] != nil
+	if raw := meta["deletionTimestamp"]; raw != nil {
+		value, ok := raw.(string)
+		if !ok || value == "" {
+			return result, caps, ErrPod
+		}
+		if _, err := time.Parse(time.RFC3339Nano, value); err != nil {
+			return result, caps, ErrPod
+		}
+		result.deletionTimestamp = value
+		result.deleting = true
+	}
+	result.resourceVersion, _ = meta["resourceVersion"].(string)
+	if err := inspectFinalizers(r, meta, &result); err != nil {
+		return result, caps, err
+	}
 	annotations, ok := meta["annotations"].(map[string]any)
 	if !ok {
 		return result, caps, ErrPod
@@ -324,7 +348,7 @@ func inspectPod(r platform.SandboxRun, raw []byte) (observedPod, platform.Sandbo
 	}
 	for key := range meta {
 		switch key {
-		case "name", "namespace", "labels", "annotations":
+		case "name", "namespace", "labels", "annotations", "finalizers":
 		case "uid", "resourceVersion", "creationTimestamp", "generation", "managedFields", "deletionTimestamp", "deletionGracePeriodSeconds":
 			delete(meta, key)
 		default:
@@ -343,34 +367,10 @@ func inspectPod(r platform.SandboxRun, raw []byte) (observedPod, platform.Sandbo
 	if err != nil || r.PodTemplateSHA == "" || hex.EncodeToString(hash[:]) != r.PodTemplateSHA {
 		return result, caps, ErrPod
 	}
-	// Keep status separate from the template fingerprint.
+	// Classification of a failed result is separate from proof the guest stopped.
 	full, _ := object(raw)
-	if status, ok := full["status"].(map[string]any); ok {
-		phase, _ := status["phase"].(string)
-		if phase == "Succeeded" || phase == "Failed" {
-			result.terminal, result.exit = true, 255
-			statuses, ok := status["containerStatuses"].([]any)
-			if !ok || len(statuses) != 1 {
-				if phase == "Failed" {
-					return result, caps, nil
-				}
-				return result, caps, ErrPod
-			}
-			container, ok := statuses[0].(map[string]any)
-			if !ok || container["name"] != "guest" || container["restartCount"] != json.Number("0") {
-				return result, caps, ErrPod
-			}
-			state, _ := container["state"].(map[string]any)
-			terminated, _ := state["terminated"].(map[string]any)
-			exit, ok := number(terminated["exitCode"])
-			if !ok || exit < 0 || exit > 255 || (phase == "Succeeded" && exit != 0) {
-				return result, caps, ErrPod
-			}
-			result.exit = int(exit)
-			if phase == "Failed" && result.exit == 0 {
-				result.exit = 255 // an infrastructure failure is never publishable
-			}
-		}
+	if err := inspectGuestStatus(full, &result); err != nil {
+		return result, caps, err
 	}
 	return result, caps, nil
 }

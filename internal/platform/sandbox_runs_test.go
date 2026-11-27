@@ -240,6 +240,10 @@ func checkSandboxStorage(t *testing.T, c *Catalog, base asset.Scope) {
 		if _, err := c.ConfirmSandboxDeleted(t.Context(), a, uuid.NewString()); !errors.Is(err, ErrConflict) {
 			t.Fatal("foreign Pod deletion admitted", err)
 		}
+		if _, err := c.ConfirmSandboxDeleted(t.Context(), a, uid); !errors.Is(err, ErrNotReady) {
+			t.Fatal("result classification alone authorized deletion", err)
+		}
+		sandboxTestGuestStop(t, c, a, uid, 0)
 		if _, err := c.ConfirmSandboxDeleted(t.Context(), a, uid); err != nil {
 			t.Fatal(err)
 		}
@@ -361,6 +365,7 @@ func checkSandboxStorage(t *testing.T, c *Catalog, base asset.Scope) {
 		if _, err := c.FailSandbox(t.Context(), a, "pod-lost"); err != nil {
 			t.Fatal(err)
 		}
+		sandboxTestStoppedAndDeletedGuest(t, c, a, uuid.NewString(), 255)
 		sandboxTestFinish(t, c, a, true)
 		if n, err := c.Collect(t.Context(), a.Scope, time.Now().Add(-24*time.Hour)); err != nil || n != 0 {
 			t.Fatal("retained private objects disappeared", n, err)
@@ -404,6 +409,7 @@ func checkSandboxStorage(t *testing.T, c *Catalog, base asset.Scope) {
 		if _, err := c.RecordSandboxTerminal(t.Context(), a, uid, 0); err != nil {
 			t.Fatal(err)
 		}
+		sandboxTestGuestStop(t, c, a, uid, 0)
 		if _, err := c.ConfirmSandboxDeleted(t.Context(), a, uid); err != nil {
 			t.Fatal(err)
 		}
@@ -445,6 +451,7 @@ func checkSandboxStorage(t *testing.T, c *Catalog, base asset.Scope) {
 		if _, err := c.FailSandbox(t.Context(), b, "owned-test-end"); err != nil {
 			t.Fatal(err)
 		}
+		sandboxTestStoppedAndDeletedGuest(t, c, b, uuid.NewString(), 255)
 		sandboxTestFinish(t, c, b, true)
 		// The old root run is eligible, but the same input is still referenced
 		// by the retained continuation. Inject one real deletion failure first.

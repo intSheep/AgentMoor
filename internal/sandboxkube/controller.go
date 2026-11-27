@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	ErrRun        = errors.New("sandbox execution cannot proceed")
-	ErrMissingPod = errors.New("sandbox create was not observed; recreation is forbidden")
+	ErrRun              = errors.New("sandbox execution cannot proceed")
+	ErrMissingPod       = errors.New("sandbox create was not observed; recreation is forbidden")
+	ErrGuestStopUnknown = errors.New("sandbox guest stop is not confirmed")
 )
 
 const cleanupTimeout = 5 * time.Second
@@ -255,7 +256,14 @@ func (c *Controller) reconcile(ctx context.Context, a platform.SandboxAddress) (
 			}
 		}
 		if r.PodUID != "" {
-			return c.catalog.ConfirmSandboxDeleted(workCtx, a, r.PodUID)
+			if r.GuestStopped() {
+				return c.catalog.ConfirmSandboxDeleted(workCtx, a, r.PodUID)
+			}
+			unknown, markErr := c.catalog.MarkSandboxCleanupUnknown(workCtx, a)
+			if markErr != nil {
+				return r, markErr
+			}
+			return unknown, ErrGuestStopUnknown
 		}
 		r, err = c.fail(ctx, a, "create-unknown")
 		if err != nil {
@@ -287,11 +295,9 @@ func (c *Controller) reconcile(ctx context.Context, a platform.SandboxAddress) (
 			return r, err
 		}
 	}
-	if pod.terminal {
-		r, err = c.catalog.RecordSandboxTerminal(workCtx, a, pod.uid, pod.exit)
-		if err != nil {
-			return r, err
-		}
+	r, err = c.observeGuest(workCtx, r, pod)
+	if err != nil {
+		return r, err
 	}
 	if stopped(r) || r.PodTerminal || pod.deleting {
 		if pod.deleting && !r.PodTerminal && !stopped(r) {
@@ -316,13 +322,93 @@ func (c *Controller) cleanup(ctx context.Context, r platform.SandboxRun) (platfo
 		return r, err
 	}
 	if exists {
-		pod, _, err := inspectPod(r, raw)
+		pod, caps, err := inspectPod(r, raw)
 		if err != nil || pod.uid != r.PodUID {
-			return r, ErrPod
+			unknown, e := c.catalog.MarkSandboxCleanupUnknown(cleanup, r.Address())
+			if e != nil {
+				return r, e
+			}
+			return unknown, ErrPod
 		}
-		return r, nil // deletion has not yet been observed; no publication
+		if err = c.catalog.MatchSandboxCapabilities(cleanup, r.Address(), caps); err != nil {
+			return r, err
+		}
+		r, err = c.observeGuest(cleanup, r, pod)
+		if err != nil {
+			return r, err
+		}
+		if !r.GuestStopped() && !pod.neverScheduled {
+			return r, nil
+		}
+		if pod.ownFinalizer {
+			if err = c.client.releaseGuestFinalizer(cleanup, r.PodNamespace, r.PodName, pod); err != nil {
+				return r, err
+			}
+			if !r.GuestStopped() {
+				// Only the successful exact spec/UID/RV finalizer CAS proves this
+				// deleting Pod could not race a scheduler assignment.
+				r, err = c.catalog.RecordSandboxGuestStopped(cleanup, r.Address(), platform.SandboxGuestStopProof{Kind: platform.SandboxGuestNeverScheduled, PodUID: pod.uid, ResourceVersion: pod.resourceVersion})
+				if err != nil {
+					return r, err
+				}
+			}
+		}
+		_, stillExists, e := c.client.Get(cleanup, r.PodNamespace, r.PodName)
+		if e != nil {
+			return r, e
+		}
+		if stillExists {
+			return r, nil
+		}
+	}
+	if !r.GuestStopped() {
+		unknown, e := c.catalog.MarkSandboxCleanupUnknown(cleanup, r.Address())
+		if e != nil {
+			return r, e
+		}
+		return unknown, ErrGuestStopUnknown
 	}
 	return c.catalog.ConfirmSandboxDeleted(cleanup, r.Address(), r.PodUID)
+}
+
+func (c *Controller) observeGuest(ctx context.Context, r platform.SandboxRun, p observedPod) (platform.SandboxRun, error) {
+	var err error
+	if p.nodeName != "" {
+		previous := r
+		r, err = c.catalog.BindSandboxGuestRuntime(ctx, r.Address(), p.uid, p.nodeName, p.containerID)
+		if err != nil {
+			if errors.Is(err, platform.ErrConflict) {
+				failed, e := c.fail(ctx, previous.Address(), "guest-runtime-changed")
+				if e != nil {
+					return previous, e
+				}
+				unknown, e := c.catalog.MarkSandboxCleanupUnknown(ctx, previous.Address())
+				if e != nil {
+					return failed, e
+				}
+				return unknown, ErrGuestStopUnknown
+			}
+			return previous, err
+		}
+	}
+	if p.terminal && !r.PodTerminal {
+		r, err = c.catalog.RecordSandboxTerminal(ctx, r.Address(), p.uid, p.exit)
+		if err != nil {
+			return r, err
+		}
+	} else if p.failed && !stopped(r) {
+		r, err = c.fail(ctx, r.Address(), "pod-failed")
+		if err != nil {
+			return r, err
+		}
+	}
+	if p.stopProof != nil {
+		r, err = c.catalog.RecordSandboxGuestStopped(ctx, r.Address(), *p.stopProof)
+		if err != nil {
+			return r, err
+		}
+	}
+	return r, nil
 }
 
 // ReconcileAll only observes persisted fences. A prepared but unstarted run is

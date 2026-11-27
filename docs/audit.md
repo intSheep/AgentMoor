@@ -45,7 +45,7 @@ SQLite 的旧相对 `file:` 参数及含 `?` 的未编码路径可能曾指向�
 
 [HTTP 拒绝与耗时遥测](http-telemetry.md) 使用独立的脱敏运维日志，不参与本片事务。[成功回执的资产链接](audit-asset-links.md) 将实际采用的版本同事务连接到 Task/Turn；[隔离成功来源](isolated-success-provenance.md) 将显式隔离执行的成功回执连接到真实 Ready Run、Pod UID 和封存输出摘要。[物理对象回收](object-collection-audit.md) 用独立的持久计划和确认描述外部 I/O，不把它误当作 SQL 原子操作。完整运维审计导出/保留治理仍属后续范围。本片不能因此标作整个 P2 的“完整审计”已完成；也没有数据库管理员篡改防护或外部不可变归档的保证。
 
-审计记录已提交的状态转换。`readTask` 可能仅在读取结果中把过期的 `running` 映射为 `interrupted`，没有相应数据库 mutation 时不会凭一次轮询生成持久事件。因此没有 `task.interrupted` 事件不能证明执行尚未过期；可信的过期扫描可另行实现，本片不改变既有期限语义。
+审计记录已提交的状态转换。默认 `serve` 现有[可信期限巡检](deadline-sweep.md)，在原期限后将符合条件的 Task/Turn 中断状态与事件同事务持久化，固定使用 `deadline-controller/system`。`readTask` 仍可先在读取结果中投影 `interrupted`；巡检有分页和预算，因此没有中断事件不能证明执行尚未过期。巡检不重跑任务、不延长期限，也不表示 Pod 或外部资源已物理清理。
 
 ## 实际验收
 

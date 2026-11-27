@@ -71,6 +71,17 @@ type AuditEvent struct {
 }
 
 type auditActorContext struct{}
+type auditWriteStepContext struct{}
+
+// A trusted lifecycle writer may check its soft budget between the two audit
+// statements without cancelling the connection owning the service lease.
+// Ordinary request/Finish contexts install no hook and keep their semantics.
+func auditWriteStep(ctx context.Context) error {
+	if check, ok := ctx.Value(auditWriteStepContext{}).(func() error); ok {
+		return check()
+	}
+	return nil
+}
 
 func auditHash(domain, value string) string {
 	h := sha256.Sum256([]byte("agentmoor.audit.v1/" + domain + "\x00" + value))
@@ -135,8 +146,14 @@ func auditSandboxEvent(ctx context.Context, before *SandboxRun, after SandboxRun
 			action = "template_sealed"
 		case before.PodUID != after.PodUID:
 			action = "pod_bound"
+		case before.GuestStopProof == nil && after.GuestStopProof != nil:
+			action = "guest_stop_proven"
+		case before.PodNodeName != after.PodNodeName || before.GuestContainerID != after.GuestContainerID:
+			action = "runtime_bound"
 		case !before.PodTerminal && after.PodTerminal:
 			action = "terminated"
+		case !before.CleanupUnknown && after.CleanupUnknown:
+			action = "cleanup_unconfirmed"
 		case !before.PodDeleted && after.PodDeleted:
 			action = "deleted"
 		case !before.Output.Sealed && after.Output.Sealed:
@@ -216,11 +233,16 @@ func (e AuditEvent) valid() bool {
 		}
 	} else {
 		switch e.Actor.Source {
-		case "internal", "controller", "model-gateway":
+		case "internal", "controller", "model-gateway", "deadline-controller":
 		default:
 			return false
 		}
 		if e.Actor.Role != "system" || e.Actor.CredentialSHA256 != "" {
+			return false
+		}
+		if e.Actor.Source == "deadline-controller" &&
+			(e.Action != "task.interrupted" && e.Action != "turn.interrupted" ||
+				e.PreviousState != task.Running && e.PreviousState != task.Cancelling && !(e.Action == "turn.interrupted" && e.PreviousState == task.Queued)) {
 			return false
 		}
 	}
@@ -269,7 +291,7 @@ func (e AuditEvent) valid() bool {
 	case "sandbox.result_accepted":
 		return e.Component == "task-store" && e.AttemptSHA256 != "" && e.RunID != "" && e.PodUID != "" && e.Digest != "" &&
 			e.State == task.Succeeded && e.PreviousState == task.Running && e.AssetKind == "" && e.AssetIDSHA256 == "" && e.SessionIDSHA256 == "" && e.Version == 0 && e.ModelRequests == 0 && e.ModelInputBytes == 0 && e.ModelOutputBytes == 0
-	case "sandbox.begun", "sandbox.collected", "sandbox.create_fenced", "sandbox.template_sealed", "sandbox.pod_bound", "sandbox.terminated", "sandbox.deleted", "sandbox.output_sealed", "sandbox.output_declared", "sandbox.input_sealed", "sandbox.cancelled", "sandbox.failed", "sandbox.expired", "sandbox.ready":
+	case "sandbox.begun", "sandbox.collected", "sandbox.create_fenced", "sandbox.template_sealed", "sandbox.pod_bound", "sandbox.runtime_bound", "sandbox.terminated", "sandbox.guest_stop_proven", "sandbox.cleanup_unconfirmed", "sandbox.deleted", "sandbox.output_sealed", "sandbox.output_declared", "sandbox.input_sealed", "sandbox.cancelled", "sandbox.failed", "sandbox.expired", "sandbox.ready":
 		return e.Component == "sandbox-controller" && e.RunID != "" && e.AttemptSHA256 != "" && e.State != "" && e.AssetKind == "" && e.AssetIDSHA256 == "" && e.Version == 0 && e.ModelRequests == 0 && e.ModelInputBytes == 0 && e.ModelOutputBytes == 0
 	case "model.reserved":
 		return e.Component == "model-gateway" && e.RunID != "" && e.AttemptSHA256 != "" && e.Digest != "" && e.AssetKind == "" && e.AssetIDSHA256 == "" && e.Version == 0 && e.State == "" && e.PreviousState == "" && e.ModelRequests > 0 && e.ModelRequests <= SandboxModelMaxRequests && e.ModelInputBytes >= e.ModelRequests && e.ModelInputBytes <= SandboxModelMaxInputBytes && e.ModelOutputBytes > 0 && e.ModelOutputBytes <= SandboxModelMaxOutputBytes
@@ -280,6 +302,9 @@ func (e AuditEvent) valid() bool {
 // appendAudit is called only from a business transaction on the leased writer,
 // under Catalog.mu. No sequence is consumed when either write rolls back.
 func appendAudit(ctx context.Context, tx *sql.Tx, event AuditEvent) error {
+	if err := auditWriteStep(ctx); err != nil {
+		return err
+	}
 	var last int64
 	if err := tx.QueryRowContext(ctx, "SELECT COALESCE(MAX(cursor),0) FROM audit_events").Scan(&last); err != nil {
 		return err
@@ -307,6 +332,9 @@ func appendAudit(ctx context.Context, tx *sql.Tx, event AuditEvent) error {
 	raw, err := json.Marshal(event)
 	if err != nil || len(raw) > auditMaxEventBytes {
 		return ErrAudit
+	}
+	if err := auditWriteStep(ctx); err != nil {
+		return err
 	}
 	_, err = tx.ExecContext(ctx, "INSERT INTO audit_events(cursor,scope,event) VALUES($1,$2,$3)", event.Cursor, event.Scope.Prefix(), string(raw))
 	return err

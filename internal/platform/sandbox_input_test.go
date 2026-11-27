@@ -99,6 +99,7 @@ func handoffReadyForFinish(t *testing.T, c *Catalog, a SandboxAddress, p Sandbox
 	if _, err := c.RecordSandboxTerminal(t.Context(), a, uid, 0); err != nil {
 		t.Fatal(err)
 	}
+	sandboxTestGuestStop(t, c, a, uid, 0)
 	r, err := c.ConfirmSandboxDeleted(t.Context(), a, uid)
 	if err != nil {
 		t.Fatal(err)

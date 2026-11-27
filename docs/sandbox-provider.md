@@ -15,7 +15,7 @@
 - 节点 kubelet 设置 `podPidsLimit: 256`；guest 启动器在任何原生版本探测、导入或执行前，另设不可提升的 **64** 个虚拟进程/线程硬上限。gVisor 的虚拟任务还需要 Sentry/sysmsg 等宿主任务，不能将两种计数一对一换算。实际 fork 负例须证明 guest 到限拒绝，且宿主 `pids.events` 和 OOM 计数未先增加；旧的宿主 128 额度会先耗尽，不是合格的 guest 64 验收。
 - 先应用并实际验证 [sandbox-network.yaml](../deploy/kubernetes/sandbox-network.yaml)，再运行任务。只有专用模型/能力网关 TCP 7443 可达；主 API 7401、Kubernetes API、其他租户、metadata、外网和 DNS 不开放。NetworkPolicy 的执行依赖具体 CNI。[Kubernetes 说明](https://kubernetes.io/docs/concepts/services-networking/network-policies/)
 - 安装 [sandbox-rbac.yaml](../deploy/kubernetes/sandbox-rbac.yaml)，将受信控制面的 ServiceAccount 绑定到沙箱 namespace 的 `pods get/create/delete`。它不需要 guest 的 exec、日志、Secrets、TokenRequest 或 RBAC 权限；与可选追问 Job dispatcher 的权限分别配置。
-- 按专用节点容量设置 [sandbox-quota.yaml](../deploy/kubernetes/sandbox-quota.yaml) 的 Pod 数和总 CPU/内存额度；网关的流并发限制不能代替 Pod 配额。达到额度时 Kubernetes 拒绝创建，不重置原 attempt 或重新运行旧任务。另给容器运行时和 kubelet 配置有限日志轮换，生产关闭 runsc debug；探针的调试日志仅用于专属临时节点。
+- 按专用节点容量设置 [sandbox-quota.yaml](../deploy/kubernetes/sandbox-quota.yaml) 的 Pod 数、`count/pods` 对象数和 CPU/内存额度；网关的流并发限制不能代替 Pod 配额。`count/pods` 保留计算 PhaseFailed 但尚未确认停止的对象，不能据此承诺跨节点物理总额度或 HA。达到额度时 Kubernetes 拒绝创建，不重置原 attempt 或重新运行旧任务。另给容器运行时和 kubelet 配置有限日志轮换，生产关闭 runsc debug；探针的调试日志仅用于专属临时节点。
 
 节点、CNI、镜像、证书与上述约束属于受信部署配置。新集群要复验实际允许/拒绝流量、运行时进程和资源耗尽，不能只检查 YAML 是否存在。运行前的两个固定连接探针仅能发现常见缺配；它们不能证明所有 IP、端口或未来策略变更都安全。
 
@@ -44,9 +44,9 @@ in-cluster Kubernetes 地址、公开 CA 和可轮换 SA token 默认来自标�
 
 参考 [sandbox-worker.example.json](../deploy/kubernetes/sandbox-worker.example.json)。配置必须同时指定 `execution_policy: "untrusted-isolated.v1"` 和 `isolated_provider: "kubernetes-gvisor.v1"`，使用 HTTPS，省略 `runtime_cli`、`sessions`、`native_sessions` 和 `artifact_session`。版本约束可选，但必须与内置适配器验证过的固定版本一致。凭据文件和 StateDir 留在可信 Worker 的挂载中。
 
-Worker 按原私有 attempt 领取并交接任务，经专用 API 等待沙箱封存结果、终止且按 UID 删除后，下载和校验整包。它不探测、启动、导入或导出宿主原生 CLI；仅在新目录恢复数据，验证产物后复用原冻结发布 journal。成功发布以后仍通过原 `finish` 协议提交 checkpoint。
+Worker 按原私有 attempt 领取并交接任务，经专用 API 等待封存结果、受信运行时报告同一 guest 正常停止，并按 UID 确认 API 对象已删除后，下载和校验整包。它不探测、启动、导入或导出宿主原生 CLI；仅在新目录恢复数据，验证产物后复用原冻结发布 journal。成功发布以后仍通过原 `finish` 协议提交 checkpoint，服务端也独立检查 guest 停止证明。
 
-取消或失败先撤销本次能力并请求删除原 Pod。没有确认物理删除时不发送成功的取消 ACK，任务可继续显示 `cancelling`，控制面后台继续核对与清理；不会改写旧 checkpoint 或延长原 deadline。调用失败、丢 ACK 或 Worker 重启不会新分配一次原生执行。缺提供方、版本不匹配或部署缺 profile 会拒绝，不能退回本地执行。
+取消或失败先撤销本次能力并请求删除原 Pod。平台 finalizer 保留对象，直到得到原 guest 的有效停止证明，再确认 API 删除；从未调度的 Pending 有单独的精确 CAS 路径。GET 404、PhaseFailed 或 NodeReady 本身都不代表程序停止；缺少证明时保持未知，不发送成功的取消 ACK，任务可继续显示 `cancelling`。控制面后台继续核对，不改写旧 checkpoint 或延长原 deadline，也不自动换节点重跑。证明与对象删除是两个事实，不由此推导所有宿主 PID/资源均已释放。[实际节点失联反例、修复与旧记录迁移边界](node-loss-cleanup.md)
 
 空策略及 `trusted-local.v1` 仍用于受信开发；普通原生导入/导出是独立的受信维护操作。本提供方不自动扩展到其他 CLI，不宣称生产 HA、硬件虚拟机边界或任意系统调用兼容。
 

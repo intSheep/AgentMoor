@@ -1,0 +1,71 @@
+"""Read-only join of this real Codex run, operator audit and stop metadata."""
+import collections
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+
+BASE = Path("/private/tmp")
+RAW = BASE/"agentmoor-nodeproof-native-audit-3564b83-20261127-r1.json"
+META = BASE/"agentmoor-nodeproof-native-metadata-3564b83-20261127-r1.json"
+RESULT = BASE/"agentmoor-nodeproof-native-verified-3564b83-20261127-r1.json"
+
+def artifact(path):
+    raw = path.read_bytes()
+    return {"path":str(path),"bytes":len(raw),"sha256":hashlib.sha256(raw).hexdigest()}
+
+
+def main():
+    run, meta = json.loads(RAW.read_text()), json.loads(META.read_text())
+    assert run["status"] == meta["status"] == "passed"
+    assert run["source_commit"] == meta["source_commit"] == "3564b831ab536fc8bd5d5426545a102b7a82de22"
+    events = run["audit_chain"]["events"]
+    observed = {row["pod"]["metadata"]["uid"]:row for row in run["running_guest_observations"]}
+    public = {row["pod_uid"]:row for row in run["scenarios"][0]["rounds"]}
+    joined = []
+    for row in meta["snapshot"]["runs"]:
+        execution = [event for event in events if event.get("run_id") == row["run_id"]]
+        def only(action):
+            found = [event for event in execution if event["action"] == action]
+            assert len(found) == 1
+            return found[0]
+        stop, terminal, deleted, accepted = [only("sandbox."+action) for action in ("guest_stop_proven","terminated","deleted","result_accepted")]
+        assert all(event["pod_uid"] == row["pod_uid"] for event in (stop,terminal,deleted,accepted))
+        assert terminal["cursor"] < deleted["cursor"] < accepted["cursor"] and stop["cursor"] < deleted["cursor"]
+        assert deleted["state"] == "ready-to-publish" and accepted["digest"] == row["output_sha256"]
+        assert row["proof_kind"] == "terminated.v1" and row["proof_exit_code"] == row["exit_code"] == 0 and row["proof_restart_count"] == 0
+        live = observed[row["pod_uid"]]
+        assert live["runtime"]["pod_uid"] == row["pod_uid"]
+        status, = [entry for entry in live["pod"]["status"]["containerStatuses"] if entry["name"] == "guest"]
+        assert status["containerID"] == row["guest_container_id"] == row["proof_container_id"] and status["restartCount"] == 0
+        assert live["pod"]["spec"]["nodeName"] == row["pod_node_name"] == row["proof_node_name"]
+        receipt = public[row["pod_uid"]]
+        assert (receipt["turn_id"] or "") == (row["turn_id"] or "") and receipt["counter"]["count"] == 1
+        assert receipt["deleted"] and receipt["no_live_sentry"] and receipt["no_live_gofer_or_shim"] and receipt["no_ready_cri"]
+        links = [event for event in events if event["action"] == "asset.linked" and event["attempt_sha256"] == accepted["attempt_sha256"]]
+        assert len(links) == len(receipt["assets"])
+        joined.append({"run_id":row["run_id"],"turn_id":row["turn_id"],"pod_uid":row["pod_uid"],"container_id":row["proof_container_id"],
+            "proof_kind":row["proof_kind"],"proof_exit_code":row["proof_exit_code"],"terminal_cursor":terminal["cursor"],"stop_proven_cursor":stop["cursor"],
+            "deleted_cursor":deleted["cursor"],"accepted_cursor":accepted["cursor"],"output_sha256":row["output_sha256"],"asset_link_cursors":[event["cursor"] for event in links]})
+    cluster = meta["cluster"]
+    checks = []
+    for kind,name in [("container",cluster+"-control-plane"),("container",cluster+"-outside-fixture")]+[("image",prefix+":"+cluster) for prefix in ("agentmoor-provider","agentmoor-provider-base","agentmoor-security-fixture")]:
+        p = subprocess.run(["docker",kind,"inspect",name],text=True,capture_output=True)
+        absent = p.returncode != 0 and "no such" in p.stderr.lower()
+        assert absent
+        checks.append({"kind":kind,"name":name,"absent":True})
+    assert len(joined) == 3 and run["audit_chain"]["events_after_replay_unchanged"] and run["audit_chain"]["public_original_uuid_replays"] == 3
+    summary = {"status":"passed","source_commit":run["source_commit"],"actual_containerd":run["actual_containerd"],"operator_event_count":len(events),
+        "action_counts":dict(collections.Counter(event["action"] for event in events)),"joins":joined,"native_rounds":3,
+        "immutable_downloads_rechecked":run["scenarios"][0]["immutable_downloads_rechecked"],"operator_page_limit":run["audit_chain"]["page_limit"],
+        "public_uuid_replays":3,"events_after_replay_unchanged":True,"proof_verifier_negative_controls":run["audit_chain"]["proof_verifier_rejected_tampering"],
+        "cleanup":checks,"retained_dependency_cache":run["dependency_cache"],
+        "artifacts":[artifact(p) for p in (RAW,RAW.with_suffix(".log"),META,Path(__file__),BASE/"agentmoor-nodeproof-native-observer-3564b83.py")],
+        "boundary":"Audit events prove persisted ordering; a separate approved read-only exact-scope metadata observation proves real terminated.v1 exit0 and matches previously observed live CRI container IDs. Trusted Worker remains the output-to-asset byte publisher. Scripted model, actual Codex; no real model key."}
+    with RESULT.open("x") as stream:
+        json.dump(summary,stream,indent=2);stream.write("\n")
+    print(json.dumps({"status":"passed","audit_events":len(events),"runs":len(joined),"verified":str(RESULT)}))
+
+
+if __name__ == "__main__":
+    main()

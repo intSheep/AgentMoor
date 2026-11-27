@@ -89,6 +89,9 @@ func (c *isolatedExecutionControl) Start(ctx context.Context, a platform.Sandbox
 	if _, err = c.h.catalog.RecordSandboxTerminal(ctx, a, uid, 0); err != nil {
 		return run, err
 	}
+	if err = fixtureGuestStopped(ctx, c.h.catalog, a, uid, 0); err != nil {
+		return run, err
+	}
 	return c.h.catalog.ConfirmSandboxDeleted(ctx, a, uid)
 }
 
@@ -113,6 +116,9 @@ func (c *isolatedExecutionControl) Cancel(ctx context.Context, a platform.Sandbo
 		return run, nil
 	}
 	if _, err = c.h.catalog.RecordSandboxTerminal(ctx, a, run.PodUID, 143); err != nil {
+		return run, err
+	}
+	if err = fixtureGuestStopped(ctx, c.h.catalog, a, run.PodUID, 143); err != nil {
 		return run, err
 	}
 	return c.h.catalog.ConfirmSandboxDeleted(ctx, a, run.PodUID)
