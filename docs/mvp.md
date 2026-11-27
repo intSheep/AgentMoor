@@ -117,3 +117,12 @@ PG/S3 集群复验的前两次 HTTP 500 保留为失败记录。补充诊断及 
 该源码的 fmt/check/demo、真实 PostgreSQL/S3 输入准备及完整四 CLI 默认文本矩阵通过；四 CLI 原生取消约 2.3/3.1/3.1/3.1 秒，集群和本次镜像标签已清理。合入能力网关后的 `bb6cd7c` 再次通过 fmt/check/demo，没有把前述存储/集群结果改写为合并后重跑。[实际来源与证据](sandbox-task-handoff.md#2026-11-27-实际验证)
 
 新增 HTTP/controller 测试使用明确合成 fixture；四 CLI 回归仍是受信开发路径。Worker 与 `serve` 尚未连接本组件，不可信执行门禁保持关闭。真实隔离 SaaS/native Skill、私有 CA 模型链路、CNI、资源耗尽、真实模型和生产 HA 均未由本次验证。
+
+
+## 2026-11-27：生产隔离提供方的 Codex 文件与 Skill 验收
+
+`19d0d5b40a48226402768f49d49228f9845901a3` 将生产 `serve --sandbox-config`、八条交接 API、固定 controller、私有 CA TLS 模型/能力网关、data-only Worker 与真实 Linux Codex 接成完整路径。文件、固定 Skill 各三轮新 gVisor Pod，在来源 head 升为 v2 后仍执行 v1；同一原生 Session、旧版本字节和独立业务验算保持。另通过活跃工具取消（1.247 秒）、精确 UID guest 删除、失败原 UUID 重投两次不新建 guest，以及新 UUID 从旧 checkpoint 恢复。共十个 Pod 原生计数各 1，guest RLIMIT 64；实际 containerd 2.4.2、Calico 3.33、runsc/systrap、宿主 PodPidsLimit 256。三次原生 Skill 各证明九个私有路径不可读、凭据环境缺失、两个禁止端口超时与只读根 EROFS；每次删除后独立观察无同归属 Sentry/gofer/shim 和 Ready CRI，最终专属节点及标签已清理。[完整实际结果与限制](sandbox-provider.md#2026-11-27-实际验收) · [原始证据](evidence/sandbox-provider-2026-11-27.json)
+
+同一干净源码的独立 `pods=1` 配额探针通过首 Pod 201、第二 Pod 403/无 UID/无 CRI、自然清理和额度恢复；仅为合成 admission 证明。`make fmt/check/demo` 及完整四 CLI 默认受信文本矩阵也通过，原生取消约 3.7/3.0/3.0/3.8 秒。[证据索引与源码/日志摘要](evidence/sandbox-provider-index-2026-11-27.json)
+
+本节更新此前组件阶段“Worker/serve 未接线、全局门禁关闭”的状态：明确配置且检查合格的 Codex 文件分配已有可用提供方；缺配置继续拒绝，不退回可信本地执行。隔离文本回合独立补验，其他 CLI、真实模型、生产 HA、PG/S3 与整条隔离路径组合均未由此验证。上述实际模型是脚本 Responses 服务，业务与不可信 Skill 全为合成数据。

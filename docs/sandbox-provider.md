@@ -1,6 +1,6 @@
 # Linux 集群的隔离执行提供方
 
-本页描述 `kubernetes-gvisor.v1` 的部署契约。完整集群验收仍在进行中；组件各自通过测试，不代表整条生产执行链路已经验收。真实模型调用按用户安排后补。
+本页描述 `kubernetes-gvisor.v1` 的部署契约。`19d0d5b` 已完成生产提供方的真实 Codex 文件、固定 Skill、取消及 guest 丢失集群验收，使用私有 CA TLS 和脚本模型。[实际结果与范围](#2026-11-27-实际验收)；隔离文本回合另验，真实模型调用按用户安排后补。
 
 ## 部署方先准备的边界
 
@@ -49,3 +49,24 @@ Worker 按原私有 attempt 领取并交接任务，经专用 API 等待沙箱�
 取消或失败先撤销本次能力并请求删除原 Pod。没有确认物理删除时不发送成功的取消 ACK，任务可继续显示 `cancelling`，控制面后台继续核对与清理；不会改写旧 checkpoint 或延长原 deadline。调用失败、丢 ACK 或 Worker 重启不会新分配一次原生执行。缺提供方、版本不匹配或部署缺 profile 会拒绝，不能退回本地执行。
 
 空策略及 `trusted-local.v1` 仍用于受信开发；普通原生导入/导出是独立的受信维护操作。本提供方不自动扩展到其他 CLI，不宣称生产 HA、硬件虚拟机边界或任意系统调用兼容。
+
+## 2026-11-27 实际验收
+
+干净源码 `19d0d5b40a48226402768f49d49228f9845901a3` 的 [production SaaS 探针](../tests/kubernetes/sandbox_provider_smoke.py) 退出 0。它实际启动 `serve --sandbox-config`、独立 TLS 能力/模型网关、固定 Pod controller、data-only Worker 和 Linux Codex `0.171.0-alpha.13`；SaaS 只用公开 HTTP 提交、下载、验算和写入独立业务数据库。模型服务使用随机合成共享 key，仅挂给可信控制面/模型服务，guest 镜像只带公开 CA。此次存储是 SQLite/本地对象，不将此前的 PostgreSQL/S3 组件结果当作同一组合通过。
+
+| 实际检查 | 结果 |
+| --- | --- |
+| 文件与固定 Skill | 各三轮、每轮新 gVisor Pod；同一原生 Session ID 接续，旧固定字节可读，业务金额独立验算。Skill 来源 head 升为 v2 后仍实际执行原 v1 的脚本/参考文件，包成员原 SHA 保持。 |
+| 原生执行与运行时 | 共 10 个不同 Pod UID、10 个独立 nonce，每 Pod 真正 `exec` 计数为 1；实际 CRI sandbox 和同归属 Sentry 关联。官方 containerd 2.4.2、runsc/systrap、Calico 3.33；guest RLIMIT_NPROC 软硬均 64，kubelet PodPidsLimit 256，专属父节点内存 4 GiB、实际 `memory.swap.max=0`。 |
+| 不可信 Skill | 三轮均在原生 Skill 脚本中生成独立 proof。九个私有路径不可读，包括实际控制面 `/tls/key.pem`、`/signing/signing.key` 与模型 `/model-tls/key.pem`、`/model-auth/key`；平台/Worker/AWS/PG/Kubernetes 凭据环境缺失。API 7401 和 Kubernetes 443 实际连接超时，镜像中 mode 0666 文件写入返回 EROFS。MCP 子进程的模型 key 环境实际为空；未保存能力值。 |
+| 执行中取消 | 活跃工具已写入同步标志后取消，1.247 秒确认；删除完成后才结束，旧 checkpoint/字节不变，新 UUID 从旧会话恢复且未带回未发布草稿。 |
+| 精确 guest 丢失 | 对实际活跃 Pod UID `d54c4351-2f7b-4235-8062-1106b32df5fa` 发带 UID 前置条件的 DELETE；回合失败，无成功资产/新 checkpoint，原 deadline 不延长。原 UUID 重投两次仍失败且没有新 guest；新 UUID 从旧会话恢复，脏文件不在恢复内容中。 |
+| 每个 workflow 的物理删除 | API 中原 UID 已不存在，并独立等待没有同归属 Sentry/gofer/shim 和 Ready CRI。Stopped CRI 历史另列，没有强删运行进程来制造通过。最终专属节点和镜像标签已删除。 |
+
+[原始 JSON](evidence/sandbox-provider-2026-11-27.json) 保留 812,490 原字节，SHA-256 为 `b38e107336a7b0ca88949cdb0859474279cd9ab2b0e00660762c9045850b84dc`，含 Pod/CRI/进程归属、十次原生计数、三份九路径 proof 和各轮固定引用。实际私有挂载的存在由独立[只读可信 Pod/Service 观察](evidence/sandbox-provider-trusted-mounts-2026-11-27.json)佐证：未读取 Secret 内容，保存前删除所有 annotations/managedFields。全部已提交证据扫描无 `sbx1.` 能力值和私钥 PEM。[证据索引、原日志摘要与限制](evidence/sandbox-provider-index-2026-11-27.json)
+
+独立的[合成 Pod 配额探针](../tests/kubernetes/sandbox_provider_quota.py)也在同一源码的新专属集群通过：restricted namespace 配 `pods=1`，首个固定 sleep Pod 创建返回 201，并实际关联 gVisor/Sentry；第二个同请求返回 403，查询 404，无 UID、无 CRI。删除首个后 quota used 回到 0，真实进程自然消失；仅之后清理 stopped CRI 历史。这是 Kubernetes admission 并发配额证明，未声称两个 SaaS 原生任务并行成功。[原始配额证据](evidence/sandbox-pod-quota-2026-11-27.json)
+
+同一干净 `19d0d5b` 的 `make fmt/check/demo` 与完整四 CLI `make test-k8s` 均退出 0；四 CLI 原生取消约 3.7/3.0/3.0/3.8 秒，两次自动新 Pod 追问及首轮/追问取消通过，专属集群已删除。该四 CLI 矩阵仍是默认受信文本路径，不能代替隔离文本或其他 CLI 隔离验收。[命令、日志 SHA 与退出码](evidence/sandbox-provider-regressions-2026-11-27.json)
+
+上述验收使用真实原生 CLI、脚本模型和合成业务/Skill，不证明真实模型质量、任意恶意程序不会逃逸、生产 HA 或全部系统调用兼容。隔离文本回合、其他 CLI、真实模型及 PostgreSQL/S3 与完整隔离提供方的组合分别验收；早期组件页所写“未接线”描述该页当时的独立组件范围，当前接线状态以本页为准。

@@ -2,7 +2,7 @@
 
 2026-11-27，产品决定：允许客户提交自己的代码和第三方 Skill，统一按不可信代码处理。它们可以读写分配给自己的工作区，不能因此得到平台身份、可信 Worker 状态、其他租户数据或宿主权限。
 
-当前开发路径会在 Worker 容器里直接启动原生 CLI。环境变量白名单、独立 HOME、`os.Root` 和非 root 用户各自有用，但这条路径仍共用 Worker 的进程权限和挂载，尚不能承载上述不可信执行承诺。现有真实 CLI/文件/Skill 验收使用合成输入与受信工具，不是恶意程序逃逸验收。
+`trusted-local.v1` 开发路径会在 Worker 容器里直接启动原生 CLI。环境变量白名单、独立 HOME、`os.Root` 和非 root 用户各自有用，但这条路径仍共用 Worker 的进程权限和挂载，不能承载上述不可信执行承诺。`untrusted-isolated.v1` 已有独立的 `kubernetes-gvisor.v1` 提供方：生产接线、真实 Codex 文件/Skill、新 Pod 接续、取消和 guest 丢失已通过限定集群验收；不可信 Skill 另实际检查九个私有路径、凭据环境、网络拒绝和只读根。它不是任意程序逃逸证明。[当前实际结果与限制](sandbox-provider.md#2026-11-27-实际验收)
 
 ## 必须分开的两侧
 
@@ -34,12 +34,14 @@ Kubernetes 的 RuntimeClass、Pod 限制、RBAC、网络策略与资源额度共
 
 ## Roadmap 进度
 
+下表保留各组件独立交付时的范围；其“尚未连接”不代表当前全局门禁仍关闭。生产 Worker/`serve` 的接线与 `19d0d5b` 整链路结果见[隔离提供方](sandbox-provider.md#2026-11-27-实际验收)。仅显式配置且通过部署检查的分配可运行，不可静默回退；隔离文本回合与其他 CLI 另验。
+
 | 工作 | 当前范围 |
 | --- | --- |
 | [INT-68](https://linear.app/intsheep/issue/INT-68) | 已合并：原有 22 条 HTTP 路由的角色及四维作用域矩阵。没有由此宣称代码隔离。 |
 | [INT-69](https://linear.app/intsheep/issue/INT-69) | 已实现：可信控制面的密钥轮换、单凭据撤销与受信管理入口；[实际验证](authentication-policy.md#2026-11-27-实际验证)。 |
 | [INT-70](https://linear.app/intsheep/issue/INT-70) | 已实现任务首轮/追问的显式策略与拒绝门禁；[运行手册](operations.md#任务执行的信任策略)。普通原生维护入口和真正 provider 仍待后续，门禁不是沙箱。 |
-| [INT-71](https://linear.app/intsheep/issue/INT-71) | 进行中：gVisor systrap 的[独立可行性命令与正反例已通过](gvisor-feasibility.md)，真正执行区分离、模型网关、网络/资源及真实 CLI/Skill 对抗验收尚未完成。 |
+| [INT-71](https://linear.app/intsheep/issue/INT-71) | 已取得[生产提供方的真实 Codex 文件/Skill、取消、精确 guest 丢失证据](sandbox-provider.md#2026-11-27-实际验收)；无模型密钥、限定 Linux/gVisor 组合。隔离文本回合及其他 CLI 另验，未宣称整个 P2 或生产 HA 完成。 |
 | [INT-73](https://linear.app/intsheep/issue/INT-73) | 已实现[私有输入/输出与执行围栏的持久存储](sandbox-execution-intents.md)，真实 PostgreSQL/S3 故障测试通过；尚未连接控制器或开放不可信执行。 |
 | [INT-72](https://linear.app/intsheep/issue/INT-72) | 已实现[有界原生 Guest 核心](native-guest.md)，真实 Codex 在三个新 gVisor Pod 中沿同会话完成文件生成、修改与核验；仍未接入生产控制器/网关或开放不可信任务。 |
 | [INT-76](https://linear.app/intsheep/issue/INT-76) | 已实现[模型调用前的持久次数/字节预留](sandbox-model-budget.md)，并发、重启与真实 PostgreSQL 租约丢失测试通过；模型代理及计费/并发流控制另验。 |

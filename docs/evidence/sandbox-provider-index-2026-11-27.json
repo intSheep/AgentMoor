@@ -1,0 +1,67 @@
+{
+  "source_commit": "19d0d5b40a48226402768f49d49228f9845901a3",
+  "evidence_files": [
+    {
+      "file": "sandbox-provider-2026-11-27.json",
+      "bytes": 812490,
+      "sha256": "b38e107336a7b0ca88949cdb0859474279cd9ab2b0e00660762c9045850b84dc"
+    },
+    {
+      "file": "sandbox-pod-quota-2026-11-27.json",
+      "bytes": 261323,
+      "sha256": "5e32a56d9036ede99831984409a2ee0b0dfd0080636c77da2a34a903cbf1133c"
+    },
+    {
+      "file": "sandbox-provider-trusted-mounts-2026-11-27.json",
+      "bytes": 22394,
+      "sha256": "75dd12b00cea7f19a7480ce99b0209b0ffcb665928eec475fd880968f01fa56f"
+    },
+    {
+      "file": "sandbox-provider-regressions-2026-11-27.json",
+      "bytes": 1583,
+      "sha256": "702c2af06e5de4ab72f5f8817f90d07570caa92db6b310aaf50fb3eb7be3ff2c"
+    }
+  ],
+  "external_raw_logs": [
+    {
+      "path": "/private/tmp/agentmoor-sandbox-provider-official-2026-11-27.log",
+      "bytes": 75635,
+      "sha256": "c6485ff4d1ecbe102829ae8abd3e2e1782667d66ba416917e167297e5f03b13d"
+    },
+    {
+      "path": "/private/tmp/agentmoor-sandbox-provider-quota-2026-11-27.log",
+      "bytes": 2017,
+      "sha256": "81e88b008c68c04b514088f1497d044217f76ac852f6b6aa4dcd03eccd5f1ee1"
+    }
+  ],
+  "scope": "Real fixed Codex, production isolated provider, private-CA TLS scripted model, SQLite/local objects; no live-model key.",
+  "independent_review": {
+    "official_status": "passed",
+    "unique_native_pods": 10,
+    "native_exec_count_per_pod": 1,
+    "guest_rlimit_nproc": [
+      64,
+      64
+    ],
+    "host_kubelet_pod_pids_limit": 256,
+    "file_business_rounds": 3,
+    "skill_business_rounds": 3,
+    "actual_skill_proofs": 3,
+    "unreadable_private_paths_per_proof": 9,
+    "cancel_seconds": 1.247,
+    "guest_loss_original_uuid_replays": 2,
+    "quota_status": "synthetic_pod_quota_passed",
+    "quota_first_admission": 201,
+    "quota_second_admission": 403,
+    "quota_second_get": 404,
+    "quota_second_pod_uid": null,
+    "trusted_mount_observation": "Read-only live Pod/Service/EndpointSlice observation; annotations and managedFields removed; Secret bodies never read.",
+    "capability_and_private_key_scan": "No capability token value or private-key PEM in committed evidence."
+  },
+  "limitations": [
+    "Scripted model responses and synthetic business inputs; no live model or arbitrary escape proof.",
+    "Only Codex file-turn isolated workflow is accepted here; isolated text-turn is being tested separately.",
+    "Single owned kind node; no production HA or PG/S3 isolated-provider combination.",
+    "Quota is independent synthetic Pod admission, not simultaneous SaaS/native task acceptance."
+  ]
+}
