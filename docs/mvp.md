@@ -166,3 +166,9 @@ INT-90 保留旧实现 R2/R3 的真实失败：只停止自有节点 kubelet，A
 `bc9b29f` 的 R5 真实 gVisor 组件四场矩阵通过：Pending 的已授权绑定返回409；正常取消与节点恢复先有真实 term143；失联和 PhaseFailed/CS仍Running 两窗各三条新心跳、同目标可达对照和直接 TCP 禁止目标超时；管理员越过 finalizer 后保持 Unknown，恢复节点也不补造证明。PhaseFailed 对象仍占 count/pods，额外 Pod 403；真实删除后同额度允许201且无CRI。原 POST1、身份、deadline 和旧 checkpoint 不变，专属节点/标签/临时凭据清理完成。[实现、实际结果与边界](node-loss-cleanup.md) · [原始与精选证据](evidence/node-loss-cleanup-2026-11-27.json)
 
 这些证明分别表示受信运行时报告 guest 停止、API 对象删除；固定版本下实际 Sentry/gofer/shim 自然回收另行观察。合成组件与有限网络 canary、对象预算不等于真实模型、所有互联网隔离、跨节点物理总额度、硬件 fence 或生产 HA。
+
+## 2026-11-27：P2.5 可信期限巡检
+
+`3c901611485b2d20460644129bc98cd7b0665ee2` 的默认 serve 在有界主键分页后，仅把原期限已到的运行/取消中 Task、Turn 及排队 Turn 转为中断，与固定 `deadline-controller/system` 审计同一 leased SQL 事务；原 JSON 仅替换唯一顶层 state，保留旧 checkpoint、pins、资产、attempt 与期限，不调度执行或伪造清理 ACK。SQLite/真实 PG 的审计/租约故障、Finish 原期限并发、旧字节、分页/坏记录、重启幂等及服务退出通过。真实 BEGIN/已执行 SELECT 回应黑洞分别按 4/2 秒 I/O 边界退出；普通慢 SQL、取消和预算耗尽后原写者 PID/租约与合法写入保持。旧 NUL 键截断和维护预算杀死写者的真实负例单列保留。[实现、验收与边界](deadline-sweep.md)
+
+同一干净源码 fmt/check/demo/services 与完整四 CLI 默认受信矩阵全部退出 0，16 个阶段、八次追问通过；取消为 2.3/3.1/3.0/3.8 秒，本轮节点/存储资源/镜像标签已独立确认清理。此回归使用脚本模型，不重标为真实模型、HA 或新的隔离资源验收。[真实事件、准确来源与原日志摘要](evidence/deadline-sweep-2026-11-27.json)

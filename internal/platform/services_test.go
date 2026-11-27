@@ -85,6 +85,7 @@ func TestPostgresAndS3(t *testing.T) {
 	checkSandboxProvenancePostgres(t, c, dir, dsn)
 	checkPostgresAuditAssetLinks(t, c, dir, dsn)
 	checkGuestStopRestart := checkSandboxGuestStopPostgres(t, c, dir, dsn)
+	checkPostgresDeadlineSweep(t, objects, dsn)
 	c = checkObjectCollectionAuditServices(t, c, objects, dir, dsn)
 	checkModelRestart := prepareSandboxModelRestart(t, c, scope("model-budget-integration-restart"))
 	// Exercise actual PostgreSQL persistence and S3 bytes across service restart.

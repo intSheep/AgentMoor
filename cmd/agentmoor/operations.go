@@ -147,6 +147,13 @@ func platformCommand(ctx context.Context, args []string, out io.Writer, registry
 			return err
 		}
 		defer catalog.Close()
+		deadlineCtx, stopDeadline := context.WithCancel(ctx)
+		deadlineDone := make(chan struct{})
+		go func() {
+			defer close(deadlineDone)
+			catalog.RunDeadlineController(deadlineCtx, func() { fmt.Fprintln(os.Stderr, "deadline sweep failed") })
+		}()
+		defer func() { stopDeadline(); <-deadlineDone }()
 		incoming := filepath.Join(*dir, "incoming")
 		if err := platform.PrepareUploads(incoming); err != nil {
 			return err
