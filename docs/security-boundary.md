@@ -18,7 +18,7 @@
 
 ## 首个参考运行时
 
-先以 gVisor systrap 验证可运行的参考后端；后续如果部署需要硬件虚拟机边界，再按节点条件接入相应提供方。gVisor 的系统调用隔离仍允许程序访问主动分配的文件和网络，因此不能把 Worker token 挂进沙箱后就认为它已被保护。资源上限与网络访问也需要各自的实际验证。[gVisor 安全模型](https://gvisor.dev/docs/architecture_guide/security/) · [平台条件](https://gvisor.dev/docs/architecture_guide/platforms/)
+2026-11-27 用户进一步确定：首版生产目标是可自行配置的 Linux Kubernetes 集群，部署方可以安装和配置 gVisor。先以 gVisor systrap 接入可复验后端；后续如果部署需要硬件虚拟机边界，再按节点条件接入相应提供方。gVisor 的系统调用隔离仍允许程序访问主动分配的文件和网络，因此不能把 Worker token 挂进沙箱后就认为它已被保护。资源上限与网络访问也需要各自的实际验证。[gVisor 安全模型](https://gvisor.dev/docs/architecture_guide/security/) · [平台条件](https://gvisor.dev/docs/architecture_guide/platforms/)
 
 Kubernetes 的 RuntimeClass、Pod 限制、RBAC、网络策略与资源额度共同组成部署约束。普通容器限制或只有一份 YAML 不构成强隔离实证；须确认实际使用指定沙箱，并运行允许/拒绝流量与恶意程序探针。[Kubernetes 多租户说明](https://kubernetes.io/docs/concepts/security/multi-tenancy/)
 

@@ -1,0 +1,111 @@
+{
+  "record_type": "test execution summary; HTTP fixture assertions are in the committed tests",
+  "recorded_at_utc": "2026-11-27T04:05:28.242856+00:00",
+  "status": "passed",
+  "source_commit": "6db69fc2c591fa2c0128f002927c8825146f948e",
+  "gate_implementation_commit": "cf143f8910294d61d003326f1b4f3c9c182df304",
+  "host_checks": {
+    "command": "make fmt && make check && make demo",
+    "exec_session": 39700,
+    "exit_code": 0,
+    "scope": "all Go race tests, five forward regressions, eight gVisor offline regressions, file report tests and local restoration demo"
+  },
+  "focused_checks": {
+    "command": "go test -race ./internal/worker ./cmd/agentmoor -run 'Test(ExecutionPolicyConfiguration|UntrustedTaskFailsBeforeLocalExecution|ExplicitTrustedLocalTaskStillExecutes|CLIUntrustedTaskPolicyFailsBeforeCredentialsOrExecution)$' -count=1",
+    "exit_code": 0,
+    "origin": "implementation-agent tool result",
+    "scope": "synthetic subprocess + real HTTP platform; no vendor CLI impersonation"
+  },
+  "assertions": [
+    "initial task and follow-up refuse untrusted-isolated.v1 before auth, claim, runtime version probe or execution",
+    "unknown policy configuration rejected; explicit trusted-local positive control executes and publishes",
+    "no platform request, native start, new workspace/state or successful asset on refused execution",
+    "queued record, existing cursor, checkpoint and fixed content remain unchanged; initial checkpoint remains HTTP409",
+    "task text cannot choose or downgrade deployment-owned execution policy"
+  ],
+  "full_four_cli_regression": {
+    "source_commit": "6db69fc2c591fa2c0128f002927c8825146f948e",
+    "entrypoint": "PATH=/Applications/OrbStack.app/Contents/MacOS/xbin:$PATH make test-k8s",
+    "status": "passed",
+    "exit_code": 0,
+    "exec_session": 13764,
+    "recorded_at_utc": "2026-11-27T04:01:03.261181+00:00",
+    "cluster": "agentmoor-e9310442dc2a",
+    "model": "scripted fixture endpoint",
+    "real_model_api_key_used": false,
+    "regression_scope": "Default text workflow; legacy/explicit-trusted execution, not untrusted guest acceptance.",
+    "clis": {
+      "codex": {
+        "messages": [
+          "SaaS verified the versioned report after deletion of the original Pod and emptyDir.",
+          "SaaS recovered two consecutive turns from automatically created Jobs and read both replies after Pod deletion.",
+          "SaaS cancelled an active follow-up and retained the last committed conversation.",
+          "SaaS cancelled an active native turn; worker acknowledged and Job exited in 4.5s."
+        ],
+        "observed_version": "codex-cli 0.171.0-alpha.13",
+        "version_observation": "independent --version in the same built image, network disabled, HOME=/tmp, temporary container removed",
+        "native_installer_ran_without_docker_layer_cache": true,
+        "image": "agentmoor-contract:agentmoor-e9310442dc2a-codex",
+        "docker_image_id": "sha256:32b5640bc09a1140624410e9098d4aad9189061760ece4b8fd4f229ef5080b55",
+        "native_cancel_seconds": 4.5
+      },
+      "gemini-cli": {
+        "messages": [
+          "SaaS verified the versioned report after deletion of the original Pod and emptyDir.",
+          "SaaS recovered two consecutive turns from automatically created Jobs and read both replies after Pod deletion.",
+          "SaaS cancelled an active follow-up and retained the last committed conversation.",
+          "SaaS cancelled an active native turn; worker acknowledged and Job exited in 3.1s."
+        ],
+        "observed_version": "0.70.0",
+        "version_observation": "independent --version in the same built image, network disabled, HOME=/tmp, temporary container removed",
+        "native_installer_ran_without_docker_layer_cache": true,
+        "image": "agentmoor-contract:agentmoor-e9310442dc2a-gemini-cli",
+        "docker_image_id": "sha256:3dc2788ca2f64b69f0e316420115cdc2ba1dbc370bda8f672703f34d7071eab5",
+        "native_cancel_seconds": 3.1
+      },
+      "opencode": {
+        "messages": [
+          "SaaS verified the versioned report after deletion of the original Pod and emptyDir.",
+          "SaaS recovered two consecutive turns from automatically created Jobs and read both replies after Pod deletion.",
+          "SaaS cancelled an active follow-up and retained the last committed conversation.",
+          "SaaS cancelled an active native turn; worker acknowledged and Job exited in 3.8s."
+        ],
+        "observed_version": "1.19.6",
+        "version_observation": "independent --version in the same built image, network disabled, HOME=/tmp, temporary container removed",
+        "native_installer_ran_without_docker_layer_cache": true,
+        "image": "agentmoor-contract:agentmoor-e9310442dc2a-opencode",
+        "docker_image_id": "sha256:4541e041501914e71a9e047ce9911c62ea0ebbe80f05fcec8522389c72a18633",
+        "native_cancel_seconds": 3.8
+      },
+      "claude-code": {
+        "messages": [
+          "SaaS verified the versioned report after deletion of the original Pod and emptyDir.",
+          "SaaS recovered two consecutive turns from automatically created Jobs and read both replies after Pod deletion.",
+          "SaaS cancelled an active follow-up and retained the last committed conversation.",
+          "SaaS cancelled an active native turn; worker acknowledged and Job exited in 3.8s."
+        ],
+        "observed_version": "2.1.330 (Claude Code)",
+        "version_observation": "independent --version in the same built image, network disabled, HOME=/tmp, temporary container removed",
+        "native_installer_ran_without_docker_layer_cache": true,
+        "image": "agentmoor-contract:agentmoor-e9310442dc2a-claude-code",
+        "docker_image_id": "sha256:342256f19e64f17d1173b159bd372c0d115077038d05a74bd626c7a0310d5c00",
+        "native_cancel_seconds": 3.8
+      }
+    },
+    "cleanup": {
+      "kind_node_deletion_in_log": true,
+      "owned_docker_node_query_empty": true,
+      "owned_four_image_tag_query_empty": true,
+      "detached_source_worktree_clean": true
+    },
+    "raw_log": "/private/tmp/agentmoor-untrusted-full-k8s.log"
+  },
+  "runtime_feasibility_evidence": "gvisor-systrap-feasibility-2026-11-27.json",
+  "limitations": [
+    "Only run-task initial/follow-up entry is gated; ordinary native import/export maintenance remains trusted.",
+    "An empty execution policy keeps legacy trusted-local behavior for old trusted deployments.",
+    "No isolated provider or credentialless handoff is implemented by this gate.",
+    "The independent BusyBox/gVisor probe does not prove AgentMoor/CLI/Skill guest isolation, network restrictions or resource exhaustion handling.",
+    "No production HA or live-model acceptance; all fixtures are synthetic."
+  ]
+}

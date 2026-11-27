@@ -17,6 +17,8 @@
 | 非 head 历史 Artifact/Skill 的 GC 保护 | `TestHistoricalArtifactAndSkillReferencesSurviveGC`、`make test-services` | SQLite 与 PostgreSQL/S3 均通过：v1 被 v2 替代为历史后仍保留完整字节；同次 GC 确实删除孤儿对象，旧版本经 HTTP 下载并核 SHA-256。 |
 | 可选工作区增量上传 | `make test-k8s-workspace-parts`、上传测量脚本 | `tar-parts.v1` 默认关闭；PG/S3 文件与固定 Skill 集群通过，公开下载仍是原 tar。5,000/10,000 文件的单文件修改请求体减少约 99%，清单流量和更高的首次/读取成本均已记录。[实测与边界](workspace-incremental.md) |
 | 完整 PG/S3 V2、发布故障、失联及租户拒读 | `make test-k8s-v2` | `89c3c155` 同命令三场景全部通过，含两次 running 原 UUID 重投、八个发布边界、耗尽恢复、真实 900 秒失联、三套 API 重启及 16/17/48 个固定版本的外租户精确 404。[原始证据](evidence/postgres-s3-v2-suite-2026-11-26.json) · [复验说明](persistent-faults-acceptance.md) |
+| 不可信任务的拒绝门禁 | `execution_policy`、真实 HTTP/CLI 测试 | 无独立提供方时拒绝首轮/追问，0 授权/claim/原生启动，queued/旧 checkpoint/游标/内容不变；受信正例与 `6db69fc` 四 CLI 默认矩阵通过。[证据](evidence/untrusted-execution-gate-2026-11-27.json) |
+| gVisor 底层运行时可行性 | `make test-k8s-gvisor-feasibility` | aarch64 官方固定包与实际 CRI/systrap/非 root 用户通过，缺 handler 多次拒绝且无 fallback；不含应用凭据/网络/资源或 CLI/Skill 隔离。[来源与限制](gvisor-feasibility.md) |
 
 ## 待落地的可运行示例
 

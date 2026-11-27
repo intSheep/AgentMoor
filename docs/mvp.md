@@ -89,3 +89,15 @@ PG/S3 集群复验的前两次 HTTP 500 保留为失败记录。补充诊断及 
 同一干净源码的 `make test-k8s-v2` 最终退出 0：文件、固定 Skill、故障/失联三个 PG/S3 场景全部通过，各自完成 queued API 重建和合法外租户拒读，分别重读 16、17、48 份固定版本并核摘要。两个真实 running 回合原 UUID 重投各两次，Job/Pod/容器身份不变且零重启。八个发布边界恢复、三次 manifest 失败耗尽、14 个独立 Pod 原生计数各为 1，以及真实 SIGKILL 137 后的生产 900 秒期限均通过；观察 interrupted 比公开期限晚约 1.66 秒，新 UUID/Pod 沿原会话恢复，旧 UUID 不创建替代 Job。最终核验 PostgreSQL 18.7、MinIO 固定版本及实际 S3 parts，无本地后端回退，专属集群已清理。[完整套件证据](evidence/postgres-s3-v2-suite-2026-11-26.json) · [复验与限制](persistent-faults-acceptance.md)。
 
 本次达到 P1/V2 无模型密钥工程门槛。真实模型按用户选择后补；多控制面副本、生产 HA、不可信代码沙箱和凭据治理仍属后续阶段。分钟级公开 GC 只验证 24 小时窗口内的历史/pending 保护，过期孤儿实际删除由服务测试另证，不扩大本次结果范围。
+
+## 2026-11-27：P2 执行门禁与 gVisor 运行时探针
+
+用户已确定允许客户代码与第三方 Skill，并先面向可自行配置的 Linux Kubernetes/gVisor 集群。密钥轮换和单凭据撤销已通过独立真实 HTTP/CLI 验证并合入。[凭据验收](authentication-policy.md#2026-11-27-实际验证)
+
+实现 `cf143f8` 增加任务 `execution_policy`：空值/`trusted-local.v1` 保留受信开发路径；`untrusted-isolated.v1` 在没有独立提供方时，于凭据读取、授权/claim、版本探测和执行前返回 `ErrIsolationUnavailable`。真实 HTTP 首轮/追问与 CLI 负例确认 0 请求、0 原生命令、无执行目录或成功资产，queued 记录、已有 checkpoint、游标和固定旧字节不变。显式 trusted-local 的合成原生子进程正例成功；任务文本不能覆盖部署策略。普通原生导入/导出仍是受信维护范围。
+
+整合已完成凭据治理后的干净源码 `6db69fc2c591fa2c0128f002927c8825146f948e` 通过 `make fmt/check/demo` 和完整四 CLI `make test-k8s`；四份镜像独立实读版本、两次新 Pod 追问和两种取消均通过，原生取消约 4.5/3.1/3.8/3.8 秒，专属集群及镜像标签已清理。该矩阵仍为默认受信文本工作流。[门禁与回归证据](evidence/untrusted-execution-gate-2026-11-27.json)
+
+独立的 `make test-k8s-gvisor-feasibility` 真实通过 runsc/systrap BusyBox 与缺 handler 拒绝，保留官方包校验、CRI、同 sandbox Sentry、实际用户及清理证据；八项离线反例已加入 check。它的实际脚本来源按基础提交和未提交文件 SHA 记录，不替换成后续文档头。[运行时验收](gvisor-feasibility.md)
+
+应用隔离提供方、无平台凭据的交接、模型网关、网络/资源与真实原生 CLI/Skill 的沙箱工作流尚未完成，因此不可信任务门禁继续关闭。运行时探针不改变该状态。
