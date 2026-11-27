@@ -8,8 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -64,17 +66,25 @@ CREATE TABLE IF NOT EXISTS revision_parts (
  scope TEXT NOT NULL, kind TEXT NOT NULL, asset_id TEXT NOT NULL, version BIGINT NOT NULL, op TEXT NOT NULL,
  PRIMARY KEY(scope,kind,asset_id,version));
 CREATE INDEX IF NOT EXISTS revision_manifests ON revision_parts(scope,op);
-` + sandboxSchema + sandboxModelSchema
+` + sandboxSchema + sandboxModelSchema + auditSchema
 
 // OpenCatalog takes an exclusive service lease. Many workers may use the HTTP
 // API concurrently. A second service must not collect the first one's uploads.
 func OpenCatalog(ctx context.Context, dir, postgres string, objects Objects) (*Catalog, error) {
-	if err := os.MkdirAll(dir, 0700); err != nil {
+	dir, err := filepath.Abs(dir)
+	if err != nil {
 		return nil, err
 	}
-	driver, dsn := "sqlite3", filepath.Join(dir, "catalog.sqlite")+"?_busy_timeout=5000&_journal_mode=WAL&_synchronous=FULL"
-	if postgres != "" {
-		driver, dsn = "postgres", postgres
+	driver, dsn := "postgres", postgres
+	if postgres == "" {
+		driver = "sqlite3"
+		dsn, err = sqliteCatalogDSN(dir)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return nil, err
 	}
 	db, err := sql.Open(driver, dsn)
 	if err != nil {
@@ -119,6 +129,27 @@ func OpenCatalog(ctx context.Context, dir, postgres string, objects Objects) (*C
 	}
 	ok = true
 	return c, nil
+}
+
+func sqliteCatalogDSN(dir string) (string, error) {
+	path := filepath.Join(dir, "catalog.sqlite")
+	if _, err := os.Lstat(path); errors.Is(err, os.ErrNotExist) {
+		// Older non-URI DSNs were truncated at '?' by go-sqlite3. Refuse
+		// to silently create a second catalog beside that possible old store.
+		// An existing directory cannot have been a SQLite database file.
+		if legacy, _, different := strings.Cut(path, "?"); different {
+			if info, e := os.Lstat(legacy); e == nil && !info.IsDir() {
+				return "", errors.New("legacy SQLite catalog path requires operator migration")
+			} else if e != nil && !errors.Is(e, os.ErrNotExist) {
+				return "", e
+			}
+		}
+	} else if err != nil {
+		return "", err
+	}
+	u := url.URL{Scheme: "file", Path: path}
+	u.RawQuery = url.Values{"_busy_timeout": {"5000"}, "_journal_mode": {"WAL"}, "_synchronous": {"FULL"}, "mode": {"rwc"}}.Encode()
+	return u.String(), nil
 }
 
 func (c *Catalog) Close() error {
@@ -320,6 +351,13 @@ func (c *Catalog) Commit(ctx context.Context, s asset.Scope, id string) (int64, 
 	_, err = tx.ExecContext(ctx, "UPDATE operations SET state='committed',message='',version=$1,updated=$2 WHERE scope=$3 AND op=$4", v, now, scope, id)
 	if err != nil {
 		return 0, err
+	}
+	if changed {
+		e := AuditEvent{Scope: s, Actor: auditActor(ctx, "internal"), Action: "revision.committed", TaskID: s.Runtime,
+			AssetKind: ch.Kind, AssetIDSHA256: auditHash("asset-id/"+ch.Kind, ch.ID), Version: v, Digest: ch.SHA256}
+		if err = appendAudit(ctx, tx, e); err != nil {
+			return 0, err
+		}
 	}
 	return v, tx.Commit()
 }

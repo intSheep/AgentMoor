@@ -241,9 +241,20 @@ func (c *Catalog) BeginSandbox(ctx context.Context, a SandboxAddress, profile st
 	if err != nil {
 		return SandboxRun{}, err
 	}
-	_, err = c.writer.ExecContext(ctx, `INSERT INTO sandbox_runs(scope,turn_id,attempt,id,record,updated,collected)
- VALUES($1,$2,$3,$4,$5,$6,0)`, a.Scope.Prefix(), a.TurnID, a.Attempt, r.ID, string(raw), r.UpdatedAt.UnixNano())
-	return r, err
+	tx, err := c.writer.BeginTx(ctx, nil)
+	if err != nil {
+		return SandboxRun{}, err
+	}
+	defer tx.Rollback()
+	if _, err = tx.ExecContext(ctx, `INSERT INTO sandbox_runs(scope,turn_id,attempt,id,record,updated,collected)
+ VALUES($1,$2,$3,$4,$5,$6,0)`, a.Scope.Prefix(), a.TurnID, a.Attempt, r.ID, string(raw), r.UpdatedAt.UnixNano()); err != nil {
+		return SandboxRun{}, err
+	}
+	e, _ := auditSandboxEvent(ctx, nil, r)
+	if err = appendAudit(ctx, tx, e); err != nil {
+		return SandboxRun{}, err
+	}
+	return r, tx.Commit()
 }
 
 func (c *Catalog) SandboxRun(ctx context.Context, a SandboxAddress) (SandboxRun, error) {

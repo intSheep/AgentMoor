@@ -29,6 +29,17 @@ type taskSlot struct {
 // Each logical runtime is one allocation. A claim token is never exposed by
 // the read API. A crashed worker's expired allocation cannot be claimed again.
 func (c *Catalog) readTask(ctx context.Context, s taskAddress) (taskSlot, error) {
+	slot, err := c.readStoredTask(ctx, s)
+	if err != nil {
+		return slot, err
+	}
+	if (slot.State == task.Running || slot.State == task.Cancelling || (s.turn != "" && slot.State == task.Queued)) && !time.Now().Before(slot.Deadline) {
+		slot.State = task.Interrupted
+	}
+	return slot, nil
+}
+
+func (c *Catalog) readStoredTask(ctx context.Context, s taskAddress) (taskSlot, error) {
 	var slot taskSlot
 	var raw string
 	// HTTP polling may overlap or be cancelled independently of a mutation.
@@ -50,9 +61,6 @@ func (c *Catalog) readTask(ctx context.Context, s taskAddress) (taskSlot, error)
 	if err = json.Unmarshal([]byte(raw), &slot.Record); err != nil {
 		return slot, err
 	}
-	if (slot.State == task.Running || slot.State == task.Cancelling || (s.turn != "" && slot.State == task.Queued)) && !time.Now().Before(slot.Deadline) {
-		slot.State = task.Interrupted
-	}
 	return slot, nil
 }
 
@@ -61,24 +69,41 @@ func (c *Catalog) readTask(ctx context.Context, s taskAddress) (taskSlot, error)
 func (c *Catalog) changeTask(ctx context.Context, s taskAddress, create bool, change func(*taskSlot) error) (task.Record, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	slot, err := c.readTask(ctx, s)
+	before, err := c.readStoredTask(ctx, s)
 	if err != nil && !(create && errors.Is(err, ErrMissing)) {
 		return task.Record{}, err
 	}
-	if err := change(&slot); err != nil {
+	slot := before
+	if (slot.State == task.Running || slot.State == task.Cancelling || (s.turn != "" && slot.State == task.Queued)) && !time.Now().Before(slot.Deadline) {
+		slot.State = task.Interrupted
+	}
+	if err = change(&slot); err != nil {
 		return task.Record{}, err
 	}
 	b, err := json.Marshal(slot.Record)
 	if err != nil {
 		return task.Record{}, err
 	}
-	if s.turn != "" {
-		_, err = c.writer.ExecContext(ctx, "UPDATE turns SET record=$1,attempt=$2,state=$3 WHERE scope=$4 AND id=$5", string(b), slot.attempt, slot.State, s.Prefix(), s.turn)
-		return slot.Record, err
+	tx, err := c.writer.BeginTx(ctx, nil)
+	if err != nil {
+		return task.Record{}, err
 	}
-	_, err = c.writer.ExecContext(ctx, `INSERT INTO tasks(scope,record,attempt) VALUES ($1,$2,$3)
+	defer tx.Rollback()
+	if s.turn != "" {
+		_, err = tx.ExecContext(ctx, "UPDATE turns SET record=$1,attempt=$2,state=$3 WHERE scope=$4 AND id=$5", string(b), slot.attempt, slot.State, s.Prefix(), s.turn)
+	} else {
+		_, err = tx.ExecContext(ctx, `INSERT INTO tasks(scope,record,attempt) VALUES ($1,$2,$3)
  ON CONFLICT(scope) DO UPDATE SET record=excluded.record,attempt=excluded.attempt`, s.Prefix(), string(b), slot.attempt)
-	return slot.Record, err
+	}
+	if err != nil {
+		return task.Record{}, err
+	}
+	if before.State != slot.State {
+		if err = appendAudit(ctx, tx, auditTaskEvent(ctx, s, before, slot)); err != nil {
+			return task.Record{}, err
+		}
+	}
+	return slot.Record, tx.Commit()
 }
 
 func (c *Catalog) submitTask(ctx context.Context, s taskAddress, spec task.Spec) (task.Record, error) {

@@ -127,6 +127,12 @@ func (c *Catalog) ReserveSandboxModel(ctx context.Context, token string, policy 
 	if err != nil {
 		return SandboxModelReservation{}, err
 	}
+	e := AuditEvent{Scope: run.Scope, Actor: auditActor(ctx, "model-gateway"), Action: "model.reserved", TaskID: run.Scope.Runtime,
+		TurnID: run.TurnID, AttemptSHA256: auditHash("attempt", run.Attempt), RunID: run.ID, PodUID: run.PodUID,
+		Digest: policy.Fingerprint, ModelRequests: reservation.Requests, ModelInputBytes: reservation.InputBytes, ModelOutputBytes: reservation.OutputBytes}
+	if err = appendAudit(ctx, tx, e); err != nil {
+		return SandboxModelReservation{}, err
+	}
 	// A SQL operation may wait until the original authority has expired. Read
 	// through the pool, never the leased transaction, before authorizing any
 	// forward. A lost lease/ambiguous commit returns no successful reservation.

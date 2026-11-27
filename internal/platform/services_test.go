@@ -5,6 +5,7 @@ package platform
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"io"
@@ -80,6 +81,7 @@ func TestPostgresAndS3(t *testing.T) {
 	checkSandboxStorage(t, c, scope("sandbox-integration"))
 	checkSandboxPreparedInput(t, c, scope("sandbox-input-integration"))
 	checkSandboxModelBudget(t, c, scope("model-budget-integration"))
+	checkPostgresAudit(t, c, dir, dsn)
 	checkModelRestart := prepareSandboxModelRestart(t, c, scope("model-budget-integration-restart"))
 	// Exercise actual PostgreSQL persistence and S3 bytes across service restart.
 	a := sandboxTestClaim(t, c, scope("sandbox-integration-restart"))
@@ -101,10 +103,20 @@ func TestPostgresAndS3(t *testing.T) {
 	checkPostgresTaskReaderIsolation(t, c)
 	checkSandboxLostLease := prepareSandboxLeaseFailure(t, c)
 	checkModelLostLease := prepareSandboxModelLeaseFailure(t, c)
-	checkSandboxFinalSealFailure(t, c, func() { terminatePostgresWriter(t, c) })
+	var auditBeforeLeaseLoss int64
+	checkSandboxFinalSealFailure(t, c, func() {
+		if err := c.db.QueryRowContext(t.Context(), "SELECT count(*) FROM audit_events").Scan(&auditBeforeLeaseLoss); err != nil {
+			t.Fatal(err)
+		}
+		terminatePostgresWriter(t, c)
+	})
 	checkPostgresMutationDeniedAfterLeaseLoss(t, c)
 	checkSandboxLostLease()
 	checkModelLostLease()
+	var auditAfterLeaseLoss int64
+	if err := c.db.QueryRowContext(t.Context(), "SELECT count(*) FROM audit_events").Scan(&auditAfterLeaseLoss); err != nil || auditAfterLeaseLoss != auditBeforeLeaseLoss {
+		t.Fatal("lost writer lease changed committed audit", auditBeforeLeaseLoss, auditAfterLeaseLoss, err)
+	}
 }
 
 func checkPostgresTaskReaderIsolation(t *testing.T, c *Catalog) {
@@ -269,5 +281,63 @@ func checkPostgresMutationDeniedAfterLeaseLoss(t *testing.T, c *Catalog) {
 	var saved int
 	if err := c.db.QueryRowContext(t.Context(), "SELECT count(*) FROM tasks WHERE scope=$1", a.Prefix()).Scan(&saved); err != nil || saved != 0 {
 		t.Fatal("lease loss published task state", saved, err)
+	}
+	if err := c.db.QueryRowContext(t.Context(), "SELECT count(*) FROM audit_events WHERE scope=$1", a.Prefix()).Scan(&saved); err != nil || saved != 0 {
+		t.Fatal("lease loss published an audit event without its business state", saved, err)
+	}
+}
+
+func checkPostgresAudit(t *testing.T, c *Catalog, dir, dsn string) {
+	t.Helper()
+	s := scope("audit-integration")
+	reader, err := OpenAuditReader(t.Context(), dir, dsn)
+	if err != nil {
+		t.Fatal("read-only audit connection competed with live lease", err)
+	}
+	defer reader.Close()
+	if _, err = c.writer.ExecContext(t.Context(), `CREATE FUNCTION reject_audit_insert() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic audit rejection'; END $$;
+CREATE TRIGGER reject_audit_insert BEFORE INSERT ON audit_events FOR EACH ROW EXECUTE FUNCTION reject_audit_insert()`); err != nil {
+		t.Fatal(err)
+	}
+	drop := func() {
+		if _, err = c.writer.ExecContext(t.Context(), "DROP TRIGGER reject_audit_insert ON audit_events; DROP FUNCTION reject_audit_insert()"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	a := taskAddress{Scope: s}
+	spec := task.Spec{Instruction: "synthetic private content must not enter audit", Output: "report.txt"}
+	if _, err = c.submitTask(t.Context(), a, spec); err == nil {
+		drop()
+		t.Fatal("PostgreSQL audit rejection committed task")
+	}
+	if _, err = c.readTask(t.Context(), a); !errors.Is(err, ErrMissing) {
+		drop()
+		t.Fatal("PostgreSQL audit rejection did not roll back task", err)
+	}
+	page, err := reader.Page(t.Context(), s, 0, 0)
+	if err != nil || page.Total != 0 || len(page.Events) != 0 {
+		drop()
+		t.Fatal("failed PostgreSQL transaction left audit", page, err)
+	}
+	drop()
+	for range 2 {
+		if _, err = c.submitTask(t.Context(), a, spec); err != nil {
+			t.Fatal(err)
+		}
+	}
+	page, err = reader.Page(t.Context(), s, 0, 1)
+	if err != nil || page.Total != 1 || len(page.Events) != 1 || page.Events[0].Action != "task.queued" {
+		t.Fatal("PostgreSQL audit ACK retry duplicated event", page, err)
+	}
+	tx, err := reader.db.BeginTx(t.Context(), &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = tx.ExecContext(t.Context(), "DELETE FROM audit_events WHERE scope=$1", s.Prefix()); err == nil {
+		tx.Rollback()
+		t.Fatal("PostgreSQL read-only audit transaction allowed mutation")
+	}
+	if err = tx.Rollback(); err != nil {
+		t.Fatal(err)
 	}
 }
