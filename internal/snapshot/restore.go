@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -18,7 +19,7 @@ import (
 
 // Restore verifies the entire payload before exposing a new target. The caller
 // selects a trusted parent; an existing destination always remains untouched.
-func Restore(ctx context.Context, r io.Reader, meta asset.Metadata, dest string, tree bool) error {
+func Restore(ctx context.Context, r io.Reader, meta asset.Metadata, dest string, tree bool) (err error) {
 	parent := filepath.Dir(dest)
 	if _, err := os.Lstat(dest); err == nil {
 		return fmt.Errorf("restore conflict: %s already exists", dest)
@@ -29,7 +30,7 @@ func Restore(ctx context.Context, r io.Reader, meta asset.Metadata, dest string,
 	if err != nil {
 		return err
 	}
-	defer os.RemoveAll(stage)
+	defer func() { err = errors.Join(err, RemoveDirectory(stage)) }()
 	blob := filepath.Join(stage, "payload")
 	f, err := os.OpenFile(blob, os.O_CREATE|os.O_EXCL|os.O_RDWR, 0600)
 	if err != nil {
