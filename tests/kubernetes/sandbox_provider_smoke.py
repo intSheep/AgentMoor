@@ -52,6 +52,7 @@ class ProviderSmoke:
         self.origin = "agentmoor." + CONTROL_NS + ".svc"
         self.model_origin = "model." + CONTROL_NS + ".svc"
         self.observed, self.observer_errors, self.seen_pods = {}, [], {}
+        self.followers = {}
         self.lock, self.stop = threading.Lock(), threading.Event()
         self.result = {"status": "in_progress", "started_at_utc": now(),
                        "scope": "production sandbox provider / real Codex / scripted private-CA TLS model",
@@ -210,6 +211,11 @@ class ProviderSmoke:
                             continue
                     if pod.get("status", {}).get("phase") != "Running":
                         continue
+                    if uid not in self.followers:
+                        path = self.p.directory / ("guest-" + uid + ".log")
+                        stream = path.open("wb")
+                        process = subprocess.Popen([*self.p.base, "-n", GUEST_NS, "logs", "--follow", "--timestamps", pod["metadata"]["name"]], stdout=stream, stderr=subprocess.STDOUT)
+                        self.followers[uid] = (path, stream, process)
                     runtime = self.p.runtime(GUEST_NS, pod["metadata"]["name"])
                     evidence = {"pod": redact_pod(pod), "runtime": strip_private(runtime)}
                     require("sbx1." not in json.dumps(evidence), "runtime evidence contains a capability")
@@ -358,6 +364,17 @@ class ProviderSmoke:
         finally:
             self.stop.set()
             observer.join(timeout=15)
+            self.result["guest_logs"] = {}
+            for uid, (path, stream, process) in self.followers.items():
+                if process.poll() is None:
+                    process.terminate()
+                try:
+                    process.wait(timeout=3)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait(timeout=3)
+                stream.close()
+                self.result["guest_logs"][uid] = path.read_text(errors="replace")[-131072:]
             with self.lock:
                 self.result["running_guest_observations"] = list(self.observed.values())
                 self.result["seen_guest_pods"] = list(self.seen_pods.values())
