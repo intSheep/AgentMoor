@@ -1,0 +1,34 @@
+{
+  "checked_at_utc": "2026-11-27T08:52:19.452734+00:00",
+  "scope": "Only exact owned verification compose projects, kind node and per-run CLI image tags. Shared dependency caches are outside cleanup scope.",
+  "compose": [
+    {
+      "project": "agentmoor-test-10297",
+      "containers_absent": true,
+      "networks_absent": true,
+      "volumes_absent": true
+    },
+    {
+      "project": "agentmoor-test-12978",
+      "containers_absent": true,
+      "networks_absent": true,
+      "volumes_absent": true
+    },
+    {
+      "project": "agentmoor-test-14680",
+      "containers_absent": true,
+      "networks_absent": true,
+      "volumes_absent": true
+    }
+  ],
+  "kind_node": {
+    "name": "agentmoor-af4ff5e3f65b-control-plane",
+    "absent": true
+  },
+  "owned_image_tags_absent": [
+    "agentmoor-contract:agentmoor-af4ff5e3f65b-codex",
+    "agentmoor-contract:agentmoor-af4ff5e3f65b-gemini-cli",
+    "agentmoor-contract:agentmoor-af4ff5e3f65b-opencode",
+    "agentmoor-contract:agentmoor-af4ff5e3f65b-claude-code"
+  ]
+}

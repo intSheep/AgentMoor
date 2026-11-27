@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS revision_parts (
  scope TEXT NOT NULL, kind TEXT NOT NULL, asset_id TEXT NOT NULL, version BIGINT NOT NULL, op TEXT NOT NULL,
  PRIMARY KEY(scope,kind,asset_id,version));
 CREATE INDEX IF NOT EXISTS revision_manifests ON revision_parts(scope,op);
-` + sandboxSchema + sandboxModelSchema + auditSchema
+` + sandboxSchema + sandboxModelSchema + auditSchema + objectCollectionSchema
 
 // OpenCatalog takes an exclusive service lease. Many workers may use the HTTP
 // API concurrently. A second service must not collect the first one's uploads.
@@ -295,6 +295,9 @@ func (c *Catalog) Upload(ctx context.Context, s asset.Scope, id, file, digest st
 	if o.state != "pending" {
 		return ErrConflict
 	}
+	if err = c.prepareObjectPut(ctx, s, objectAssetBlob, digest); err != nil {
+		return err
+	}
 	err = c.objects.Put(ctx, objectKey(s, digest), file, size)
 	if err != nil {
 		_, _ = c.writer.ExecContext(ctx, "UPDATE operations SET message='object upload failed',updated=$1 WHERE scope=$2 AND op=$3", time.Now().UnixNano(), s.Prefix(), id)
@@ -506,16 +509,10 @@ func (c *Catalog) Collect(ctx context.Context, s asset.Scope, before time.Time) 
 	}
 	n := 0
 	for _, h := range hashes {
-		key := objectKey(s, h)
-		exists, err := c.objects.Exists(ctx, key)
+		removed, err := c.collectObject(ctx, s, objectAssetBlob, h)
+		n += removed
 		if err != nil {
 			return n, err
-		}
-		if exists {
-			if err = c.objects.Remove(ctx, key); err != nil {
-				return n, err
-			}
-			n++
 		}
 	}
 	parts, err := c.collectParts(ctx, s, before)

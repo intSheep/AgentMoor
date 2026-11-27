@@ -71,7 +71,8 @@ func newHandoffHTTPFixture(t *testing.T, turn bool) handoffHTTPFixture {
 		handoffPublish(t, c, s, asset.Key{Kind: "workspace", ID: "root"}, handoffTree(t, "input.txt", "saved input"), "workspace-tar.v1", "application/x-tar", "", 0)
 		handoffPublish(t, c, s, asset.Key{Kind: "session", ID: session}, handoffTree(t, "native.session", "saved synthetic history"), "fixture-session.v1", "application/x-tar", "", 0)
 		handoffPublish(t, c, s, asset.Key{Kind: "artifact", ID: "out/report.txt"}, []byte("saved report"), "file.v1", "text/plain", session, 0)
-		if _, err = c.finishTask(t.Context(), taskAddress{Scope: s}, task.Finish{Attempt: a.Attempt, SessionID: session}); err != nil {
+		handoffReadyForFinish(t, c, a, handoffProfile(s), nil)
+		if _, err = c.finishTask(handoffFinishContext(t.Context(), s), taskAddress{Scope: s}, task.Finish{Attempt: a.Attempt, SessionID: session}); err != nil {
 			t.Fatal(err)
 		}
 		a.TurnID, a.Attempt = uuid.NewString(), uuid.NewString()

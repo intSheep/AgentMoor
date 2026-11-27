@@ -1,0 +1,397 @@
+{
+  "kind": "isolated_success_provenance_evidence",
+  "issue": "INT-89",
+  "status": "passed",
+  "implementation_commit": "2c7fd8627079dd1b882e02eff87a1dcbc2867959",
+  "production_validated_source": "efa0b9915506f972fa27a05efbc633d6edfa707e",
+  "actual_chain_fixture_source": "003c425ebff0c0ec43ad7615665f557e5a5ddd8a",
+  "production_tree_same_after_fixture_fix": true,
+  "files_sha256": {
+    "internal/nativeguest/bundle.go": "24959d9ddac538091e899221f23b7cc70fc053d65caff28ccf747d2fa445ded0",
+    "internal/nativeguest/inspect_test.go": "d362c03a47092948a940d006216df06887ba3968fee73b55d7967fe9a483ede9",
+    "internal/platform/audit.go": "56cc574d8c6876bc915839dd8e1487422efafa4131338e9369b8f6a134cd8d6c",
+    "internal/platform/audit_sandbox_result.go": "d54bd2d1fc69fb30a84e7cb0b899045e17f3cd62afcbab546989e475ffcd1459",
+    "internal/platform/audit_sandbox_result_test.go": "f6ff896baa544a8d121d64e4b17030edfec11741f7cfd5268624f77c8ba88e1c",
+    "internal/platform/audit_sandbox_result_services_test.go": "757c12ef27c99c7edda0804e2ff513473ea59b8a84491ba12ad5fdf9038e4193",
+    "internal/platform/task_http.go": "21e7e779e4f4fd673e8ff5c167a3c700a5ae270476b6a5fb05963c6435549613",
+    "internal/platform/tasks.go": "86c024894e39d64200c88a304b479de44a92371a5ad428bdb12ed5a342d58567",
+    "internal/platform/services_test.go": "99570d3d809ac8cf099c5ac2620ab35c3b9db97983147747b80f3a204849142b"
+  },
+  "checks": [
+    {
+      "command": "make fmt",
+      "source_commit": "efa0b9915506f972fa27a05efbc633d6edfa707e",
+      "path": "/private/tmp/agentmoor-provenance-efa0b99-fmt-20261127.log",
+      "sha256": "9ba9a3ce39410b82cffdcafff24a52faa1612e3a34b2a29885a7007b1bbfbc33",
+      "bytes": 22,
+      "exit_code": 0
+    },
+    {
+      "command": "go test -race ./internal/platform -run 'TestSandboxProvenance' -count=1",
+      "source_commit": "efa0b9915506f972fa27a05efbc633d6edfa707e",
+      "path": "/private/tmp/agentmoor-provenance-efa0b99-focused-platform-20261127.log",
+      "sha256": "9aba0333f9d0dc91671fa6158a1c71d82f4944d296bee9662e1f7bb2ffe07003",
+      "bytes": 40,
+      "exit_code": 0
+    },
+    {
+      "command": "make check",
+      "source_commit": "efa0b9915506f972fa27a05efbc633d6edfa707e",
+      "path": "/private/tmp/agentmoor-provenance-efa0b99-check-20261127.log",
+      "sha256": "2a4268337dfde524d16b9b66ebb7998d3716ede61faca49d74591cff38471b5a",
+      "bytes": 9397,
+      "exit_code": 0
+    },
+    {
+      "command": "make demo",
+      "source_commit": "efa0b9915506f972fa27a05efbc633d6edfa707e",
+      "path": "/private/tmp/agentmoor-provenance-efa0b99-demo-20261127.log",
+      "sha256": "ce9cd48214031bd1a6ecbb695559cfaf67aa7fa81e647d1242863a15fce198e6",
+      "bytes": 10161,
+      "exit_code": 0
+    },
+    {
+      "command": "make test-services",
+      "source_commit": "efa0b9915506f972fa27a05efbc633d6edfa707e",
+      "path": "/private/tmp/agentmoor-provenance-efa0b99-services-20261127.log",
+      "sha256": "6e50d5f198a0034a589478afce0271d458692572574848df0aa48cbe131305f2",
+      "bytes": 1335,
+      "exit_code": 0
+    },
+    {
+      "command": "make test-k8s",
+      "source_commit": "efa0b9915506f972fa27a05efbc633d6edfa707e",
+      "path": "/private/tmp/agentmoor-provenance-efa0b99-k8s-20261127.log",
+      "sha256": "a7e6c0d20350c17bcb6ad35c6100d256aad5fd3817aebb7257e4527566f2f4b7",
+      "bytes": 14241,
+      "exit_code": 0
+    }
+  ],
+  "focused_coverage": [
+    "Authenticated actual HTTP Finish binds real exact Scope/Task/Turn/private attempt to one Ready Run and actual Pod UID; client has no Run field.",
+    "Wrong attempt, missing Run, unready, unterminated, undeleted, nonzero exit, profile drift, collected or expired authority reject before input object I/O.",
+    "Actual sealed input is inspected to exact EOF: independent whole SHA/size plus strict metadata and per-slot hashes; equal-size corrupt bytes and adapter/runtime drift reject.",
+    "Large input object I/O does not hold Catalog.mu; concurrent cancellation proceeds and current profile/Run/output are rechecked under the lock.",
+    "SQLite trigger rejects accepted event or second asset link: state, accepted and all links roll back; the same receipt retry succeeds. Existing checkpoint/deadline regressions also run in make check.",
+    "Actual PostgreSQL/S3 accepted-event trigger rollback and terminated leased writer cannot publish isolated success.",
+    "Same Finish ACK after success emits no event or input read even with retired provider, missing old input and expired deadline.",
+    "Audit stores no raw credential, attempt, native Session ID, private body or path."
+  ],
+  "default_cli_matrix": {
+    "source_commit": "efa0b9915506f972fa27a05efbc633d6edfa707e",
+    "contract_groups": 16,
+    "successful_followups": 8,
+    "adapters": [
+      "codex",
+      "gemini-cli",
+      "opencode",
+      "claude-code"
+    ],
+    "cancellation_seconds": {
+      "codex": 3.8,
+      "gemini-cli": 3.1,
+      "opencode": 3.7,
+      "claude-code": 3.1
+    },
+    "cleanup": {
+      "source_commit": "efa0b9915506f972fa27a05efbc633d6edfa707e",
+      "owned_cluster": "agentmoor-6909456713de",
+      "checks": [
+        {
+          "kind": "container",
+          "name": "agentmoor-6909456713de-control-plane",
+          "absent": true
+        },
+        {
+          "kind": "image",
+          "name": "agentmoor-contract:agentmoor-6909456713de-codex",
+          "absent": true
+        },
+        {
+          "kind": "image",
+          "name": "agentmoor-contract:agentmoor-6909456713de-gemini-cli",
+          "absent": true
+        },
+        {
+          "kind": "image",
+          "name": "agentmoor-contract:agentmoor-6909456713de-opencode",
+          "absent": true
+        },
+        {
+          "kind": "image",
+          "name": "agentmoor-contract:agentmoor-6909456713de-claude-code",
+          "absent": true
+        }
+      ]
+    },
+    "raw_cleanup": {
+      "path": "/private/tmp/agentmoor-provenance-efa0b99-cleanup-20261127.json",
+      "sha256": "6ac0c5038805b1f0f5ef53835a1587dc1b215979822d008ed53db10769b4e410",
+      "bytes": 746,
+      "exit_code": 0
+    },
+    "boundary": "Default trusted compatibility matrix; does not replace isolated Codex audit-chain acceptance."
+  },
+  "actual_chain_runs": [
+    {
+      "run": "R1",
+      "source_commit": "efa0b9915506f972fa27a05efbc633d6edfa707e",
+      "status": "failed",
+      "stage": "build_real_codex_with_public_ca_only",
+      "started_at_utc": "2026-11-27T09:24:42.620803+00:00",
+      "finished_at_utc": "2026-11-27T09:28:45.236969+00:00",
+      "raw_json": {
+        "path": "/private/tmp/agentmoor-isolated-audit-chain-20261127-r1.json",
+        "bytes": 201641,
+        "sha256": "00def43c800917d9b0ca2df479f6b07d3e785d4ebb2b52af288e9cbbaeb54dcb"
+      },
+      "raw_log": {
+        "path": "/private/tmp/agentmoor-isolated-audit-chain-20261127-r1.log",
+        "bytes": 4751,
+        "sha256": "cc4b4e998e5c24428f34473790642e66a93793e7c01b886339db59147a6a5645"
+      },
+      "cleanup": {
+        "owned_image_tag_removed": true,
+        "owned_node_removed": true,
+        "owned_outside_fixture_removed": true
+      },
+      "provider_image_tags_removed": true,
+      "boundary": "Build-stage failure before configure or Codex; not an isolated execution/security pass or failure. Original harness did not retain the failed build tail. Independent same-source build diagnosis retained separately."
+    },
+    {
+      "run": "R2",
+      "source_commit": "fb59307f58ffa13f025a6a7edafa043fcb474130",
+      "status": "failed",
+      "stage": "operator_only_audit_chain_and_public_uuid_replay",
+      "failure": {
+        "message": "success preceded its recorded terminal/delete/ready conditions",
+        "type": "RuntimeError"
+      },
+      "started_at_utc": "2026-11-27T09:37:53.007388+00:00",
+      "finished_at_utc": "2026-11-27T09:41:18.764473+00:00",
+      "raw_json": {
+        "path": "/private/tmp/agentmoor-isolated-audit-chain-20261127-r2.json",
+        "bytes": 475540,
+        "sha256": "cc4c9a2b22cbf82f6f1eee8515f1a6f4b60ab9add2e103144be281bc1a7eb32b"
+      },
+      "raw_log": {
+        "path": "/private/tmp/agentmoor-isolated-audit-chain-20261127-r2.log",
+        "bytes": 106703,
+        "sha256": "f6a10478cf497c020c74da2adb5581752f49f3f46abb7566aa157ebe0712a52e"
+      },
+      "cleanup": {
+        "owned_image_tag_removed": true,
+        "owned_node_removed": true,
+        "owned_outside_fixture_removed": true
+      },
+      "provider_image_tags_removed": true,
+      "actual_native_rounds": 3,
+      "immutable_downloads_rechecked": 11,
+      "boundary": "Actual pinned Codex first round and two continuations completed, including raw Session identity and immutable asset downloads. Final audit proof failed because fixture required deleted.state=ready while the persisted SandboxReady enum is ready-to-publish. Later secret, UUID replay and tamper checks were not executed. No production predicate is relaxed; new-source rerun required."
+    },
+    {
+      "run": "R3",
+      "source_commit": "003c425ebff0c0ec43ad7615665f557e5a5ddd8a",
+      "status": "passed",
+      "raw_json": {
+        "path": "/private/tmp/agentmoor-isolated-audit-chain-20261127-r3.json",
+        "bytes": 514494,
+        "sha256": "2aa89896aec80185c4e68c213098e45bc33edd62111542dd3ac316b487bb1ea5"
+      },
+      "committed_raw_json": "isolated-success-audit-chain-2026-11-27.json",
+      "raw_log": {
+        "path": "/private/tmp/agentmoor-isolated-audit-chain-20261127-r3.log",
+        "bytes": 125698,
+        "sha256": "0d17f86daf62e135e0275e718fdb50b6bc6f170af40d8e239c039c93fef953b8"
+      },
+      "started_at_utc": "2026-11-27T09:44:36.423409+00:00",
+      "finished_at_utc": "2026-11-27T09:48:10.250972+00:00",
+      "stage": "operator_only_audit_chain_and_public_uuid_replay",
+      "actual_native_rounds": 3,
+      "unique_pods": 3,
+      "events": 64,
+      "asset_links": 11,
+      "operator_pages": 11,
+      "page_limit": 7,
+      "public_original_uuid_replays": 3,
+      "events_after_replay_unchanged": true,
+      "sensitive_content_absent": true,
+      "proof_verifier_rejected_tampering": [
+        "sandbox.result_accepted/run_id",
+        "asset.linked/version",
+        "sandbox.output_sealed/actor"
+      ],
+      "joins": [
+        {
+          "accepted_cursor": 17,
+          "asset_link_cursors": [
+            18,
+            19,
+            20
+          ],
+          "attempt_sha256": "5c5defd6aea8a7febfac9b5683b027377153f34a8e50b49fb8f07777e6a6214b",
+          "model_reservation_cursors": [
+            8
+          ],
+          "pod_uid": "81e474d0-5e70-4d02-a18b-d7a06434d581",
+          "run_id": "961fcdfb2ebc313cc4385962052174791c9a9fc52ad564bf263b375de75ca2d0",
+          "sealed_output_sha256": "799e0f7a7d4b20742277edb838212a358fede452759c2fb64587c9bffdc3d1b3",
+          "task_id": "text-job",
+          "turn_id": ""
+        },
+        {
+          "accepted_cursor": 38,
+          "asset_link_cursors": [
+            39,
+            40,
+            41,
+            42
+          ],
+          "attempt_sha256": "3da1b1dfaf03beef270edce16a808b907d9cf3ef2e2b5a7a5be4d555cd7eda40",
+          "model_reservation_cursors": [
+            28
+          ],
+          "pod_uid": "9334df51-c98f-4f06-807f-1e4d875419dc",
+          "run_id": "a0ceffa83984dc9218eea3c42f369bb42475c74c25ccc0e13723164545348b36",
+          "sealed_output_sha256": "357653525060538be57015dc05116003f1b624c96612c00835e70a0e9166a841",
+          "task_id": "text-job",
+          "turn_id": "209c6af6-aae0-4e63-8db5-869fd9a210d6"
+        },
+        {
+          "accepted_cursor": 60,
+          "asset_link_cursors": [
+            61,
+            62,
+            63,
+            64
+          ],
+          "attempt_sha256": "f25637cd01aa4679ddd41779061ba8c817acd345e868fb7913ae3587096e67eb",
+          "model_reservation_cursors": [
+            50
+          ],
+          "pod_uid": "c46f528f-bf3c-419d-a855-255991762149",
+          "run_id": "12770d389e87e7c597f4357164fd037b01ccd8da1719a95c6b0f405c3c82d60f",
+          "sealed_output_sha256": "bc5fe9f6ff7d8099250cd2a724b74ca338068c35c214638782870d3c79cfb918",
+          "task_id": "text-job",
+          "turn_id": "389d0afc-ec0f-4571-b089-51bdf7cabb9a"
+        }
+      ],
+      "immutable_downloads_rechecked": 11,
+      "cleanup": {
+        "owned_image_tag_removed": true,
+        "owned_node_removed": true,
+        "owned_outside_fixture_removed": true
+      },
+      "provider_image_tags_removed": true,
+      "actual_inspect_cleanup": [
+        {
+          "type": "container",
+          "name": "agentmoor-726fcea63aef-control-plane",
+          "absent": true,
+          "inspect_exit_code": 1
+        },
+        {
+          "type": "image",
+          "name": "agentmoor-provider:agentmoor-726fcea63aef",
+          "absent": true,
+          "inspect_exit_code": 1
+        },
+        {
+          "type": "image",
+          "name": "agentmoor-provider-base:agentmoor-726fcea63aef",
+          "absent": true,
+          "inspect_exit_code": 1
+        }
+      ],
+      "dependency_cache": {
+        "contains_run_secrets": false,
+        "contains_test_ca": false,
+        "image_id": "sha256:1b9601f9b6d626c7499b33c1896ea3db0e206c177d6f06755ce672270c4b37a1",
+        "reference": "agentmoor-validation-cache:provider-codex-0.171-alpha.13",
+        "retained": true
+      },
+      "boundary": "A trusted Worker derives the published refs; this proof does not claim server-side reconstruction of every output asset byte.",
+      "finish_ack_boundary": "Finish ACK replay is tested separately in platform HTTP tests; these are public submit UUID replays."
+    }
+  ],
+  "trust_boundary": [
+    "Trusted data-only Worker verifies/decodes the sealed guest output and publishes original refs. Finish validates their existing exact versions and binds success to the real sealed Run; it does not rebuild every output-to-asset byte relation.",
+    "No tenant audit HTTP endpoint or new role. Operator-only reader remains read-only and lease-free.",
+    "No persistent task expiry sweep, node-loss physical fencing policy, external immutable archive or complete P2 audit claim.",
+    "Scripted model with actual pinned Codex; no real model key used."
+  ],
+  "build_diagnostics": {
+    "source_commit": "efa0b9915506f972fa27a05efbc633d6edfa707e",
+    "hinted_cache_build": {
+      "exit_code": 1,
+      "failure": "Legacy Docker failed to restore/create cache image: failed to read diff archive InvalidArgument. Go compilation completed before cache import failed.",
+      "raw_log": {
+        "path": "/private/tmp/agentmoor-audit-chain-build-preflight-20261127.log",
+        "bytes": 1610,
+        "sha256": "aeec58ce95ea65b392f9806ec8a6f63e793dc15f6bf674c3f0f90f3d452839b6"
+      },
+      "source_marker": {
+        "path": "/private/tmp/agentmoor-audit-chain-build-preflight-20261127.source",
+        "bytes": 41,
+        "sha256": "4661704d1964bed98143c208c487e89d55cd872a69bbc73bbec62b90bf92fde7"
+      }
+    },
+    "same_source_without_cache_hints": {
+      "exit_code": 0,
+      "raw_log": {
+        "path": "/private/tmp/agentmoor-audit-chain-build-without-hints-20261127.log",
+        "bytes": 2491,
+        "sha256": "989c9110919aeb10ff1543b47ad08d0bc8cbc7a5112c2070ea8508be79a8288b"
+      },
+      "temporary_image": "agentmoor-audit-preflight:efa0b99",
+      "boundary": "Build confirmation only; not a native or isolated audit-chain acceptance run.",
+      "temporary_image_removed": true
+    },
+    "fixture_fix_commit": "fb59307f58ffa13f025a6a7edafa043fcb474130",
+    "fixture_fix": "Always retain build-log SHA/tail. Only this exact cache error retries the identical current-source/version build once without hints; no runtime/version/assertion fallback."
+  },
+  "committed_failed_runs": [
+    {
+      "run": "R1",
+      "raw": {
+        "path": "/private/tmp/agentmoor-isolated-audit-chain-20261127-r1.json",
+        "bytes": 201641,
+        "sha256": "00def43c800917d9b0ca2df479f6b07d3e785d4ebb2b52af288e9cbbaeb54dcb"
+      },
+      "committed_gzip": {
+        "path": "/private/tmp/agentmoor-isolated-provenance/docs/evidence/isolated-success-audit-chain-r1-failed-2026-11-27.json.gz",
+        "bytes": 26974,
+        "sha256": "1816d31d372f9242b0587c4ec78f68805a8ed1f09a27d0dfb793be37b93ce4d6"
+      }
+    },
+    {
+      "run": "R2",
+      "raw": {
+        "path": "/private/tmp/agentmoor-isolated-audit-chain-20261127-r2.json",
+        "bytes": 475540,
+        "sha256": "cc4c9a2b22cbf82f6f1eee8515f1a6f4b60ab9add2e103144be281bc1a7eb32b"
+      },
+      "committed_gzip": {
+        "path": "/private/tmp/agentmoor-isolated-provenance/docs/evidence/isolated-success-audit-chain-r2-failed-2026-11-27.json.gz",
+        "bytes": 60667,
+        "sha256": "226e376df0114931491f12087771433828fbfedae5b0f95c94436046dfd5e744"
+      }
+    }
+  ],
+  "fixture_state_name_fix": {
+    "commit": "003c425ebff0c0ec43ad7615665f557e5a5ddd8a",
+    "change": "Match the existing ready-to-publish wire enum and retain actual bounded audit snapshot before assertions; no production predicate or version relaxed."
+  },
+  "production_comparison": {
+    "baseline": "efa0b9915506f972fa27a05efbc633d6edfa707e",
+    "actual_source": "003c425ebff0c0ec43ad7615665f557e5a5ddd8a",
+    "paths": [
+      "cmd",
+      "internal",
+      "go.mod",
+      "go.sum"
+    ],
+    "diff": "empty"
+  },
+  "files_sha256_source": "003c425ebff0c0ec43ad7615665f557e5a5ddd8a"
+}

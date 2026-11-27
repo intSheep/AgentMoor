@@ -151,3 +151,10 @@ PG/S3 集群复验的前两次 HTTP 500 保留为失败记录。补充诊断及 
 `4ce08cf815581dfc5d31820aed3756e8ee5975ed` 的 `--scenario text` 独立通过生产隔离路径：没有 FileTool/pins，三个不同 gVisor Pod 沿同一原生 Session 返回随机 CSV 合计、前次确认码和新校验码。三次原生计数各 1、RLIMIT 64，11 份固定资产旧字节复读不变，每轮无同归属 Sentry/gofer/shim 和 Ready CRI，专属节点及本轮镜像标签已清理。实际三次上游请求均未携带 `text.format`，合法 named Responses SSE 通过原生产校验；没有开放任意 `json_schema`。[文本原始证据](evidence/sandbox-provider-text-2026-11-27.json) · [有界请求摘要](evidence/sandbox-provider-text-wire-2026-11-27.json)
 
 前次 `24cf983` 因测试误选旧报告而失败，生产首轮和第一次追问已成功；原始失败保留，修复选择后才在新节点重跑。依赖缓存保留的是加入本轮 CA 前的 base，当前 Go 仍按 Dockerfile/COPY 编译，证据按各自源码记录；没有将此前 `19d0d5b` 的 fmt/check/demo/四 CLI 结果改写为后续源码重跑。[来源、摘要与限制](evidence/sandbox-provider-index-2026-11-27.json)
+
+
+## 2026-11-27：P2.5 物理对象回收审计
+
+INT-87 的 `b7b93573649b9cad2a2a899a69e7c0215135fa89` 保留原 24h/引用筛选，为完整对象、文件块及沙箱输入输出增加持久计划、实际 ACK/absence 确认和 Put 前旧意图退休；不声称 SQL 与对象删除原子或物理操作恰好一次。SQLite/DiskObjects 故障、四维作用域/类别、共享/保留引用、实际 guest 输出归属，以及真实 PostgreSQL/S3 的 ACK 前后故障、审计拒绝、重启均通过。旧 Go 的真实 lease-loss 负例单列保留；修复后已知死写者不发 Remove，健康新 owner 才沿原意图恢复。[实现、边界和原始失败](object-collection-audit.md)
+
+同一干净集成源码的 fmt/check/demo、真实 services 和完整四 CLI 默认受信文本矩阵退出 0；原生取消约 4.6/3.0/3.0/3.8 秒，专属节点/项目/本次标签已清理。没有把这个回归当作新的隔离、真实模型或 HA 证明。[实际事件样本、源码、原日志与 SHA](evidence/object-collection-audit-2026-11-27.json)
