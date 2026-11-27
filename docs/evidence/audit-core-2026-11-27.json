@@ -1,0 +1,350 @@
+{
+  "version": "audit-core-evidence.v1",
+  "date": "2026-11-27",
+  "issue": "INT-84",
+  "parent_issue": "INT-83",
+  "status": "bounded_transactional_audit_slice_passed",
+  "final_verified_code_source": "6c41ac28ebe54ed16c8c9e8109f40be9c31a8093",
+  "integrated_main": "b23c78cb68466ae8ef661e9498c8c28261b7937e",
+  "source_commits": {
+    "operator_cli": "858846bca6520816c532436c42e05cafa117133d",
+    "transaction_core": "7f8438ce2472efb4df8d465027f001f342e07ad0",
+    "sqlite_filename_and_deadline_fixture_fix": "fee2e67af81a2e2713d1c1a6b185eb2529f898c5",
+    "delegated_actor_fix": "bcf0effa463b59987fe72001ab826d86dd01f37f",
+    "integrated_verification": "6c41ac28ebe54ed16c8c9e8109f40be9c31a8093"
+  },
+  "implemented": [
+    "Lease-bound same-SQL-transaction audit for task/turn state, changed revision commits, sandbox lifecycle, and model reservations.",
+    "Operator-only independent read backend and local CLI; no tenant audit HTTP route or role.",
+    "Fixed event schema, actor/action/state validation, bounded scoped snapshot pagination; no general payload or raw error/path/content.",
+    "Verified guest capability attribution for output/model; authenticated platform HTTP context retained; components distinguish processing from principals."
+  ],
+  "limits": {
+    "event_bytes": 8192,
+    "event_depth": 8,
+    "event_value_tokens": 256,
+    "default_page_limit": 100,
+    "maximum_page_limit": 1000,
+    "maximum_cursor": "9223372036854775807",
+    "cursor_overflow": "fail closed and roll back business mutation"
+  },
+  "final_checks": {
+    "fmt": {
+      "command": "make fmt",
+      "exit_code": 0,
+      "retained_local_path": "/private/tmp/agentmoor-audit-6c41ac2-fmt-20261127.log",
+      "sha256": "9ba9a3ce39410b82cffdcafff24a52faa1612e3a34b2a29885a7007b1bbfbc33",
+      "bytes": 22
+    },
+    "check": {
+      "command": "make check",
+      "exit_code": 0,
+      "retained_local_path": "/private/tmp/agentmoor-audit-6c41ac2-check-20261127.log",
+      "sha256": "77d93a5833849d92fc99be2f9496cdb8cf496d4ba8aebf8f35ef57f13710c8dc",
+      "bytes": 9289
+    },
+    "demo": {
+      "command": "make demo",
+      "exit_code": 0,
+      "retained_local_path": "/private/tmp/agentmoor-audit-6c41ac2-demo-20261127.log",
+      "sha256": "c2608aad4d5d93514020328683f79bd3d9511b34837e3c27a1a6dbb960ffb38d",
+      "bytes": 234
+    },
+    "services": {
+      "command": "make test-services",
+      "exit_code": 0,
+      "retained_local_path": "/private/tmp/agentmoor-audit-6c41ac2-services-20261127.log",
+      "sha256": "09328f41a3834ba38692bd0addbbc9ffef8424c0fc0caafc0a2247ed1dde34bb",
+      "bytes": 1282
+    },
+    "k8s": {
+      "command": "make test-k8s",
+      "exit_code": 0,
+      "retained_local_path": "/private/tmp/agentmoor-audit-6c41ac2-k8s-20261127.log",
+      "sha256": "61d2045719ad6ed386d69568beacb02f7d4797b01be513d0c1c748a16f8f168d",
+      "bytes": 13985
+    }
+  },
+  "final_native_cli_matrix": {
+    "cluster": "agentmoor-3c636bbdd667",
+    "native_agents": [
+      "codex",
+      "gemini-cli",
+      "opencode",
+      "claude-code"
+    ],
+    "completed_phases": 16,
+    "consecutive_followup_replies": 8,
+    "per_agent_phases": {
+      "codex": [
+        "SaaS verified the versioned report after deletion of the original Pod and emptyDir.",
+        "SaaS recovered two consecutive turns from automatically created Jobs and read both replies after Pod deletion.",
+        "SaaS cancelled an active follow-up and retained the last committed conversation.",
+        "SaaS cancelled an active native turn; worker acknowledged and Job exited in 3.8s."
+      ],
+      "gemini-cli": [
+        "SaaS verified the versioned report after deletion of the original Pod and emptyDir.",
+        "SaaS recovered two consecutive turns from automatically created Jobs and read both replies after Pod deletion.",
+        "SaaS cancelled an active follow-up and retained the last committed conversation.",
+        "SaaS cancelled an active native turn; worker acknowledged and Job exited in 3.8s."
+      ],
+      "opencode": [
+        "SaaS verified the versioned report after deletion of the original Pod and emptyDir.",
+        "SaaS recovered two consecutive turns from automatically created Jobs and read both replies after Pod deletion.",
+        "SaaS cancelled an active follow-up and retained the last committed conversation.",
+        "SaaS cancelled an active native turn; worker acknowledged and Job exited in 3.8s."
+      ],
+      "claude-code": [
+        "SaaS verified the versioned report after deletion of the original Pod and emptyDir.",
+        "SaaS recovered two consecutive turns from automatically created Jobs and read both replies after Pod deletion.",
+        "SaaS cancelled an active follow-up and retained the last committed conversation.",
+        "SaaS cancelled an active native turn; worker acknowledged and Job exited in 3.8s."
+      ]
+    },
+    "native_cancellation_seconds": {
+      "codex": 3.8,
+      "gemini-cli": 3.8,
+      "opencode": 3.8,
+      "claude-code": 3.8
+    },
+    "model": "scripted synthetic provider with actual native CLI binaries",
+    "boundary": "Default trusted text contract; not a new gVisor resource/escape or real-model acceptance."
+  },
+  "cleanup": {
+    "cluster_absent": true,
+    "owned_image_tags_absent": {
+      "agentmoor-contract:agentmoor-3c636bbdd667-codex": true,
+      "agentmoor-contract:agentmoor-3c636bbdd667-gemini-cli": true,
+      "agentmoor-contract:agentmoor-3c636bbdd667-opencode": true,
+      "agentmoor-contract:agentmoor-3c636bbdd667-claude-code": true
+    }
+  },
+  "selected_test_assertions": [
+    "SQLite trigger rejection rolls back business state and audit together, including capability issuance/revocation and new/existing model budgets.",
+    "ACK replay and actual catalog reopen do not duplicate logical state events.",
+    "Legacy schema upgrade preserves original task JSON, private attempt and frozen sandbox identity; reader never performs migration.",
+    "Live read-only readers retain scoped snapshot totals/pagination without taking the service writer lease.",
+    "Real PostgreSQL audit insertion rejection rolls back task state; killed leased writer cannot append business or audit rows; S3 bytes use the real backend.",
+    "Actual TLS gateway model/output calls have guest-capability actors, rejected capability/purpose/actor-shaped bodies append no event and start no upstream request.",
+    "Cancellation at actual SQLite audit INSERT after capability authentication and tentative model budget write rolls back both counters and event.",
+    "HTTP actors retain only domain-separated credential/attempt digests; cap/key/prompt/session/Skill/content/path canaries do not enter audit."
+  ],
+  "independent_actor_regression": {
+    "test_source": "internal/sandboxgateway/audit_test.go",
+    "test_sha256": "c24ae9a19e83f7368a561c25f77263bafe7cbd44e95673842d9e5afe88e82f46",
+    "command": "go test -race ./internal/sandboxgateway -run ^TestGatewayAudit -count=1",
+    "before": {
+      "baseline_commit": "fee2e67af81a2e2713d1c1a6b185eb2529f898c5",
+      "overlay": {
+        "retained_local_path": "/private/tmp/agentmoor-audit-capability-review/before-overlay.json",
+        "sha256": "ccf76e13f28274944e0d54b3ca5a4d3d71587a4e2f191ade673dab4174e232a2",
+        "bytes": 510
+      },
+      "production_files_sha256": {
+        "internal/platform/audit.go": "51e690db5b64fa7037daa1a2adacad6a048013476b859a8415c7778284f6b96a",
+        "internal/platform/sandbox_model_budget.go": "30a21047e01338034e73425ae157d9843d150d0ad2cc5ce268400024b135e9fb",
+        "internal/platform/sandbox_runs_blobs.go": "1987fed0be305b8c82c25d60252f9cbd31a8641caff8e8f91dc7a1861fddda09"
+      },
+      "exit_code": 1,
+      "log": {
+        "retained_local_path": "/private/tmp/agentmoor-audit-capability-review/before-gateway-tests.log",
+        "sha256": "fde9dc5857f33e3f51e681db63af88387cce0d2bf86b77e0148d689053b1546c",
+        "bytes": 1006
+      },
+      "observed": "model.reserved reported model-gateway/system; output declaration/seal reported controller/system."
+    },
+    "after": {
+      "run_time_head": "fee2e67af81a2e2713d1c1a6b185eb2529f898c5",
+      "tested_uncommitted_fix_later_committed_as": "bcf0effa463b59987fe72001ab826d86dd01f37f",
+      "production_files_sha256": {
+        "internal/platform/audit.go": "62b30c6501ed9e5b02b35dbedf31af8fbc448a4c508b908b98f1a0a9c2a127d0",
+        "internal/platform/sandbox_model_budget.go": "2be85be3127dc0a56fed5d95bd0fd84a14b79c83efd74f62ed6532acccd4bbfe",
+        "internal/platform/sandbox_runs_blobs.go": "9fd770b5c1624d464237f173d067f4a1b1ebd83ba9c64ab2df6cb0f00ef1f411"
+      },
+      "exit_code": 0,
+      "log": {
+        "retained_local_path": "/private/tmp/agentmoor-audit-capability-review/after-gateway-tests.log",
+        "sha256": "457b6db19097e7b2ba88affb2d1f2387193a6e0cef3fa894ef0ffd5a3a23c7db",
+        "bytes": 46
+      },
+      "result": "Same TLS/SQLite cases pass with guest-capability model/output; final integrated full check includes them again."
+    },
+    "platform_authority_cancellation": {
+      "exit_code": 0,
+      "log": {
+        "retained_local_path": "/private/tmp/agentmoor-audit-capability-review/platform-focused-r2.log",
+        "sha256": "2efaca750e497f006082cb6cea32338f3d5533a2d0cb6731d3777cbabd0d030c",
+        "bytes": 40
+      },
+      "test": "TestAuditModelCancellationAfterAuthorityRollsBackEventAndBudget"
+    },
+    "test_fixture_iteration": {
+      "log": {
+        "retained_local_path": "/private/tmp/agentmoor-audit-capability-review/platform-focused.log",
+        "sha256": "4cca90ab5b3d1d12b3fabeba3395fe82c4074b1e9610638c4e3211ca44e4d55e",
+        "bytes": 199
+      },
+      "exit_code": 1,
+      "reason": "SQLite interrupt discarded the pinned test connection; rollback checks passed, but trigger cleanup attempted that closed connection. Test now restores the real lease-protected pool before cleanup/positive control; no production relaxation."
+    }
+  },
+  "independent_sqlite_path_regression": {
+    "test_source": {
+      "retained_local_path": "/private/tmp/agentmoor-audit-readonly-review/audit_review_test.go",
+      "sha256": "fc45fafc686f2b1cdda39dd6b1bc0b65fafe21e03156d0a9fab6efdce22e0185",
+      "bytes": 1368
+    },
+    "overlay": {
+      "retained_local_path": "/private/tmp/agentmoor-audit-readonly-review/overlay.json",
+      "sha256": "311b72ef06b5c64b4ae168b5942bbabafedeff0fa54545d42d374f42aaa799ae",
+      "bytes": 176
+    },
+    "before": {
+      "source_commit": "a4d3214ab43e54828b6916789d3d96cc4e7701cc",
+      "exit_code": 1,
+      "log": {
+        "retained_local_path": "/private/tmp/agentmoor-audit-readonly-review/results.log",
+        "sha256": "e01c32dc89a00418b5a5eb43f02cbbe123e159d8c6330c9d5eb78dcb3cd03dbc",
+        "bytes": 558
+      },
+      "observed": "Relative file: URI could silently select a second literal catalog; NUL library path could select a prefix DB."
+    },
+    "after": {
+      "run_time_head": "a4d3214ab43e54828b6916789d3d96cc4e7701cc",
+      "tested_uncommitted_fix_later_committed_as": "fee2e67af81a2e2713d1c1a6b185eb2529f898c5",
+      "exit_code": 0,
+      "log": {
+        "retained_local_path": "/private/tmp/agentmoor-audit-readonly-review/results-fixed-r2.log",
+        "sha256": "1b7c20238d809b932a0d596d78c680dbcf83648c36ad117e149bd5be65a200c7",
+        "bytes": 5082
+      },
+      "result": "Same overlay and Audit/CLI/path cases pass; legacy data remain intact, no fallback/move/new ambiguous store."
+    }
+  },
+  "earlier_verified_baseline": {
+    "code_source": "fee2e67af81a2e2713d1c1a6b185eb2529f898c5",
+    "checks": {
+      "fmt": {
+        "command": "make fmt",
+        "exit_code": 0,
+        "retained_local_path": "/private/tmp/agentmoor-audit-fee2e67-fmt-20261127.log",
+        "sha256": "9ba9a3ce39410b82cffdcafff24a52faa1612e3a34b2a29885a7007b1bbfbc33",
+        "bytes": 22
+      },
+      "check": {
+        "command": "make check",
+        "exit_code": 0,
+        "retained_local_path": "/private/tmp/agentmoor-audit-fee2e67-check-20261127.log",
+        "sha256": "2e90464c0058c6e5d5209d9725206076b8ac17ad2b9c9fef2152455e77f3968e",
+        "bytes": 7766
+      },
+      "demo": {
+        "command": "make demo",
+        "exit_code": 0,
+        "retained_local_path": "/private/tmp/agentmoor-audit-fee2e67-demo-20261127.log",
+        "sha256": "c2608aad4d5d93514020328683f79bd3d9511b34837e3c27a1a6dbb960ffb38d",
+        "bytes": 234
+      },
+      "services": {
+        "command": "make test-services",
+        "exit_code": 0,
+        "retained_local_path": "/private/tmp/agentmoor-audit-fee2e67-services-20261127.log",
+        "sha256": "90f0b943aa1c8f3b63db80850b0218c8fc918716d882f394fdd355559f36710f",
+        "bytes": 1334
+      },
+      "k8s": {
+        "command": "make test-k8s",
+        "exit_code": 0,
+        "retained_local_path": "/private/tmp/agentmoor-audit-fee2e67-k8s-20261127.log",
+        "sha256": "3b662cf5b26f1b753191ad7b0aa08a5ea9e49d6219b4460986f6363066a370cd",
+        "bytes": 14093
+      }
+    },
+    "matrix": {
+      "cluster": "agentmoor-a48afff8b7c7",
+      "native_agents": [
+        "codex",
+        "gemini-cli",
+        "opencode",
+        "claude-code"
+      ],
+      "completed_phases": 16,
+      "consecutive_followup_replies": 8,
+      "per_agent_phases": {
+        "codex": [
+          "SaaS verified the versioned report after deletion of the original Pod and emptyDir.",
+          "SaaS recovered two consecutive turns from automatically created Jobs and read both replies after Pod deletion.",
+          "SaaS cancelled an active follow-up and retained the last committed conversation.",
+          "SaaS cancelled an active native turn; worker acknowledged and Job exited in 3.8s."
+        ],
+        "gemini-cli": [
+          "SaaS verified the versioned report after deletion of the original Pod and emptyDir.",
+          "SaaS recovered two consecutive turns from automatically created Jobs and read both replies after Pod deletion.",
+          "SaaS cancelled an active follow-up and retained the last committed conversation.",
+          "SaaS cancelled an active native turn; worker acknowledged and Job exited in 3.0s."
+        ],
+        "opencode": [
+          "SaaS verified the versioned report after deletion of the original Pod and emptyDir.",
+          "SaaS recovered two consecutive turns from automatically created Jobs and read both replies after Pod deletion.",
+          "SaaS cancelled an active follow-up and retained the last committed conversation.",
+          "SaaS cancelled an active native turn; worker acknowledged and Job exited in 4.5s."
+        ],
+        "claude-code": [
+          "SaaS verified the versioned report after deletion of the original Pod and emptyDir.",
+          "SaaS recovered two consecutive turns from automatically created Jobs and read both replies after Pod deletion.",
+          "SaaS cancelled an active follow-up and retained the last committed conversation.",
+          "SaaS cancelled an active native turn; worker acknowledged and Job exited in 3.1s."
+        ]
+      },
+      "native_cancellation_seconds": {
+        "codex": 3.8,
+        "gemini-cli": 3.0,
+        "opencode": 4.5,
+        "claude-code": 3.1
+      },
+      "model": "scripted synthetic provider with actual native CLI binaries",
+      "boundary": "Default trusted text contract; not a new gVisor resource/escape or real-model acceptance."
+    },
+    "note": "Earlier compatibility evidence is retained under its original source. It predates capability actor attribution and production-provider integration, so it is not relabeled as final actor/provider verification.",
+    "original_summary": {
+      "retained_local_path": "/private/tmp/agentmoor-audit-fee2e67-verification-20261127.json",
+      "sha256": "d30c2bf9f1f04d9220fff99a19c75bc92f38efc12be5151e4c33e676d014f1f9",
+      "bytes": 3848
+    },
+    "cleanup": {
+      "cluster": "agentmoor-a48afff8b7c7",
+      "absent": true,
+      "owned_image_tags_absent": {
+        "agentmoor-contract:agentmoor-a48afff8b7c7-codex": true,
+        "agentmoor-contract:agentmoor-a48afff8b7c7-gemini-cli": true,
+        "agentmoor-contract:agentmoor-a48afff8b7c7-opencode": true,
+        "agentmoor-contract:agentmoor-a48afff8b7c7-claude-code": true
+      }
+    }
+  },
+  "preserved_initial_check_failure": {
+    "source": "a4d3214ab43e54828b6916789d3d96cc4e7701cc",
+    "exit_code": 2,
+    "log": {
+      "retained_local_path": "/private/tmp/agentmoor-audit-a4d3214-check-20261127.log",
+      "sha256": "663c620091706042dcf4b8af0d0a5adaf90154b75bc092cb473dbdfbeba5b37f",
+      "bytes": 8670
+    },
+    "observed": "Existing 150ms publication deadline expired before the selected frozen-artifact HTTP boundary under full race plus services load.",
+    "fix": "The fixture retains a real five-second context deadline and explicitly asserts target boundary entry; production deadlines and pending-byte rules did not change.",
+    "targeted_race_log": {
+      "retained_local_path": "/private/tmp/agentmoor-audit-publication-deadline-fix-20261127.log",
+      "sha256": "421699564e3b273d731fc2741c61ac32c44c374631dfc5836edad98dfc4ffefc",
+      "bytes": 39
+    }
+  },
+  "out_of_scope": [
+    "Time-derived expired-task read snapshots without a committed mutation; no synthetic persistent interrupted event is invented by polling.",
+    "HTTP denials, request latency and read-access telemetry.",
+    "External object Put/removal atomicity and physical GC audit.",
+    "Explicit successful task/turn-to-each-asset link events (separate follow-up).",
+    "Retention/export governance, DBA tamper resistance and external immutable archival.",
+    "Real model credentials/calls; a fresh gVisor resource/escape acceptance."
+  ],
+  "parent_status": "This completes INT-84 only; INT-83 is not marked complete by this slice."
+}
