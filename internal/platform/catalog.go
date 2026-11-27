@@ -34,6 +34,7 @@ type Catalog struct {
 		BeginTx(context.Context, *sql.TxOptions) (*sql.Tx, error)
 	}
 	objects     Objects
+	postgres    bool
 	mu          sync.Mutex // composes conditional publication and collection for this store owner
 	sandboxTemp string
 	release     func()
@@ -99,7 +100,7 @@ func OpenCatalog(ctx context.Context, dir, postgres string, objects Objects) (*C
 	if err != nil {
 		return nil, err
 	}
-	c := &Catalog{db: db, writer: db, objects: objects, sandboxTemp: filepath.Join(dir, "sandbox-incoming")}
+	c := &Catalog{db: db, writer: db, objects: objects, postgres: postgres != "", sandboxTemp: filepath.Join(dir, "sandbox-incoming")}
 	ok := false
 	defer func() {
 		if !ok {

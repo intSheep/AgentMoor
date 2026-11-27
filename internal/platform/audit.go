@@ -208,11 +208,16 @@ func (e AuditEvent) valid() bool {
 		}
 	} else {
 		switch e.Actor.Source {
-		case "internal", "controller", "model-gateway":
+		case "internal", "controller", "model-gateway", "deadline-controller":
 		default:
 			return false
 		}
 		if e.Actor.Role != "system" || e.Actor.CredentialSHA256 != "" {
+			return false
+		}
+		if e.Actor.Source == "deadline-controller" &&
+			(e.Action != "task.interrupted" && e.Action != "turn.interrupted" ||
+				e.PreviousState != task.Running && e.PreviousState != task.Cancelling && !(e.Action == "turn.interrupted" && e.PreviousState == task.Queued)) {
 			return false
 		}
 	}
