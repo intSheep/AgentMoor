@@ -1,0 +1,43 @@
+{
+  "kind": "derived_full_matrix_summary",
+  "status": "passed",
+  "source_commit": "214fdeba1559df2fe0c498aadc917eb02c5ce87d",
+  "command": "PATH=/Applications/OrbStack.app/Contents/MacOS/xbin:$PATH make test-k8s",
+  "exit_code": 0,
+  "finished_at_utc": "2026-11-27T05:46:10.275452+00:00",
+  "adapter_count": 4,
+  "verified_phase_groups": 16,
+  "adapters": [
+    {
+      "adapter": "codex",
+      "verified_phase_groups": 4,
+      "native_cancel_seconds": 3.9
+    },
+    {
+      "adapter": "gemini-cli",
+      "verified_phase_groups": 4,
+      "native_cancel_seconds": 3.1
+    },
+    {
+      "adapter": "opencode",
+      "verified_phase_groups": 4,
+      "native_cancel_seconds": 3.1
+    },
+    {
+      "adapter": "claude-code",
+      "verified_phase_groups": 4,
+      "native_cancel_seconds": 3.1
+    }
+  ],
+  "log_path": "/private/tmp/agentmoor-controller-four-cli-20261127.log",
+  "log_sha256": "5c6580fa67cbc031721879585db8976707659858f96d53daa9bd8f145da21c2c",
+  "cleanup": {
+    "owned_cluster": "agentmoor-d49e1b00a77d",
+    "owned_node_container_absent": true,
+    "owned_contract_image_tags_absent": true
+  },
+  "limitations": [
+    "Trusted legacy task contract matrix with actual pinned native CLIs and synthetic model HTTP fixtures; this is not strong-isolation/provider or real-model acceptance.",
+    "The default target removes temporary task reports; this JSON summarizes retained stdout assertions, not retained native report bytes."
+  ]
+}
