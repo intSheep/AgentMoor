@@ -145,4 +145,9 @@ PG/S3 集群复验的前两次 HTTP 500 保留为失败记录。补充诊断及 
 
 同一干净源码的独立 `pods=1` 配额探针通过首 Pod 201、第二 Pod 403/无 UID/无 CRI、自然清理和额度恢复；仅为合成 admission 证明。`make fmt/check/demo` 及完整四 CLI 默认受信文本矩阵也通过，原生取消约 3.7/3.0/3.0/3.8 秒。[证据索引与源码/日志摘要](evidence/sandbox-provider-index-2026-11-27.json)
 
-本节更新此前组件阶段“Worker/serve 未接线、全局门禁关闭”的状态：明确配置且检查合格的 Codex 文件分配已有可用提供方；缺配置继续拒绝，不退回可信本地执行。隔离文本回合独立补验，其他 CLI、真实模型、生产 HA、PG/S3 与整条隔离路径组合均未由此验证。上述实际模型是脚本 Responses 服务，业务与不可信 Skill 全为合成数据。
+本节更新此前组件阶段“Worker/serve 未接线、全局门禁关闭”的状态：明确配置且检查合格的 Codex 文件分配已有可用提供方；缺配置继续拒绝，不退回可信本地执行。`4ce08cf` 的隔离文本补充结果如下；其他 CLI 隔离路径、真实模型、生产 HA、PG/S3 与整条隔离路径组合均未由此验证。上述实际模型是脚本 Responses 服务，业务与不可信 Skill 全为合成数据。
+
+
+`4ce08cf815581dfc5d31820aed3756e8ee5975ed` 的 `--scenario text` 独立通过生产隔离路径：没有 FileTool/pins，三个不同 gVisor Pod 沿同一原生 Session 返回随机 CSV 合计、前次确认码和新校验码。三次原生计数各 1、RLIMIT 64，11 份固定资产旧字节复读不变，每轮无同归属 Sentry/gofer/shim 和 Ready CRI，专属节点及本轮镜像标签已清理。实际三次上游请求均未携带 `text.format`，合法 named Responses SSE 通过原生产校验；没有开放任意 `json_schema`。[文本原始证据](evidence/sandbox-provider-text-2026-11-27.json) · [有界请求摘要](evidence/sandbox-provider-text-wire-2026-11-27.json)
+
+前次 `24cf983` 因测试误选旧报告而失败，生产首轮和第一次追问已成功；原始失败保留，修复选择后才在新节点重跑。依赖缓存保留的是加入本轮 CA 前的 base，当前 Go 仍按 Dockerfile/COPY 编译，证据按各自源码记录；没有将此前 `19d0d5b` 的 fmt/check/demo/四 CLI 结果改写为后续源码重跑。[来源、摘要与限制](evidence/sandbox-provider-index-2026-11-27.json)

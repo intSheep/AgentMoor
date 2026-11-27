@@ -1,6 +1,6 @@
 # Linux 集群的隔离执行提供方
 
-本页描述 `kubernetes-gvisor.v1` 的部署契约。`19d0d5b` 已完成生产提供方的真实 Codex 文件、固定 Skill、取消及 guest 丢失集群验收，使用私有 CA TLS 和脚本模型。[实际结果与范围](#2026-11-27-实际验收)；隔离文本回合另验，真实模型调用按用户安排后补。
+本页描述 `kubernetes-gvisor.v1` 的部署契约。`19d0d5b` 已完成生产提供方的真实 Codex 文件、固定 Skill、取消及 guest 丢失集群验收；`4ce08cf` 另通过隔离文本三轮。两者使用私有 CA TLS 和脚本模型。[实际结果与范围](#2026-11-27-实际验收)；真实模型调用按用户安排后补。
 
 ## 部署方先准备的边界
 
@@ -69,4 +69,12 @@ Worker 按原私有 attempt 领取并交接任务，经专用 API 等待沙箱�
 
 同一干净 `19d0d5b` 的 `make fmt/check/demo` 与完整四 CLI `make test-k8s` 均退出 0；四 CLI 原生取消约 3.7/3.0/3.0/3.8 秒，两次自动新 Pod 追问及首轮/追问取消通过，专属集群已删除。该四 CLI 矩阵仍是默认受信文本路径，不能代替隔离文本或其他 CLI 隔离验收。[命令、日志 SHA 与退出码](evidence/sandbox-provider-regressions-2026-11-27.json)
 
-上述验收使用真实原生 CLI、脚本模型和合成业务/Skill，不证明真实模型质量、任意恶意程序不会逃逸、生产 HA 或全部系统调用兼容。隔离文本回合、其他 CLI、真实模型及 PostgreSQL/S3 与完整隔离提供方的组合分别验收；早期组件页所写“未接线”描述该页当时的独立组件范围，当前接线状态以本页为准。
+### 隔离文本回合补充
+
+干净源码 `4ce08cf815581dfc5d31820aed3756e8ee5975ed` 的同一探针以 `--scenario text` 独立退出 0。专属 `text-job` 分配不配置 FileTool 或 Skill pins，data-only Worker 通过生产交接 API 执行。SaaS 首轮给随机 CSV，第二轮只给确认码，第三轮只给新校验码；三个新 gVisor Pod 沿同一个原生 Session，独立验算原金额、前次确认码和本次校验码。每 Pod 原生计数为 1、RLIMIT 为 64，原生 Session 首条 ID 保持；11 份固定资产在后续轮次后重读，原字节未变。每轮独立观察原 UID 消失、无同归属 Sentry/gofer/shim 和 Ready CRI，专属节点与本次镜像标签已清理。[原始文本证据](evidence/sandbox-provider-text-2026-11-27.json)
+
+可信观察者只读收集了三次实际上游请求的有界结构日志：`text.format` 与 `verbosity` 均未出现，也没有 MCP 报告工具；模型返回合法 named Responses SSE。没有改写原生请求、绕过生产网关或放宽校验，不能据此宣称支持任意 `json_schema`。[实际请求摘要](evidence/sandbox-provider-text-wire-2026-11-27.json)
+
+前次 `24cf983` 的真实运行完成首轮和第一次追问后，夹具误选旧 `report.json`，本地验算失败；文本追问的主文件实际为 `row.spec.output` 指向的 `reply.txt`。该[原始夹具失败](evidence/sandbox-provider-text-fixture-failed-2026-11-27.json)保留，没有写成生产失败或通过。修正选择后才运行上述新节点复验。为避免每次重下 CLI，保留明确的 `agentmoor-validation-cache:provider-codex-0.171-alpha.13` 依赖缓存：位于加入本次公开 CA 前，不含本轮 CA/私钥/运行密钥；`docker build --cache-from` 仍按当前 Dockerfile/COPY 构建 AgentMoor，再生成新 CA child。清理声明只覆盖专属节点及本轮标签，不包括这个公开依赖缓存。
+
+上述验收使用真实原生 CLI、脚本模型和合成业务/Skill，不证明真实模型质量、任意恶意程序不会逃逸、生产 HA 或全部系统调用兼容。其他 CLI 隔离路径、真实模型及 PostgreSQL/S3 与完整隔离提供方的组合分别验收；早期组件页所写“未接线”描述该页当时的独立组件范围，当前接线状态以本页为准。

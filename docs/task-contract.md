@@ -17,7 +17,7 @@
 
 作用域由控制面签发的短期凭据决定。`{id}` 等于已分配的 `scope.runtime`，同一租户、项目、适配器下每个新任务使用独立 ID。请求体不能指定租户、镜像、命令、可执行文件路径或云端凭据。
 
-客户代码和第三方 Skill 按不可信代码处理。同容器直接执行路径只供受信开发及批准工具使用；不可信执行使用明确配置的[隔离提供方](sandbox-provider.md)。真实 Codex 文件/Skill 三轮、取消及精确 guest 丢失已有独立证据，隔离文本回合另验，不能用默认受信四 CLI 矩阵代替。
+客户代码和第三方 Skill 按不可信代码处理。同容器直接执行路径只供受信开发及批准工具使用；不可信执行使用明确配置的[隔离提供方](sandbox-provider.md)。真实 Codex 文件/Skill 三轮、取消及精确 guest 丢失已有独立证据；`4ce08cf` 另通过无 FileTool/pins 的隔离文本首轮与两次同 Session 新 Pod 追问，不能用默认受信四 CLI 矩阵代替。
 
 `run-task` Worker 的 `execution_policy: "untrusted-isolated.v1"` 与 `isolated_provider: "kubernetes-gvisor.v1"` 已连接生产 `serve --sandbox-config` 和[沙箱交接 API](sandbox-task-handoff.md)。可信 Worker 只准备/校验数据和发布，原生版本探测、导入/执行留在 guest；缺提供方、错版本或不可用分配明确拒绝，不回退。空值及 `trusted-local.v1` 只兼容旧受信路径；SaaS 指令无法选择或降级策略。[配置行为与范围](operations.md#任务执行的信任策略)
 

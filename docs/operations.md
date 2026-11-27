@@ -106,11 +106,11 @@ HTTP 按以下能力分别授权；同一凭据可以组合多种能力。
 | `untrusted-isolated.v1` | 要求 `isolated_provider: "kubernetes-gvisor.v1"` 和已配置的 HTTPS 控制面分配；Worker 不启动宿主原生 CLI。缺提供方、错版本或不可用分配拒绝，不能回退。 |
 | 其他值 | 配置校验失败。 |
 
-客户代码和第三方 Skill 必须按不可信执行处理，不能改成 `trusted-local.v1`。按[隔离提供方部署契约](sandbox-provider.md)配置双 TLS listener、公开 CA、最小 RBAC、NetworkPolicy、固定镜像和实际节点边界；Worker 省略 `runtime_cli`、原生会话与宿主导入配置。`19d0d5b` 已通过真实 Codex 文件/Skill、取消和 guest 丢失验收，隔离文本回合另验。缺配置的拒绝检查仍保留，不会改写旧成功 checkpoint 或静默执行。
+客户代码和第三方 Skill 必须按不可信执行处理，不能改成 `trusted-local.v1`。按[隔离提供方部署契约](sandbox-provider.md)配置双 TLS listener、公开 CA、最小 RBAC、NetworkPolicy、固定镜像和实际节点边界；Worker 省略 `runtime_cli`、原生会话与宿主导入配置。`19d0d5b` 已通过真实 Codex 文件/Skill、取消和 guest 丢失验收；`4ce08cf` 另通过独立隔离文本三轮。缺配置的拒绝检查仍保留，不会改写旧成功 checkpoint 或静默执行。
 
 这个策略覆盖任务首轮和追问，不覆盖普通 `sync` 或 `restore-native` 等受信维护入口。隔离任务的原生导入/导出发生在 guest；独立维护命令仍要求受信输入。[执行边界](security-boundary.md)
 
-`make test-k8s-gvisor-feasibility` 仅检验运行时和缺 handler 拒绝。完整应用探针使用 `python3 tests/kubernetes/sandbox_provider_smoke.py --scenario both`，独立合成配额用 `python3 tests/kubernetes/sandbox_provider_quota.py`；两者支持 `--bundle`、`--calico-manifest`、`--containerd-cache` 和 `--output`，缓存仍按固定 SHA 验证。它们各建专属临时 kind 节点并在退出时清理，需 OrbStack/Docker、kind、kubectl 和联网构建；不在已有生产节点上运行安装步骤。[固定源码、实际结果与限制](sandbox-provider.md#2026-11-27-实际验收)
+`make test-k8s-gvisor-feasibility` 仅检验运行时和缺 handler 拒绝。完整应用探针使用 `python3 tests/kubernetes/sandbox_provider_smoke.py --scenario both`，文本三轮另用 `--scenario text`，独立合成配额用 `python3 tests/kubernetes/sandbox_provider_quota.py`；两者支持 `--bundle`、`--calico-manifest`、`--containerd-cache` 和 `--output`，缓存仍按固定 SHA 验证。它们各建专属临时 kind 节点并在退出时清理；提供方探针明确保留不含本轮 CA/密钥的 `agentmoor-validation-cache:provider-codex-0.171-alpha.13` 依赖缓存，本轮镜像标签仍删除。需 OrbStack/Docker、kind、kubectl 和联网构建；不在已有生产节点上运行安装步骤。[固定源码、实际结果与限制](sandbox-provider.md#2026-11-27-实际验收)
 
 ### 可选：固定任务 Skill
 

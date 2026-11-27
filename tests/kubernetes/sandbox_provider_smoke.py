@@ -24,6 +24,7 @@ from sandbox_controller_smoke import redact_pod, safe_evidence
 from contract import forward
 
 ROOT = Path(__file__).resolve().parents[2]
+DEPENDENCY_CACHE = "agentmoor-validation-cache:provider-codex-0.171-alpha.13"
 sys.path.insert(0, str(ROOT / "tests"))
 from saas_file_contract import FileReportClient
 from saas_contract import ReportClient
@@ -111,9 +112,19 @@ class ProviderSmoke:
         (context / "Dockerfile").write_text(dockerfile)
         build_log = self.p.directory / "provider-image-build.log"
         with build_log.open("w") as stream:
-            for command in (["docker", "build", "-f", str(ROOT / "tests/kubernetes/Dockerfile"), "--build-arg", "AGENT=codex", "-t", self.base_image, str(ROOT)],
-                            ["docker", "build", "-t", self.image, str(context)]):
-                subprocess.run(command, stdout=stream, stderr=subprocess.STDOUT, check=True, timeout=900)
+            # Retain only the pre-CA dependency image. Docker still hashes COPY
+            # of the current Go source; this cache is never the acceptance source.
+            subprocess.run(["docker", "build", "--cache-from", DEPENDENCY_CACHE,
+                            "--cache-from", "agentmoor-validation-cache:int79-e79066b-codex",
+                            "-f", str(ROOT / "tests/kubernetes/Dockerfile"), "--build-arg", "AGENT=codex",
+                            "-t", self.base_image, str(ROOT)],
+                           stdout=stream, stderr=subprocess.STDOUT, check=True, timeout=900)
+            self.p.run("docker", "tag", self.base_image, DEPENDENCY_CACHE)
+            self.result["dependency_cache"] = {"reference": DEPENDENCY_CACHE,
+                "image_id": json.loads(self.p.run("docker", "image", "inspect", self.base_image))[0]["Id"],
+                "contains_test_ca": False, "contains_run_secrets": False}
+            subprocess.run(["docker", "build", "-t", self.image, str(context)],
+                           stdout=stream, stderr=subprocess.STDOUT, check=True, timeout=900)
         self.result["build_log_sha256"] = sha(build_log.read_bytes())
         self.result["docker_image_id"] = json.loads(self.p.run("docker", "image", "inspect", self.image))[0]["Id"]
         self.p.run("kind", "load", "docker-image", self.image, "--name", self.p.cluster, timeout=180)
@@ -345,7 +356,9 @@ class ProviderSmoke:
                 turn = client.ask(session, message)
                 row, reply = client.answer(turn, seconds=240)
                 require(reply == answer and row["parent"] == cp, "text follow-up lost original totals, confirmation or frozen parent")
-            refs = assets.refs(row)
+            refs = {kind: next(ref for ref in row["assets"] if ref["kind"] == kind)
+                    for kind in ("workspace", "session")}
+            refs["artifact"] = client.primary(row)
             require(json.loads(assets.download(refs["artifact"])) == answer, "text report failed independent business verification")
             archive = assets.archive(refs["workspace"])
             counter = json.loads(archive[".agentmoor-native-count.json"])
@@ -554,6 +567,10 @@ class ProviderSmoke:
             remaining = subprocess.run(["docker", "image", "inspect", image], capture_output=True, text=True)
             require(remaining.returncode != 0, "owned provider image tag remains after cleanup")
         self.result["provider_image_tags_removed"] = True
+        if "dependency_cache" in self.result:
+            cache = json.loads(self.p.run("docker", "image", "inspect", DEPENDENCY_CACHE))[0]
+            require(cache["Id"] == self.result["dependency_cache"]["image_id"], "dependency cache identity changed")
+            self.result["dependency_cache"]["retained"] = True
 
 
 def main():
