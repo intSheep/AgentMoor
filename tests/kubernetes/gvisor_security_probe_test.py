@@ -1,11 +1,17 @@
 """Offline evidence validation; no cluster, network or resource load."""
 import copy
 import json
+import hashlib
+import io
+from pathlib import Path
+import tarfile
+import tempfile
 from types import SimpleNamespace
 from unittest import mock
 import unittest
 
 import gvisor_security_probe as probe
+import gvisor_security_containerd as candidate
 
 
 class NetworkProofTest(unittest.TestCase):
@@ -87,9 +93,9 @@ class ResourceProofTest(unittest.TestCase):
     def record(self):
         return {"runtime_verified": True, "node_swap_max": "0", "before": [{"path": "/owned-pod", "pids.max": "128",
                  "cpu.max": "20000 100000", "memory.max": str(128 << 20)}], "after": [],
-                "cpu_throttled_delta": 4, "cpu_usage_usec_delta": 100000, "oom_kill_delta": 1,
+                "cpu_throttled_delta": 4, "cpu_usage_usec_delta": 100000, "oom_kill_delta": 1, "host_pids_max_events_delta": 0,
                 "terminated": True, "pod_reason": "DeadlineExceeded", "cancelled": True, "physical_cleanup": True,
-                "fixture": {"guest_rlimit_nproc": [32, 32], "hard_raise_denied": True, "fork_errno": 11, "children": 30}}
+                "fixture": {"guest_rlimit_nproc": [64, 64], "hard_raise_denied": True, "fork_errno": 11, "children": 62}}
 
     def test_actual_limits_and_effects_required(self):
         for mode, mutation in (("cpu", "cpu_throttled_delta"), ("memory", "oom_kill_delta"),
@@ -97,6 +103,8 @@ class ResourceProofTest(unittest.TestCase):
                                ("wall", "pod_reason"), ("cancel", "physical_cleanup")):
             with self.subTest(mode=mode):
                 record = self.record()
+                if mode == "pids":
+                    record["oom_kill_delta"] = 0
                 self.assertTrue(probe.verify_resource(mode, record))
                 if mutation == "hard_raise_denied":
                     record["fixture"][mutation] = False
@@ -109,6 +117,16 @@ class ResourceProofTest(unittest.TestCase):
             value["before"][0]["pids.max"] = "max"
             with self.subTest(mode=mode), self.assertRaises(RuntimeError):
                 probe.verify_resource(mode, value)
+
+    def test_guest_process_proof_cannot_be_an_earlier_host_pid_or_memory_bound(self):
+        value = self.record()
+        value["oom_kill_delta"] = 0
+        self.assertTrue(probe.verify_resource("pids", value))
+        for key in ("host_pids_max_events_delta", "oom_kill_delta"):
+            changed = copy.deepcopy(value)
+            changed[key] = 1
+            with self.subTest(key=key), self.assertRaises(RuntimeError):
+                probe.verify_resource("pids", changed)
 
     def test_tmpfs_enospc_is_separate_from_oom(self):
         value = self.record()
@@ -228,6 +246,60 @@ class CleanupTest(unittest.TestCase):
         self.assertEqual(result["sentry_processes"], [])
         self.assertEqual([args for args in calls if args[:2] == ("crictl", "rmp")], [("crictl", "rmp", "sandbox-own")])
         self.assertFalse(any("stopp" in args or "kill" in args for args in calls))
+
+
+class CandidateBundleTest(unittest.TestCase):
+    def archive(self, path, extra=None, missing=False):
+        with tarfile.open(path, "w:gz") as output:
+            for name in candidate.BINARIES[:-1] if missing else candidate.BINARIES:
+                data = b"synthetic binary bytes; never execute"
+                item = tarfile.TarInfo("bin/" + name)
+                item.size = len(data)
+                output.addfile(item, io.BytesIO(data))
+            if extra:
+                item = tarfile.TarInfo(extra)
+                item.type = tarfile.SYMTYPE
+                item.linkname = "/outside"
+                output.addfile(item)
+
+    def test_bundle_members_are_complete_regular_and_confined(self):
+        for extra, missing in ((None, False), ("bin/link", False), ("../../escape", False), (None, True)):
+            with self.subTest(extra=extra, missing=missing), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                archive = root / "official-fixture.tar.gz"
+                self.archive(archive, extra, missing)
+                if extra or missing:
+                    with self.assertRaises(RuntimeError):
+                        candidate.extract(archive, root / "expanded")
+                else:
+                    candidate.extract(archive, root / "expanded")
+                    self.assertTrue((root / "expanded/bin/containerd").is_file())
+
+    def test_cached_bundle_still_requires_the_fixed_digest(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            cache = root / "cache"
+            cache.mkdir()
+            expected = {}
+            for version in candidate.VERSIONS:
+                archive = cache / ("containerd-" + version + "-linux-arm64.tar.gz")
+                self.archive(archive)
+                expected[version] = {"arm64": hashlib.sha256(archive.read_bytes()).hexdigest()}
+            instance = SimpleNamespace(directory=root / "run", cluster="owned", run=lambda *args: "arm64")
+            instance.directory.mkdir()
+            with mock.patch.dict(candidate.DIGESTS, expected):
+                self.assertEqual([value["version"] for value in candidate.prepare(instance, cache)], ["2.3.7", "2.4.2"])
+                archive = cache / "containerd-2.3.7-linux-arm64.tar.gz"
+                archive.write_bytes(archive.read_bytes() + b"mutated")
+                with self.assertRaisesRegex(RuntimeError, "SHA256"):
+                    candidate.prepare(instance, cache)
+
+    def test_installer_does_not_touch_an_unowned_node(self):
+        instance = SimpleNamespace(cluster="owned", node="owned-node", node_run=mock.Mock(),
+            run=lambda *args: json.dumps([{"Config": {"Labels": {"io.x-k8s.kind.cluster": "another"}}}]))
+        with self.assertRaises(RuntimeError):
+            candidate.install(instance, [])
+        instance.node_run.assert_not_called()
 
 
 if __name__ == "__main__":

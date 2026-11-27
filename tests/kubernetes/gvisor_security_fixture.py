@@ -134,13 +134,13 @@ def workload(options):
         # exec. Check inheritance and denial before any bounded fork loop.
         result["guest_rlimit_nproc"] = resource.getrlimit(resource.RLIMIT_NPROC)
         try:
-            resource.setrlimit(resource.RLIMIT_NPROC, (33, 33))
+            resource.setrlimit(resource.RLIMIT_NPROC, (65, 65))
             result["hard_raise_denied"] = False
         except (OSError, ValueError):
             result["hard_raise_denied"] = True
         children = []
         try:
-            for _ in range(64):
+            for _ in range(128):
                 try:
                     pid = os.fork()
                 except OSError as error:
