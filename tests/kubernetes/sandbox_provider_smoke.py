@@ -168,6 +168,12 @@ class ProviderSmoke:
     def configmap(self, name, data):
         self.apply({"apiVersion": "v1", "kind": "ConfigMap", "metadata": {"name": name, "namespace": CONTROL_NS}, "data": data})
 
+    def configure_storage(self):
+        pass
+
+    def platform_environment(self):
+        return []
+
     def configure(self):
         self.stage("configure_restricted_guest_and_trusted_services")
         self.apply({"apiVersion": "v1", "kind": "Namespace", "metadata": {"name": GUEST_NS,
@@ -217,10 +223,13 @@ class ProviderSmoke:
         self.apply({"apiVersion": "v1", "kind": "Pod", "metadata": {"name": "provider-model", "namespace": CONTROL_NS, "labels": {"app": "provider-model"}}, "spec": {"automountServiceAccountToken": False, "restartPolicy": "Never", "securityContext": security,
             "containers": [{"name": "model", "image": self.image, "imagePullPolicy": "Never", "command": ["python3", "/opt/test/sandbox_provider_model.py", "--tls-cert", "/model-tls/cert.pem", "--tls-key", "/model-tls/key.pem", "--upstream-key-file", "/model-auth/key"], "resources": {"limits": {"memory": "256Mi", "cpu": "500m"}}, "volumeMounts": [{"name": "tls", "mountPath": "/model-tls", "readOnly": True}, {"name": "auth", "mountPath": "/model-auth", "readOnly": True}]}], "volumes": [{"name": "tls", "secret": {"secretName": "provider-tls"}}, {"name": "auth", "secret": {"secretName": "provider-model-auth"}}]}})
         mounts = [{"name": n, "mountPath": p, "readOnly": n != "data"} for n, p in (("data", "/data"), ("tls", "/tls"), ("auth", "/model-auth"), ("signing", "/signing"), ("config", "/configuration"))]
-        self.apply({"apiVersion": "v1", "kind": "Pod", "metadata": {"name": "agentmoor", "namespace": CONTROL_NS, "labels": GATEWAY_LABEL}, "spec": {"serviceAccountName": "sandbox-controller", "restartPolicy": "Never", "securityContext": security,
+        self.configure_storage()
+        self.platform_manifest = {"apiVersion": "v1", "kind": "Pod", "metadata": {"name": "agentmoor", "namespace": CONTROL_NS, "labels": GATEWAY_LABEL}, "spec": {"serviceAccountName": "sandbox-controller", "restartPolicy": "Never", "securityContext": security,
             "initContainers": [{"name": "signing", "image": self.image, "imagePullPolicy": "Never", "command": ["python3", "-c", "from pathlib import Path; p=Path('/data/signing.key'); p.write_bytes(Path('/signing/signing.key').read_bytes()); p.chmod(0o600)"], "volumeMounts": mounts}],
             "containers": [{"name": "api", "image": self.image, "imagePullPolicy": "Never", "command": ["agentmoor", "serve", "--data", "/data", "--listen", "0.0.0.0:7401", "--tls-cert", "/tls/cert.pem", "--tls-key", "/tls/key.pem", "--sandbox-config", "/configuration/sandbox.json", "--turn-jobs", "/configuration/profiles.json"], "resources": {"limits": {"memory": "512Mi", "cpu": "1"}}, "volumeMounts": mounts}],
-            "volumes": [{"name": "data", "emptyDir": {}}, {"name": "tls", "secret": {"secretName": "provider-tls"}}, {"name": "auth", "secret": {"secretName": "provider-model-auth"}}, {"name": "signing", "secret": {"secretName": "provider-signing"}}, {"name": "config", "configMap": {"name": "provider-config"}}]}})
+            "volumes": [{"name": "data", "emptyDir": {}}, {"name": "tls", "secret": {"secretName": "provider-tls"}}, {"name": "auth", "secret": {"secretName": "provider-model-auth"}}, {"name": "signing", "secret": {"secretName": "provider-signing"}}, {"name": "config", "configMap": {"name": "provider-config"}}]}}
+        self.platform_manifest["spec"]["containers"][0]["env"] = self.platform_environment()
+        self.apply(self.platform_manifest)
         self.p.wait_ready(CONTROL_NS, "provider-model")
         self.p.wait_ready(CONTROL_NS, "agentmoor")
 
@@ -346,6 +355,9 @@ class ProviderSmoke:
         self.result["scenarios"].append(result)
         return client, cp, marker, deliveries, directory
 
+    def text_round_complete(self, operation, client, assets, checkpoint):
+        pass
+
     def text_scenario(self, endpoint):
         self.stage("text_three_real_isolated_rounds")
         scope = self.scopes["text"]
@@ -391,6 +403,7 @@ class ProviderSmoke:
             frozen.extend((ref, assets.download(ref)) for ref in row["assets"])
             cp = json.loads(client.request("GET", client.route + "/checkpoint"))
             require(cp["session_id"] == session, "text checkpoint changed native Session ID")
+            self.text_round_complete(operation, client, assets, cp)
         require(len({r["pod_uid"] for r in rounds}) == 3 and len({r["counter"]["nonce"] for r in rounds}) == 3,
                 "text turns reused a native execution Pod or nonce")
         for ref, raw in frozen:

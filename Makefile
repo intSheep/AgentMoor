@@ -7,6 +7,7 @@
 .PHONY: test-k8s-native-guest test-k8s-gvisor-security
 .PHONY: test-k8s-sandbox-provider test-k8s-sandbox-quota
 .PHONY: test-k8s-sandbox-audit
+.PHONY: test-k8s-sandbox-persistent
 
 check: test-file-report
 	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p test_forward.py -v
@@ -17,6 +18,7 @@ check: test-file-report
 	PYTHONDONTWRITEBYTECODE=1 python3 tests/kubernetes/sandbox_provider_skill.py --check
 	PYTHONDONTWRITEBYTECODE=1 python3 tests/kubernetes/sandbox_provider_quota.py --check
 	PYTHONDONTWRITEBYTECODE=1 python3 tests/kubernetes/sandbox_audit_chain.py --help > /dev/null
+	PYTHONDONTWRITEBYTECODE=1 python3 tests/kubernetes/sandbox_persistent_chain.py --help > /dev/null
 	sh tests/check-kind-prereqs.sh
 	@unformatted=$$(gofmt -l cmd internal) && test -z "$$unformatted" || { echo "Run make fmt"; exit 1; }
 	go vet ./...
@@ -108,3 +110,7 @@ test-k8s-sandbox-quota:
 test-k8s-sandbox-audit:
 	@test -n "$(AUDIT_OUTPUT)" || { echo "Set AUDIT_OUTPUT to a new evidence file path"; exit 2; }
 	python3 tests/kubernetes/sandbox_audit_chain.py --output "$(AUDIT_OUTPUT)" $(if $(GVISOR_SECURITY_BUNDLE),--bundle "$(GVISOR_SECURITY_BUNDLE)") $(if $(GVISOR_SECURITY_CALICO_MANIFEST),--calico-manifest "$(GVISOR_SECURITY_CALICO_MANIFEST)")
+
+test-k8s-sandbox-persistent:
+	@test -n "$(PERSISTENT_OUTPUT)" || { echo "Set PERSISTENT_OUTPUT to a new evidence file path"; exit 2; }
+	python3 tests/kubernetes/sandbox_persistent_chain.py --output "$(PERSISTENT_OUTPUT)" $(if $(GVISOR_SECURITY_BUNDLE),--bundle "$(GVISOR_SECURITY_BUNDLE)") $(if $(GVISOR_SECURITY_CALICO_MANIFEST),--calico-manifest "$(GVISOR_SECURITY_CALICO_MANIFEST)")
