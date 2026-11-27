@@ -1,0 +1,772 @@
+{
+  "schema": "agentmoor.deadline-sweep.evidence.v1",
+  "issue": "https://linear.app/intsheep/issue/INT-91",
+  "date": "2026-11-27",
+  "source": {
+    "base_commit": "90fbb16ceb04b9eefa1e9e7861a4c40d2c9663e4",
+    "initial_implementation": "dd725c722459b034ca95376e391bd6719d13fe09",
+    "actual_negative_source": "814335ae03145fbd4ec2bc09459551d968572a5f",
+    "maintenance_fix": "98f80f885b517d6df39419bfdaf01ecc411de1ea",
+    "integrated_main": "7776ad29ab20b43fd9f4becc1f5831e80d14da84",
+    "verified_clean_commit": "3c901611485b2d20460644129bc98cd7b0665ee2",
+    "status_before": "",
+    "status_after": "",
+    "documentation_is_subsequent_to_verified_code": true,
+    "file_sha256": {
+      "cmd/agentmoor/operations.go": "c16b41608ea07ac0ba9009ae41e64b63c494e70bae274d5c556cb825298a9a82",
+      "cmd/agentmoor/deadline_sweep_test.go": "748f7ed6b885e6f56bfe7de29c65aed2b4574886031094d058ce3b542935effc",
+      "internal/platform/audit.go": "72eab13821049a56c2efc668c667819ac3eb1d7ed456ac746daeaeffdfddf458",
+      "internal/platform/catalog.go": "1e9de8e998df34df55803d45056eb4d4e6de3113c1337eb423d2fc361a1a0c3e",
+      "internal/platform/deadline_sweep.go": "88179011faa23b239e29b098b6466fb66f764ebe60bd772067b9cd995ae9b3c6",
+      "internal/platform/deadline_sweep_test.go": "6355d85d6572ea884c842ae0f8e753e327b2a87be96fdf815e6c6330f97f8e84",
+      "internal/platform/deadline_sweep_services_test.go": "87b16c222e2b2729cf2aa57711e0e003d4e886b243140f4d335e5eb54dcc415d",
+      "internal/platform/postgres_maintenance.go": "fc63f7f3780355623fce1b1b7332cb80a04ea5623e1247e3e045e1e53c132261",
+      "internal/platform/postgres_maintenance_test.go": "ec3fa2da9a2dec5eb7ea0da0db30e0ae7a2b52d29bd486aea8b182c8c0361b3d",
+      "internal/platform/postgres_maintenance_services_test.go": "f5a6a7dfeac15e6db1c67685d8a976e58f488de8e48b7fafa8531f9777f11426"
+    }
+  },
+  "bounds": {
+    "interval_seconds": 1,
+    "keyset_rows_per_table": 32,
+    "raw_json_bytes_per_record": 8388608,
+    "raw_json_bytes_per_table": 16777216,
+    "transitions_per_table_per_batch": 4,
+    "scan_soft_budget_seconds": 2,
+    "postgres_scan_socket_window_seconds": 2,
+    "write_soft_budget_seconds": 2,
+    "postgres_write_socket_window_seconds": 4,
+    "postgres_local_statement_and_lock_timeout_max_ms": 250,
+    "smaller_existing_timeouts_preserved": true,
+    "whole_call_strict_two_seconds": false,
+    "expiry_detection_rto_claimed": false
+  },
+  "initial_success": {
+    "summary": {
+      "source_commit": "dd725c722459b034ca95376e391bd6719d13fe09",
+      "source_status_before": "",
+      "base_commit": "90fbb16ceb04b9eefa1e9e7861a4c40d2c9663e4",
+      "started_at_utc": "2026-11-27T09:28:54.786352+00:00",
+      "checks": [
+        {
+          "command": "GOFLAGS=-v make test-services",
+          "start": "2026-11-27T09:28:54.786636+00:00",
+          "exit_code": 0,
+          "finish": "2026-11-27T09:29:12.394465+00:00",
+          "seconds": 17.608,
+          "log": "/private/tmp/agentmoor-deadline-sweep-initial-dd725c7-2026-11-27-test-services.log",
+          "log_bytes": 178458,
+          "log_sha256": "2a118d8107b09ace6b2e115e526915246dc429d27821cc0bc6f9b93c586ffb54"
+        }
+      ],
+      "finished_at_utc": "2026-11-27T09:29:12.394839+00:00",
+      "source_commit_after": "dd725c722459b034ca95376e391bd6719d13fe09",
+      "source_status_after": ""
+    },
+    "raw_summary_sha256": "e8d14ce848fdb1234a87738b2d4f98d430cde8d3e7d0dfa436e4507012d7370e",
+    "archived_log": {
+      "repository_file": "docs/evidence/deadline-sweep-initial-test-services-2026-11-27.log.gz",
+      "raw_bytes": 178458,
+      "raw_sha256": "2a118d8107b09ace6b2e115e526915246dc429d27821cc0bc6f9b93c586ffb54",
+      "gzip_bytes": 16658,
+      "gzip_sha256": "fa2d59c1775e2f1846c4b108f81b9b211b6bf3ab9669cac9a92052d395b5ed62",
+      "compression": "lossless gzip; raw bytes unchanged"
+    },
+    "scope": "Initial four PostgreSQL expiry/lease/Finish cases passed before availability and NUL-key regressions were added. This is not relabelled as the maintenance fix."
+  },
+  "actual_negative": {
+    "summary": {
+      "source_commit": "814335ae03145fbd4ec2bc09459551d968572a5f",
+      "source_status_before": "",
+      "production_source": "dd725c722459b034ca95376e391bd6719d13fe09",
+      "started_at_utc": "2026-11-27T09:45:47.372918+00:00",
+      "checks": [
+        {
+          "command": "go test -race ./internal/platform -run ^TestDeadlineSweepMalformedRowRollsBackEarlierTask$ -count=1 -v",
+          "start": "2026-11-27T09:45:47.373282+00:00",
+          "exit_code": 1,
+          "finish": "2026-11-27T09:45:49.521011+00:00",
+          "seconds": 2.148,
+          "log": "/private/tmp/agentmoor-deadline-sweep-negative-814335a-2026-11-27-sqlite-key.log",
+          "log_bytes": 2932,
+          "log_sha256": "8f595a18c7e0ff5f12904c9a7dd176e2f79e91b903004e236b4a0d46be3adb78"
+        },
+        {
+          "command": "GOFLAGS=-v make test-services",
+          "start": "2026-11-27T09:45:49.521399+00:00",
+          "exit_code": 2,
+          "finish": "2026-11-27T09:46:14.437795+00:00",
+          "seconds": 24.916,
+          "log": "/private/tmp/agentmoor-deadline-sweep-negative-814335a-2026-11-27-test-services.log",
+          "log_bytes": 178034,
+          "log_sha256": "131dd24de3bc662173c662ca9e878e9dc200bf2f2155e073e6469067ad9f80e3"
+        }
+      ],
+      "source_commit_after": "814335ae03145fbd4ec2bc09459551d968572a5f",
+      "source_status_after": "",
+      "finished_at_utc": "2026-11-27T09:46:14.477060+00:00"
+    },
+    "raw_summary_sha256": "154dc4a49a05205647bea515202cfd09b80d7cc2572d349e236c54a4a343b3e3",
+    "archived_logs": [
+      {
+        "repository_file": "docs/evidence/deadline-sweep-negative-sqlite-key-2026-11-27.log.gz",
+        "raw_bytes": 2932,
+        "raw_sha256": "8f595a18c7e0ff5f12904c9a7dd176e2f79e91b903004e236b4a0d46be3adb78",
+        "gzip_bytes": 460,
+        "gzip_sha256": "657bbfb232df575b50ed7f5300006d606f0811ca2d75cae10224b3c3bf35673a",
+        "compression": "lossless gzip; raw bytes unchanged"
+      },
+      {
+        "repository_file": "docs/evidence/deadline-sweep-negative-test-services-2026-11-27.log.gz",
+        "raw_bytes": 178034,
+        "raw_sha256": "131dd24de3bc662173c662ca9e878e9dc200bf2f2155e073e6469067ad9f80e3",
+        "gzip_bytes": 16941,
+        "gzip_sha256": "8b2e9a6cc0da11c717d3141a72703eedf61f7661b2651036ad7b9d655005dcdf",
+        "compression": "lossless gzip; raw bytes unchanged"
+      }
+    ],
+    "scope": "Same causal baseline: malformed SQLite NUL scope/Turn keys silently skipped with a legal expiry committed; ordinary near-budget PostgreSQL read plus audit delay killed the leased writer. Both failures are retained, not counted as passes."
+  },
+  "final_verification": {
+    "started_at_utc": "2026-11-27T10:20:14.906709+00:00",
+    "finished_at_utc": "2026-11-27T10:31:27.097435+00:00",
+    "raw_summary_sha256": "e31c63e53beb433bd8dbbb6677ff47f57bcc66b0b1d7849b90f9124851beb66b",
+    "checks": [
+      {
+        "command": "make fmt",
+        "start": "2026-11-27T10:20:14.906978+00:00",
+        "exit_code": 0,
+        "finish": "2026-11-27T10:20:14.939654+00:00",
+        "seconds": 0.033,
+        "log": "/private/tmp/agentmoor-deadline-sweep-final-3c90161-2026-11-27-fmt.log",
+        "log_bytes": 22,
+        "log_sha256": "9ba9a3ce39410b82cffdcafff24a52faa1612e3a34b2a29885a7007b1bbfbc33",
+        "archived_log": {
+          "repository_file": "docs/evidence/deadline-sweep-final-fmt-2026-11-27.log.gz",
+          "raw_bytes": 22,
+          "raw_sha256": "9ba9a3ce39410b82cffdcafff24a52faa1612e3a34b2a29885a7007b1bbfbc33",
+          "gzip_bytes": 42,
+          "gzip_sha256": "1179b69b26bb4ff518260950ba63654a1f00d22b62857a9a01ee31f2035cc17c",
+          "compression": "lossless gzip; raw bytes unchanged"
+        }
+      },
+      {
+        "command": "make check",
+        "start": "2026-11-27T10:20:14.963388+00:00",
+        "exit_code": 0,
+        "finish": "2026-11-27T10:21:49.575164+00:00",
+        "seconds": 94.611,
+        "log": "/private/tmp/agentmoor-deadline-sweep-final-3c90161-2026-11-27-check.log",
+        "log_bytes": 9396,
+        "log_sha256": "6c4ca77e623382d40c90694f9170d10ef496d2f3a7a9c49afcc35ccd55322eb3",
+        "archived_log": {
+          "repository_file": "docs/evidence/deadline-sweep-final-check-2026-11-27.log.gz",
+          "raw_bytes": 9396,
+          "raw_sha256": "6c4ca77e623382d40c90694f9170d10ef496d2f3a7a9c49afcc35ccd55322eb3",
+          "gzip_bytes": 2308,
+          "gzip_sha256": "9f5afd8a4e7f678b0f6e4307150826b88067105271a1cc2dbfa59968af7e6c7e",
+          "compression": "lossless gzip; raw bytes unchanged"
+        }
+      },
+      {
+        "command": "make demo",
+        "start": "2026-11-27T10:21:49.594642+00:00",
+        "exit_code": 0,
+        "finish": "2026-11-27T10:21:51.597080+00:00",
+        "seconds": 2.002,
+        "log": "/private/tmp/agentmoor-deadline-sweep-final-3c90161-2026-11-27-demo.log",
+        "log_bytes": 10166,
+        "log_sha256": "caa328616a78c5739b30c7eaa3e73965a16b9ec85b3804f0b50ef9e54329fa0b",
+        "archived_log": {
+          "repository_file": "docs/evidence/deadline-sweep-final-demo-2026-11-27.log.gz",
+          "raw_bytes": 10166,
+          "raw_sha256": "caa328616a78c5739b30c7eaa3e73965a16b9ec85b3804f0b50ef9e54329fa0b",
+          "gzip_bytes": 1396,
+          "gzip_sha256": "cc26fa190de03bed93022b226f1f02145963e9f383d8eed7c87cf085887280fc",
+          "compression": "lossless gzip; raw bytes unchanged"
+        }
+      },
+      {
+        "command": "GOFLAGS=-v make test-services",
+        "start": "2026-11-27T10:21:51.618000+00:00",
+        "exit_code": 0,
+        "finish": "2026-11-27T10:22:43.771707+00:00",
+        "seconds": 52.153,
+        "log": "/private/tmp/agentmoor-deadline-sweep-final-3c90161-2026-11-27-test-services.log",
+        "log_bytes": 196294,
+        "log_sha256": "a679e9880cf84702d9493bbd5076ab122022dfb12d53e9a32da9af4e0b518622",
+        "archived_log": {
+          "repository_file": "docs/evidence/deadline-sweep-final-test-services-2026-11-27.log.gz",
+          "raw_bytes": 196294,
+          "raw_sha256": "a679e9880cf84702d9493bbd5076ab122022dfb12d53e9a32da9af4e0b518622",
+          "gzip_bytes": 19521,
+          "gzip_sha256": "326452f398d0aae91b1373ac1bebfb93018b181f06e822e6331afa89d37b471c",
+          "compression": "lossless gzip; raw bytes unchanged"
+        }
+      },
+      {
+        "command": "make test-k8s",
+        "start": "2026-11-27T10:22:43.798032+00:00",
+        "exit_code": 0,
+        "finish": "2026-11-27T10:31:27.097272+00:00",
+        "seconds": 523.293,
+        "log": "/private/tmp/agentmoor-deadline-sweep-final-3c90161-2026-11-27-test-k8s.log",
+        "log_bytes": 14049,
+        "log_sha256": "776d9c3c2c2fdde115678dfa2b89be9c7b9ae9998eec758d36891b86d5a5c715",
+        "archived_log": {
+          "repository_file": "docs/evidence/deadline-sweep-final-test-k8s-2026-11-27.log.gz",
+          "raw_bytes": 14049,
+          "raw_sha256": "776d9c3c2c2fdde115678dfa2b89be9c7b9ae9998eec758d36891b86d5a5c715",
+          "gzip_bytes": 2768,
+          "gzip_sha256": "c7ad54af7419ca83749203cd8a0f345bb4fdd80f1b0ffbd7c0fddd172e73de16",
+          "compression": "lossless gzip; raw bytes unchanged"
+        }
+      }
+    ]
+  },
+  "postgres_actual_observations": {
+    "scenario_count": 13,
+    "markers": [
+      "DEADLINE_SWEEP_PG scenario=second_audit_rejected atomic_rollback=true recovery_interrupted=2 controller_actor=true",
+      "DEADLINE_SWEEP_PG scenario=writer_terminated backend_gone=true atomic_rollback=true replacement_interrupted=2",
+      "DEADLINE_SWEEP_PG scenario=finish_committed_first sql_barrier_observed=true keyset_read_observed=true fresh_record_succeeded=true interrupted=0",
+      "DEADLINE_SWEEP_PG scenario=finish_sql_wait_crossed_deadline finish_rolled_back=true interrupted=1 checkpoint_unchanged=true",
+      "DEADLINE_SWEEP_AVAILABILITY keyset_lock_observed=true read_release_ms=1901 sweep_error=false interrupted=1 writer_query_ok=true same_writer_pid=true original_backend_alive=true original_advisory_lease=true subsequent_submit_ok=true",
+      "DEADLINE_SWEEP_AVAILABILITY fresh_retry_interrupted=0 final_expiry_events=1 same_owner_usable=true",
+      "DEADLINE_SWEEP_WRITE_GUARD scenario=caller_cancel audit_pg_sleep_observed=true caller_cancelled=true atomic_rollback=true",
+      "DEADLINE_SWEEP_WRITE_GUARD scenario=caller-cancel writer_query_ok=true same_writer_pid=true original_backend_alive=true original_advisory_lease=true subsequent_submit_ok=true",
+      "DEADLINE_SWEEP_WRITE_GUARD scenario=caller-cancel fresh_retry_interrupted=1 final_expiry_events=1",
+      "DEADLINE_SWEEP_WRITE_GUARD scenario=lower_statement_timeout original_ms=80 audit_sleep_ms=150 sqlstate=57014 interrupted=0 setting_after_ms=80",
+      "DEADLINE_SWEEP_WRITE_GUARD scenario=lower-statement writer_query_ok=true same_writer_pid=true original_backend_alive=true original_advisory_lease=true subsequent_submit_ok=true",
+      "DEADLINE_SWEEP_WRITE_GUARD scenario=lower-statement fresh_retry_interrupted=1 final_expiry_events=1",
+      "DEADLINE_SWEEP_WRITE_GUARD scenario=lower_lock_timeout original_ms=50 audit_table_lock_observed=true sqlstate=55P03 interrupted=0 setting_after_ms=50",
+      "DEADLINE_SWEEP_WRITE_GUARD scenario=lower-lock writer_query_ok=true same_writer_pid=true original_backend_alive=true original_advisory_lease=true subsequent_submit_ok=true",
+      "DEADLINE_SWEEP_WRITE_GUARD scenario=lower-lock fresh_retry_interrupted=1 final_expiry_events=1",
+      "DEADLINE_SWEEP_WRITE_GUARD scenario=soft_write_budget elapsed_ms=2152 update_calls=7 audit_calls=7 sqlstate= interrupted=0",
+      "DEADLINE_SWEEP_WRITE_GUARD scenario=soft-budget writer_query_ok=true same_writer_pid=true original_backend_alive=true original_advisory_lease=true subsequent_submit_ok=true",
+      "DEADLINE_SWEEP_WRITE_GUARD scenario=soft-budget fresh_retry_interrupted=8 final_expiry_events=8",
+      "POSTGRES_MAINTENANCE_BLACKHOLE scenario=sweep begin_forwarded=1 backend_begin_ack_dropped=1 actual_transaction=true pooled_reads_ok=true elapsed_ms=4004 commit_queries=0 writer_failed_closed=true submit_failed_closed=true controller_reports=0",
+      "POSTGRES_MAINTENANCE_BLACKHOLE scenario=sweep replacement_interrupted=1 original_bytes_preserved=true recovered_event_once=true",
+      "POSTGRES_MAINTENANCE_BLACKHOLE scenario=controller_cancel begin_forwarded=1 backend_begin_ack_dropped=1 actual_transaction=true pooled_reads_ok=true elapsed_ms=3998 commit_queries=0 writer_failed_closed=true submit_failed_closed=true controller_reports=0",
+      "POSTGRES_MAINTENANCE_BLACKHOLE scenario=controller_cancel replacement_interrupted=1 original_bytes_preserved=true recovered_event_once=true",
+      "DEADLINE_SWEEP_WRITE_GUARD scenario=scan_sweep writer_query_ok=true same_writer_pid=true original_backend_alive=true original_advisory_lease=true subsequent_submit_ok=true",
+      "POSTGRES_MAINTENANCE_BLACKHOLE scenario=scan_sweep actual_select_completed=true discarded_data_rows=1 discarded_ready=1 elapsed_ms=2000 same_writer_healthy=true recovered_once=true replay_interrupted=0 same_reader_reused=true reader_sleep_ms=2100",
+      "DEADLINE_SWEEP_WRITE_GUARD scenario=scan_controller_cancel writer_query_ok=true same_writer_pid=true original_backend_alive=true original_advisory_lease=true subsequent_submit_ok=true",
+      "POSTGRES_MAINTENANCE_BLACKHOLE scenario=scan_controller_cancel actual_select_completed=true discarded_data_rows=1 discarded_ready=1 elapsed_ms=1989 same_writer_healthy=true recovered_once=true replay_interrupted=0 same_reader_reused=true reader_sleep_ms=2100"
+    ],
+    "events_from_read_only_audit_reader": [
+      {
+        "schema": "platform-audit.v1",
+        "cursor": 2,
+        "time_unix_nano": 1795774929320689000,
+        "scope": {
+          "tenant": "deadline-caller-cancel",
+          "project": "demo",
+          "runtime": "logical-1",
+          "adapter": "codex"
+        },
+        "actor": {
+          "source": "deadline-controller",
+          "role": "system"
+        },
+        "component": "task-store",
+        "action": "task.interrupted",
+        "task_id": "logical-1",
+        "attempt_sha256": "4fa4513c1bf38e5d165ec892660a98842ebf1cb5bcae088b73c9ab573bf0aaed",
+        "previous_state": "running",
+        "state": "interrupted"
+      },
+      {
+        "schema": "platform-audit.v1",
+        "cursor": 2,
+        "time_unix_nano": 1795774929803324000,
+        "scope": {
+          "tenant": "deadline-lower-statement",
+          "project": "demo",
+          "runtime": "logical-1",
+          "adapter": "codex"
+        },
+        "actor": {
+          "source": "deadline-controller",
+          "role": "system"
+        },
+        "component": "task-store",
+        "action": "task.interrupted",
+        "task_id": "logical-1",
+        "attempt_sha256": "a898b1246e95e10d1de4da2f0f3ebae230ac023278977f8ded97ec57f4ebe3a0",
+        "previous_state": "running",
+        "state": "interrupted"
+      },
+      {
+        "schema": "platform-audit.v1",
+        "cursor": 2,
+        "time_unix_nano": 1795774930178897000,
+        "scope": {
+          "tenant": "deadline-lower-lock",
+          "project": "demo",
+          "runtime": "logical-1",
+          "adapter": "codex"
+        },
+        "actor": {
+          "source": "deadline-controller",
+          "role": "system"
+        },
+        "component": "task-store",
+        "action": "task.interrupted",
+        "task_id": "logical-1",
+        "attempt_sha256": "e07b1f9c65b2f74360b33706382b539005696a319a55ff7ca6312eb3a4859b52",
+        "previous_state": "running",
+        "state": "interrupted"
+      },
+      {
+        "schema": "platform-audit.v1",
+        "cursor": 2,
+        "time_unix_nano": 1795774932424839000,
+        "scope": {
+          "tenant": "a-deadline-soft-0",
+          "project": "demo",
+          "runtime": "logical-1",
+          "adapter": "codex"
+        },
+        "actor": {
+          "source": "deadline-controller",
+          "role": "system"
+        },
+        "component": "task-store",
+        "action": "task.interrupted",
+        "task_id": "logical-1",
+        "attempt_sha256": "6e8176d8419e3b7516a7756877739202ec3daa7d8b20b917a915b938194eb818",
+        "previous_state": "running",
+        "state": "interrupted"
+      },
+      {
+        "schema": "platform-audit.v1",
+        "cursor": 6,
+        "time_unix_nano": 1795774932428437000,
+        "scope": {
+          "tenant": "z-deadline-soft-0",
+          "project": "demo",
+          "runtime": "logical-1",
+          "adapter": "codex"
+        },
+        "actor": {
+          "source": "deadline-controller",
+          "role": "system"
+        },
+        "component": "task-store",
+        "action": "turn.interrupted",
+        "task_id": "logical-1",
+        "turn_id": "2023c0bd-02bc-440b-b152-d87e21da3ed5",
+        "attempt_sha256": "5a57b3679c5a3b7fc3bc1f07204cd0f06196c7f42daf35c20010be655c4a8f45",
+        "previous_state": "running",
+        "state": "interrupted"
+      },
+      {
+        "schema": "platform-audit.v1",
+        "cursor": 3,
+        "time_unix_nano": 1795774932425935000,
+        "scope": {
+          "tenant": "a-deadline-soft-1",
+          "project": "demo",
+          "runtime": "logical-1",
+          "adapter": "codex"
+        },
+        "actor": {
+          "source": "deadline-controller",
+          "role": "system"
+        },
+        "component": "task-store",
+        "action": "task.interrupted",
+        "task_id": "logical-1",
+        "attempt_sha256": "214a3b8ad3fbf5539566b440278471a5d4b8061c5fb24271ab563cb190344fae",
+        "previous_state": "running",
+        "state": "interrupted"
+      },
+      {
+        "schema": "platform-audit.v1",
+        "cursor": 7,
+        "time_unix_nano": 1795774932429205000,
+        "scope": {
+          "tenant": "z-deadline-soft-1",
+          "project": "demo",
+          "runtime": "logical-1",
+          "adapter": "codex"
+        },
+        "actor": {
+          "source": "deadline-controller",
+          "role": "system"
+        },
+        "component": "task-store",
+        "action": "turn.interrupted",
+        "task_id": "logical-1",
+        "turn_id": "a13c92cf-865f-44a4-8914-c9b8209df7b6",
+        "attempt_sha256": "e9434c06eaa76cd8c8d13472943220f530efadc95cc3108ad3cf118107da90ed",
+        "previous_state": "running",
+        "state": "interrupted"
+      },
+      {
+        "schema": "platform-audit.v1",
+        "cursor": 4,
+        "time_unix_nano": 1795774932426645000,
+        "scope": {
+          "tenant": "a-deadline-soft-2",
+          "project": "demo",
+          "runtime": "logical-1",
+          "adapter": "codex"
+        },
+        "actor": {
+          "source": "deadline-controller",
+          "role": "system"
+        },
+        "component": "task-store",
+        "action": "task.interrupted",
+        "task_id": "logical-1",
+        "attempt_sha256": "da883b1c108624bb5979b916dd2d6c38c93ecdd0c801f6adc8bb82739d0575ff",
+        "previous_state": "running",
+        "state": "interrupted"
+      },
+      {
+        "schema": "platform-audit.v1",
+        "cursor": 8,
+        "time_unix_nano": 1795774932429881000,
+        "scope": {
+          "tenant": "z-deadline-soft-2",
+          "project": "demo",
+          "runtime": "logical-1",
+          "adapter": "codex"
+        },
+        "actor": {
+          "source": "deadline-controller",
+          "role": "system"
+        },
+        "component": "task-store",
+        "action": "turn.interrupted",
+        "task_id": "logical-1",
+        "turn_id": "8076b3ae-5fb8-4161-bedd-d8a3eec59b0c",
+        "attempt_sha256": "f7f1f9a7ccb1af45f74d4eb38f4e3997c64ab060d276888e803a18a60e4f0aaa",
+        "previous_state": "running",
+        "state": "interrupted"
+      },
+      {
+        "schema": "platform-audit.v1",
+        "cursor": 5,
+        "time_unix_nano": 1795774932427373000,
+        "scope": {
+          "tenant": "a-deadline-soft-3",
+          "project": "demo",
+          "runtime": "logical-1",
+          "adapter": "codex"
+        },
+        "actor": {
+          "source": "deadline-controller",
+          "role": "system"
+        },
+        "component": "task-store",
+        "action": "task.interrupted",
+        "task_id": "logical-1",
+        "attempt_sha256": "e00b475ca82c4633ad3f54b671f28b3702c143a85981e070b1f0e3d7b22c52e3",
+        "previous_state": "running",
+        "state": "interrupted"
+      },
+      {
+        "schema": "platform-audit.v1",
+        "cursor": 9,
+        "time_unix_nano": 1795774932430489000,
+        "scope": {
+          "tenant": "z-deadline-soft-3",
+          "project": "demo",
+          "runtime": "logical-1",
+          "adapter": "codex"
+        },
+        "actor": {
+          "source": "deadline-controller",
+          "role": "system"
+        },
+        "component": "task-store",
+        "action": "turn.interrupted",
+        "task_id": "logical-1",
+        "turn_id": "9f7e504a-5da3-462e-8ae0-edd53419f74d",
+        "attempt_sha256": "205467c856e800bc1367fbfe533feca759eb6ed0668454db11eb804683e94b0e",
+        "previous_state": "running",
+        "state": "interrupted"
+      }
+    ],
+    "database_transport": "Disposable real PostgreSQL/S3 loopback services; PostgreSQL test DSN uses sslmode=disable. BEGIN and completed SELECT responses were actually swallowed by the bounded plaintext test proxy. Startup/authentication cancellation also has a separate real loopback TCP unit fault."
+  },
+  "native_compatibility": {
+    "cluster": "agentmoor-2ada1452f4f1",
+    "worker_images": [
+      {
+        "tag": "agentmoor-contract:agentmoor-2ada1452f4f1-codex",
+        "image_id": "sha256:3458d5f34288c5a1ebd5e8e537060ab6ce2558b6a45b23398b2e1b5c3ae26a06"
+      },
+      {
+        "tag": "agentmoor-contract:agentmoor-2ada1452f4f1-gemini-cli",
+        "image_id": "sha256:3cbe0fa06f42bcf8a66ca80aaff5ce4adcd0ba6814af5385ab1631fcf3d9bd30"
+      },
+      {
+        "tag": "agentmoor-contract:agentmoor-2ada1452f4f1-opencode",
+        "image_id": "sha256:b3d0ed2ad341e4a6b15bb84bad60e4fdf41cb38e21d311c948618aa47be82feb"
+      },
+      {
+        "tag": "agentmoor-contract:agentmoor-2ada1452f4f1-claude-code",
+        "image_id": "sha256:383220e35e27ec90a3939f2cc456bd4c43da8a76a8a89d989cdf2410b7b608de"
+      }
+    ],
+    "report_stages": 4,
+    "two_followup_stages": 4,
+    "followup_turns": 8,
+    "active_followup_cancellations": 4,
+    "active_native_cancellations": 4,
+    "native_cancel_seconds": [
+      2.3,
+      3.1,
+      3.0,
+      3.8
+    ],
+    "models": "scripted fixtures; no live model API keys",
+    "path": "default trusted four-CLI Task HTTP contract; not a new isolated-provider or gVisor resource acceptance"
+  },
+  "cleanup": {
+    "observed_at_utc": "2026-11-27T10:31:47.669780+00:00",
+    "source_commit": "3c901611485b2d20460644129bc98cd7b0665ee2",
+    "owned_kind_cluster": "agentmoor-2ada1452f4f1",
+    "owned_compose_project": "agentmoor-test-57090",
+    "owned_worker_tags": [
+      "agentmoor-contract:agentmoor-2ada1452f4f1-codex",
+      "agentmoor-contract:agentmoor-2ada1452f4f1-gemini-cli",
+      "agentmoor-contract:agentmoor-2ada1452f4f1-opencode",
+      "agentmoor-contract:agentmoor-2ada1452f4f1-claude-code"
+    ],
+    "checks": [
+      {
+        "command": [
+          "docker",
+          "ps",
+          "-a",
+          "--filter",
+          "label=io.x-k8s.kind.cluster=agentmoor-2ada1452f4f1",
+          "--format",
+          "{{.Names}}"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "docker",
+          "image",
+          "inspect",
+          "agentmoor-contract:agentmoor-2ada1452f4f1-codex",
+          "--format",
+          "{{.Id}}"
+        ],
+        "exit_code": 1,
+        "stdout": "\n",
+        "stderr": "Error response from daemon: No such image: agentmoor-contract:agentmoor-2ada1452f4f1-codex\n"
+      },
+      {
+        "command": [
+          "docker",
+          "image",
+          "inspect",
+          "agentmoor-contract:agentmoor-2ada1452f4f1-gemini-cli",
+          "--format",
+          "{{.Id}}"
+        ],
+        "exit_code": 1,
+        "stdout": "\n",
+        "stderr": "Error response from daemon: No such image: agentmoor-contract:agentmoor-2ada1452f4f1-gemini-cli\n"
+      },
+      {
+        "command": [
+          "docker",
+          "image",
+          "inspect",
+          "agentmoor-contract:agentmoor-2ada1452f4f1-opencode",
+          "--format",
+          "{{.Id}}"
+        ],
+        "exit_code": 1,
+        "stdout": "\n",
+        "stderr": "Error response from daemon: No such image: agentmoor-contract:agentmoor-2ada1452f4f1-opencode\n"
+      },
+      {
+        "command": [
+          "docker",
+          "image",
+          "inspect",
+          "agentmoor-contract:agentmoor-2ada1452f4f1-claude-code",
+          "--format",
+          "{{.Id}}"
+        ],
+        "exit_code": 1,
+        "stdout": "\n",
+        "stderr": "Error response from daemon: No such image: agentmoor-contract:agentmoor-2ada1452f4f1-claude-code\n"
+      },
+      {
+        "command": [
+          "docker",
+          "ps",
+          "-a",
+          "--filter",
+          "label=com.docker.compose.project=agentmoor-test-57090",
+          "--format",
+          "{{.Names}}"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "docker",
+          "network",
+          "ls",
+          "--filter",
+          "label=com.docker.compose.project=agentmoor-test-57090",
+          "--format",
+          "{{.Name}}"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "docker",
+          "volume",
+          "ls",
+          "--filter",
+          "label=com.docker.compose.project=agentmoor-test-57090",
+          "--format",
+          "{{.Name}}"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "all_owned_resources_absent": true,
+    "scope": "Only this run owned node, compose resources and four image tags queried. Shared dependency caches and untagged build layers are not claimed deleted."
+  },
+  "limitations": [
+    "Logical interrupted state/audit does not prove Pod or external resource deletion; sweep creates no cleanup acknowledgement.",
+    "Restart and repeated sweeps were tested for durable event idempotence. No actual PostgreSQL COMMIT-response blackhole was injected.",
+    "Existing original deadlines, attempts, Spec, Parent, Skill pins, assets, checkpoint and raw JSON outside the unique top-level state value remain unchanged.",
+    "No native execution, Job/Pod dispatch, new attempt, deadline extension, automatic lease migration, new tenant audit endpoint or HA guarantee is introduced.",
+    "Large inventories, writer contention and invalid stored records can delay expiry detection; no new RTO.",
+    "Initial and real negative sources retain their own results; final acceptance refers to the exact clean integrated source."
+  ],
+  "ci_test_fixture_followup": {
+    "pull_request": "https://github.com/intSheep/AgentMoor/pull/27",
+    "failed_actions_run": "https://github.com/intSheep/AgentMoor/actions/runs/45983333225",
+    "failed_pull_request_head": "4c2462d132b328210807c88befa6f21be317e3fd",
+    "failed_log_scope": "Downloaded failed make check step only; the PR head is identified separately, not asserted as the exact GitHub checkout merge SHA.",
+    "old_failure": "TestControllerCreateTimeoutRecoversWithGETOnly controller_test.go:495: recovery GET timed out with the initial test-only 20ms HTTP timeout still installed.",
+    "original_ci_log": {
+      "repository_file": "docs/evidence/deadline-sweep-ci-45983333225-failed-2026-11-27.log.gz",
+      "raw_bytes": 65489,
+      "raw_sha256": "d139672729cf0e8fd464fbf700a2b2b0847be44bfa11f395747664d8cbd7b36c",
+      "gzip_bytes": 8705,
+      "gzip_sha256": "ef4b093aada57fde13db80abbc7618a6e80116edc461dc8533f54136addd1a00",
+      "compression": "lossless gzip; raw bytes unchanged"
+    },
+    "fix_source": "ee1dea2670ff8cefb4e8e671d699c60221332c82",
+    "production_changes": false,
+    "changed_paths": [
+      "internal/sandboxkube/controller_test.go"
+    ],
+    "test_change": "Channels confirm the POST reached the fixture; hold response until a real DeadlineExceeded, join initial Start, restore default 5s HTTP budget, release fixture, recover same UID with only GET and one total POST. No fixed sleeps. Test-only first phase HTTP timeout is 2s; production timeouts/deadlines unchanged.",
+    "clean_validation": {
+      "source_commit": "ee1dea2670ff8cefb4e8e671d699c60221332c82",
+      "status_before": "",
+      "changed_paths_from_original_pr": [
+        "internal/sandboxkube/controller_test.go"
+      ],
+      "started_at_utc": "2026-11-27T10:41:29.354502+00:00",
+      "checks": [
+        {
+          "command": [
+            "make",
+            "fmt"
+          ],
+          "started_at_utc": "2026-11-27T10:41:29.354741+00:00",
+          "exit_code": 0,
+          "finished_at_utc": "2026-11-27T10:41:29.393478+00:00",
+          "seconds": 0.039,
+          "log": "/private/tmp/agentmoor-pr27-ci-fixture-ee1dea2-20261127-fmt.log",
+          "raw_bytes": 22,
+          "raw_sha256": "9ba9a3ce39410b82cffdcafff24a52faa1612e3a34b2a29885a7007b1bbfbc33",
+          "archived_log": {
+            "repository_file": "docs/evidence/deadline-sweep-ci-fixed-fmt-2026-11-27.log.gz",
+            "raw_bytes": 22,
+            "raw_sha256": "9ba9a3ce39410b82cffdcafff24a52faa1612e3a34b2a29885a7007b1bbfbc33",
+            "gzip_bytes": 42,
+            "gzip_sha256": "1179b69b26bb4ff518260950ba63654a1f00d22b62857a9a01ee31f2035cc17c",
+            "compression": "lossless gzip; raw bytes unchanged"
+          }
+        },
+        {
+          "command": [
+            "go",
+            "test",
+            "-race",
+            "./internal/sandboxkube",
+            "-run",
+            "^TestControllerCreateTimeoutRecoversWithGETOnly$",
+            "-count=5",
+            "-v"
+          ],
+          "started_at_utc": "2026-11-27T10:41:29.416384+00:00",
+          "exit_code": 0,
+          "finished_at_utc": "2026-11-27T10:41:52.244796+00:00",
+          "seconds": 22.828,
+          "log": "/private/tmp/agentmoor-pr27-ci-fixture-ee1dea2-20261127-focused-race.log",
+          "raw_bytes": 6455,
+          "raw_sha256": "3cd7f4cb5786f97a791a1a84d36db724c0f788f8078e17b48427c56035d35dd3",
+          "archived_log": {
+            "repository_file": "docs/evidence/deadline-sweep-ci-fixed-focused-race-2026-11-27.log.gz",
+            "raw_bytes": 6455,
+            "raw_sha256": "3cd7f4cb5786f97a791a1a84d36db724c0f788f8078e17b48427c56035d35dd3",
+            "gzip_bytes": 1171,
+            "gzip_sha256": "6256b3334ce203c5465d73bd5275ae9a40cee4eccf8fee1c02729c47c7ed036f",
+            "compression": "lossless gzip; raw bytes unchanged"
+          }
+        },
+        {
+          "command": [
+            "make",
+            "check"
+          ],
+          "started_at_utc": "2026-11-27T10:41:52.269697+00:00",
+          "exit_code": 0,
+          "finished_at_utc": "2026-11-27T10:43:00.863441+00:00",
+          "seconds": 68.593,
+          "log": "/private/tmp/agentmoor-pr27-ci-fixture-ee1dea2-20261127-check.log",
+          "raw_bytes": 9419,
+          "raw_sha256": "b4dcee92c480ffd8840a68e5586e6fb2cd9080fc61bcb150e27be6ca6dce7c2d",
+          "archived_log": {
+            "repository_file": "docs/evidence/deadline-sweep-ci-fixed-check-2026-11-27.log.gz",
+            "raw_bytes": 9419,
+            "raw_sha256": "b4dcee92c480ffd8840a68e5586e6fb2cd9080fc61bcb150e27be6ca6dce7c2d",
+            "gzip_bytes": 2272,
+            "gzip_sha256": "0a37b76744f1e75e95b5cd48c80aad0d4fab61e21bc8003199f1961003d09b8c",
+            "compression": "lossless gzip; raw bytes unchanged"
+          }
+        }
+      ],
+      "source_commit_after": "ee1dea2670ff8cefb4e8e671d699c60221332c82",
+      "status_after": "",
+      "finished_at_utc": "2026-11-27T10:43:00.883346+00:00"
+    },
+    "actual_repeated_markers": [
+      "CONTROLLER_CREATE_TIMEOUT accepted_post=true first_http_timeout=2s recovery_http_timeout=5s posts=1 recovery_gets=1 accepted_uid_preserved=true",
+      "CONTROLLER_CREATE_TIMEOUT accepted_post=true first_http_timeout=2s recovery_http_timeout=5s posts=1 recovery_gets=1 accepted_uid_preserved=true",
+      "CONTROLLER_CREATE_TIMEOUT accepted_post=true first_http_timeout=2s recovery_http_timeout=5s posts=1 recovery_gets=1 accepted_uid_preserved=true",
+      "CONTROLLER_CREATE_TIMEOUT accepted_post=true first_http_timeout=2s recovery_http_timeout=5s posts=1 recovery_gets=1 accepted_uid_preserved=true",
+      "CONTROLLER_CREATE_TIMEOUT accepted_post=true first_http_timeout=2s recovery_http_timeout=5s posts=1 recovery_gets=1 accepted_uid_preserved=true"
+    ],
+    "scope": "Five non-cached focused race repetitions and make fmt/check passed on this clean test-only source. Original PG/S3 and full four-CLI results remain attributed to 3c901611485b2d20460644129bc98cd7b0665ee2; they were not rerun or relabelled."
+  }
+}

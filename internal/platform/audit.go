@@ -71,6 +71,17 @@ type AuditEvent struct {
 }
 
 type auditActorContext struct{}
+type auditWriteStepContext struct{}
+
+// A trusted lifecycle writer may check its soft budget between the two audit
+// statements without cancelling the connection owning the service lease.
+// Ordinary request/Finish contexts install no hook and keep their semantics.
+func auditWriteStep(ctx context.Context) error {
+	if check, ok := ctx.Value(auditWriteStepContext{}).(func() error); ok {
+		return check()
+	}
+	return nil
+}
 
 func auditHash(domain, value string) string {
 	h := sha256.Sum256([]byte("agentmoor.audit.v1/" + domain + "\x00" + value))
@@ -216,11 +227,16 @@ func (e AuditEvent) valid() bool {
 		}
 	} else {
 		switch e.Actor.Source {
-		case "internal", "controller", "model-gateway":
+		case "internal", "controller", "model-gateway", "deadline-controller":
 		default:
 			return false
 		}
 		if e.Actor.Role != "system" || e.Actor.CredentialSHA256 != "" {
+			return false
+		}
+		if e.Actor.Source == "deadline-controller" &&
+			(e.Action != "task.interrupted" && e.Action != "turn.interrupted" ||
+				e.PreviousState != task.Running && e.PreviousState != task.Cancelling && !(e.Action == "turn.interrupted" && e.PreviousState == task.Queued)) {
 			return false
 		}
 	}
@@ -280,6 +296,9 @@ func (e AuditEvent) valid() bool {
 // appendAudit is called only from a business transaction on the leased writer,
 // under Catalog.mu. No sequence is consumed when either write rolls back.
 func appendAudit(ctx context.Context, tx *sql.Tx, event AuditEvent) error {
+	if err := auditWriteStep(ctx); err != nil {
+		return err
+	}
 	var last int64
 	if err := tx.QueryRowContext(ctx, "SELECT COALESCE(MAX(cursor),0) FROM audit_events").Scan(&last); err != nil {
 		return err
@@ -307,6 +326,9 @@ func appendAudit(ctx context.Context, tx *sql.Tx, event AuditEvent) error {
 	raw, err := json.Marshal(event)
 	if err != nil || len(raw) > auditMaxEventBytes {
 		return ErrAudit
+	}
+	if err := auditWriteStep(ctx); err != nil {
+		return err
 	}
 	_, err = tx.ExecContext(ctx, "INSERT INTO audit_events(cursor,scope,event) VALUES($1,$2,$3)", event.Cursor, event.Scope.Prefix(), string(raw))
 	return err

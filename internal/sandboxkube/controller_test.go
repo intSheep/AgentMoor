@@ -485,15 +485,72 @@ func TestControllerFailedPodZeroExitCannotPublish(t *testing.T) {
 
 func TestControllerCreateTimeoutRecoversWithGETOnly(t *testing.T) {
 	f := newControllerFixture(t)
-	f.kube.onCreate = func(map[string]any) { time.Sleep(150 * time.Millisecond) }
-	f.c.client.http.Timeout = 20 * time.Millisecond
-	if _, err := f.c.Start(t.Context(), f.a); err == nil {
-		t.Fatal("owned response timeout not exercised")
+	accepted, release := make(chan struct{}), make(chan struct{})
+	var acceptedOnce, releaseOnce sync.Once
+	unblock := func() { releaseOnce.Do(func() { close(release) }) }
+	f.kube.onCreate = func(map[string]any) {
+		acceptedOnce.Do(func() { close(accepted) })
+		// Keep the real accepted POST response ambiguous until the first Start
+		// has timed out. The fixture mutex also holds its internal recovery GET.
+		<-release
 	}
-	time.Sleep(200 * time.Millisecond)
-	if r, err := f.c.Start(t.Context(), f.a); err != nil || r.PodUID == "" || f.kube.posts != 1 {
-		t.Fatal("timeout recovery recreated or lost accepted Pod", err)
+	ordinaryTimeout := f.c.client.http.Timeout
+	if ordinaryTimeout != 5*time.Second {
+		t.Fatal("fixture did not retain the ordinary five-second client timeout")
 	}
+	f.c.client.http.Timeout = 2 * time.Second
+	ctx, cancel := context.WithCancel(t.Context())
+	done := make(chan error, 1)
+	returned := false
+	t.Cleanup(func() {
+		cancel()
+		unblock()
+		if !returned {
+			select {
+			case <-done:
+			case <-time.After(10 * time.Second):
+				t.Error("owned timeout Start did not join during cleanup")
+			}
+		}
+	})
+	go func() {
+		_, err := f.c.Start(ctx, f.a)
+		done <- err
+	}()
+	select {
+	case <-accepted:
+	case err := <-done:
+		returned = true
+		t.Fatal("Start returned before the owned POST was accepted", err)
+	case <-time.After(5 * time.Second):
+		t.Fatal("owned POST never reached its accepted-response fault boundary")
+	}
+	select {
+	case err := <-done:
+		returned = true
+		if !errors.Is(err, context.DeadlineExceeded) {
+			t.Fatal("owned response timeout not exercised", err)
+		}
+	case <-time.After(10 * time.Second):
+		t.Fatal("owned accepted POST did not produce a bounded client timeout")
+	}
+	// The first client operation has joined: changing the test timeout cannot
+	// race an in-flight Do. A normal GET now receives the ordinary full budget.
+	f.c.client.http.Timeout = ordinaryTimeout
+	unblock()
+	f.kube.mu.Lock()
+	uid := f.kube.pod["metadata"].(map[string]any)["uid"].(string)
+	getsBefore := f.kube.gets
+	f.kube.mu.Unlock()
+	if r, err := f.c.Start(t.Context(), f.a); err != nil || r.PodUID != uid {
+		t.Fatal("timeout recovery lost the accepted Pod identity", err)
+	}
+	f.kube.mu.Lock()
+	defer f.kube.mu.Unlock()
+	if f.kube.posts != 1 || f.kube.gets <= getsBefore {
+		t.Fatal("timeout recovery did not use GET only", f.kube.posts, f.kube.gets, getsBefore)
+	}
+	t.Logf("CONTROLLER_CREATE_TIMEOUT accepted_post=true first_http_timeout=2s recovery_http_timeout=%s posts=%d recovery_gets=%d accepted_uid_preserved=true", ordinaryTimeout, f.kube.posts, f.kube.gets-getsBefore)
 }
 
 func TestControllerCrashBeforePOSTDoesNotCreateOnRecovery(t *testing.T) {

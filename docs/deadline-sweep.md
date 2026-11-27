@@ -1,0 +1,48 @@
+# 可信期限巡检
+
+默认 `serve` 会定期把已过期任务写成 `interrupted`，并在同一数据库事务追加运维审计。它不会重跑任务、延长期限或替换最近成功的 checkpoint，也不表示 Pod 或外部资源已经物理清理。[INT-91](https://linear.app/intsheep/issue/INT-91)
+
+巡检只处理原期限已到的 `running` / `cancelling` Task、Turn 及已排队 Turn。首轮 `queued` Task 没有执行期限，不在此范围；已经成功、失败、取消或中断的记录保持原状态。查询接口已有的过期投影仍可先显示中断；持久事件可能在后续巡检才出现。
+
+## 有界执行与身份
+
+服务启动后每轮间隔一秒，按现有主键分别分页 Task 和 Turn，每表最多 32 条、原 JSON 合计最多 16 MiB，单条最多 8 MiB；每表最多提交四个过期转换，同批至多八个。遇到尚未处理的额度边界时保留游标位置，下轮继续；走到尾部后回绕，重启可从头开始。没有过期状态变化时不启动写事务。
+
+扫描和 JSON 解析有两秒软预算，并在行、token 和锁等待边界检查取消。PostgreSQL 本轮扫描借用一条专用读连接，启动、认证与扫描 I/O 都受本轮 socket 期限保护，正常归还前清除，异常连接丢弃。普通业务读池不带这个新增期限。
+
+写阶段另有两秒软预算；PostgreSQL 在同一租约连接使用不超过 250ms 的事务内 `statement_timeout` / `lock_timeout`，已有更小配置继续保留。普通慢 SQL、软预算耗尽和调用方取消正常回滚，不取消持有写锁的会话；独立四秒 socket I/O 保险覆盖 BEGIN、后续语句、COMMIT 和 ROLLBACK，真正网络故障时写者失败关闭，不能从读池替换租约。结束维护后恢复驱动原有期限；迟到的取消连接仍受故障窗口约束。
+
+这不是“整轮固定两秒完成”的承诺。服务退出会先取消并 join 巡检，再关闭 Catalog；通常等当前有界 SQL 收尾，异常网络可等该阶段 I/O 上限。大存量、竞争和错误记录会延后检测；没有新增到期 RTO、HA 或自动租约迁移保证。
+
+事件使用固定 `deadline-controller/system` 来源，不接受请求正文或头提供 actor。只允许真实的中断动作及匹配的前状态。运维通过已有只读 `audit` 命令查询，没有新增租户 HTTP 端点。
+
+## 保留原内容与事务边界
+
+候选键只用于定位。巡检在 `Catalog.mu` 内重读当前原始记录；若 Finish 已先提交成功，就不会将它改回中断。更新使用原 JSON、attempt 和 Turn 状态作条件，状态转换及审计同一 leased SQL 事务；任一审计 INSERT、条件更新或租约失败，整批回滚。
+
+更新仅替换唯一顶层 `state` 值，Turn 同步更新其状态列；其他已知或未知字段、空白、转义、旧 checkpoint、资产引用、Skill pins、Spec、Parent、原始 deadline 和 attempt 保持。重复字段、大小写或转义造成的歧义、坏键、超额 JSON 失败关闭，不猜测哪一份是权威内容。没有新 attempt、Job、Pod、原生执行或物理清理 ACK。
+
+成功提交后丢失应答，再扫或重启仍只保留一个转换事件；不能把没有事件当作任务尚未过期的证明。数据库管理员篡改、外部不可变归档和审计保留治理仍按既有边界处理。
+
+## 2026-11-27 实际验收
+
+干净集成源码 `3c901611485b2d20460644129bc98cd7b0665ee2` 已合入物理 GC 与隔离成功来源审计；同一源码的 `make fmt`、`make check`、`make demo`、真实 PostgreSQL/S3 `make test-services` 和完整 `make test-k8s` 全部退出 0。原始日志按原字节 gzip 保存，并记录原始/压缩 SHA256。[结构化证据及原日志索引](evidence/deadline-sweep-2026-11-27.json)
+
+SQLite 状态表、分页、额度、坏键/坏 JSON、审计拒绝、CAS 拒绝与实际 Catalog 重启，验证原 JSON/旧审计字节及 checkpoint/pins 保持，重扫不新增事件。独立 TCP 单元测试覆盖 socket 期限收紧/恢复、独立连接、迟到取消连接、坏写者丢弃，以及真实维护 reader 启动回应黑洞的期限与取消退出；默认 serve 测试确认无需 HTTP 轮询也会持久化，并在退出或监听失败后释放租约。
+
+真实 PostgreSQL 的 13 个定向场景覆盖第二条审计 INSERT 拒绝整批回滚、实际终止写者、Finish 先提交和 SQL 等待跨过原 deadline，以及普通慢读、调用方取消、较小 statement/lock timeout、写软预算耗尽。普通失败后原 backend PID、实际 advisory lease 与后续合法提交均保持；恢复只追加一次事件。证据保存了从只读 AuditReader 实际读出的 11 条 Task/Turn 中断事件。
+
+真实协议代理仅丢弃已执行 BEGIN 的回复，直接观察实际事务已开始；Sweep 和控制器取消分别约 4.004 / 3.998 秒退出，零提交，坏写者不借读池继续写，新 owner 沿原记录恢复。另一组仅丢弃已完成 SELECT 的结果，约 2.000 / 1.989 秒退出，原写者保持健康；恢复后同一读连接实际执行 2.1 秒查询成功，证明两秒期限已清除。PostgreSQL 服务测试为 loopback 明文连接，不将其描述成数据库 TLS 验收。没有注入 PostgreSQL COMMIT 回包黑洞；幂等结论分别来自实际重复巡检与重启测试。
+
+初版 `dd725c7` 的正常 PG/S3 通过记录单独保留。后来在干净 `814335a` 上定向复现 SQLite NUL Scope/Turn 键被截断后跳过坏行、仍提交合法行，以及 1.901 秒读屏障加 200ms 审计等待耗尽旧共享预算、杀死写者租约。修复来源 `98f80f8` 改为真实字节键校验及独立维护预算/传输边界，最终集成源码才重新通过以上反例；旧失败不重标成成功。
+
+四 CLI 共完成 16 个报告/恢复/取消阶段及八次连续追问，原生取消为 Codex 2.3、Gemini CLI 3.1、OpenCode 3.0、Claude Code 3.8 秒。退出后独立查询确认专属节点 `agentmoor-2ada1452f4f1`、存储项目 `agentmoor-test-57090` 的容器/网络/卷和四个本轮镜像标签均已清理；共享依赖缓存和构建层没有被描述为删除。
+
+本轮四 CLI 使用真实二进制及脚本模型，只证明默认受信任务路径的兼容性。没有重新验证真实模型、生产 HA、其他 CLI 隔离能力或完整 gVisor 资源边界。
+
+
+## PR27 的 CI 夹具修复
+
+首轮 GitHub Actions `45983333225`（PR head `4c2462d`）在既有 `TestControllerCreateTimeoutRecoversWithGETOnly` 的恢复 GET 超时：测试把首次故意超时使用的 20ms HTTP 预算留给了恢复请求。原失败步骤日志已无损保留；它不是期限巡检或生产控制器行为失败的证据。
+
+测试修复源码 `ee1dea2670ff8cefb4e8e671d699c60221332c82` 只改该测试：用 accepted/release 同步确证 POST 已收到，首阶段给两秒 HTTP 预算并真实等待 `DeadlineExceeded`，该 Start 退出后恢复原默认五秒，再释放夹具并验证 GET 返回同一 UID、POST 总数仍为一。去掉固定 sleep，清理时取消、释放并 join；没有修改生产超时或任务期限。该干净源码的 fmt、五次非缓存 focused race 和 make check 通过，原日志与来源追加在同一[证据](evidence/deadline-sweep-2026-11-27.json)。原 PG/S3 和完整四 CLI 仍归属于 `3c90161`，没有改写成此次测试提交的新验收。
