@@ -36,6 +36,9 @@ func (e *Engine) runTask(ctx context.Context, wait time.Duration, turn string) e
 	if err := c.Validate(); err != nil {
 		return err
 	}
+	if c.ExecutionPolicy == ExecutionUntrustedIsolated {
+		return ErrIsolationUnavailable
+	}
 	if c.RuntimeCLI == "" || c.Sessions != "" || c.NativeSessions || (c.Artifacts != "" && c.Artifacts != "out") {
 		return fmt.Errorf("run-task requires runtime_cli and manages its own sessions and out directory")
 	}

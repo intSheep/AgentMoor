@@ -27,6 +27,7 @@ type Config struct {
 	AdapterVersion    string          `json:"adapter_version,omitempty"`
 	RuntimeCLI        string          `json:"runtime_cli,omitempty"`
 	RuntimeVersion    string          `json:"runtime_version,omitempty"`
+	ExecutionPolicy   string          `json:"execution_policy,omitempty"`
 	NativeSessions    bool            `json:"native_sessions,omitempty"`
 	WorkspaceTransfer string          `json:"workspace_transfer,omitempty"`
 }
@@ -72,6 +73,11 @@ func resolve(p string) (string, error) {
 }
 
 func (c Config) Validate() error {
+	switch c.ExecutionPolicy {
+	case "", ExecutionTrustedLocal, ExecutionUntrustedIsolated:
+	default:
+		return fmt.Errorf("unsupported execution_policy")
+	}
 	if c.WorkspaceTransfer != "" && c.WorkspaceTransfer != asset.TarPartsFormat {
 		return fmt.Errorf("unsupported workspace_transfer")
 	}
