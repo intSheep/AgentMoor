@@ -87,6 +87,18 @@ func (c *Catalog) changeTask(ctx context.Context, s taskAddress, create bool, ch
 	if err != nil {
 		return task.Record{}, err
 	}
+	// A first successful Finish must commit within the allocation's original
+	// deadline, including time spent waiting on state/audit SQL. Completed
+	// acknowledgement replays and failure/cancellation keep their semantics.
+	newSuccess := before.State == task.Running && slot.State == task.Succeeded
+	if newSuccess {
+		if !time.Now().Before(before.Deadline) {
+			return task.Record{}, ErrConflict
+		}
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithDeadline(ctx, before.Deadline)
+		defer cancel()
+	}
 	tx, err := c.writer.BeginTx(ctx, nil)
 	if err != nil {
 		return task.Record{}, err
@@ -110,6 +122,9 @@ func (c *Catalog) changeTask(ctx context.Context, s taskAddress, create bool, ch
 				return task.Record{}, err
 			}
 		}
+	}
+	if newSuccess && !time.Now().Before(before.Deadline) {
+		return task.Record{}, ErrConflict
 	}
 	return slot.Record, tx.Commit()
 }

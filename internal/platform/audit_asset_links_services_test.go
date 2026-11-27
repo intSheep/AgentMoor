@@ -27,29 +27,93 @@ func checkPostgresAuditAssetLinks(t *testing.T, c *Catalog, dir, dsn string) {
 	for _, n := range []int{1, 2, 4} {
 		checkAuditAssetLinksRollback(t, c, reader, scope(fmt.Sprint("audit-links-pg-", n)), n, true)
 	}
+	checkPostgresAuditAssetLinkDeadline(t, c.objects, dsn)
 	checkPostgresAuditAssetLinkLeaseLoss(t, c.objects, dsn)
 }
 
-func checkPostgresAuditAssetLinkLeaseLoss(t *testing.T, objects Objects, dsn string) {
+func checkPostgresAuditAssetLinkDeadline(t *testing.T, objects Objects, dsn string) {
 	t.Helper()
-	// Own database in the disposable service: terminating this writer during
-	// link N must not kill the shared integration catalog's lease.
-	admin, err := sql.Open("postgres", dsn)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer admin.Close()
-	name := "agentmoor_audit_links_" + strings.ReplaceAll(uuid.NewString(), "-", "")
-	if _, err = admin.ExecContext(t.Context(), "CREATE DATABASE "+name); err != nil {
+	c, reader, _ := openOwnedAuditLinksPostgres(t, objects, dsn)
+	f := prepareAuditLinksDeadline(t, c, reader, scope("audit-link-pg-deadline"))
+	threshold := len(assetLinkEvents(f.events)) + 1
+	query := fmt.Sprintf("CREATE FUNCTION wait_owned_asset_link_deadline() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.scope='%s' AND NEW.event::jsonb->>'action'='asset.linked' AND (SELECT count(*) FROM audit_events WHERE scope=NEW.scope AND event::jsonb->>'action'='asset.linked')=%d THEN PERFORM pg_sleep(4); END IF; RETURN NEW; END $$; CREATE TRIGGER wait_owned_asset_link_deadline BEFORE INSERT ON audit_events FOR EACH ROW EXECUTE FUNCTION wait_owned_asset_link_deadline()", f.address.Prefix(), threshold)
+	if _, err := c.writer.ExecContext(t.Context(), query); err != nil {
 		t.Fatal(err)
 	}
 	defer func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
+		if _, err := c.db.ExecContext(ctx, "DROP TRIGGER wait_owned_asset_link_deadline ON audit_events; DROP FUNCTION wait_owned_asset_link_deadline()"); err != nil {
+			t.Error(err)
+		}
+	}()
+	var writerPID int
+	if err := c.writer.QueryRowContext(t.Context(), "SELECT pg_backend_pid()").Scan(&writerPID); err != nil {
+		t.Fatal(err)
+	}
+	f.setDeadline(t, 2*time.Second)
+	done := make(chan error, 1)
+	go func() {
+		var record task.Record
+		done <- f.f.worker.JSON(t.Context(), "POST", f.f.route(f.address.turn)+"/finish", f.finish, &record)
+	}()
+	// Observe the real leased PostgreSQL backend sleeping inside link 2;
+	// a mere client timeout before SQL executes does not satisfy this test.
+	for until := time.Now().Add(5 * time.Second); ; {
+		var wait sql.NullString
+		if err := c.db.QueryRowContext(t.Context(), "SELECT wait_event FROM pg_stat_activity WHERE pid=$1", writerPID).Scan(&wait); err != nil {
+			t.Fatal(err)
+		}
+		if wait.String == "PgSleep" {
+			break
+		}
+		select {
+		case <-done:
+			t.Fatal("Finish did not reach the real PostgreSQL second-link sleep")
+		default:
+		}
+		if time.Now().After(until) {
+			t.Fatal("PostgreSQL second-link sleep never started")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	if !time.Now().Before(f.before.Deadline) {
+		t.Fatal("fixture did not enter PostgreSQL sleep before the original deadline")
+	}
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Fatal("PostgreSQL SQL sleep committed success after the original deadline")
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("expired PostgreSQL transaction did not finish")
+	}
+	if time.Now().Before(f.before.Deadline) {
+		t.Fatal("Finish failed before the controlled original deadline")
+	}
+	f.requireRollback(t)
+}
+
+func openOwnedAuditLinksPostgres(t *testing.T, objects Objects, dsn string) (*Catalog, *AuditReader, string) {
+	t.Helper()
+	// Cancellation or backend termination can discard the leased connection.
+	// Keep both negative controls off the shared integration Catalog.
+	admin, err := sql.Open("postgres", dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { admin.Close() })
+	name := "agentmoor_audit_links_" + strings.ReplaceAll(uuid.NewString(), "-", "")
+	if _, err = admin.ExecContext(t.Context(), "CREATE DATABASE "+name); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		if _, err := admin.ExecContext(ctx, "DROP DATABASE "+name+" WITH (FORCE)"); err != nil {
 			t.Error("cannot clean owned audit-link database", err)
 		}
-	}()
+	})
 	endpoint, err := url.Parse(dsn)
 	if err != nil {
 		t.Fatal(err)
@@ -61,13 +125,19 @@ func checkPostgresAuditAssetLinkLeaseLoss(t *testing.T, objects Objects, dsn str
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer c.Close()
+	t.Cleanup(func() { c.Close() })
 	reader, err := OpenAuditReader(t.Context(), dir, isolatedDSN)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer reader.Close()
-	s := scope("audit-links-lease-" + name[len(name)-8:])
+	t.Cleanup(func() { reader.Close() })
+	return c, reader, isolatedDSN
+}
+
+func checkPostgresAuditAssetLinkLeaseLoss(t *testing.T, objects Objects, dsn string) {
+	t.Helper()
+	c, reader, isolatedDSN := openOwnedAuditLinksPostgres(t, objects, dsn)
+	s := scope("audit-links-lease-" + uuid.NewString()[:8])
 	f := newAuditLinksHTTP(t, c, reader, s)
 	defer f.server.Close()
 	session := "ses_private_lease_loss"
