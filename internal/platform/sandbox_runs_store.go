@@ -207,15 +207,14 @@ func (c *Catalog) collectSandbox(ctx context.Context, scope asset.Scope, before 
 			if protected[key] {
 				continue
 			}
-			exists, err := c.objects.Exists(ctx, key)
+			kind := objectSandboxInput
+			if purpose == SandboxOutput {
+				kind = objectSandboxOutput
+			}
+			removed, err := c.collectObject(ctx, scope, kind, blob.SHA256)
+			n += removed
 			if err != nil {
 				return n, err
-			}
-			if exists {
-				if err = c.objects.Remove(ctx, key); err != nil {
-					return n, err
-				}
-				n++
 			}
 		}
 		// Keep identity, frozen fingerprints, Pod ownership and create_started.
