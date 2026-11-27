@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -15,6 +14,7 @@ import (
 	"time"
 
 	"agentmoor/internal/asset"
+	"agentmoor/internal/httptrace"
 )
 
 type API struct {
@@ -27,12 +27,14 @@ type API struct {
 	Temp             string
 	SandboxProfiles  func(asset.Scope) (SandboxExecutionProfile, bool)
 	SandboxControl   SandboxController
+	RequestLog       httptrace.Sink
 }
 
 func (a *API) Handler() http.Handler {
 	mux := http.NewServeMux()
 	handle := func(pattern string, perm string, f func(http.ResponseWriter, *http.Request, Grant) error) {
 		mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+			httptrace.Route(r.Context(), pattern)
 			w.Header().Set("Cache-Control", "no-store")
 			token, ok := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
 			var g Grant
@@ -50,35 +52,32 @@ func (a *API) Handler() http.Handler {
 				http.Error(w, "unauthorized", http.StatusUnauthorized)
 				return
 			}
+			r = r.WithContext(auditHTTPContext(r.Context(), token, perm))
+			actor := auditActor(r.Context(), "internal")
+			httptrace.Platform(r.Context(), g.Scope, actor.CredentialSHA256, actor.Role)
 			if (perm == "read" && !g.Read) || (perm == "write" && !g.Write) || (perm == "gc" && !g.Collect) || (perm == "submit" && !g.Submit) || (perm == "execute" && !g.Execute) {
 				http.Error(w, "forbidden", http.StatusForbidden)
 				return
 			}
-			r = r.WithContext(auditHTTPContext(r.Context(), token, perm))
 			if err = f(w, r, g); err != nil {
 				status := 500
 				message := "platform operation failed"
 				switch {
 				case errors.Is(err, ErrMissing):
 					status = 404
-					message = err.Error()
+					message = ErrMissing.Error()
 				case errors.Is(err, ErrConflict):
 					status = 409
-					message = err.Error()
+					message = ErrConflict.Error()
 				case errors.Is(err, ErrNotReady):
 					status = http.StatusTooEarly
-					message = err.Error()
+					message = ErrNotReady.Error()
 				case errors.Is(err, errUnsupported), errors.Is(err, errNoTurnProfile):
 					status = http.StatusUnprocessableEntity
-					message = err.Error()
+					message = "operation is not configured for this allocation"
 				case errors.Is(err, errBadRequest):
 					status = 400
 					message = "invalid request or checksum"
-				}
-				if status == http.StatusInternalServerError {
-					// Keep the public response generic. Server diagnostics include
-					// the cause, but never the credential, request body or query.
-					log.Printf("platform request failed: method=%s path=%s error=%v", r.Method, r.URL.Path, err)
 				}
 				http.Error(w, message, status)
 			}
@@ -188,7 +187,7 @@ func (a *API) Handler() http.Handler {
 		}
 		return reply(w, map[string]int{"removed": n})
 	})
-	return mux
+	return httptrace.Handler("platform-api", mux, a.RequestLog)
 }
 
 var errNoTurnProfile = errors.New("follow-up execution is not configured for this allocation")

@@ -50,6 +50,8 @@ make test-k8s-v2
 
 首版审计仅平台运维可读，使用本地 `agentmoor audit` 查询现有 SQLite/PostgreSQL，不新增租户 HTTP 入口，不需要签名密钥或 SaaS token。关键状态与审计同事务提交，运行中的平台仍可同时提供服务。[命令、字段与当前范围](audit.md)
 
+平台 API 和能力网关同时向 stderr 输出固定 JSON 请求遥测；用响应的 `X-Agentmoor-Request-ID` 查找拒绝、耗时或中断。运维配置日志采集、容量和保留；该日志不参与业务事务，不保存原始 URL、错误或正文。[遥测字段与流式边界](http-telemetry.md)
+
 ## 2. 给 Worker 分配身份和目录
 
 在平台侧签发短期凭据，并通过挂载文件或密钥管理系统把它交给对应 Worker。以下命令的凭据文件父目录应已存在，且仅平台和获授权的 Worker 可访问。

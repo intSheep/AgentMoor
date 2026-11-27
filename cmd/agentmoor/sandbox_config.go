@@ -236,7 +236,7 @@ func (s *sandboxRuntime) reconcile(ctx context.Context) {
 	defer tick.Stop()
 	for {
 		if err := s.controller.ReconcileAll(ctx); err != nil && ctx.Err() == nil {
-			log.Printf("sandbox reconciliation failed: %v", err)
+			log.Printf("sandbox reconciliation failed")
 		}
 		select {
 		case <-ctx.Done():
