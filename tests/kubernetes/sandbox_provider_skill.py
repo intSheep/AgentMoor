@@ -18,6 +18,7 @@ PROOF_PATH = ".isolation-proof.json"
 PRIVATE_PATHS = (
     "/store/signing.key", "/data/signing.key", "/access/token", "/run/task/state",
     "/var/run/secrets/kubernetes.io/serviceaccount/token", "/model-auth/key",
+    "/tls/key.pem", "/model-tls/key.pem", "/signing/signing.key",
 )
 SENTINEL = "/etc/agentmoor/readonly-sentinel"
 
@@ -38,6 +39,7 @@ import uuid
 PRIVATE_PATHS = (
     "/store/signing.key", "/data/signing.key", "/access/token", "/run/task/state",
     "/var/run/secrets/kubernetes.io/serviceaccount/token", "/model-auth/key",
+    "/tls/key.pem", "/model-tls/key.pem", "/signing/signing.key",
 )
 
 def denied_file(path):
