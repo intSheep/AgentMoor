@@ -158,3 +158,10 @@ PG/S3 集群复验的前两次 HTTP 500 保留为失败记录。补充诊断及 
 INT-87 的 `b7b93573649b9cad2a2a899a69e7c0215135fa89` 保留原 24h/引用筛选，为完整对象、文件块及沙箱输入输出增加持久计划、实际 ACK/absence 确认和 Put 前旧意图退休；不声称 SQL 与对象删除原子或物理操作恰好一次。SQLite/DiskObjects 故障、四维作用域/类别、共享/保留引用、实际 guest 输出归属，以及真实 PostgreSQL/S3 的 ACK 前后故障、审计拒绝、重启均通过。旧 Go 的真实 lease-loss 负例单列保留；修复后已知死写者不发 Remove，健康新 owner 才沿原意图恢复。[实现、边界和原始失败](object-collection-audit.md)
 
 同一干净集成源码的 fmt/check/demo、真实 services 和完整四 CLI 默认受信文本矩阵退出 0；原生取消约 4.6/3.0/3.0/3.8 秒，专属节点/项目/本次标签已清理。没有把这个回归当作新的隔离、真实模型或 HA 证明。[实际事件样本、源码、原日志与 SHA](evidence/object-collection-audit-2026-11-27.json)
+
+
+## 2026-11-27：P2.5 可信期限巡检
+
+`3c901611485b2d20460644129bc98cd7b0665ee2` 的默认 serve 在有界主键分页后，仅把原期限已到的运行/取消中 Task、Turn 及排队 Turn 转为中断，与固定 `deadline-controller/system` 审计同一 leased SQL 事务；原 JSON 仅替换唯一顶层 state，保留旧 checkpoint、pins、资产、attempt 与期限，不调度执行或伪造清理 ACK。SQLite/真实 PG 的审计/租约故障、Finish 原期限并发、旧字节、分页/坏记录、重启幂等及服务退出通过。真实 BEGIN/已执行 SELECT 回应黑洞分别按 4/2 秒 I/O 边界退出；普通慢 SQL、取消和预算耗尽后原写者 PID/租约与合法写入保持。旧 NUL 键截断和维护预算杀死写者的真实负例单列保留。[实现、验收与边界](deadline-sweep.md)
+
+同一干净源码 fmt/check/demo/services 与完整四 CLI 默认受信矩阵全部退出 0，16 个阶段、八次追问通过；取消为 2.3/3.1/3.0/3.8 秒，本轮节点/存储资源/镜像标签已独立确认清理。此回归使用脚本模型，不重标为真实模型、HA 或新的隔离资源验收。[真实事件、准确来源与原日志摘要](evidence/deadline-sweep-2026-11-27.json)
