@@ -29,13 +29,15 @@ func guestRunCommand(ctx context.Context, args []string, registry *adapter.Regis
 	deadline := flags.String("deadline", "", "original task deadline")
 	model := flags.String("model", "", "operator-assigned model")
 	tool := flags.String("file-tool", "", "optional operator-assigned image tool")
+	apiCanary := flags.String("deny-api-address", "", "fixed same-IP control API canary (production profiles require both canaries)")
+	kubeCanary := flags.String("deny-kube-address", "", "fixed Kubernetes Service canary")
 	inputLimit := flags.Int64("max-input-bytes", nativeguest.MaxBundleBytes, "bounded input envelope limit")
 	outputLimit := flags.Int64("max-output-bytes", nativeguest.MaxBundleBytes, "bounded output envelope limit")
 	if err := flags.Parse(args[1:]); err != nil {
 		return err
 	}
 	if flags.NArg() != 0 || *id != "codex" || !filepath.IsAbs(*executable) || !filepath.IsAbs(*root) ||
-		(*tool != "" && !filepath.IsAbs(*tool)) || !regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$`).MatchString(*model) {
+		(*tool != "" && !filepath.IsAbs(*tool)) || (*apiCanary == "") != (*kubeCanary == "") || !regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$`).MatchString(*model) {
 		return fmt.Errorf("guest-run requires a fixed Codex image profile, model and absolute paths")
 	}
 	until, err := time.Parse(time.RFC3339Nano, *deadline)
@@ -71,6 +73,11 @@ func guestRunCommand(ctx context.Context, args []string, registry *adapter.Regis
 		}()
 	}
 	return guesttransport.Run(ctx, config, filepath.Dir(*root), func(runCtx context.Context, input io.Reader, output io.Writer) error {
+		if *apiCanary != "" {
+			if err := guesttransport.CheckNetwork(runCtx, *gateway, *ca, *apiCanary, *kubeCanary); err != nil {
+				return err
+			}
+		}
 		return nativeguest.Execute(runCtx, a, *executable, *root, input, output,
 			nativeguest.Limits{MaxInputBytes: *inputLimit, MaxOutputBytes: *outputLimit})
 	})
