@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -432,5 +433,46 @@ func TestGuestExecuteTextTurnUsesExistingExecutor(t *testing.T) {
 	raw, _ := os.ReadFile(filepath.Join(work, "out", request.Spec.Output))
 	if string(raw) != "done" || result.Text != "done" {
 		t.Fatal("existing text executor result did not reach the output file", string(raw), result.Text)
+	}
+}
+
+type oversizedWorkspaceFixture struct {
+	executionFixture
+	sessionReads *atomic.Int64
+}
+
+func (a oversizedWorkspaceFixture) ExecuteFile(ctx context.Context, env task.Environment, spec task.Spec, result, id string, history task.RestoreHistory) (task.Execution, error) {
+	execution, err := a.executionFixture.ExecuteFile(ctx, env, spec, result, id, history)
+	if err != nil {
+		return execution, err
+	}
+	err = os.WriteFile(filepath.Join(env.Workspace, "oversized"), bytes.Repeat([]byte{'x'}, 32<<10), 0600)
+	return execution, err
+}
+
+func (a oversizedWorkspaceFixture) Sessions(ctx context.Context, root *os.Root) ([]adapter.NativeSession, error) {
+	a.sessionReads.Add(1)
+	return a.executionFixture.Sessions(ctx, root)
+}
+
+func TestGuestCaptureBudgetRejectsWorkspaceBeforeCapturingSession(t *testing.T) {
+	_, exe, request := executionEnvironment(t)
+	var sessionReads atomic.Int64
+	a := oversizedWorkspaceFixture{sessionReads: &sessionReads}
+	var output bytes.Buffer
+	root := filepath.Join(t.TempDir(), "guest")
+	if err := Execute(t.Context(), a, exe, root, bytes.NewReader(requestBytes(t, request, nil)), &output,
+		Limits{MaxInputBytes: MaxBundleBytes, MaxOutputBytes: 8 << 10}); err == nil || output.Len() != 0 {
+		t.Fatal("oversized captured workspace emitted a result", err, output.Len())
+	}
+	if sessionReads.Load() != 0 {
+		t.Fatal("oversized workspace was captured before the output budget was enforced")
+	}
+	calls, _ := os.ReadFile(exe + ".calls")
+	if string(calls) != "version\nrun\n" {
+		t.Fatal("oversized output reran the intended native turn", string(calls))
+	}
+	if _, err := os.Stat(root); !errors.Is(err, os.ErrNotExist) {
+		t.Fatal("failed bounded capture retained guest temporary files", err)
 	}
 }

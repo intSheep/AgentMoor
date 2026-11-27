@@ -157,16 +157,20 @@ func Execute(ctx context.Context, a adapter.Adapter, executable, root string, sr
 	if err != nil || !insideDirectory(home, realHistory) || realHistory == home {
 		return fmt.Errorf("guest history must belong to its private home")
 	}
-	session, sessionMetadata, err := captureSession(ctx, a, realHistory, execution.SessionID, capture)
-	if err != nil {
-		return err
-	}
-	defer session.Remove()
-	workBlob, err := snapshot.Tree(ctx, workspace, []snapshot.Entry{{Source: ".", Name: "."}}, capture)
+	workBlob, err := snapshot.TreeWithLimit(ctx, workspace, []snapshot.Entry{{Source: ".", Name: "."}}, capture, limits.MaxOutputBytes)
 	if err != nil {
 		return err
 	}
 	defer workBlob.Remove()
+	remaining := limits.MaxOutputBytes - workBlob.Size
+	if remaining < 1 {
+		return fmt.Errorf("guest captures exceed their combined output budget")
+	}
+	session, sessionMetadata, err := captureSession(ctx, a, realHistory, execution.SessionID, capture, remaining)
+	if err != nil {
+		return err
+	}
+	defer session.Remove()
 	result := Result{Version: Protocol, AdapterID: descriptor.ID, AdapterVersion: descriptor.Version, RuntimeVersion: info.RuntimeVersion,
 		SessionID: execution.SessionID, Text: execution.Text,
 		Workspace: blobMetadata(workBlob, "workspace-tar.v1", "application/x-tar"), Session: sessionMetadata}
@@ -235,7 +239,7 @@ func restoreBlob(ctx context.Context, file string, blob BlobMeta, destination st
 	return errors.Join(snapshot.Restore(ctx, source, metadata(blob), destination, tree), source.Close())
 }
 
-func captureSession(ctx context.Context, a adapter.Adapter, dir, id, temporary string) (snapshot.Blob, BlobMeta, error) {
+func captureSession(ctx context.Context, a adapter.Adapter, dir, id, temporary string, maxBytes int64) (snapshot.Blob, BlobMeta, error) {
 	source, ok := a.(adapter.SessionSource)
 	if !ok {
 		return snapshot.Blob{}, BlobMeta{}, fmt.Errorf("assigned guest adapter does not export native sessions")
@@ -273,9 +277,9 @@ func captureSession(ctx context.Context, a adapter.Adapter, dir, id, temporary s
 		if media == "" {
 			media = "application/octet-stream"
 		}
-		blob, err = snapshot.File(ctx, root, file, temporary)
+		blob, err = snapshot.FileWithLimit(ctx, root, file, temporary, maxBytes)
 	} else {
-		blob, err = snapshot.Tree(ctx, root, selected.Entries, temporary)
+		blob, err = snapshot.TreeWithLimit(ctx, root, selected.Entries, temporary, maxBytes)
 	}
 	if err != nil {
 		return snapshot.Blob{}, BlobMeta{}, err
