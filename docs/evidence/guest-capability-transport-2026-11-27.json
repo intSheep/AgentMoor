@@ -1,0 +1,55 @@
+{
+  "issue": "INT-75",
+  "source_commit": "911097266827c53076d6bff80f09245b00ec43f5",
+  "make_fmt_check_demo": "passed",
+  "full_kubernetes_matrix": {
+    "command": "make test-k8s",
+    "exit_code": 0,
+    "workflow": "default trusted text turns with scripted model; not guest-run/provider acceptance",
+    "cluster": "agentmoor-a75ce023643a",
+    "delivery_pass_count": 4,
+    "two_new_turns_pass_count": 4,
+    "followup_cancellation_pass_count": 4,
+    "native_cancel_seconds_in_adapter_order": [
+      "3.8",
+      "3.0",
+      "3.1",
+      "3.1"
+    ],
+    "actual_image_ids": [
+      "sha256:fc529dcac3f34b8b0cce3561d93461a98e2f58090a2d8f7c35a001bfae233bd8",
+      "sha256:6a9a96d7a30e035375e12fcda113af8a02c21fe3b5d02773f178a8a7c3daed22",
+      "sha256:3551fd553eb74912a01c02bd11621e5f9f07219ce5d950c294c5d00d8be41900",
+      "sha256:683aa2f0643c421d1692f79dc964ae58e807b0ec82efdf3a6cfe439d15701b70"
+    ],
+    "fixture_cleanup_reported": true,
+    "log_sha256": "30a4e3387ae4dbf4b1788753d570b49e16a697b03f6ee3948590233a8a409f55"
+  },
+  "transport_tests": {
+    "real_tls": true,
+    "actual_fixture_child_process": true,
+    "input_whole_envelope_verified_before_one_execution": true,
+    "output_received_then_tcp_ack_lost": true,
+    "same_capability_bytes_sha_and_size_retried": true,
+    "child_and_callback_execution_count": 1,
+    "input_stream_interruption_retry": true,
+    "changed_input_no_execution": true,
+    "different_ca_rejected": true,
+    "redirect_rejected": true,
+    "oversized_headers_rejected": true,
+    "wrong_purpose_and_permanent_errors_rejected": true,
+    "original_deadline_and_cancellation": true,
+    "empty_or_overlimit_output_not_uploaded": true,
+    "bounded_private_spool_cleanup": true,
+    "fifo_and_oversized_config_rejected": true,
+    "downward_api_symlinks_supported": true
+  },
+  "not_verified": [
+    "actual Codex model HTTPS with this private CA",
+    "production controller/gateway integration",
+    "SaaS publication via isolated provider",
+    "NetworkPolicy and resource exhaustion",
+    "production HA"
+  ],
+  "untrusted_task_gate": "closed"
+}
