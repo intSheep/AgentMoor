@@ -4,6 +4,7 @@
 .PHONY: test-k8s-persistent-faults
 .PHONY: test-k8s-v2
 .PHONY: test-k8s-gvisor-feasibility
+.PHONY: test-k8s-native-guest
 
 check: test-file-report
 	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p test_forward.py -v
@@ -71,6 +72,10 @@ test-k8s-v2: check-kind-prereqs
 # Independent runtime feasibility, not AgentMoor/CLI/tenant isolation acceptance.
 test-k8s-gvisor-feasibility:
 	python3 tests/kubernetes/gvisor_probe.py
+
+# Real Codex + scripted model in fresh gVisor guests; provider stays closed.
+test-k8s-native-guest:
+	python3 tests/kubernetes/native_guest_smoke.py
 
 # Uses the production 15-minute deadline. Keep this separate from the short smoke.
 test-k8s-pod-loss: check-kind-prereqs
