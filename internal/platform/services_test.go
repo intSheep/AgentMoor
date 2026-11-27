@@ -79,6 +79,8 @@ func TestPostgresAndS3(t *testing.T) {
 	}
 	checkSandboxStorage(t, c, scope("sandbox-integration"))
 	checkSandboxPreparedInput(t, c, scope("sandbox-input-integration"))
+	checkSandboxModelBudget(t, c, scope("model-budget-integration"))
+	checkModelRestart := prepareSandboxModelRestart(t, c, scope("model-budget-integration-restart"))
 	// Exercise actual PostgreSQL persistence and S3 bytes across service restart.
 	a := sandboxTestClaim(t, c, scope("sandbox-integration-restart"))
 	p := sandboxTestFence(t, c, a, "frozen input")
@@ -89,6 +91,7 @@ func TestPostgresAndS3(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	checkModelRestart(c)
 	q, err := c.FenceSandboxCreate(t.Context(), a, p.Run.Deadline)
 	if err != nil || q.CreateAllowed || q.Capabilities != (SandboxCapabilities{}) || q.Run.PodName != p.Run.PodName {
 		t.Fatal("PostgreSQL restart authorized a second create", q, err)
@@ -97,9 +100,11 @@ func TestPostgresAndS3(t *testing.T) {
 	sandboxTestRead(t, blob, stream, err, "frozen input")
 	checkPostgresTaskReaderIsolation(t, c)
 	checkSandboxLostLease := prepareSandboxLeaseFailure(t, c)
+	checkModelLostLease := prepareSandboxModelLeaseFailure(t, c)
 	checkSandboxFinalSealFailure(t, c, func() { terminatePostgresWriter(t, c) })
 	checkPostgresMutationDeniedAfterLeaseLoss(t, c)
 	checkSandboxLostLease()
+	checkModelLostLease()
 }
 
 func checkPostgresTaskReaderIsolation(t *testing.T, c *Catalog) {
