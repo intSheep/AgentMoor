@@ -1,0 +1,37 @@
+{
+  "version": "sandbox-deployment.v1",
+  "network_policy": "gateway-only.v1",
+  "gateway_listen": "0.0.0.0:7443",
+  "kubernetes": {},
+  "profiles": [
+    {
+      "execution": {
+        "scope": {"tenant": "example", "project": "reports", "runtime": "report-job", "adapter": "codex"},
+        "namespace": "agentmoor-sandboxes",
+        "image": "registry.example/agentmoor-codex@sha256:REPLACE_WITH_VERIFIED_MANIFEST_SHA256",
+        "runtime_class": "agentmoor-gvisor",
+        "gateway_url": "https://agentmoor.agentmoor.svc:7443",
+        "gateway_ip": "REPLACE_WITH_AGENTMOOR_SERVICE_CLUSTER_IP",
+        "gateway_ca_path": "/etc/agentmoor/gateway-ca.pem",
+        "runtime_executable": "/usr/local/bin/codex",
+        "model": "REPLACE_WITH_FIXED_MODEL_ID",
+        "filesystem_class": "gvisor-overlay2-memory.v1",
+        "cpu_millis": 1000,
+        "memory_mib": 1024,
+        "workspace_mib": 512,
+        "temp_mib": 128
+      },
+      "model": {
+        "upstream_url": "https://REPLACE_WITH_TRUSTED_PROVIDER/v1/responses",
+        "api_key_file": "/etc/agentmoor-model/api-key",
+        "ca_file": "/etc/ssl/certs/ca-certificates.crt",
+        "max_requests": 32,
+        "max_input_bytes": 8388608,
+        "max_output_bytes": 8388608,
+        "per_request_output_bytes": 524288,
+        "concurrency": 1,
+        "max_output_tokens": 2048
+      }
+    }
+  ]
+}

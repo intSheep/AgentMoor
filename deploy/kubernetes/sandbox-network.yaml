@@ -1,0 +1,23 @@
+# Apply only after installing and verifying a policy-enforcing CNI.
+# Guest DNS is disabled; the fixed gateway name is supplied by HostAliases.
+# Keep Service and container ports equal: API 7401, capability gateway 7443.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: agentmoor-gateway-only
+  namespace: agentmoor-sandboxes
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+  ingress: []
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: agentmoor
+          podSelector:
+            matchLabels:
+              app: agentmoor
+      ports:
+        - protocol: TCP
+          port: 7443

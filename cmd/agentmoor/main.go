@@ -24,7 +24,7 @@ const usage = `Usage:
   agentmoor skills <adapter> <workspace>
   agentmoor init --data DIR
   agentmoor audit --data DIR --tenant ID --project ID --runtime ID --adapter ID [--after N] [--limit 100]
-  agentmoor serve --data DIR [--auth-policy FILE] [--listen ADDRESS] [--tls-cert PEM --tls-key PEM] [--turn-jobs FILE]
+  agentmoor serve --data DIR [--auth-policy FILE] [--listen ADDRESS] [--tls-cert PEM --tls-key PEM] [--turn-jobs FILE] [--sandbox-config FILE]
   agentmoor issue [--data DIR] [--auth-policy FILE] --tenant ID --project ID --runtime ID --adapter ID [--write] [--gc] [--submit] [--execute] [--ttl 1h]
   agentmoor auth-init --policy FILE [--from-key FILE] [--key-id ID]
   agentmoor auth-rotate --policy FILE [--key-id ID]

@@ -36,10 +36,15 @@ func (e *Engine) runTask(ctx context.Context, wait time.Duration, turn string) e
 	if err := c.Validate(); err != nil {
 		return err
 	}
-	if c.ExecutionPolicy == ExecutionUntrustedIsolated {
+	isolated := c.ExecutionPolicy == ExecutionUntrustedIsolated && c.IsolatedProvider == KubernetesGVisorProvider
+	if c.ExecutionPolicy == ExecutionUntrustedIsolated && !isolated {
 		return ErrIsolationUnavailable
 	}
-	if c.RuntimeCLI == "" || c.Sessions != "" || c.NativeSessions || (c.Artifacts != "" && c.Artifacts != "out") {
+	if isolated {
+		if err := e.validateIsolatedTask(); err != nil {
+			return err
+		}
+	} else if c.RuntimeCLI == "" || c.Sessions != "" || c.NativeSessions || (c.Artifacts != "" && c.Artifacts != "out") {
 		return fmt.Errorf("run-task requires runtime_cli and manages its own sessions and out directory")
 	}
 	var g platform.Grant
@@ -84,16 +89,33 @@ func (e *Engine) runTask(ctx context.Context, wait time.Duration, turn string) e
 		return fmt.Errorf("task is %s", record.State)
 	}
 	attempt := uuid.NewString()
-	if err = e.taskUpdate(ctx, route+"/claim", task.Claim{Attempt: attempt, Skills: c.SkillPins}, &record); err != nil {
+	claim := task.Claim{Attempt: attempt, Skills: c.SkillPins}
+	if isolated {
+		claim.ExecutionPolicy = task.ExecutionUntrustedIsolated
+	}
+	if err = e.taskUpdate(ctx, route+"/claim", claim, &record); err != nil {
 		return err
 	}
 	runCtx, cancel := context.WithDeadline(ctx, record.Deadline)
 	defer cancel()
 	stopped := make(chan struct{})
 	go func() { defer close(stopped); e.monitorTask(runCtx, route, cancel) }()
-	session, artifacts, runErr := e.execute(runCtx, record)
+	var session string
+	var artifacts []task.Ref
+	var runErr error
+	if isolated {
+		session, artifacts, runErr = e.executeIsolated(runCtx, record, route+"/sandbox", attempt)
+	} else {
+		session, artifacts, runErr = e.execute(runCtx, record)
+	}
 	cancel()
 	<-stopped
+	if errors.Is(runErr, errIsolatedCleanup) {
+		// Leave cancellation visibly pending. The control-plane reconciler
+		// continues revocation/deletion; do not acknowledge physical cleanup
+		// that was not observed, or advance the checkpoint.
+		return runErr
+	}
 	// A failed acknowledgement can be retried without starting another turn.
 	finish := task.Finish{Attempt: attempt, SessionID: session, Artifacts: artifacts}
 	if runErr != nil {

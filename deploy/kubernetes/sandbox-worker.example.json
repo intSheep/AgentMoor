@@ -1,0 +1,9 @@
+{
+  "scope": {"tenant": "example", "project": "reports", "runtime": "report-job", "adapter": "codex"},
+  "endpoint": "https://agentmoor.agentmoor.svc:7401",
+  "workspace": "/run/task/work",
+  "state_dir": "/run/task/state",
+  "artifacts": "out",
+  "execution_policy": "untrusted-isolated.v1",
+  "isolated_provider": "kubernetes-gvisor.v1"
+}
