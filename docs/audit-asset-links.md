@@ -15,7 +15,7 @@ INT-85 让平台回答“这次任务成功时，实际采用了哪些资产版�
 | Action、Component、State | 固定为 `asset.linked`、`task-store`、`succeeded` |
 | Cursor、TimeUnixNano | 与其它审计事件共用的事务内全局游标和平台时间 |
 
-审计不保存原生 Session ID、attempt 原值、资产 ID/路径、正文、URL、凭据或原始错误。这里没有新增 `RunID` 关系；Task/Turn 的成功回执与 sandbox Run 之间的独立权威关联仍属后续范围。
+审计不保存原生 Session ID、attempt 原值、资产 ID/路径、正文、URL、凭据或原始错误。INT-85 的链接事件本身不增加 `RunID` 字段；后续 [INT-89 隔离成功来源](isolated-success-provenance.md) 通过同一真实 Task/Turn/attempt 的 `sandbox.result_accepted` 连接实际 Ready Run、Pod UID 和封存输出，再与这些精确资产链接共同提交。它不声称服务端已重建 guest 输出到每份资产的所有字节。
 
 任务成功状态、成功事件、全部 `asset.linked` 与成功检查点在同一个持有写租约的数据库事务中提交。每次最多 128 份 Artifact，加上 Workspace 与 Session，共 130 条链接。任何一条链接写入失败，整笔事务回滚：任务不能先成功，也不能推进检查点。首次成功事务还受该执行原始截止时间约束：开始事务前检查，以同一 deadline 限制全部 SQL，并在提交前复查；等待数据库不能续期。相同成功回执重试不会追加链接，既有成功回执过期后仍可重试确认；失败、取消或被拒绝的回执不会生成成功链接。
 
