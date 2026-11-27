@@ -23,6 +23,7 @@ const usage = `Usage:
   agentmoor inspect <adapter> <workspace> [absolute-runtime-executable]
   agentmoor skills <adapter> <workspace>
   agentmoor init --data DIR
+  agentmoor audit --data DIR --tenant ID --project ID --runtime ID --adapter ID [--after N] [--limit 100]
   agentmoor serve --data DIR [--auth-policy FILE] [--listen ADDRESS] [--tls-cert PEM --tls-key PEM] [--turn-jobs FILE]
   agentmoor issue [--data DIR] [--auth-policy FILE] --tenant ID --project ID --runtime ID --adapter ID [--write] [--gc] [--submit] [--execute] [--ttl 1h]
   agentmoor auth-init --policy FILE [--from-key FILE] [--key-id ID]
@@ -63,6 +64,8 @@ func run(ctx context.Context, args []string, out io.Writer) error {
 	jsonOut.SetIndent("", "  ")
 	if len(args) > 0 {
 		switch args[0] {
+		case "audit":
+			return auditCommand(ctx, args, out)
 		case "init", "issue", "serve":
 			return platformCommand(ctx, args, out, registry)
 		case "auth-init", "auth-rotate", "auth-retire", "auth-revoke":
