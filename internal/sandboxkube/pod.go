@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"net"
 	"net/url"
 	"reflect"
 	"strconv"
@@ -52,6 +53,10 @@ func podTemplate(p Profile, r platform.SandboxRun, caps platform.SandboxCapabili
 		"--deadline", r.Deadline.UTC().Format("2006-01-02T15:04:05.999999999Z07:00")}
 	if p.FileTool != "" {
 		args = append(args, "--file-tool", p.FileTool)
+	}
+	if p.APIProbePort != 0 {
+		args = append(args, "--deny-api-address", net.JoinHostPort(p.GatewayIP, strconv.Itoa(p.APIProbePort)),
+			"--deny-kube-address", p.KubeProbeAddress)
 	}
 	resources := map[string]any{"cpu": cpuQuantity(p.CPUMillis), "memory": memoryQuantity(p.MemoryMiB)}
 	items := []any{}

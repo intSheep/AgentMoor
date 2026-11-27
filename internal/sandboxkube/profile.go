@@ -38,6 +38,8 @@ type Profile struct {
 	MemoryMiB         int64       `json:"memory_mib"`
 	WorkspaceMiB      int64       `json:"workspace_mib"`
 	TempMiB           int64       `json:"temp_mib"`
+	APIProbePort      int         `json:"api_probe_port,omitempty"`
+	KubeProbeAddress  string      `json:"kubernetes_probe_address,omitempty"`
 }
 
 var dnsPart = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]*[a-z0-9])?$`)
@@ -83,6 +85,19 @@ func (p Profile) Validate() error {
 	if u.Port() != "" {
 		port, err := strconv.Atoi(u.Port())
 		if err != nil || port < 1 || port > 65535 {
+			return ErrProfile
+		}
+	}
+	if p.APIProbePort != 0 || p.KubeProbeAddress != "" {
+		port := 443
+		if u.Port() != "" {
+			port, _ = strconv.Atoi(u.Port())
+		}
+		host, kubePort, err := net.SplitHostPort(p.KubeProbeAddress)
+		n, parseErr := strconv.Atoi(kubePort)
+		ip := net.ParseIP(host)
+		if p.APIProbePort < 1 || p.APIProbePort > 65535 || p.APIProbePort == port ||
+			err != nil || parseErr != nil || n < 1 || n > 65535 || ip == nil || ip.IsUnspecified() {
 			return ErrProfile
 		}
 	}
