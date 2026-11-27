@@ -1,0 +1,124 @@
+python3 tests/codex_file_report.py -v
+test_existing_report (__main__.ReportTest.test_existing_report) ... ok
+test_malformed_row (__main__.ReportTest.test_malformed_row) ... ok
+test_missing_input (__main__.ReportTest.test_missing_input) ... ok
+test_sales_and_refund (__main__.ReportTest.test_sales_and_refund) ... verified 43 bytes, SHA-256 33220b14cfc7b6e9a4b53cf91f2a0f663f2caa430f1e586df40c6f6dd4258d80, east=98 west=204975
+ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.110s
+
+OK
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p test_forward.py -v
+test_body_error_keeps_late_diagnostics (test_forward.ForwardTest.test_body_error_keeps_late_diagnostics) ... ok
+test_chatty_child_keeps_progress_and_reconnects (test_forward.ForwardTest.test_chatty_child_keeps_progress_and_reconnects) ... ok
+test_reconnect_failure_stops_both_children (test_forward.ForwardTest.test_reconnect_failure_stops_both_children) ... ok
+test_split_readiness_keeps_complete_port (test_forward.ForwardTest.test_split_readiness_keeps_complete_port) ... ok
+test_startup_exit_keeps_diagnostics (test_forward.ForwardTest.test_startup_exit_keeps_diagnostics) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.247s
+
+OK
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p gvisor_probe_test.py -v
+test_changed_cached_bundle_cannot_pass_the_pinned_hash (gvisor_probe_test.BundleTest.test_changed_cached_bundle_cannot_pass_the_pinned_hash) ... ok
+test_incomplete_or_escaping_bundle_is_rejected (gvisor_probe_test.BundleTest.test_incomplete_or_escaping_bundle_is_rejected) ... ok
+test_verified_bundle_keeps_sidecar_layout (gvisor_probe_test.BundleTest.test_verified_bundle_keeps_sidecar_layout) ... ok
+test_complete_independent_runtime_proof (gvisor_probe_test.ProbeEvidenceTest.test_complete_independent_runtime_proof) ... ok
+test_missing_handler_pending_must_be_explicit_and_unexecuted (gvisor_probe_test.ProbeEvidenceTest.test_missing_handler_pending_must_be_explicit_and_unexecuted) ... ok
+test_runtime_evidence_cannot_hide_removed_pod_restrictions (gvisor_probe_test.ProbeEvidenceTest.test_runtime_evidence_cannot_hide_removed_pod_restrictions) ... ok
+test_runtime_name_and_guest_uname_cannot_substitute_for_real_handler (gvisor_probe_test.ProbeEvidenceTest.test_runtime_name_and_guest_uname_cannot_substitute_for_real_handler) ... ok
+test_systrap_process_must_belong_to_the_same_sandbox (gvisor_probe_test.ProbeEvidenceTest.test_systrap_process_must_belong_to_the_same_sandbox) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.005s
+
+OK
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p gvisor_security_probe_test.py -v
+test_bundle_members_are_complete_regular_and_confined (gvisor_security_probe_test.CandidateBundleTest.test_bundle_members_are_complete_regular_and_confined) ... ok
+test_cached_bundle_still_requires_the_fixed_digest (gvisor_security_probe_test.CandidateBundleTest.test_cached_bundle_still_requires_the_fixed_digest) ... ok
+test_installer_does_not_touch_an_unowned_node (gvisor_security_probe_test.CandidateBundleTest.test_installer_does_not_touch_an_unowned_node) ... ok
+test_cleanup_refuses_another_owners_container (gvisor_security_probe_test.CleanupTest.test_cleanup_refuses_another_owners_container) ... ok
+test_debug_rechecks_pid_identity_before_any_signal (gvisor_security_probe_test.CleanupTest.test_debug_rechecks_pid_identity_before_any_signal) ... ok
+test_debug_signals_require_explicit_mode_and_owned_shim_only (gvisor_security_probe_test.CleanupTest.test_debug_signals_require_explicit_mode_and_owned_shim_only) ... ok
+test_only_stopped_owned_cri_records_are_removed_after_natural_exit (gvisor_security_probe_test.CleanupTest.test_only_stopped_owned_cri_records_are_removed_after_natural_exit) ... ok
+test_complete_actual_destination_proof (gvisor_security_probe_test.NetworkProofTest.test_complete_actual_destination_proof) ... ok
+test_missing_or_inconclusive_proof_never_launches_fixture (gvisor_security_probe_test.NetworkProofTest.test_missing_or_inconclusive_proof_never_launches_fixture) ... ok
+test_policy_is_default_deny_with_one_combined_namespace_and_pod_peer (gvisor_security_probe_test.NetworkProofTest.test_policy_is_default_deny_with_one_combined_namespace_and_pod_peer) ... ok
+test_actual_limits_and_effects_required (gvisor_security_probe_test.ResourceProofTest.test_actual_limits_and_effects_required) ... ok
+test_cgroup_scope_must_belong_to_the_attested_pod (gvisor_security_probe_test.ResourceProofTest.test_cgroup_scope_must_belong_to_the_attested_pod) ... ok
+test_guest_process_proof_cannot_be_an_earlier_host_pid_or_memory_bound (gvisor_security_probe_test.ResourceProofTest.test_guest_process_proof_cannot_be_an_earlier_host_pid_or_memory_bound) ... ok
+test_one_failure_keeps_other_bounded_resource_observations_but_run_fails (gvisor_security_probe_test.ResourceProofTest.test_one_failure_keeps_other_bounded_resource_observations_but_run_fails) ... ok
+test_tmpfs_enospc_is_separate_from_oom (gvisor_security_probe_test.ResourceProofTest.test_tmpfs_enospc_is_separate_from_oom) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.008s
+
+OK
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p sandbox_controller_smoke_test.py -v
+test_pod_annotation_values_and_managed_fields_never_enter_evidence (sandbox_controller_smoke_test.EvidenceTest.test_pod_annotation_values_and_managed_fields_never_enter_evidence) ... ok
+test_saved_evidence_and_printed_summary_share_sanitized_failure (sandbox_controller_smoke_test.EvidenceTest.test_saved_evidence_and_printed_summary_share_sanitized_failure) ... ok
+test_unexpected_redaction_cannot_leave_acceptance_passing (sandbox_controller_smoke_test.EvidenceTest.test_unexpected_redaction_cannot_leave_acceptance_passing) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.000s
+
+OK
+PYTHONDONTWRITEBYTECODE=1 python3 tests/kubernetes/sandbox_provider_model.py --check
+SANDBOX_MODEL_AUTH verified kind=file
+SANDBOX_MODEL_SHAPE {"function_outputs": 0, "mcp_report_render": true, "tools": 1, "users": 1}
+SANDBOX_MODEL_AUTH verified kind=skill
+SANDBOX_MODEL_SHAPE {"function_outputs": 0, "mcp_report_render": true, "tools": 1, "users": 2}
+SANDBOX_MODEL_AUTH verified kind=skill
+SANDBOX_MODEL_SHAPE {"function_outputs": 0, "mcp_report_render": true, "tools": 1, "users": 1}
+SANDBOX_MODEL_AUTH verified kind=text
+SANDBOX_MODEL_SHAPE {"function_outputs": 0, "mcp_report_render": false, "text": {"format": {"type": "text"}, "verbosity": "low"}, "tools": 0, "users": 1}
+TEXT_MODEL written
+SANDBOX_MODEL_AUTH verified kind=text
+SANDBOX_MODEL_SHAPE {"function_outputs": 0, "mcp_report_render": false, "text": {"format": {"type": "text"}, "verbosity": "low"}, "tools": 0, "users": 2}
+TEXT_MODEL written
+SANDBOX_MODEL_AUTH verified kind=text
+SANDBOX_MODEL_SHAPE {"function_outputs": 0, "mcp_report_render": false, "text": {"format": {"type": "text"}, "verbosity": "low"}, "tools": 0, "users": 3}
+TEXT_MODEL written
+SANDBOX_MODEL_REJECT code=401
+SANDBOX_MODEL_REJECT code=404
+sandbox provider scripted model checks passed
+PYTHONDONTWRITEBYTECODE=1 python3 tests/kubernetes/sandbox_provider_skill.py --check
+isolated Skill package/proof checks passed; no host probe executed
+PYTHONDONTWRITEBYTECODE=1 python3 tests/kubernetes/sandbox_provider_quota.py --check
+sandbox Pod quota offline checks passed; no cluster started
+sh tests/check-kind-prereqs.sh
+kind preflight passed: required commands found and Docker is reachable.
+Missing: C compiler configured by CC (check CC and PATH).
+Unavailable: Docker CLI is installed, but the daemon is not reachable with the current context and permissions.
+Missing: kind (install it and add it to PATH).
+Missing: kubectl (install it and add it to PATH).
+Missing: docker (install it and add it to PATH).
+Missing: C compiler (install GCC or Clang, or set CC).
+kind preflight tests passed
+go vet ./...
+go test -race ./...
+ok  	agentmoor/cmd/agentmoor	4.783s
+ok  	agentmoor/internal/adapter	(cached)
+ok  	agentmoor/internal/adapters/claudecode	(cached)
+ok  	agentmoor/internal/adapters/codex	(cached)
+ok  	agentmoor/internal/adapters/gemini	(cached)
+ok  	agentmoor/internal/adapters/opencode	(cached)
+?   	agentmoor/internal/adapters/sessionfile	[no test files]
+ok  	agentmoor/internal/adapters/workspace	(cached)
+ok  	agentmoor/internal/asset	(cached)
+ok  	agentmoor/internal/guesttransport	(cached)
+ok  	agentmoor/internal/kubejobs	(cached)
+ok  	agentmoor/internal/nativeguest	(cached)
+ok  	agentmoor/internal/platform	22.606s
+ok  	agentmoor/internal/sandboxgateway	7.821s
+ok  	agentmoor/internal/sandboxkube	5.723s
+ok  	agentmoor/internal/snapshot	(cached)
+ok  	agentmoor/internal/task	(cached)
+ok  	agentmoor/internal/worker	64.028s
+?   	agentmoor/tests/kubernetes/controllerfixture	[no test files]
+ok  	agentmoor/tests/kubernetes/faultproxy	(cached)
+?   	agentmoor/tests/kubernetes/faultproxy/cmd/faultproxy	[no test files]
+?   	agentmoor/tests/kubernetes/gvisor_network_check	[no test files]
+?   	agentmoor/tests/kubernetes/gvisor_process_limit	[no test files]
+go build ./...

@@ -1,0 +1,7 @@
+go build -o bin/agentmoor ./cmd/agentmoor
+sh examples/demo.sh
+artifact v1  out/result.txt
+session v1  921b456d-939b-43c3-bb69-ff2e9138ff0b
+skill v1  .claude/skills/greeting/SKILL.md
+workspace v1  root
+Workspace restored and verified.
