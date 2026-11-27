@@ -102,8 +102,8 @@ class PrivateKubernetesAPI:
 
 
 class QuotaProbe(SecurityProbe):
-    def __init__(self, directory, bundle, manifest):
-        super().__init__(directory, bundle, manifest, enforcing=True)
+    def __init__(self, directory, bundle, manifest, containerd_cache=None):
+        super().__init__(directory, bundle, manifest, enforcing=True, containerd_cache=containerd_cache)
         self.image = "agentmoor-quota-fixture:" + self.cluster
         self.acceptance = {"status": "in_progress", "started_at_utc": now(), "cluster": self.cluster,
             "scope": "one synthetic sleeping gVisor Pod and an actual second-Pod quota rejection",
@@ -233,6 +233,7 @@ def main():
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--bundle", type=Path)
     parser.add_argument("--calico-manifest", type=Path)
+    parser.add_argument("--containerd-cache", type=Path, default=os.environ.get("GVISOR_SECURITY_CONTAINERD_CACHE"))
     parser.add_argument("--output", type=Path)
     options = parser.parse_args()
     if options.check:
@@ -242,7 +243,7 @@ def main():
     signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt()))
     failure = None
     with tempfile.TemporaryDirectory(prefix="agentmoor-sandbox-quota-") as directory:
-        probe = QuotaProbe(directory, options.bundle, options.calico_manifest)
+        probe = QuotaProbe(directory, options.bundle, options.calico_manifest, containerd_cache=options.containerd_cache)
         probe.acceptance["source"] = {"commit": probe.run("git", "-C", ROOT, "rev-parse", "HEAD").strip(),
             "status": probe.run("git", "-C", ROOT, "status", "--short"), "script_sha256": sha(__file__),
             "security_probe_sha256": sha(Path(__file__).with_name("gvisor_security_probe.py"))}
