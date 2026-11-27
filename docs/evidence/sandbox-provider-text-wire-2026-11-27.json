@@ -1,0 +1,51 @@
+{
+  "source_commit_prefix": "4ce08cf",
+  "cluster": "agentmoor-7ce5ebb47d27",
+  "model_pod_uid": "ef69e00e-1a67-4b9e-906b-40d198df8c5a",
+  "observed_at_utc": "2026-11-27T08:03:14.219825+00:00",
+  "scope": "Read-only bounded upstream fixture logs; no raw body, header, key or capability retained.",
+  "text_requests": [
+    {
+      "function_outputs": 0,
+      "mcp_report_render": false,
+      "text": {
+        "format": "absent",
+        "verbosity": "absent"
+      },
+      "tools": 5,
+      "users": 2
+    },
+    {
+      "function_outputs": 0,
+      "mcp_report_render": false,
+      "text": {
+        "format": "absent",
+        "verbosity": "absent"
+      },
+      "tools": 5,
+      "users": 3
+    },
+    {
+      "function_outputs": 0,
+      "mcp_report_render": false,
+      "text": {
+        "format": "absent",
+        "verbosity": "absent"
+      },
+      "tools": 5,
+      "users": 4
+    }
+  ],
+  "text_response_count": 3,
+  "selected_logs": [
+    "SANDBOX_MODEL_AUTH verified kind=text",
+    "SANDBOX_MODEL_SHAPE {\"function_outputs\": 0, \"mcp_report_render\": false, \"text\": {\"format\": \"absent\", \"verbosity\": \"absent\"}, \"tools\": 5, \"users\": 2}",
+    "TEXT_MODEL written",
+    "SANDBOX_MODEL_AUTH verified kind=text",
+    "SANDBOX_MODEL_SHAPE {\"function_outputs\": 0, \"mcp_report_render\": false, \"text\": {\"format\": \"absent\", \"verbosity\": \"absent\"}, \"tools\": 5, \"users\": 3}",
+    "TEXT_MODEL written",
+    "SANDBOX_MODEL_AUTH verified kind=text",
+    "SANDBOX_MODEL_SHAPE {\"function_outputs\": 0, \"mcp_report_render\": false, \"text\": {\"format\": \"absent\", \"verbosity\": \"absent\"}, \"tools\": 5, \"users\": 4}",
+    "TEXT_MODEL written"
+  ]
+}

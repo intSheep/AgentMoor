@@ -1,0 +1,35 @@
+{
+  "source": "f1ec8c8b45ffe58629191926f40ef6ba38153e8f",
+  "checks": [
+    {
+      "command": "make fmt",
+      "exit_code": 0,
+      "started": "2026-11-27T08:09:14.972207+00:00",
+      "finished": "2026-11-27T08:09:15.009530+00:00",
+      "log": "/private/tmp/agentmoor-provider-release-f1ec8c8-20261127-fmt.log",
+      "sha256": "9ba9a3ce39410b82cffdcafff24a52faa1612e3a34b2a29885a7007b1bbfbc33"
+    },
+    {
+      "command": "make check",
+      "exit_code": 0,
+      "started": "2026-11-27T08:09:15.009871+00:00",
+      "finished": "2026-11-27T08:10:18.964320+00:00",
+      "log": "/private/tmp/agentmoor-provider-release-f1ec8c8-20261127-check.log",
+      "sha256": "0eea029415ae82f529a17294fba1f84b6444a4636dc56034bc30ef3635ec98e2"
+    },
+    {
+      "command": "make demo",
+      "exit_code": 0,
+      "started": "2026-11-27T08:10:18.964994+00:00",
+      "finished": "2026-11-27T08:10:21.027586+00:00",
+      "log": "/private/tmp/agentmoor-provider-release-f1ec8c8-20261127-demo.log",
+      "sha256": "c2608aad4d5d93514020328683f79bd3d9511b34837e3c27a1a6dbb960ffb38d"
+    }
+  ],
+  "merged_main": "0a9dba472455ff793ec2432f33dcbe404db67e08",
+  "same_cmd_internal_mod_sum_as": {
+    "19d0d5b40a48226402768f49d49228f9845901a3": true,
+    "4ce08cf815581dfc5d31820aed3756e8ee5975ed": true
+  },
+  "scope": "Post-main integration fmt/check/demo with added offline fixture checks; actual cluster evidence retains its original 19d0/4ce source; full four CLI regression remains 19d0."
+}
