@@ -103,6 +103,7 @@ func (c *Catalog) SealSandboxOutput(ctx context.Context, token string, output Sa
 	if err != nil {
 		return SandboxRun{}, err
 	}
+	ctx = auditCapabilityContext(ctx, SandboxOutput)
 	if r.Output.SHA256 != output.SHA256 || r.Output.Size != output.Size {
 		return SandboxRun{}, ErrConflict
 	}
@@ -127,6 +128,7 @@ func (c *Catalog) bindSandboxOutput(ctx context.Context, token string, output Sa
 	if err != nil {
 		return SandboxRun{}, err
 	}
+	ctx = auditCapabilityContext(ctx, SandboxOutput)
 	if r.Output.SHA256 != "" {
 		if r.Output.SHA256 != output.SHA256 || r.Output.Size != output.Size {
 			return SandboxRun{}, ErrConflict

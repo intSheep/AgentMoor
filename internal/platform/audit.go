@@ -90,6 +90,17 @@ func auditActor(ctx context.Context, source string) AuditActor {
 	return AuditActor{Source: source, Role: "system"}
 }
 
+// Called only after the Catalog has authenticated this exact capability and
+// purpose. The capability identifies delegated run authority, not a person or
+// platform credential; neither its value nor its hash is an audit actor field.
+// A real authenticated platform HTTP actor remains the causal credential.
+func auditCapabilityContext(ctx context.Context, purpose SandboxPurpose) context.Context {
+	if actor, ok := ctx.Value(auditActorContext{}).(AuditActor); ok && actor.Source == "http" {
+		return ctx
+	}
+	return context.WithValue(ctx, auditActorContext{}, AuditActor{Source: "guest-capability", Role: string(purpose)})
+}
+
 func auditTaskEvent(ctx context.Context, s taskAddress, before, after taskSlot) AuditEvent {
 	prefix := "task."
 	if s.turn != "" {
@@ -172,6 +183,22 @@ func (e AuditEvent) valid() bool {
 		}
 		switch e.Actor.Role {
 		case "context", "read", "write", "submit", "execute", "collect":
+		default:
+			return false
+		}
+	} else if e.Actor.Source == "guest-capability" {
+		if e.Actor.CredentialSHA256 != "" || e.RunID == "" {
+			return false
+		}
+		switch e.Actor.Role {
+		case "output":
+			if e.Action != "sandbox.output_declared" && e.Action != "sandbox.output_sealed" {
+				return false
+			}
+		case "model":
+			if e.Action != "model.reserved" {
+				return false
+			}
 		default:
 			return false
 		}
