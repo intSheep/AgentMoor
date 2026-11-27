@@ -73,6 +73,9 @@ func (c *Catalog) SealSandboxInput(ctx context.Context, a SandboxAddress, source
 	if err = c.sandboxWriteGuard(ctx, r); err != nil {
 		return SandboxRun{}, err
 	}
+	if err = c.prepareObjectPut(ctx, r.Scope, objectSandboxInput, r.Input.SHA256); err != nil {
+		return SandboxRun{}, err
+	}
 	if err = c.objects.Put(ctx, sandboxObjectKey(r.Scope, SandboxInput, r.Input.SHA256), file, r.Input.Size); err != nil {
 		return SandboxRun{}, err
 	}
@@ -111,6 +114,10 @@ func (c *Catalog) SealSandboxOutput(ctx context.Context, token string, output Sa
 		return r, nil
 	}
 	if err = c.sandboxWriteGuard(ctx, r); err != nil {
+		return SandboxRun{}, err
+	}
+	ctx = objectCollectionRunContext(ctx, r)
+	if err = c.prepareObjectPut(ctx, r.Scope, objectSandboxOutput, output.SHA256); err != nil {
 		return SandboxRun{}, err
 	}
 	if err = c.objects.Put(ctx, sandboxObjectKey(r.Scope, SandboxOutput, output.SHA256), file, output.Size); err != nil {

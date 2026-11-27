@@ -149,6 +149,9 @@ func (c *Catalog) UploadPart(ctx context.Context, s asset.Scope, id, file, diges
 	if o.state != "pending" {
 		return ErrConflict
 	}
+	if err = c.prepareObjectPut(ctx, s, objectWorkspacePart, digest); err != nil {
+		return err
+	}
 	if err = c.objects.Put(ctx, partKey(s, digest), file, size); err != nil {
 		return err
 	}
@@ -291,16 +294,10 @@ func (c *Catalog) collectParts(ctx context.Context, s asset.Scope, before time.T
 	}
 	n := 0
 	for _, digest := range hashes {
-		key := partKey(s, digest)
-		exists, err := c.objects.Exists(ctx, key)
+		removed, err := c.collectObject(ctx, s, objectWorkspacePart, digest)
+		n += removed
 		if err != nil {
 			return n, err
-		}
-		if exists {
-			if err = c.objects.Remove(ctx, key); err != nil {
-				return n, err
-			}
-			n++
 		}
 	}
 	return n, nil
