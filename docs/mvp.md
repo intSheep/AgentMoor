@@ -117,3 +117,11 @@ PG/S3 集群复验的前两次 HTTP 500 保留为失败记录。补充诊断及 
 该源码的 fmt/check/demo、真实 PostgreSQL/S3 输入准备及完整四 CLI 默认文本矩阵通过；四 CLI 原生取消约 2.3/3.1/3.1/3.1 秒，集群和本次镜像标签已清理。合入能力网关后的 `bb6cd7c` 再次通过 fmt/check/demo，没有把前述存储/集群结果改写为合并后重跑。[实际来源与证据](sandbox-task-handoff.md#2026-11-27-实际验证)
 
 新增 HTTP/controller 测试使用明确合成 fixture；四 CLI 回归仍是受信开发路径。Worker 与 `serve` 尚未连接本组件，不可信执行门禁保持关闭。真实隔离 SaaS/native Skill、私有 CA 模型链路、CNI、资源耗尽、真实模型和生产 HA 均未由本次验证。
+
+## 2026-11-27：隔离结果的可信发布组件
+
+`e79066b` 增加 Worker 私有数据发布入口：先核对当前分配、固定版本及 Ready/正常退出/Pod 删除证明，再完整验证独立整包摘要、原始 Workspace/Session 和全部交付文件，最后复用 journal 的冻结发布及重试。真实 HTTP 合成适配器的所有宿主原生方法均为零调用；初次/追问的新 Workspace 沿用同一 Session，原始 tar 与会话字节、多 Artifact 和完整 Skill 均校验通过。503/TCP 应答丢失、耗尽、取消、期限及 pending 恢复保持旧成功 checkpoint。
+
+同一实现补齐 JSON 深度/节点、tar 隐式父目录/路径限制，以及 `000` 目录权限导致的失败暂存清理；三个旧实现负例保留实际失败日志。`make fmt/check/demo` 与完整四 CLI 默认文本 `make test-k8s` 通过，16 组断言、8 次追问全部通过，原生取消约 3.0/3.1/3.7/3.0 秒，专属集群与任务镜像标签已清理。合入 main `c18e3bd` 后的干净 `1698547` 再次通过 fmt/check/demo，四 CLI 来源仍如实记为 `e79066b`。[复验与边界](isolated-result-publication.md) · [结构化证据](evidence/isolated-result-publication-2026-11-27.json)
+
+本次只交付数据发布组件，`serve`/`run-task` 尚未接线，不可信执行门禁继续关闭。合成发布测试和受信四 CLI 回归不代表真实隔离 SaaS、native Skill、私有 CA 模型全链路、CNI、资源耗尽或真实模型已通过。

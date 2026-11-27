@@ -15,6 +15,7 @@ import (
 )
 
 const MaxTreeEntries = 65536
+const MaxTreePathBytes = 4096
 const maxGuestPAXBytes = 64 << 10
 
 // ValidateTree checks expansion and filesystem semantics before a native or
@@ -42,6 +43,9 @@ func ValidateTree(ctx context.Context, file string, maxBytes int64) error {
 	}
 	reader := tar.NewReader(contextReader{ctx, f})
 	seen := make(map[string]bool)
+	// Restore creates the root and missing parent directories even when they
+	// have no explicit tar header. Bound those actual filesystem nodes too.
+	nodes := map[string]bool{".": true}
 	remaining := maxBytes
 	for {
 		header, err := reader.Next()
@@ -52,7 +56,7 @@ func ValidateTree(ctx context.Context, file string, maxBytes int64) error {
 			return fmt.Errorf("invalid guest tree archive")
 		}
 		name := header.Name
-		if (name != "." && !asset.SafePath(name)) || seen[name] || len(seen) >= MaxTreeEntries || header.Mode < 0 || header.Mode > 0777 || header.Uid < 0 || header.Gid < 0 {
+		if len(name) > MaxTreePathBytes || (name != "." && !asset.SafePath(name)) || seen[name] || len(seen) >= MaxTreeEntries || header.Mode < 0 || header.Mode > 0777 || header.Uid < 0 || header.Gid < 0 {
 			return fmt.Errorf("invalid or duplicate guest tree entry")
 		}
 		seen[name] = true
@@ -62,9 +66,6 @@ func ValidateTree(ctx context.Context, file string, maxBytes int64) error {
 				return fmt.Errorf("guest tree exceeds its expanded limit")
 			}
 			remaining -= header.Size
-			if _, err = io.Copy(io.Discard, reader); err != nil {
-				return err
-			}
 		case tar.TypeDir:
 		case tar.TypeSymlink:
 			if !guestSafeLink(name, header.Linkname) {
@@ -73,11 +74,49 @@ func ValidateTree(ctx context.Context, file string, maxBytes int64) error {
 		default:
 			return fmt.Errorf("unsupported guest tree entry type")
 		}
+		if err = addGuestTreeNode(nodes, name, header.Typeflag == tar.TypeDir); err != nil {
+			return err
+		}
+		if header.Typeflag == tar.TypeReg {
+			if _, err = io.Copy(io.Discard, reader); err != nil {
+				return err
+			}
+		}
 	}
 }
 
+// The bool records whether a node is a directory. Explicit-header duplicates
+// are checked separately, so a later explicit declaration of an implicit
+// directory is valid, while files/links cannot replace or become parents.
+func addGuestTreeNode(nodes map[string]bool, name string, directory bool) error {
+	if previous, exists := nodes[name]; exists {
+		if !directory || !previous {
+			return fmt.Errorf("guest tree entry collides with a directory")
+		}
+		return nil
+	}
+	var parents []string
+	for parent := path.Dir(name); ; parent = path.Dir(parent) {
+		if directory, exists := nodes[parent]; exists {
+			if !directory {
+				return fmt.Errorf("guest tree parent is not a directory")
+			}
+			break
+		}
+		parents = append(parents, parent)
+	}
+	if len(nodes)+len(parents)+1 > MaxTreeEntries {
+		return fmt.Errorf("guest tree exceeds its filesystem node limit")
+	}
+	for _, parent := range parents {
+		nodes[parent] = true
+	}
+	nodes[name] = directory
+	return nil
+}
+
 func guestSafeLink(name, target string) bool {
-	if target == "" || path.IsAbs(target) || strings.ContainsAny(target, "\\:\x00\r\n") {
+	if target == "" || len(target) > MaxTreePathBytes || path.IsAbs(target) || strings.ContainsAny(target, "\\:\x00\r\n") {
 		return false
 	}
 	resolved := path.Clean(path.Join(path.Dir(name), target))
