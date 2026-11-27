@@ -23,8 +23,12 @@ const usage = `Usage:
   agentmoor inspect <adapter> <workspace> [absolute-runtime-executable]
   agentmoor skills <adapter> <workspace>
   agentmoor init --data DIR
-  agentmoor serve --data DIR [--listen ADDRESS] [--tls-cert PEM --tls-key PEM] [--turn-jobs FILE]
-  agentmoor issue --data DIR --tenant ID --project ID --runtime ID --adapter ID [--write] [--gc] [--submit] [--execute] [--ttl 1h]
+  agentmoor serve --data DIR [--auth-policy FILE] [--listen ADDRESS] [--tls-cert PEM --tls-key PEM] [--turn-jobs FILE]
+  agentmoor issue [--data DIR] [--auth-policy FILE] --tenant ID --project ID --runtime ID --adapter ID [--write] [--gc] [--submit] [--execute] [--ttl 1h]
+  agentmoor auth-init --policy FILE [--from-key FILE] [--key-id ID]
+  agentmoor auth-rotate --policy FILE [--key-id ID]
+  agentmoor auth-retire --policy FILE --key-id ID
+  agentmoor auth-revoke --policy FILE --token-file FILE
   agentmoor run-task --config FILE [--wait 2m | --turn UUID]
   agentmoor sync|assets|status|gc --config FILE
   agentmoor watch --config FILE [--interval 1m] [--periodic-only]
@@ -59,6 +63,8 @@ func run(ctx context.Context, args []string, out io.Writer) error {
 		switch args[0] {
 		case "init", "issue", "serve":
 			return platformCommand(ctx, args, out, registry)
+		case "auth-init", "auth-rotate", "auth-retire", "auth-revoke":
+			return authCommand(ctx, args, out)
 		case "run-task", "sync", "watch", "restore", "restore-native", "restore-sessions", "assets", "status", "gc", "resolve":
 			return workerCommand(ctx, args, out, registry)
 		}

@@ -70,6 +70,7 @@ func platformCommand(ctx context.Context, args []string, out io.Writer, registry
 		defer parent.Close()
 		return parent.Sync()
 	case "issue":
+		authPolicy := f.String("auth-policy", "", "private authentication policy file")
 		tenant := f.String("tenant", "", "tenant")
 		project := f.String("project", "", "project")
 		runtime := f.String("runtime", "", "logical runtime")
@@ -82,21 +83,29 @@ func platformCommand(ctx context.Context, args []string, out io.Writer, registry
 		if err := f.Parse(args[1:]); err != nil {
 			return err
 		}
-		if *dir == "" || f.NArg() != 0 {
-			return fmt.Errorf("issue requires --data and a scope")
-		}
-		key, err := os.ReadFile(filepath.Join(*dir, "signing.key"))
-		if err != nil {
-			return err
+		if (*dir == "" && *authPolicy == "") || f.NArg() != 0 {
+			return fmt.Errorf("issue requires --data or --auth-policy and a scope")
 		}
 		now := time.Now()
-		token, err := platform.Issue(key, platform.Grant{Scope: asset.Scope{Tenant: *tenant, Project: *project, Runtime: *runtime, Adapter: *agent}, Read: true, Write: *write || *execute, Submit: *submit, Execute: *execute, Collect: *gc, Expires: now.Add(*ttl).Unix()}, now)
+		grant := platform.Grant{Scope: asset.Scope{Tenant: *tenant, Project: *project, Runtime: *runtime, Adapter: *agent}, Read: true, Write: *write || *execute, Submit: *submit, Execute: *execute, Collect: *gc, Expires: now.Add(*ttl).Unix()}
+		var token string
+		var err error
+		if *authPolicy != "" {
+			token, err = platform.IssueAuthPolicy(*authPolicy, grant, now)
+		} else {
+			var key []byte
+			key, err = os.ReadFile(filepath.Join(*dir, "signing.key"))
+			if err == nil {
+				token, err = platform.Issue(key, grant, now)
+			}
+		}
 		if err != nil {
 			return err
 		}
 		_, err = fmt.Fprintln(out, token)
 		return err
 	case "serve":
+		authPolicy := f.String("auth-policy", "", "private authentication policy file, reloaded for each request")
 		jobsFile := f.String("turn-jobs", "", "in-cluster follow-up Job profiles (JSON)")
 		cert := f.String("tls-cert", "", "TLS certificate PEM")
 		keyFile := f.String("tls-key", "", "TLS private key PEM")
@@ -107,12 +116,20 @@ func platformCommand(ctx context.Context, args []string, out io.Writer, registry
 		if *dir == "" || f.NArg() != 0 {
 			return fmt.Errorf("serve --data DIR [--listen ADDRESS]")
 		}
-		key, err := os.ReadFile(filepath.Join(*dir, "signing.key"))
-		if err != nil {
-			return err
-		}
-		if len(key) != 32 {
-			return fmt.Errorf("invalid signing key")
+		var key []byte
+		var err error
+		if *authPolicy != "" {
+			if _, err = platform.LoadAuthPolicy(*authPolicy); err != nil {
+				return err
+			}
+		} else {
+			key, err = os.ReadFile(filepath.Join(*dir, "signing.key"))
+			if err != nil {
+				return err
+			}
+			if len(key) != 32 {
+				return fmt.Errorf("invalid signing key")
+			}
 		}
 		var objects platform.Objects = platform.DiskObjects{Dir: filepath.Join(*dir, "objects")}
 		if ep := os.Getenv("AGENTMOOR_S3_ENDPOINT"); ep != "" {
@@ -144,7 +161,7 @@ func platformCommand(ctx context.Context, args []string, out io.Writer, registry
 		if (*cert == "") != (*keyFile == "") {
 			return errors.New("TLS requires certificate and key")
 		}
-		api := platform.API{Catalog: catalog, Secret: key, Temp: incoming, TaskAdapters: enabled, FileTaskAdapters: files}
+		api := platform.API{Catalog: catalog, Secret: key, AuthPolicy: *authPolicy, Temp: incoming, TaskAdapters: enabled, FileTaskAdapters: files}
 		if *jobsFile != "" {
 			dispatch, err := kubejobs.InCluster(*jobsFile)
 			if err != nil {

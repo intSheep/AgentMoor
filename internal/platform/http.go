@@ -20,6 +20,7 @@ import (
 type API struct {
 	Catalog          *Catalog
 	Secret           []byte
+	AuthPolicy       string
 	TaskAdapters     map[string]bool
 	FileTaskAdapters map[string]bool
 	TurnEnabled      func(asset.Scope) bool
@@ -32,7 +33,17 @@ func (a *API) Handler() http.Handler {
 		mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Cache-Control", "no-store")
 			token, ok := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
-			g, err := authenticate(a.Secret, token, time.Now())
+			var g Grant
+			var err error
+			if a.AuthPolicy != "" {
+				g, err = AuthenticateAuthPolicy(a.AuthPolicy, token, time.Now())
+			} else {
+				g, err = authenticate(a.Secret, token, time.Now())
+			}
+			if ok && errors.Is(err, ErrAuthPolicyUnavailable) {
+				http.Error(w, "authentication unavailable", http.StatusServiceUnavailable)
+				return
+			}
 			if !ok || err != nil {
 				http.Error(w, "unauthorized", http.StatusUnauthorized)
 				return
