@@ -24,6 +24,7 @@ from gvisor_probe import Probe, NAMESPACE, require, HANDLER, RUNTIME_TYPE, IMAGE
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURE_BASE = "python@sha256:a5a7017efc5969e00ae2b91c8eb0631049a569652aa4ffc4501769049ae45c72"
+POD_PIDS_LIMIT = 256
 NODE_MEMORY_BYTES = 2 << 30
 POD_CIDR = "10.244.0.0/16"
 CALICO_VERSION = "v3.33.0"
@@ -116,7 +117,7 @@ def verify_resource(mode, record):
     require(record.get("runtime_verified") is True, "resource fixture has no actual runsc Sentry")
     before, after = record["before"], record["after"]
     require(record.get("node_swap_max") == "0", "resource proof has no actual parent cgroup swap denial")
-    require(any(row.get("pids.max") == "128" for row in before), "host Pod PID cgroup limit missing")
+    require(any(row.get("pids.max") == str(POD_PIDS_LIMIT) for row in before), "host Pod PID cgroup limit missing")
     if mode == "cpu":
         require(any(row.get("cpu.max") == "20000 100000" for row in before), "actual CPU quota differs")
         require(record["cpu_throttled_delta"] > 0 and record["cpu_usage_usec_delta"] > 0,
@@ -131,7 +132,9 @@ def verify_resource(mode, record):
                 "tmpfs did not demonstrate actual ENOSPC")
         require(record["oom_kill_delta"] == 0, "ENOSPC test was actually an OOM")
     elif mode == "pids":
-        fixture = record["fixture"]
+        require(record["host_pids_max_events_delta"] == 0, "host task limit was reached before the guest process proof")
+        require(record["oom_kill_delta"] == 0, "memory was exhausted before the guest process proof")
+        fixture = record.get("fixture", {})
         require(fixture.get("guest_rlimit_nproc") == [64, 64] and fixture.get("hard_raise_denied") is True and
                 fixture.get("fork_errno") == 11 and 0 < fixture["children"] <= 63 and
                 record["host_pids_max_events_delta"] == 0 and record["oom_kill_delta"] == 0, "guest PID hard limit did not deny fork")
@@ -252,7 +255,7 @@ class SecurityProbe(Probe):
             values[values.index("--wait") + 1] = "0s"
             config = {"kind": "Cluster", "apiVersion": "kind.x-k8s.io/v1alpha4", "nodes": [{"role": "control-plane"}],
                       "networking": {"disableDefaultCNI": self.enforcing, "podSubnet": POD_CIDR},
-                      "kubeadmConfigPatches": ["kind: KubeletConfiguration\npodPidsLimit: 128\n"]}
+                      "kubeadmConfigPatches": ["kind: KubeletConfiguration\npodPidsLimit: " + str(POD_PIDS_LIMIT) + "\n"]}
             path = self.directory / "kind.json"
             path.write_text(json.dumps(config))
             values.extend(["--config", path])
@@ -395,7 +398,7 @@ class SecurityProbe(Probe):
         self.run("docker", "cp", path, self.node + ":/etc/containerd/runsc.toml")
         self.security["runsc_config"] = config
         kubelet = self.node_run("cat", "/var/lib/kubelet/config.yaml")
-        require(re.search(r"(?m)^podPidsLimit:\s*128\s*$", kubelet), "actual kubelet PodPidsLimit differs")
+        require(re.search(r"(?m)^podPidsLimit:\s*" + str(POD_PIDS_LIMIT) + r"\s*$", kubelet), "actual kubelet PodPidsLimit differs")
         self.security["kubelet_config"] = kubelet
         self.run("kind", "load", "docker-image", self.image, "--name", self.cluster, timeout=180)
         for namespace in (GUEST_NS, CONTROL_NS, TENANT_NS):
@@ -791,7 +794,7 @@ class SecurityProbe(Probe):
                   "pod_creation": pod["metadata"]["creationTimestamp"], "pod_start_time": pod["status"]["startTime"], "original_active_deadline_seconds": deadline,
                   "observations": [], "terminated": False}
         self.security["resources"][mode] = record
-        require(any(row.get("pids.max") == "128" for row in before), "resource Pod lacks actual host PID bound before load")
+        require(any(row.get("pids.max") == str(POD_PIDS_LIMIT) for row in before), "resource Pod lacks actual host PID bound before load")
         if self.debug_orphans:
             self.pre_oom_diagnostic(runtime, pod, record)
         self.run(*self.base, "-n", GUEST_NS, "exec", name, "--", "touch", "/run/work/start")

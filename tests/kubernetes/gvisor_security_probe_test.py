@@ -91,7 +91,7 @@ class NetworkProofTest(unittest.TestCase):
 
 class ResourceProofTest(unittest.TestCase):
     def record(self):
-        return {"runtime_verified": True, "node_swap_max": "0", "before": [{"path": "/owned-pod", "pids.max": "128",
+        return {"runtime_verified": True, "node_swap_max": "0", "before": [{"path": "/owned-pod", "pids.max": str(probe.POD_PIDS_LIMIT),
                  "cpu.max": "20000 100000", "memory.max": str(128 << 20)}], "after": [],
                 "cpu_throttled_delta": 4, "cpu_usage_usec_delta": 100000, "oom_kill_delta": 1, "host_pids_max_events_delta": 0,
                 "terminated": True, "pod_reason": "DeadlineExceeded", "cancelled": True, "physical_cleanup": True,
