@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"agentmoor/internal/platform"
 	"agentmoor/internal/task"
@@ -238,6 +239,53 @@ func normalizeDefaults(spec map[string]any) error {
 	return nil
 }
 
+// Calico v3.33 writes these informational values atomically during CNI ADD,
+// then clears only the two IP values at teardown. They grant no authority;
+// identity, capabilities and every spec field still match the frozen hash.
+// Unknown annotations, including other Calico keys, remain in that hash.
+func normalizeCalicoAnnotations(annotations map[string]any) error {
+	const container = "cni.projectcalico.org/containerID"
+	const single = "cni.projectcalico.org/podIP"
+	const multiple = "cni.projectcalico.org/podIPs"
+	_, hasContainer := annotations[container]
+	_, hasSingle := annotations[single]
+	_, hasMultiple := annotations[multiple]
+	if !hasContainer && !hasSingle && !hasMultiple {
+		return nil
+	}
+	id, validID := annotations[container].(string)
+	ip, validIP := annotations[single].(string)
+	ips, validIPs := annotations[multiple].(string)
+	if !validID || !validIP || !validIPs || len(id) != 64 || len(ips) > 256 {
+		return ErrPod
+	}
+	if decoded, err := hex.DecodeString(id); err != nil || len(decoded) != 32 || strings.ToLower(id) != id {
+		return ErrPod
+	}
+	if ip != "" || ips != "" {
+		parts := strings.Split(ips, ",")
+		if len(parts) > 2 || ip != parts[0] {
+			return ErrPod
+		}
+		seen := map[string]bool{}
+		for _, address := range parts {
+			parsed, network, err := net.ParseCIDR(address)
+			if err != nil || parsed.IsUnspecified() || parsed.String() != network.IP.String() || seen[address] {
+				return ErrPod
+			}
+			ones, bits := network.Mask.Size()
+			if ones != bits || address != parsed.String()+"/"+strconv.Itoa(bits) {
+				return ErrPod
+			}
+			seen[address] = true
+		}
+	}
+	delete(annotations, container)
+	delete(annotations, single)
+	delete(annotations, multiple)
+	return nil
+}
+
 func inspectPod(r platform.SandboxRun, raw []byte) (observedPod, platform.SandboxCapabilities, error) {
 	var result observedPod
 	var caps platform.SandboxCapabilities
@@ -267,6 +315,9 @@ func inspectPod(r platform.SandboxRun, raw []byte) (observedPod, platform.Sandbo
 	caps.Input, _ = annotations[inputAnnotation].(string)
 	caps.Output, _ = annotations[outputAnnotation].(string)
 	caps.Model, _ = annotations[modelAnnotation].(string)
+	if normalizeCalicoAnnotations(annotations) != nil {
+		return result, caps, ErrPod
+	}
 	spec, ok := pod["spec"].(map[string]any)
 	if !ok {
 		return result, caps, ErrPod

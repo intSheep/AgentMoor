@@ -87,3 +87,61 @@ func TestPodJSONRejectsDuplicateAliasTrailingAndExcessiveNesting(t *testing.T) {
 		}
 	}
 }
+
+func TestCalicoInformationalAnnotationsPreserveAllControlledFields(t *testing.T) {
+	f := newControllerFixture(t)
+	r, err := f.c.Start(t.Context(), f.a)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.kube.mu.Lock()
+	original, _ := json.Marshal(f.kube.pod)
+	f.kube.mu.Unlock()
+	for _, tc := range []struct {
+		name   string
+		mutate func(map[string]any, map[string]any)
+		valid  bool
+	}{
+		{"actual-v4-add", func(_, _ map[string]any) {}, true},
+		{"dual-stack", func(_, a map[string]any) { a["cni.projectcalico.org/podIPs"] = "10.244.68.73/32,2001:db8::1/128" }, true},
+		{"actual-delete", func(_, a map[string]any) {
+			a["cni.projectcalico.org/podIP"], a["cni.projectcalico.org/podIPs"] = "", ""
+		}, true},
+		{"unknown-calico-key", func(_, a map[string]any) { a["cni.projectcalico.org/forged"] = "anything" }, false},
+		{"partial-patch", func(_, a map[string]any) { delete(a, "cni.projectcalico.org/containerID") }, false},
+		{"invalid-container-id", func(_, a map[string]any) { a["cni.projectcalico.org/containerID"] = strings.Repeat("A", 64) }, false},
+		{"wrong-type", func(_, a map[string]any) { a["cni.projectcalico.org/podIPs"] = []any{"10.244.68.73/32"} }, false},
+		{"network-cidr", func(_, a map[string]any) {
+			a["cni.projectcalico.org/podIP"], a["cni.projectcalico.org/podIPs"] = "10.244.68.0/24", "10.244.68.0/24"
+		}, false},
+		{"disagreeing-ips", func(_, a map[string]any) { a["cni.projectcalico.org/podIPs"] = "10.244.68.74/32" }, false},
+		{"duplicate-ips", func(_, a map[string]any) { a["cni.projectcalico.org/podIPs"] = "10.244.68.73/32,10.244.68.73/32" }, false},
+		{"empty-partial-delete", func(_, a map[string]any) { a["cni.projectcalico.org/podIPs"] = "" }, false},
+		{"changed-model-cap", func(_, a map[string]any) { a[modelAnnotation] = "replacement" }, false},
+		{"changed-image", func(p, _ map[string]any) {
+			p["spec"].(map[string]any)["containers"].([]any)[0].(map[string]any)["image"] = "other@sha256:" + strings.Repeat("b", 64)
+		}, false},
+		{"added-env", func(p, _ map[string]any) {
+			p["spec"].(map[string]any)["containers"].([]any)[0].(map[string]any)["env"] = []any{map[string]any{"name": "UNTRUSTED", "value": "value"}}
+		}, false},
+		{"added-hostpath", func(p, _ map[string]any) {
+			p["spec"].(map[string]any)["volumes"] = []any{map[string]any{"name": "unsafe", "hostPath": map[string]any{"path": "/"}}}
+		}, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			pod, err := object(original)
+			if err != nil {
+				t.Fatal(err)
+			}
+			a := pod["metadata"].(map[string]any)["annotations"].(map[string]any)
+			a["cni.projectcalico.org/containerID"] = strings.Repeat("a", 64)
+			a["cni.projectcalico.org/podIP"], a["cni.projectcalico.org/podIPs"] = "10.244.68.73/32", "10.244.68.73/32"
+			tc.mutate(pod, a)
+			raw, _ := json.Marshal(pod)
+			_, _, err = inspectPod(r, raw)
+			if (err == nil) != tc.valid {
+				t.Fatalf("valid=%v: %v", tc.valid, err)
+			}
+		})
+	}
+}
