@@ -37,6 +37,17 @@ def redact_pod(pod):
     return row
 
 
+def safe_evidence(result):
+    """Use one sanitized object for both the saved artifact and stdout summary."""
+    encoded, redactions = re.subn(r"sbx1\.[A-Za-z0-9_-]{43}", "[redacted-capability]", json.dumps(result))
+    safe = json.loads(encoded)
+    if redactions:
+        safe["status"] = "failed"
+        safe["unexpected_capability_redactions"] = redactions
+        safe["failure"] = {"type": "RuntimeError", "message": "acceptance diagnostics required capability redaction"}
+    return safe, redactions
+
+
 class ControllerSmoke:
     def __init__(self, probe):
         self.probe = probe
@@ -326,18 +337,16 @@ def main():
             smoke.result["cleanup_error"] = str(error)
         smoke.result.update({"status": "failed" if failure else "controller_component_passed", "finished_at_utc": now(),
                              "retained_work_directory": str(directory), "runtime_feasibility": probe.result})
-        encoded = json.dumps(smoke.result, indent=2)
-        encoded, redactions = re.subn(r"sbx1\.[A-Za-z0-9_-]{43}", "[redacted-capability]", encoded)
+        safe, redactions = safe_evidence(smoke.result)
         if redactions:
             # Never persist a live delegated credential even when a future
             # test diagnostic regresses. Such an acceptance run must fail.
             failure = failure or RuntimeError("acceptance diagnostics required capability redaction")
-            smoke.result["status"] = "failed"
-            encoded = encoded.replace('"status": "controller_component_passed"', '"status": "failed"', 1)
         with output.open("x") as stream:
-            stream.write(encoded + "\n")
-        print("SANDBOX_CONTROLLER_RESULT " + json.dumps({"status": smoke.result["status"], "evidence": str(output),
-               "cleanup": smoke.result.get("cleanup"), "failure": smoke.result.get("failure")}), flush=True)
+            json.dump(safe, stream, indent=2)
+            stream.write("\n")
+        print("SANDBOX_CONTROLLER_RESULT " + json.dumps({"status": safe["status"], "evidence": str(output),
+               "cleanup": safe.get("cleanup"), "failure": safe.get("failure")}), flush=True)
     return 1 if failure else 0
 
 
