@@ -12,6 +12,8 @@ import (
 	"agentmoor/internal/task"
 )
 
+var errIsolatedCleanup = errors.New("isolated sandbox deletion was not confirmed")
+
 func (e *Engine) validateIsolatedTask() error {
 	c := e.Config
 	u, err := url.Parse(c.Endpoint)
@@ -57,7 +59,9 @@ func (e *Engine) executeIsolated(ctx context.Context, record task.Record, path, 
 		if runErr != nil {
 			cleanupCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 10*time.Second)
 			defer cancel()
-			runErr = errors.Join(runErr, e.cleanupIsolated(cleanupCtx, path, attempt))
+			if err := e.cleanupIsolated(cleanupCtx, path, attempt); err != nil {
+				runErr = errors.Join(runErr, errIsolatedCleanup, err)
+			}
 		}
 	}()
 	status, err := e.Client.SandboxTask(ctx, path, "", attempt)

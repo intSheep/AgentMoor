@@ -110,6 +110,12 @@ func (e *Engine) runTask(ctx context.Context, wait time.Duration, turn string) e
 	}
 	cancel()
 	<-stopped
+	if errors.Is(runErr, errIsolatedCleanup) {
+		// Leave cancellation visibly pending. The control-plane reconciler
+		// continues revocation/deletion; do not acknowledge physical cleanup
+		// that was not observed, or advance the checkpoint.
+		return runErr
+	}
 	// A failed acknowledgement can be retried without starting another turn.
 	finish := task.Finish{Attempt: attempt, SessionID: session, Artifacts: artifacts}
 	if runErr != nil {
