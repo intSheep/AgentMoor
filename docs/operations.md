@@ -72,7 +72,7 @@ HTTP 按以下能力分别授权；同一凭据可以组合多种能力。
 
 `GET /v1/context` 用于查看当前有效凭据自身的授权。Submit 不授予 Execute 或 Write，Write 不授予 Submit 或 Execute，Collect 也不授予 Write。SaaS 使用 `--submit`，Worker 使用 `--execute`；回收工具单独使用 `--gc`。所有操作都受 Tenant、Project、Runtime、Adapter 四项作用域限制。
 
-[HTTP 授权矩阵](../internal/platform/authorization_matrix_test.go)逐条列出当前 22 条公开路由：有效但缺少能力的凭据返回 403，无效身份返回 401；四个作用域维度各自变化时，另一个合法凭据访问已有固定引用返回 404，原归属数据保持不变。它包含各接口的有效正例和同摘要文件块的隔离验证；新增路由时应同步补入矩阵。此项尚不包含签名密钥轮换、单凭据撤销或不可信代码沙箱验收。
+[HTTP 授权矩阵](../internal/platform/authorization_matrix_test.go)逐条列出当前 22 条公开路由：有效但缺少能力的凭据返回 403，无效身份返回 401；四个作用域维度各自变化时，另一个合法凭据访问已有固定引用返回 404，原归属数据保持不变。它包含各接口的有效正例和同摘要文件块的隔离验证；新增路由时应同步补入矩阵。矩阵本身不代表凭据治理或沙箱验收；可选的密钥轮换与单凭据撤销见[策略运行手册](authentication-policy.md)，客户代码/第三方 Skill 见[不可信执行边界](security-boundary.md)。
 
 将下面配置保存在受信目录，例如 `/etc/agentmoor/primary.json`。`workspace`、`sessions` 和 `state_dir` 使用绝对路径。前两者分配给一个逻辑运行时，`state_dir` 由 Worker 独占，可跨进程重启保留。平台密钥、Worker 凭据和配置放在工作区之外，工作区快照会收录整个目录树，包括点文件。
 
