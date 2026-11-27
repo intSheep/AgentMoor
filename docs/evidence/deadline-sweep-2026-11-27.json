@@ -657,5 +657,116 @@
     "No native execution, Job/Pod dispatch, new attempt, deadline extension, automatic lease migration, new tenant audit endpoint or HA guarantee is introduced.",
     "Large inventories, writer contention and invalid stored records can delay expiry detection; no new RTO.",
     "Initial and real negative sources retain their own results; final acceptance refers to the exact clean integrated source."
-  ]
+  ],
+  "ci_test_fixture_followup": {
+    "pull_request": "https://github.com/intSheep/AgentMoor/pull/27",
+    "failed_actions_run": "https://github.com/intSheep/AgentMoor/actions/runs/45983333225",
+    "failed_pull_request_head": "4c2462d132b328210807c88befa6f21be317e3fd",
+    "failed_log_scope": "Downloaded failed make check step only; the PR head is identified separately, not asserted as the exact GitHub checkout merge SHA.",
+    "old_failure": "TestControllerCreateTimeoutRecoversWithGETOnly controller_test.go:495: recovery GET timed out with the initial test-only 20ms HTTP timeout still installed.",
+    "original_ci_log": {
+      "repository_file": "docs/evidence/deadline-sweep-ci-45983333225-failed-2026-11-27.log.gz",
+      "raw_bytes": 65489,
+      "raw_sha256": "d139672729cf0e8fd464fbf700a2b2b0847be44bfa11f395747664d8cbd7b36c",
+      "gzip_bytes": 8705,
+      "gzip_sha256": "ef4b093aada57fde13db80abbc7618a6e80116edc461dc8533f54136addd1a00",
+      "compression": "lossless gzip; raw bytes unchanged"
+    },
+    "fix_source": "ee1dea2670ff8cefb4e8e671d699c60221332c82",
+    "production_changes": false,
+    "changed_paths": [
+      "internal/sandboxkube/controller_test.go"
+    ],
+    "test_change": "Channels confirm the POST reached the fixture; hold response until a real DeadlineExceeded, join initial Start, restore default 5s HTTP budget, release fixture, recover same UID with only GET and one total POST. No fixed sleeps. Test-only first phase HTTP timeout is 2s; production timeouts/deadlines unchanged.",
+    "clean_validation": {
+      "source_commit": "ee1dea2670ff8cefb4e8e671d699c60221332c82",
+      "status_before": "",
+      "changed_paths_from_original_pr": [
+        "internal/sandboxkube/controller_test.go"
+      ],
+      "started_at_utc": "2026-11-27T10:41:29.354502+00:00",
+      "checks": [
+        {
+          "command": [
+            "make",
+            "fmt"
+          ],
+          "started_at_utc": "2026-11-27T10:41:29.354741+00:00",
+          "exit_code": 0,
+          "finished_at_utc": "2026-11-27T10:41:29.393478+00:00",
+          "seconds": 0.039,
+          "log": "/private/tmp/agentmoor-pr27-ci-fixture-ee1dea2-20261127-fmt.log",
+          "raw_bytes": 22,
+          "raw_sha256": "9ba9a3ce39410b82cffdcafff24a52faa1612e3a34b2a29885a7007b1bbfbc33",
+          "archived_log": {
+            "repository_file": "docs/evidence/deadline-sweep-ci-fixed-fmt-2026-11-27.log.gz",
+            "raw_bytes": 22,
+            "raw_sha256": "9ba9a3ce39410b82cffdcafff24a52faa1612e3a34b2a29885a7007b1bbfbc33",
+            "gzip_bytes": 42,
+            "gzip_sha256": "1179b69b26bb4ff518260950ba63654a1f00d22b62857a9a01ee31f2035cc17c",
+            "compression": "lossless gzip; raw bytes unchanged"
+          }
+        },
+        {
+          "command": [
+            "go",
+            "test",
+            "-race",
+            "./internal/sandboxkube",
+            "-run",
+            "^TestControllerCreateTimeoutRecoversWithGETOnly$",
+            "-count=5",
+            "-v"
+          ],
+          "started_at_utc": "2026-11-27T10:41:29.416384+00:00",
+          "exit_code": 0,
+          "finished_at_utc": "2026-11-27T10:41:52.244796+00:00",
+          "seconds": 22.828,
+          "log": "/private/tmp/agentmoor-pr27-ci-fixture-ee1dea2-20261127-focused-race.log",
+          "raw_bytes": 6455,
+          "raw_sha256": "3cd7f4cb5786f97a791a1a84d36db724c0f788f8078e17b48427c56035d35dd3",
+          "archived_log": {
+            "repository_file": "docs/evidence/deadline-sweep-ci-fixed-focused-race-2026-11-27.log.gz",
+            "raw_bytes": 6455,
+            "raw_sha256": "3cd7f4cb5786f97a791a1a84d36db724c0f788f8078e17b48427c56035d35dd3",
+            "gzip_bytes": 1171,
+            "gzip_sha256": "6256b3334ce203c5465d73bd5275ae9a40cee4eccf8fee1c02729c47c7ed036f",
+            "compression": "lossless gzip; raw bytes unchanged"
+          }
+        },
+        {
+          "command": [
+            "make",
+            "check"
+          ],
+          "started_at_utc": "2026-11-27T10:41:52.269697+00:00",
+          "exit_code": 0,
+          "finished_at_utc": "2026-11-27T10:43:00.863441+00:00",
+          "seconds": 68.593,
+          "log": "/private/tmp/agentmoor-pr27-ci-fixture-ee1dea2-20261127-check.log",
+          "raw_bytes": 9419,
+          "raw_sha256": "b4dcee92c480ffd8840a68e5586e6fb2cd9080fc61bcb150e27be6ca6dce7c2d",
+          "archived_log": {
+            "repository_file": "docs/evidence/deadline-sweep-ci-fixed-check-2026-11-27.log.gz",
+            "raw_bytes": 9419,
+            "raw_sha256": "b4dcee92c480ffd8840a68e5586e6fb2cd9080fc61bcb150e27be6ca6dce7c2d",
+            "gzip_bytes": 2272,
+            "gzip_sha256": "0a37b76744f1e75e95b5cd48c80aad0d4fab61e21bc8003199f1961003d09b8c",
+            "compression": "lossless gzip; raw bytes unchanged"
+          }
+        }
+      ],
+      "source_commit_after": "ee1dea2670ff8cefb4e8e671d699c60221332c82",
+      "status_after": "",
+      "finished_at_utc": "2026-11-27T10:43:00.883346+00:00"
+    },
+    "actual_repeated_markers": [
+      "CONTROLLER_CREATE_TIMEOUT accepted_post=true first_http_timeout=2s recovery_http_timeout=5s posts=1 recovery_gets=1 accepted_uid_preserved=true",
+      "CONTROLLER_CREATE_TIMEOUT accepted_post=true first_http_timeout=2s recovery_http_timeout=5s posts=1 recovery_gets=1 accepted_uid_preserved=true",
+      "CONTROLLER_CREATE_TIMEOUT accepted_post=true first_http_timeout=2s recovery_http_timeout=5s posts=1 recovery_gets=1 accepted_uid_preserved=true",
+      "CONTROLLER_CREATE_TIMEOUT accepted_post=true first_http_timeout=2s recovery_http_timeout=5s posts=1 recovery_gets=1 accepted_uid_preserved=true",
+      "CONTROLLER_CREATE_TIMEOUT accepted_post=true first_http_timeout=2s recovery_http_timeout=5s posts=1 recovery_gets=1 accepted_uid_preserved=true"
+    ],
+    "scope": "Five non-cached focused race repetitions and make fmt/check passed on this clean test-only source. Original PG/S3 and full four-CLI results remain attributed to 3c901611485b2d20460644129bc98cd7b0665ee2; they were not rerun or relabelled."
+  }
 }
