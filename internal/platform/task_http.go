@@ -99,7 +99,11 @@ func (a *API) taskRoutes(handle func(string, string, apiHandler)) {
 			if !decodeInput(w, r, &finish, 1<<20) {
 				return task.Record{}, errBadRequest
 			}
-			return a.Catalog.finishTask(r.Context(), s, finish)
+			ctx := r.Context()
+			if a.SandboxProfiles != nil && a.SandboxControl != nil {
+				ctx = sandboxFinishContext(ctx, a.SandboxProfiles)
+			}
+			return a.Catalog.finishTask(ctx, s, finish)
 		})
 	}
 }
