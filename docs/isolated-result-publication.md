@@ -49,7 +49,7 @@ Workspace 经有界路径/类型检查后，用 `snapshot.Restore` 原子恢复�
 
 组件共用现有授权、journal 独占锁、head 比对、冻结发布和有限重试。它只把数据捕获部分替换为已校验的原始 blob；普通受信 Sync 的原生行为不变。专用 journal 位于原 StateDir 的 `publish` 子目录。
 
-Begin、Upload、Commit 前后遇到 503 或真实 TCP 应答丢失时，最多三次重试使用同一操作和冻结字节。即使测试在故障后改动已恢复的交付文件，重试仍上传原字节。耗尽、取消或截止后保留 pending；后续调用须使用新 Workspace，并先继续原冻结操作，不重跑 Agent。部分资产版本可能已经提交，但成功 checkpoint 只由后续完整 Finish 推进，不能提前移动。
+Begin、Upload、Commit 前后遇到 503 或真实 TCP 应答丢失时，最多三次尝试使用同一操作和冻结字节。即使测试在故障后改动已恢复的交付文件，重试仍上传原字节。耗尽、取消或截止后保留 pending；后续调用须使用新 Workspace，并先继续原冻结操作，不重跑 Agent。部分资产版本可能已经提交，但成功 checkpoint 只由后续完整 Finish 推进，不能提前移动。
 
 ## 实际验证与复验
 
