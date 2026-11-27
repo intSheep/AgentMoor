@@ -1643,12 +1643,15 @@
     "host_pod_pids_limit": 256,
     "overlay2": "all:memory,size=512m",
     "owned_parent_memory_bytes": 2147483648,
-    "owned_parent_swap_max": "0"
+    "owned_parent_swap_max": "0",
+    "scope": "R5 synthetic component node only; actual native provider node memory/configuration are recorded separately in its original artifact."
   },
   "source_provenance": {
     "actual_component_source": "bc9b29f7e37fd7363cb69dc5daf71f18ff5e0962",
-    "integrated_checks_source": "3564b831ab536fc8bd5d5426545a102b7a82de22",
-    "difference": "Only internal/sandboxgateway/audit_test.go adds an explicit synthetic trusted controller stop-proof to its existing positive fixture. Production and node-loss fixture/harness unchanged."
+    "difference": "Only internal/sandboxgateway/audit_test.go adds an explicit synthetic trusted controller stop-proof to its existing positive fixture. Production and node-loss fixture/harness unchanged.",
+    "pre_deadline_merge_checks_source": "3564b831ab536fc8bd5d5426545a102b7a82de22",
+    "final_combined_checks_source": "c383c8525c024d7e9fd55a05dbeab1a01f19b7dd",
+    "deadline_merge_head": "4c2462d132b328210807c88befa6f21be317e3fd"
   },
   "limitations": [
     "One owned kind node; stopping kubelet is a partition surrogate, not physical power fencing or production multi-node HA.",
@@ -2134,6 +2137,68 @@
       "metadata_observer_method": "trusted operator exec; existing SQLite URI mode=ro/query_only; exact scope and JSON field whitelist; no Source/attempt/cap/payload/signing key/model key read",
       "boundary": "Audit events prove persisted ordering; a separate approved read-only exact-scope metadata observation proves real terminated.v1 exit0 and matches previously observed live CRI container IDs. Trusted Worker remains the output-to-asset byte publisher. Scripted model, actual Codex; no real model key.",
       "additional_observation": "Independent trusted read-only metadata whitelist observer while the owned cluster was live, followed by a bounded post-run verifier. Exact one-run scripts are committed as text evidence, not generic operational commands."
+    },
+    "final_combined": {
+      "source_commit": "c383c8525c024d7e9fd55a05dbeab1a01f19b7dd",
+      "merged_deadline_head": "4c2462d132b328210807c88befa6f21be317e3fd",
+      "command": "make fmt && make check && make demo && make test-services && make test-k8s",
+      "exit_code": 0,
+      "log": {
+        "filename": "agentmoor-nodeproof-combined-checks-20261127-r9.log",
+        "bytes": 36834,
+        "sha256": "35c7166daf0327420dfb0e65cc58d59897f9949a2626acb029aba83936679215",
+        "committed_gzip": "node-loss-combined-checks-2026-11-27.log.gz",
+        "gzip_sha256": "0fde1250fc84a74da88f9fc36d09883b85a995fe01c2de68f2cf1686c4e920b4"
+      },
+      "platform_race_seconds": 38.844,
+      "gateway_race_seconds": 8.466,
+      "controller_race_seconds": 6.463,
+      "worker_race_seconds": 62.732,
+      "actual_postgres_s3_seconds": 43.865,
+      "four_cli": [
+        {
+          "adapter": "codex",
+          "report_after_pod_deletion": true,
+          "consecutive_new_job_turns": 2,
+          "active_followup_cancel": true,
+          "native_turn_cancel_seconds": 3.0
+        },
+        {
+          "adapter": "gemini-cli",
+          "report_after_pod_deletion": true,
+          "consecutive_new_job_turns": 2,
+          "active_followup_cancel": true,
+          "native_turn_cancel_seconds": 3.1
+        },
+        {
+          "adapter": "opencode",
+          "report_after_pod_deletion": true,
+          "consecutive_new_job_turns": 2,
+          "active_followup_cancel": true,
+          "native_turn_cancel_seconds": 3.8
+        },
+        {
+          "adapter": "claude-code",
+          "report_after_pod_deletion": true,
+          "consecutive_new_job_turns": 2,
+          "active_followup_cancel": true,
+          "native_turn_cancel_seconds": 2.3
+        }
+      ],
+      "actual_cleanup": {
+        "cluster": "agentmoor-7031b14840cc",
+        "owned_node_containers_remaining": [],
+        "run_image_tags_removed": {
+          "agentmoor-contract:agentmoor-7031b14840cc-codex": true,
+          "agentmoor-contract:agentmoor-7031b14840cc-gemini-cli": true,
+          "agentmoor-contract:agentmoor-7031b14840cc-opencode": true,
+          "agentmoor-contract:agentmoor-7031b14840cc-claude-code": true
+        },
+        "services_project": "agentmoor-test-64557",
+        "services_containers_remaining": [],
+        "services_network_removed": true
+      },
+      "scope": "Integrated stop-proof and deadline-maintenance production source; full4 remains the default trusted-local text regression. Earlier R5 and real Codex results retain their original source hashes."
     }
   }
 }

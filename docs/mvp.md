@@ -167,6 +167,8 @@ INT-90 保留旧实现 R2/R3 的真实失败：只停止自有节点 kubelet，A
 
 这些证明分别表示受信运行时报告 guest 停止、API 对象删除；固定版本下实际 Sentry/gofer/shim 自然回收另行观察。合成组件与有限网络 canary、对象预算不等于真实模型、所有互联网隔离、跨节点物理总额度、硬件 fence 或生产 HA。
 
+独立 `3564b83` 的生产文本提供方另通过真实 Codex 三轮、73条运维事件和11份固定资产复读；只读白名单观察取得3个真实 exit0 停止证明，与实际 UID/node/CID、封存输出和 accepted 一致，停止证明先于删除和成功接收。该源 fmt/check/demo/services/full4 均通过。再合 INT-91 完整头后的 `c383c85` 也通过全部五项（真实 services 43.865秒，四 CLI 取消3.0/3.1/3.8/2.3秒）；两轮均独立核实临时资源清理，原始来源分别保留在上述索引。
+
 ## 2026-11-27：P2.5 可信期限巡检
 
 `3c901611485b2d20460644129bc98cd7b0665ee2` 的默认 serve 在有界主键分页后，仅把原期限已到的运行/取消中 Task、Turn 及排队 Turn 转为中断，与固定 `deadline-controller/system` 审计同一 leased SQL 事务；原 JSON 仅替换唯一顶层 state，保留旧 checkpoint、pins、资产、attempt 与期限，不调度执行或伪造清理 ACK。SQLite/真实 PG 的审计/租约故障、Finish 原期限并发、旧字节、分页/坏记录、重启幂等及服务退出通过。真实 BEGIN/已执行 SELECT 回应黑洞分别按 4/2 秒 I/O 边界退出；普通慢 SQL、取消和预算耗尽后原写者 PID/租约与合法写入保持。旧 NUL 键截断和维护预算杀死写者的真实负例单列保留。[实现、验收与边界](deadline-sweep.md)
