@@ -1,0 +1,49 @@
+{
+  "source_commit": "b45250b4ebb85f94c056df4d4d6bbb2c1bd1d0ad",
+  "command": "make test-k8s",
+  "exit_code": 0,
+  "workflow": "default trusted text turns with scripted model; not gVisor provider",
+  "cluster": "agentmoor-13c7140ff3f7",
+  "source_worktree_clean": true,
+  "versions": {
+    "codex": {
+      "image_id": "sha256:1f8801e78b6ee81f2e0d6826d05f31c630633b6bd74005d5b42ae37f4735694c",
+      "version_exit": 0,
+      "version": "codex-cli 0.171.0-alpha.13",
+      "stderr": "WARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary dir \"/tmp\" (codex_home: AbsolutePathBuf(\"/tmp/version-home/.codex\"))\n"
+    },
+    "gemini-cli": {
+      "image_id": "sha256:bf2acbb9a0bceb5430e00a9ae87b83197189c4edb9924f7601a9491ad9974f9a",
+      "version_exit": 0,
+      "version": "0.70.0",
+      "stderr": ""
+    },
+    "opencode": {
+      "image_id": "sha256:c163bde026015e1fdb337af7112238174eb5d2af8b42e4e9daae944f254a5b4a",
+      "version_exit": 0,
+      "version": "1.19.6",
+      "stderr": ""
+    },
+    "claude-code": {
+      "image_id": "sha256:ec109e94445d8facba091b91115b4fb78c7914fc85b74e5b143b794357845976",
+      "version_exit": 0,
+      "version": "2.1.330 (Claude Code)",
+      "stderr": ""
+    }
+  },
+  "delivery_pass_count": 4,
+  "two_new_turns_pass_count": 4,
+  "followup_cancellation_pass_count": 4,
+  "native_cancel_seconds_in_adapter_order": [
+    "2.3",
+    "3.8",
+    "4.6",
+    "3.8"
+  ],
+  "cluster_node_removed_verified": true,
+  "owned_runtime_image_tags_removed_by_fixture": true,
+  "dependency_cache_tags_retained": true,
+  "log_sha256": "baee61e9222c218f7fb327ff54e45b8d2e209edcb446cf0e3d997d454a3a2339",
+  "integrated_source": "4aef8c848db19730c1a46404cc29055728a6c86d",
+  "integrated_make_fmt_check_demo": "passed; no native guest Go changes after b45250b"
+}

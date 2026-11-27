@@ -52,6 +52,13 @@ func (r cancelReader) Read(p []byte) (int, error) {
 }
 
 func spool(temp string, write func(io.Writer) error) (result Blob, err error) {
+	return spoolWithLimit(temp, asset.MaxBytes, write)
+}
+
+func spoolWithLimit(temp string, maxBytes int64, write func(io.Writer) error) (result Blob, err error) {
+	if maxBytes < 1 || maxBytes > asset.MaxBytes {
+		return result, fmt.Errorf("invalid snapshot size limit")
+	}
 	f, err := os.CreateTemp(temp, "asset-*")
 	if err != nil {
 		return result, err
@@ -62,7 +69,7 @@ func spool(temp string, write func(io.Writer) error) (result Blob, err error) {
 		}
 	}()
 	h := sha256.New()
-	w := &limitedWriter{io.MultiWriter(f, h), asset.MaxBytes}
+	w := &limitedWriter{io.MultiWriter(f, h), maxBytes}
 	err = write(w)
 	if err == nil {
 		err = f.Sync()
@@ -71,7 +78,7 @@ func spool(temp string, write func(io.Writer) error) (result Blob, err error) {
 	if err != nil {
 		return result, err
 	}
-	return Blob{f.Name(), hex.EncodeToString(h.Sum(nil)), asset.MaxBytes - w.left}, nil
+	return Blob{f.Name(), hex.EncodeToString(h.Sum(nil)), maxBytes - w.left}, nil
 }
 
 func stable(a, b fs.FileInfo) bool {
@@ -109,17 +116,38 @@ func copyFile(ctx context.Context, root *os.Root, src string, before fs.FileInfo
 }
 
 func File(ctx context.Context, root *os.Root, src, temp string) (Blob, error) {
+	return FileWithLimit(ctx, root, src, temp, asset.MaxBytes)
+}
+
+// FileWithLimit preserves the regular file's original bytes while bounding
+// temporary capture writes. File retains the existing platform-wide limit.
+func FileWithLimit(ctx context.Context, root *os.Root, src, temp string, maxBytes int64) (Blob, error) {
+	if err := ctx.Err(); err != nil {
+		return Blob{}, err
+	}
 	info, err := root.Lstat(src)
 	if err != nil {
 		return Blob{}, err
 	}
-	return spool(temp, func(w io.Writer) error { return copyFile(ctx, root, src, info, w) })
+	if info.Size() > maxBytes {
+		return Blob{}, fmt.Errorf("asset exceeds size limit")
+	}
+	return spoolWithLimit(temp, maxBytes, func(w io.Writer) error { return copyFile(ctx, root, src, info, w) })
 }
 
 // Tree archives the contents of each source under its portable name. A "." name
 // maps the source directory to the root of the restoration.
 func Tree(ctx context.Context, root *os.Root, entries []Entry, temp string) (Blob, error) {
-	return spool(temp, func(w io.Writer) error {
+	return TreeWithLimit(ctx, root, entries, temp, asset.MaxBytes)
+}
+
+// TreeWithLimit bounds the complete captured tar, including headers, padding
+// and end markers. Tree retains the existing platform-wide limit.
+func TreeWithLimit(ctx context.Context, root *os.Root, entries []Entry, temp string, maxBytes int64) (Blob, error) {
+	if err := ctx.Err(); err != nil {
+		return Blob{}, err
+	}
+	return spoolWithLimit(temp, maxBytes, func(w io.Writer) error {
 		tw := tar.NewWriter(w)
 		type observed struct {
 			name string

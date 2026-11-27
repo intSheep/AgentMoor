@@ -19,6 +19,7 @@
 | 完整 PG/S3 V2、发布故障、失联及租户拒读 | `make test-k8s-v2` | `89c3c155` 同命令三场景全部通过，含两次 running 原 UUID 重投、八个发布边界、耗尽恢复、真实 900 秒失联、三套 API 重启及 16/17/48 个固定版本的外租户精确 404。[原始证据](evidence/postgres-s3-v2-suite-2026-11-26.json) · [复验说明](persistent-faults-acceptance.md) |
 | 不可信任务的拒绝门禁 | `execution_policy`、真实 HTTP/CLI 测试 | 无独立提供方时拒绝首轮/追问，0 授权/claim/原生启动，queued/旧 checkpoint/游标/内容不变；受信正例与 `6db69fc` 四 CLI 默认矩阵通过。[证据](evidence/untrusted-execution-gate-2026-11-27.json) |
 | gVisor 底层运行时可行性 | `make test-k8s-gvisor-feasibility` | aarch64 官方固定包与实际 CRI/systrap/非 root 用户通过，缺 handler 多次拒绝且无 fallback；不含应用凭据/网络/资源或 CLI/Skill 隔离。[来源与限制](gvisor-feasibility.md) |
+| 有界 Guest 核心与真实 Codex | `make test-k8s-native-guest` | 三个新 gVisor Pod 沿同会话生成、修改、核验文件，原始 Session 和工作区交接通过；只读及原子不覆盖实测通过。仍未接入生产控制器/模型网关、SaaS 发布或网络/资源对抗。[实际来源](native-guest.md) |
 
 ## 待落地的可运行示例
 

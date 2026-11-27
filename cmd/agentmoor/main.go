@@ -29,6 +29,7 @@ const usage = `Usage:
   agentmoor auth-rotate --policy FILE [--key-id ID]
   agentmoor auth-retire --policy FILE --key-id ID
   agentmoor auth-revoke --policy FILE --token-file FILE
+  agentmoor guest-execute --adapter ID --runtime-cli ABS --root NEW_DIR [--max-input-bytes N] [--max-output-bytes N]
   agentmoor run-task --config FILE [--wait 2m | --turn UUID]
   agentmoor sync|assets|status|gc --config FILE
   agentmoor watch --config FILE [--interval 1m] [--periodic-only]
@@ -65,6 +66,8 @@ func run(ctx context.Context, args []string, out io.Writer) error {
 			return platformCommand(ctx, args, out, registry)
 		case "auth-init", "auth-rotate", "auth-retire", "auth-revoke":
 			return authCommand(ctx, args, out)
+		case "guest-execute":
+			return guestCommand(ctx, args, os.Stdin, out, registry)
 		case "run-task", "sync", "watch", "restore", "restore-native", "restore-sessions", "assets", "status", "gc", "resolve":
 			return workerCommand(ctx, args, out, registry)
 		}
