@@ -195,6 +195,27 @@ func TestSandboxProvenanceRejectsUnboundOrUnreadyReceiptBeforeObjectRead(t *test
 			f.mutateRun(t, func(r *SandboxRun) { r.PodTerminal = false })
 		}},
 		{"nonzero-exit", func(t *testing.T, f *provenanceFixture) { f.mutateRun(t, func(r *SandboxRun) { r.ExitCode = 1 }) }},
+		// These persisted rows retain all old Ready/terminal/deleted flags.
+		// An execute credential sends Finish directly, bypassing Worker checks.
+		{"missing-guest-stop-proof", func(t *testing.T, f *provenanceFixture) {
+			f.mutateRun(t, func(r *SandboxRun) { r.GuestStopProof, r.PodNodeName, r.GuestContainerID = nil, "", "" })
+		}},
+		{"invalidated-guest-stop-proof", func(t *testing.T, f *provenanceFixture) {
+			f.mutateRun(t, func(r *SandboxRun) { r.CleanupUnknown = true })
+		}},
+		{"never-scheduled-stop-proof", func(t *testing.T, f *provenanceFixture) {
+			f.mutateRun(t, func(r *SandboxRun) {
+				r.PodNodeName, r.GuestContainerID = "", ""
+				r.GuestStopProof = &SandboxGuestStopProof{Kind: SandboxGuestNeverScheduled, PodUID: r.PodUID, ResourceVersion: "synthetic-cas-observation"}
+			})
+		}},
+		{"nonzero-guest-stop-proof", func(t *testing.T, f *provenanceFixture) {
+			f.mutateRun(t, func(r *SandboxRun) {
+				proof, code := *r.GuestStopProof, 143
+				proof.ExitCode = &code
+				r.GuestStopProof = &proof
+			})
+		}},
 		{"unsealed-output", func(t *testing.T, f *provenanceFixture) {
 			f.mutateRun(t, func(r *SandboxRun) { r.Output.Sealed = false })
 		}},
@@ -265,10 +286,20 @@ func TestSandboxProvenanceInspectRejectsVersionDriftAndEqualSizeCorruption(t *te
 }
 
 func TestSandboxProvenanceRechecksCancellationAndProfileAfterUnlockedIO(t *testing.T) {
-	for _, mode := range []string{"cancel", "profile", "output"} {
+	for _, mode := range []string{"cancel", "profile", "output", "stop-proof", "cleanup-unknown"} {
 		t.Run(mode, func(t *testing.T) {
 			f := newProvenanceFixture(t)
 			f.objects.beforeGet = func() {
+				if mode == "stop-proof" || mode == "cleanup-unknown" {
+					f.mutateRun(t, func(r *SandboxRun) {
+						if mode == "stop-proof" {
+							r.GuestStopProof, r.PodNodeName, r.GuestContainerID = nil, "", ""
+						} else {
+							r.CleanupUnknown = true
+						}
+					})
+					return
+				}
 				if mode == "output" {
 					f.mutateRun(t, func(r *SandboxRun) { r.Output.SHA256 = sandboxTestBlob("different sealed output").SHA256 })
 					return

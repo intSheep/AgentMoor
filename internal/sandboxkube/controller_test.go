@@ -13,6 +13,8 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -36,8 +38,9 @@ type kubeFixture struct {
 	t                                               *testing.T
 	mu                                              sync.Mutex
 	pod                                             map[string]any
-	posts, gets, deletes                            int
+	posts, gets, deletes, patches                   int
 	ambiguous, missing, keepDeleted, replaceDeleted bool
+	raceBindOnPatch, dropPatchAck                   bool
 	onCreate                                        func(map[string]any)
 }
 
@@ -113,13 +116,88 @@ func (f *kubeFixture) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		if f.replaceDeleted {
 			f.pod["metadata"].(map[string]any)["uid"] = uuid.NewString()
-		} else if !f.keepDeleted {
-			f.pod = nil
 		} else {
 			f.pod["metadata"].(map[string]any)["deletionTimestamp"] = time.Now().UTC().Format(time.RFC3339Nano)
+			f.bumpVersion()
+			if !f.keepDeleted {
+				meta := f.pod["metadata"].(map[string]any)
+				finalizers, _ := meta["finalizers"].([]any)
+				if len(finalizers) == 0 {
+					f.pod = nil
+				} else {
+					status, _ := f.pod["status"].(map[string]any)
+					statuses, _ := status["containerStatuses"].([]any)
+					terminated := false
+					if len(statuses) == 1 {
+						s, _ := statuses[0].(map[string]any)
+						state, _ := s["state"].(map[string]any)
+						_, terminated = state["terminated"]
+					}
+					if !terminated && f.pod["spec"].(map[string]any)["nodeName"] != nil {
+						f.setTerminal(143)
+					}
+				}
+			}
 		}
 		w.WriteHeader(202)
 		io.WriteString(w, `{}`)
+	case "PATCH":
+		f.patches++
+		if r.Header.Get("Content-Type") != "application/json-patch+json" || f.pod == nil {
+			w.WriteHeader(409)
+			return
+		}
+		var operations []struct {
+			Op, Path string
+			Value    any
+		}
+		decoder := json.NewDecoder(r.Body)
+		decoder.UseNumber()
+		if decoder.Decode(&operations) != nil || len(operations) != 6 {
+			f.t.Error("unexpected finalizer patch")
+			w.WriteHeader(422)
+			return
+		}
+		if f.raceBindOnPatch {
+			f.pod["spec"].(map[string]any)["nodeName"] = "racing-node"
+			f.bumpVersion()
+			f.raceBindOnPatch = false
+		}
+		meta := f.pod["metadata"].(map[string]any)
+		values := []any{meta["uid"], meta["resourceVersion"], meta["deletionTimestamp"], meta["finalizers"], f.pod["spec"]}
+		paths := []string{"/metadata/uid", "/metadata/resourceVersion", "/metadata/deletionTimestamp", "/metadata/finalizers", "/spec"}
+		for i, path := range paths {
+			if operations[i].Op != "test" || operations[i].Path != path || !reflect.DeepEqual(operations[i].Value, values[i]) {
+				w.WriteHeader(409)
+				return
+			}
+		}
+		finals, _ := meta["finalizers"].([]any)
+		index := -1
+		for i, value := range finals {
+			if value == guestStopFinalizer {
+				index = i
+			}
+		}
+		if index < 0 || operations[5].Op != "remove" || operations[5].Path != "/metadata/finalizers/"+strconv.Itoa(index) {
+			f.t.Error("patch did not remove only owned finalizer")
+			w.WriteHeader(422)
+			return
+		}
+		meta["finalizers"] = append(append([]any{}, finals[:index]...), finals[index+1:]...)
+		f.bumpVersion()
+		response, _ := json.Marshal(f.pod)
+		if !f.keepDeleted && len(meta["finalizers"].([]any)) == 0 {
+			f.pod = nil
+		}
+		if f.dropPatchAck {
+			f.dropPatchAck = false
+			connection, _, _ := w.(http.Hijacker).Hijack()
+			connection.Close()
+			return
+		}
+		w.WriteHeader(200)
+		w.Write(response)
 	default:
 		f.t.Error("controller used a forbidden Kubernetes operation")
 		w.WriteHeader(405)
@@ -129,12 +207,24 @@ func (f *kubeFixture) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (f *kubeFixture) terminal(exit int) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	f.setTerminal(exit)
+}
+
+func (f *kubeFixture) bumpVersion() {
+	meta := f.pod["metadata"].(map[string]any)
+	old, _ := strconv.Atoi(meta["resourceVersion"].(string))
+	meta["resourceVersion"] = strconv.Itoa(old + 1)
+}
+func (f *kubeFixture) setTerminal(exit int) {
 	phase := "Succeeded"
 	if exit != 0 {
 		phase = "Failed"
 	}
+	sum := sha256.Sum256([]byte(f.pod["metadata"].(map[string]any)["uid"].(string)))
+	id := "containerd://" + hex.EncodeToString(sum[:])
 	f.pod["status"] = map[string]any{"phase": phase, "containerStatuses": []any{
-		map[string]any{"name": "guest", "restartCount": 0, "state": map[string]any{"terminated": map[string]any{"exitCode": exit}}}}}
+		map[string]any{"name": "guest", "containerID": id, "restartCount": 0, "state": map[string]any{"terminated": map[string]any{"exitCode": exit, "containerID": id}}}}}
+	f.bumpVersion()
 }
 
 type controllerFixture struct {

@@ -84,6 +84,7 @@ func TestPostgresAndS3(t *testing.T) {
 	checkPostgresAudit(t, c, dir, dsn)
 	checkSandboxProvenancePostgres(t, c, dir, dsn)
 	checkPostgresAuditAssetLinks(t, c, dir, dsn)
+	checkGuestStopRestart := checkSandboxGuestStopPostgres(t, c, dir, dsn)
 	checkPostgresDeadlineSweep(t, objects, dsn)
 	c = checkObjectCollectionAuditServices(t, c, objects, dir, dsn)
 	checkModelRestart := prepareSandboxModelRestart(t, c, scope("model-budget-integration-restart"))
@@ -98,6 +99,7 @@ func TestPostgresAndS3(t *testing.T) {
 		t.Fatal(err)
 	}
 	checkModelRestart(c)
+	checkGuestStopRestart(c)
 	q, err := c.FenceSandboxCreate(t.Context(), a, p.Run.Deadline)
 	if err != nil || q.CreateAllowed || q.Capabilities != (SandboxCapabilities{}) || q.Run.PodName != p.Run.PodName {
 		t.Fatal("PostgreSQL restart authorized a second create", q, err)
@@ -107,6 +109,7 @@ func TestPostgresAndS3(t *testing.T) {
 	checkPostgresTaskReaderIsolation(t, c)
 	checkSandboxLostLease := prepareSandboxLeaseFailure(t, c)
 	checkModelLostLease := prepareSandboxModelLeaseFailure(t, c)
+	checkGuestStopLostLease := prepareSandboxGuestStopLeaseFailure(t, c, dir, dsn)
 	checkProvenanceLostLease := prepareSandboxProvenanceLeaseFailure(t, c, dir, dsn)
 	var auditBeforeLeaseLoss int64
 	checkSandboxFinalSealFailure(t, c, func() {
@@ -118,6 +121,7 @@ func TestPostgresAndS3(t *testing.T) {
 	checkPostgresMutationDeniedAfterLeaseLoss(t, c)
 	checkSandboxLostLease()
 	checkModelLostLease()
+	checkGuestStopLostLease()
 	checkProvenanceLostLease()
 	var auditAfterLeaseLoss int64
 	if err := c.db.QueryRowContext(t.Context(), "SELECT count(*) FROM audit_events").Scan(&auditAfterLeaseLoss); err != nil || auditAfterLeaseLoss != auditBeforeLeaseLoss {

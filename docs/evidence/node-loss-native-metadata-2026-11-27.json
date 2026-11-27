@@ -1,0 +1,111 @@
+{
+  "source_commit": "3564b831ab536fc8bd5d5426545a102b7a82de22",
+  "cluster": "agentmoor-f6971a02f937",
+  "kubeconfig": "/var/folders/6y/141xqnc57b9cq5vts67ycqz80000gn/T/agentmoor-provider-8df6f4jo/kubeconfig",
+  "observer_script_sha256": "f1c9f61167169af92a3454a5ceeaafa70345fdb52e0af33fd18ead9f5716ed22",
+  "method": "trusted operator exec; existing SQLite URI mode=ro/query_only; exact scope and JSON field whitelist; no Source/attempt/cap/payload/signing key/model key read",
+  "scope": "saas/reports/text-job/codex",
+  "status": "passed",
+  "polls": 63,
+  "observed_at_unix_nano": 1795775410631117000,
+  "snapshot": {
+    "scope": "saas/reports/text-job/codex",
+    "runs": [
+      {
+        "run_id": "309f7a6d4f3b8795b98d19ada6d3ae1d1744acee626f4912bf886f16c73926eb",
+        "turn_id": "be7a8f39-8250-446d-9bed-b69083e6a6ca",
+        "pod_uid": "67dd1063-5d89-4c46-8d5d-b99e2ceab611",
+        "pod_node_name": "agentmoor-f6971a02f937-control-plane",
+        "guest_container_id": "containerd://fccb569d63d401ba60baf0ef039ece63622f56d430dcf6fc418f6646264e3b00",
+        "state": "ready-to-publish",
+        "pod_terminal": 1,
+        "exit_code": 0,
+        "pod_deleted": 1,
+        "cleanup_unknown": null,
+        "collected": 0,
+        "output_sha256": "df0ba99dac18487339231896f7399dfd3369f8f61ae02bbe93532d3f5a70ffea",
+        "output_size": 59392,
+        "output_sealed": 1,
+        "proof_kind": "terminated.v1",
+        "proof_pod_uid": "67dd1063-5d89-4c46-8d5d-b99e2ceab611",
+        "proof_resource_version": "1047",
+        "proof_node_name": "agentmoor-f6971a02f937-control-plane",
+        "proof_container_id": "containerd://fccb569d63d401ba60baf0ef039ece63622f56d430dcf6fc418f6646264e3b00",
+        "proof_container_name": "guest",
+        "proof_restart_count": 0,
+        "proof_exit_code": 0
+      },
+      {
+        "run_id": "843a65eaeb7fd5245254cb71df238fc2f730d669aeb11081b71558747a22c3bc",
+        "turn_id": null,
+        "pod_uid": "276d80a8-4738-4c2e-bb8b-a1300b6826e6",
+        "pod_node_name": "agentmoor-f6971a02f937-control-plane",
+        "guest_container_id": "containerd://df72583787da203ead8075da906d6f0caee4872502c25c88975fc51850fdc61c",
+        "state": "ready-to-publish",
+        "pod_terminal": 1,
+        "exit_code": 0,
+        "pod_deleted": 1,
+        "cleanup_unknown": null,
+        "collected": 0,
+        "output_sha256": "a2549b69cf99b78d90b6ea4a048d9284119aa5c5d5fd4f78df73dedbd69da1b8",
+        "output_size": 46592,
+        "output_sealed": 1,
+        "proof_kind": "terminated.v1",
+        "proof_pod_uid": "276d80a8-4738-4c2e-bb8b-a1300b6826e6",
+        "proof_resource_version": "980",
+        "proof_node_name": "agentmoor-f6971a02f937-control-plane",
+        "proof_container_id": "containerd://df72583787da203ead8075da906d6f0caee4872502c25c88975fc51850fdc61c",
+        "proof_container_name": "guest",
+        "proof_restart_count": 0,
+        "proof_exit_code": 0
+      },
+      {
+        "run_id": "ed6f1e7aa44ed99b32c6a8ea2c8186edc911a44d4a6fd810738e9bbc29e0e093",
+        "turn_id": "ded7067b-293b-4f8d-993f-69f81f9aaa63",
+        "pod_uid": "7beffc33-bf08-4ff6-baba-101df2a3409f",
+        "pod_node_name": "agentmoor-f6971a02f937-control-plane",
+        "guest_container_id": "containerd://263a4d0f3ffcc78b241b2b7d0aa336fc7c3ad8d57366842345774d9799312a1a",
+        "state": "ready-to-publish",
+        "pod_terminal": 1,
+        "exit_code": 0,
+        "pod_deleted": 1,
+        "cleanup_unknown": null,
+        "collected": 0,
+        "output_sha256": "28aaa457f9f03cce932aeb7d4d82c3302c3b4097b5e9bb224d7151ff3c9fdd4f",
+        "output_size": 71168,
+        "output_sealed": 1,
+        "proof_kind": "terminated.v1",
+        "proof_pod_uid": "7beffc33-bf08-4ff6-baba-101df2a3409f",
+        "proof_resource_version": "1118",
+        "proof_node_name": "agentmoor-f6971a02f937-control-plane",
+        "proof_container_id": "containerd://263a4d0f3ffcc78b241b2b7d0aa336fc7c3ad8d57366842345774d9799312a1a",
+        "proof_container_name": "guest",
+        "proof_restart_count": 0,
+        "proof_exit_code": 0
+      }
+    ],
+    "accepted": [
+      {
+        "cursor": 20,
+        "run_id": "843a65eaeb7fd5245254cb71df238fc2f730d669aeb11081b71558747a22c3bc",
+        "pod_uid": "276d80a8-4738-4c2e-bb8b-a1300b6826e6",
+        "output_sha256": "a2549b69cf99b78d90b6ea4a048d9284119aa5c5d5fd4f78df73dedbd69da1b8",
+        "turn_id": null
+      },
+      {
+        "cursor": 44,
+        "run_id": "309f7a6d4f3b8795b98d19ada6d3ae1d1744acee626f4912bf886f16c73926eb",
+        "pod_uid": "67dd1063-5d89-4c46-8d5d-b99e2ceab611",
+        "output_sha256": "df0ba99dac18487339231896f7399dfd3369f8f61ae02bbe93532d3f5a70ffea",
+        "turn_id": "be7a8f39-8250-446d-9bed-b69083e6a6ca"
+      },
+      {
+        "cursor": 69,
+        "run_id": "ed6f1e7aa44ed99b32c6a8ea2c8186edc911a44d4a6fd810738e9bbc29e0e093",
+        "pod_uid": "7beffc33-bf08-4ff6-baba-101df2a3409f",
+        "output_sha256": "28aaa457f9f03cce932aeb7d4d82c3302c3b4097b5e9bb224d7151ff3c9fdd4f",
+        "turn_id": "ded7067b-293b-4f8d-993f-69f81f9aaa63"
+      }
+    ]
+  }
+}

@@ -7,12 +7,14 @@
 .PHONY: test-k8s-native-guest test-k8s-gvisor-security
 .PHONY: test-k8s-sandbox-provider test-k8s-sandbox-quota
 .PHONY: test-k8s-sandbox-audit
+.PHONY: test-k8s-node-loss
 
 check: test-file-report
 	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p test_forward.py -v
 	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p gvisor_probe_test.py -v
 	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p gvisor_security_probe_test.py -v
 	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p sandbox_controller_smoke_test.py -v
+	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p node_loss_probe_test.py -v
 	PYTHONDONTWRITEBYTECODE=1 python3 tests/kubernetes/sandbox_provider_model.py --check
 	PYTHONDONTWRITEBYTECODE=1 python3 tests/kubernetes/sandbox_provider_skill.py --check
 	PYTHONDONTWRITEBYTECODE=1 python3 tests/kubernetes/sandbox_provider_quota.py --check
@@ -94,6 +96,10 @@ test-k8s-pod-loss: check-kind-prereqs
 STAGE ?= all
 test-k8s-gvisor-security:
 	python3 tests/kubernetes/gvisor_security_probe.py --stage $(STAGE)
+
+# Synthetic heartbeat with real kubelet loss; only a new owned kind cluster.
+test-k8s-node-loss:
+	python3 tests/kubernetes/node_loss_probe.py $(if $(NODE_LOSS_OUTPUT),--output "$(NODE_LOSS_OUTPUT)") $(if $(GVISOR_SECURITY_BUNDLE),--bundle "$(GVISOR_SECURITY_BUNDLE)") $(if $(GVISOR_SECURITY_CALICO_MANIFEST),--calico-manifest "$(GVISOR_SECURITY_CALICO_MANIFEST)") $(if $(GVISOR_SECURITY_CONTAINERD_CACHE),--containerd-cache "$(GVISOR_SECURITY_CONTAINERD_CACHE)")
 
 PROVIDER_SCENARIO ?= both
 test-k8s-sandbox-provider:

@@ -171,7 +171,7 @@ func (c *Catalog) ReadSandboxOutput(ctx context.Context, a SandboxAddress) (Sand
 	if err = c.sandboxCurrent(ctx, r, true); err != nil {
 		return SandboxBlob{}, nil, err
 	}
-	if r.State != SandboxReady || !r.PodTerminal || r.ExitCode != 0 || !r.PodDeleted || !r.Output.Sealed {
+	if r.State != SandboxReady || !r.PodTerminal || r.ExitCode != 0 || !r.PodDeleted || !r.GuestStopped() || r.GuestStopProof.Kind != SandboxGuestTerminated || r.GuestStopProof.ExitCode == nil || *r.GuestStopProof.ExitCode != 0 || !r.Output.Sealed {
 		return SandboxBlob{}, nil, ErrNotReady
 	}
 	return c.readSandboxBlob(ctx, r, SandboxOutput, r.Output)

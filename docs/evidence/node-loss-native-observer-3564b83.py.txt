@@ -1,0 +1,76 @@
+"""Exact owned regression only: operator metadata whitelist, never payload/caps."""
+import hashlib
+import json
+import pathlib
+import re
+import subprocess
+import time
+
+SOURCE = "3564b831ab536fc8bd5d5426545a102b7a82de22"
+CLUSTER = "agentmoor-f6971a02f937"
+KUBECONFIG = "/var/folders/6y/141xqnc57b9cq5vts67ycqz80000gn/T/agentmoor-provider-8df6f4jo/kubeconfig"
+OUTPUT = pathlib.Path("/private/tmp/agentmoor-nodeproof-native-metadata-3564b83-20261127-r1.json")
+BASE = ["kubectl", "--context", "kind-"+CLUSTER, "--kubeconfig", KUBECONFIG]
+CODE = r'''
+import sqlite3,json
+scope="saas/reports/text-job/codex"
+db=sqlite3.connect("file:/data/catalog.sqlite?mode=ro",uri=True,timeout=1)
+db.execute("PRAGMA query_only=1")
+db.execute("BEGIN")
+paths={"run_id":"run_id","turn_id":"turn_id","pod_uid":"pod_uid","pod_node_name":"pod_node_name","guest_container_id":"guest_container_id","state":"state","pod_terminal":"pod_terminal","exit_code":"exit_code","pod_deleted":"pod_deleted","cleanup_unknown":"cleanup_unknown","collected":"collected","output_sha256":"output.sha256","output_size":"output.size","output_sealed":"output.sealed","proof_kind":"guest_stop_proof.kind","proof_pod_uid":"guest_stop_proof.pod_uid","proof_resource_version":"guest_stop_proof.resource_version","proof_node_name":"guest_stop_proof.node_name","proof_container_id":"guest_stop_proof.container_id","proof_container_name":"guest_stop_proof.container_name","proof_restart_count":"guest_stop_proof.restart_count","proof_exit_code":"guest_stop_proof.exit_code"}
+columns=",".join("json_extract(record,'$."+path+"')" for path in paths.values())
+runs=[dict(zip(paths,row)) for row in db.execute("SELECT "+columns+" FROM sandbox_runs WHERE scope=? ORDER BY id LIMIT 4",(scope,))]
+accepted=[dict(zip(("cursor","run_id","pod_uid","output_sha256","turn_id"),row)) for row in db.execute("SELECT cursor,json_extract(event,'$.run_id'),json_extract(event,'$.pod_uid'),json_extract(event,'$.digest'),json_extract(event,'$.turn_id') FROM audit_events WHERE scope=? AND json_extract(event,'$.action')='sandbox.result_accepted' ORDER BY cursor LIMIT 4",(scope,))]
+db.rollback();db.close()
+print(json.dumps({"scope":scope,"runs":runs,"accepted":accepted}))
+'''
+
+def run(*args):
+    return subprocess.run(args, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=15)
+
+
+def main():
+    if OUTPUT.exists():
+        raise RuntimeError("new observer output required")
+    context = run(*BASE, "config", "current-context")
+    assert context.returncode == 0 and context.stdout.strip() == "kind-"+CLUSTER
+    owned = run("docker", "inspect", "--format", '{{index .Config.Labels "io.x-k8s.kind.cluster"}}', CLUSTER+"-control-plane")
+    assert owned.returncode == 0 and owned.stdout.strip() == CLUSTER
+    metadata = {"source_commit":SOURCE,"cluster":CLUSTER,"kubeconfig":KUBECONFIG,
+        "observer_script_sha256":hashlib.sha256(pathlib.Path(__file__).read_bytes()).hexdigest(),
+        "method":"trusted operator exec; existing SQLite URI mode=ro/query_only; exact scope and JSON field whitelist; no Source/attempt/cap/payload/signing key/model key read",
+        "scope":"saas/reports/text-job/codex"}
+    until = time.monotonic()+480
+    polls = 0
+    while time.monotonic() < until:
+        polls += 1
+        result = run(*BASE, "-n", "agentmoor-control-fixture", "exec", "agentmoor", "-c", "api", "--", "python3", "-c", CODE)
+        if result.returncode == 0 and len(result.stdout.encode()) <= 65536:
+            snapshot = json.loads(result.stdout)
+            if len(snapshot["accepted"]) == 3:
+                assert len(snapshot["runs"]) == 3
+                by_id = {row["run_id"]:row for row in snapshot["runs"]}
+                assert len(by_id) == 3
+                for accepted in snapshot["accepted"]:
+                    row = by_id[accepted["run_id"]]
+                    assert re.fullmatch(r"[a-f0-9]{64}",row["run_id"])
+                    assert row["state"] == "ready-to-publish" and row["pod_terminal"] == 1 and row["exit_code"] == 0 and row["pod_deleted"] == 1
+                    assert not row["cleanup_unknown"] and not row["collected"] and row["output_sealed"] == 1
+                    assert row["proof_kind"] == "terminated.v1" and row["proof_exit_code"] == 0 and row["proof_restart_count"] == 0
+                    assert row["pod_uid"] == row["proof_pod_uid"] == accepted["pod_uid"]
+                    assert row["pod_node_name"] == row["proof_node_name"] == CLUSTER+"-control-plane"
+                    assert row["guest_container_id"] == row["proof_container_id"] and re.fullmatch(r"containerd://[a-f0-9]{64}",row["proof_container_id"])
+                    assert row["proof_container_name"] == "guest" and row["proof_resource_version"]
+                    assert row["output_sha256"] == accepted["output_sha256"] and row["output_size"] > 0 and row["turn_id"] == accepted["turn_id"]
+                metadata.update(status="passed",polls=polls,observed_at_unix_nano=time.time_ns(),snapshot=snapshot)
+                with OUTPUT.open("x") as stream:
+                    json.dump(metadata,stream,indent=2);stream.write("\n")
+                OUTPUT.chmod(0o600)
+                print(json.dumps({"status":"passed","runs":3,"metadata":str(OUTPUT)}))
+                return 0
+        time.sleep(.5)
+    raise RuntimeError("exact owned metadata window missed or did not reach three accepted Runs")
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

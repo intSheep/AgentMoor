@@ -54,5 +54,6 @@ Kubernetes 的 RuntimeClass、Pod 限制、RBAC、网络策略与资源额度共
 | [INT-79](https://linear.app/intsheep/issue/INT-79) | 已实现[隔离结果的可信发布组件](isolated-result-publication.md)：整包与交付预检、原始 Session/Workspace、冻结重试及失败清理均通过；新增 host 解码入口同时限制 JSON 深度/节点与归档隐式目录。仅数据发布，未接 `serve`/Worker 执行入口，门禁继续关闭。 |
 | [INT-80](https://linear.app/intsheep/issue/INT-80) | [参考集群网络/资源组件](gvisor-network-resources.md)已通过真实 Calico/gVisor 正反例、guest 64/host 256 两层任务数与三次额外 OOM 回收；并发 Pod 配额与整链路另由 INT-81 验证，不据此开放门禁。 |
 | [INT-82](https://linear.app/intsheep/issue/INT-82) | OOM 后 idle shim 残留已保留旧失败、真实 Delete/Shutdown 时序与栈；固定含官方修复的 containerd 2.4.2 后完整组件和三次额外 OOM 通过，无自建 shim 或生产特权回收器。 |
+| [INT-90](https://linear.app/intsheep/issue/INT-90) | [节点失联停止证明与 finalizer](node-loss-cleanup.md)：旧实现 API404 后真实 child 仍运行的反例已保留；修复后真实终态或从未调度精确 CAS 才释放对象，PhaseFailed/NodeReady 不造证明。故障窗口 direct TCP 与 count/pods 正反例通过，旧无证明记录保护操作拒绝；不等于硬件 fence、跨节点 HA 或所有宿主资源释放。 |
 
 各项完成时更新对应实际源码、命令、镜像和结果。真实模型按用户安排后补；不以本机沙箱成功宣称生产 HA、所有系统调用兼容或硬件侧信道防护。

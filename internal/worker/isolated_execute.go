@@ -126,7 +126,7 @@ func (e *Engine) cleanupIsolated(ctx context.Context, path, attempt string) erro
 		if errors.Is(err, platform.ErrMissing) {
 			return nil
 		}
-		if err == nil && (status.Run.PodDeleted || !status.Run.CreateStarted) {
+		if err == nil && ((status.Run.PodDeleted && status.Run.GuestStopped()) || !status.Run.CreateStarted) {
 			return nil
 		}
 		if err != nil && !sandboxTransient(err) {

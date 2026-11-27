@@ -211,6 +211,7 @@ func TestObjectCollectionFourKindsAuditActualDeletes(t *testing.T) {
 	if _, err = f.c.FailSandbox(t.Context(), a, "pod-lost"); err != nil {
 		t.Fatal(err)
 	}
+	sandboxTestStoppedAndDeletedGuest(t, f.c, a, uuid.NewString(), 255)
 	sandboxTestFinish(t, f.c, a, true)
 	keys := map[string]string{
 		objectAssetBlob:     objectKey(s, ch.SHA256),
@@ -550,6 +551,7 @@ func TestObjectCollectionGuestOutputSupersedeUsesAuthenticatedRun(t *testing.T) 
 	if _, err := f.c.RecordSandboxTerminal(t.Context(), a, uid, 0); err != nil {
 		t.Fatal(err)
 	}
+	sandboxTestGuestStop(t, f.c, a, uid, 0)
 	if _, err := f.c.ConfirmSandboxDeleted(t.Context(), a, uid); err != nil {
 		t.Fatal(err)
 	}

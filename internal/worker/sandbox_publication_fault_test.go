@@ -366,6 +366,9 @@ func TestSandboxPublicationBoundsHostMetadataAndImplicitDirectoryExpansion(t *te
 			if _, err = h.catalog.RecordSandboxTerminal(t.Context(), a, uid, 0); err != nil {
 				t.Fatal(err)
 			}
+			if err = fixtureGuestStopped(t.Context(), h.catalog, a, uid, 0); err != nil {
+				t.Fatal(err)
+			}
 			if _, err = h.catalog.ConfirmSandboxDeleted(t.Context(), a, uid); err != nil {
 				t.Fatal(err)
 			}

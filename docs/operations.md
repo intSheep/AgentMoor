@@ -120,6 +120,8 @@ HTTP 按以下能力分别授权；同一凭据可以组合多种能力。
 
 `make test-k8s-gvisor-feasibility` 仅检验运行时和缺 handler 拒绝。完整应用探针使用 `python3 tests/kubernetes/sandbox_provider_smoke.py --scenario both`，文本三轮另用 `--scenario text`，独立合成配额用 `python3 tests/kubernetes/sandbox_provider_quota.py`；两者支持 `--bundle`、`--calico-manifest`、`--containerd-cache` 和 `--output`，缓存仍按固定 SHA 验证。它们各建专属临时 kind 节点并在退出时清理；提供方探针明确保留不含本轮 CA/密钥的 `agentmoor-validation-cache:provider-codex-0.171-alpha.13` 依赖缓存，本轮镜像标签仍删除。需 OrbStack/Docker、kind、kubectl 和联网构建；不在已有生产节点上运行安装步骤。[固定源码、实际结果与限制](sandbox-provider.md#2026-11-27-实际验收)
 
+节点失联不会自动重跑原任务。平台自己的 finalizer 等待原 guest 停止证明后才释放对象；GET 404、PhaseFailed、NodeReady 都不能替代证明。无证明的历史或管理员越过锁的记录保留为未知，不能自动补造；优先恢复原 kubelet并让控制器观察真实终态。`NODE_LOSS_OUTPUT=/absolute/new/evidence.json make test-k8s-node-loss` 只在新建专属 kind 节点注入 kubelet 故障，不对已有集群执行。复验、`count/pods` 与旧记录恢复边界见[节点失联处理](node-loss-cleanup.md)。
+
 ### 可选：固定任务 Skill
 
 任务执行可通过受信 Worker 配置的 `skill_pins` 固定 Skill。以下示例中的引用应从该作用域的资产 API 取得，替换为真实 ID、固定版本、SHA-256 及对应 content_path；不能写 `version: 0` 或指向可变 head。

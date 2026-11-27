@@ -159,6 +159,15 @@ INT-87 的 `b7b93573649b9cad2a2a899a69e7c0215135fa89` 保留原 24h/引用筛选
 
 同一干净集成源码的 fmt/check/demo、真实 services 和完整四 CLI 默认受信文本矩阵退出 0；原生取消约 4.6/3.0/3.0/3.8 秒，专属节点/项目/本次标签已清理。没有把这个回归当作新的隔离、真实模型或 HA 证明。[实际事件样本、源码、原日志与 SHA](evidence/object-collection-audit-2026-11-27.json)
 
+## 2026-11-27：节点失联的 guest 停止证明
+
+INT-90 保留旧实现 R2/R3 的真实失败：只停止自有节点 kubelet，API 404 后旧 Catalog 错记 PodDeleted=true，同一个 CRI/Sentry/单 child 仍发出三条新心跳。新控制器为 Pod 加 finalizer；只凭当前唯一 guest 的真实 terminated/restart0/节点与容器绑定，或从未调度且删除中的精确 UID/RV/spec CAS，才保存停止证明并释放对象。GET 404、PhaseFailed、NodeReady 不造证明；新的结果下载、服务端成功 Finish 和 sandbox GC 同样拒绝无证明记录，旧历史读取与已成功 ACK 保持。
+
+`bc9b29f` 的 R5 真实 gVisor 组件四场矩阵通过：Pending 的已授权绑定返回409；正常取消与节点恢复先有真实 term143；失联和 PhaseFailed/CS仍Running 两窗各三条新心跳、同目标可达对照和直接 TCP 禁止目标超时；管理员越过 finalizer 后保持 Unknown，恢复节点也不补造证明。PhaseFailed 对象仍占 count/pods，额外 Pod 403；真实删除后同额度允许201且无CRI。原 POST1、身份、deadline 和旧 checkpoint 不变，专属节点/标签/临时凭据清理完成。[实现、实际结果与边界](node-loss-cleanup.md) · [原始与精选证据](evidence/node-loss-cleanup-2026-11-27.json)
+
+这些证明分别表示受信运行时报告 guest 停止、API 对象删除；固定版本下实际 Sentry/gofer/shim 自然回收另行观察。合成组件与有限网络 canary、对象预算不等于真实模型、所有互联网隔离、跨节点物理总额度、硬件 fence 或生产 HA。
+
+独立 `3564b83` 的生产文本提供方另通过真实 Codex 三轮、73条运维事件和11份固定资产复读；只读白名单观察取得3个真实 exit0 停止证明，与实际 UID/node/CID、封存输出和 accepted 一致，停止证明先于删除和成功接收。该源 fmt/check/demo/services/full4 均通过。再合 INT-91 完整头后的 `c383c85` 也通过全部五项（真实 services 43.865秒，四 CLI 取消3.0/3.1/3.8/2.3秒）；两轮均独立核实临时资源清理，原始来源分别保留在上述索引。
 
 ## 2026-11-27：P2.5 可信期限巡检
 

@@ -1,0 +1,159 @@
+{
+  "status": "passed",
+  "source_commit": "3564b831ab536fc8bd5d5426545a102b7a82de22",
+  "actual_containerd": "containerd github.com/containerd/containerd/v2 v2.4.2 b7a25261e029d68978bbf290df0a62fc819b3c51",
+  "operator_event_count": 73,
+  "action_counts": {
+    "task.queued": 1,
+    "task.claimed": 1,
+    "sandbox.begun": 3,
+    "sandbox.input_sealed": 3,
+    "sandbox.create_fenced": 3,
+    "sandbox.template_sealed": 3,
+    "sandbox.pod_bound": 3,
+    "sandbox.runtime_bound": 6,
+    "model.reserved": 3,
+    "sandbox.output_declared": 3,
+    "sandbox.output_sealed": 3,
+    "sandbox.terminated": 3,
+    "sandbox.guest_stop_proven": 3,
+    "sandbox.deleted": 3,
+    "revision.committed": 11,
+    "task.succeeded": 1,
+    "sandbox.result_accepted": 3,
+    "asset.linked": 11,
+    "turn.queued": 2,
+    "turn.claimed": 2,
+    "turn.succeeded": 2
+  },
+  "joins": [
+    {
+      "run_id": "309f7a6d4f3b8795b98d19ada6d3ae1d1744acee626f4912bf886f16c73926eb",
+      "turn_id": "be7a8f39-8250-446d-9bed-b69083e6a6ca",
+      "pod_uid": "67dd1063-5d89-4c46-8d5d-b99e2ceab611",
+      "container_id": "containerd://fccb569d63d401ba60baf0ef039ece63622f56d430dcf6fc418f6646264e3b00",
+      "proof_kind": "terminated.v1",
+      "proof_exit_code": 0,
+      "terminal_cursor": 36,
+      "stop_proven_cursor": 37,
+      "deleted_cursor": 38,
+      "accepted_cursor": 44,
+      "output_sha256": "df0ba99dac18487339231896f7399dfd3369f8f61ae02bbe93532d3f5a70ffea",
+      "asset_link_cursors": [
+        45,
+        46,
+        47,
+        48
+      ]
+    },
+    {
+      "run_id": "843a65eaeb7fd5245254cb71df238fc2f730d669aeb11081b71558747a22c3bc",
+      "turn_id": null,
+      "pod_uid": "276d80a8-4738-4c2e-bb8b-a1300b6826e6",
+      "container_id": "containerd://df72583787da203ead8075da906d6f0caee4872502c25c88975fc51850fdc61c",
+      "proof_kind": "terminated.v1",
+      "proof_exit_code": 0,
+      "terminal_cursor": 13,
+      "stop_proven_cursor": 14,
+      "deleted_cursor": 15,
+      "accepted_cursor": 20,
+      "output_sha256": "a2549b69cf99b78d90b6ea4a048d9284119aa5c5d5fd4f78df73dedbd69da1b8",
+      "asset_link_cursors": [
+        21,
+        22,
+        23
+      ]
+    },
+    {
+      "run_id": "ed6f1e7aa44ed99b32c6a8ea2c8186edc911a44d4a6fd810738e9bbc29e0e093",
+      "turn_id": "ded7067b-293b-4f8d-993f-69f81f9aaa63",
+      "pod_uid": "7beffc33-bf08-4ff6-baba-101df2a3409f",
+      "container_id": "containerd://263a4d0f3ffcc78b241b2b7d0aa336fc7c3ad8d57366842345774d9799312a1a",
+      "proof_kind": "terminated.v1",
+      "proof_exit_code": 0,
+      "terminal_cursor": 61,
+      "stop_proven_cursor": 62,
+      "deleted_cursor": 63,
+      "accepted_cursor": 69,
+      "output_sha256": "28aaa457f9f03cce932aeb7d4d82c3302c3b4097b5e9bb224d7151ff3c9fdd4f",
+      "asset_link_cursors": [
+        70,
+        71,
+        72,
+        73
+      ]
+    }
+  ],
+  "native_rounds": 3,
+  "immutable_downloads_rechecked": 11,
+  "operator_page_limit": 7,
+  "public_uuid_replays": 3,
+  "events_after_replay_unchanged": true,
+  "proof_verifier_negative_controls": [
+    "sandbox.result_accepted/run_id",
+    "asset.linked/version",
+    "sandbox.output_sealed/actor"
+  ],
+  "cleanup": [
+    {
+      "kind": "container",
+      "name": "agentmoor-f6971a02f937-control-plane",
+      "absent": true
+    },
+    {
+      "kind": "container",
+      "name": "agentmoor-f6971a02f937-outside-fixture",
+      "absent": true
+    },
+    {
+      "kind": "image",
+      "name": "agentmoor-provider:agentmoor-f6971a02f937",
+      "absent": true
+    },
+    {
+      "kind": "image",
+      "name": "agentmoor-provider-base:agentmoor-f6971a02f937",
+      "absent": true
+    },
+    {
+      "kind": "image",
+      "name": "agentmoor-security-fixture:agentmoor-f6971a02f937",
+      "absent": true
+    }
+  ],
+  "retained_dependency_cache": {
+    "contains_run_secrets": false,
+    "contains_test_ca": false,
+    "image_id": "sha256:0ebb9800e6978dedb7d5097bb8fb736858ba8e9ecc16c75c85b5761fed2de7bd",
+    "reference": "agentmoor-validation-cache:provider-codex-0.171-alpha.13",
+    "retained": true
+  },
+  "artifacts": [
+    {
+      "path": "/private/tmp/agentmoor-nodeproof-native-audit-3564b83-20261127-r1.json",
+      "bytes": 531587,
+      "sha256": "c9dfa768ebdc7aa9e62c4b3a33c90d81843d8299107f85ce6da1e58aed003087"
+    },
+    {
+      "path": "/private/tmp/agentmoor-nodeproof-native-audit-3564b83-20261127-r1.log",
+      "bytes": 137262,
+      "sha256": "91a678f457891b4778e3bd56a57cf4494bdbae74cc60708e74f8b4701de72c9e"
+    },
+    {
+      "path": "/private/tmp/agentmoor-nodeproof-native-metadata-3564b83-20261127-r1.json",
+      "bytes": 5093,
+      "sha256": "cd80949eeea5a7af3b358e8957f95779f4f9bf942db168a8d245976dd17f04b4"
+    },
+    {
+      "path": "/private/tmp/agentmoor-nodeproof-native-verify-3564b83.py",
+      "bytes": 5349,
+      "sha256": "508a57fd57a20665a69479d78462db5cff2c0cc55654b70316d683470ec165d1"
+    },
+    {
+      "path": "/private/tmp/agentmoor-nodeproof-native-observer-3564b83.py",
+      "bytes": 5439,
+      "sha256": "f1c9f61167169af92a3454a5ceeaafa70345fdb52e0af33fd18ead9f5716ed22"
+    }
+  ],
+  "boundary": "Audit events prove persisted ordering; a separate approved read-only exact-scope metadata observation proves real terminated.v1 exit0 and matches previously observed live CRI container IDs. Trusted Worker remains the output-to-asset byte publisher. Scripted model, actual Codex; no real model key."
+}

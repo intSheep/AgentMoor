@@ -268,6 +268,9 @@ func checkSandboxModelBudget(t *testing.T, c *Catalog, base asset.Scope) {
 							t.Fatal(err)
 						}
 					} else {
+						// Deletion requires a separate trusted stop observation;
+						// no other denial case is given that authority.
+						sandboxTestGuestStop(t, c, p.Run.Address(), uid, 1)
 						if _, err := c.ConfirmSandboxDeleted(t.Context(), p.Run.Address(), uid); err != nil {
 							t.Fatal(err)
 						}

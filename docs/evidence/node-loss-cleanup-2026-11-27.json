@@ -1,0 +1,2229 @@
+{
+  "schema": "node-loss-cleanup-evidence.v1",
+  "issue": "INT-90",
+  "issue_url": "https://linear.app/intsheep/issue/INT-90/节点失联与沙箱物理清理证明",
+  "scope": "trusted controller guest-stop proof, API object deletion and bounded real fault-window component probes",
+  "native_vendor": false,
+  "synthetic_data_only": true,
+  "runs": [
+    {
+      "run": "R1",
+      "source_commit": "85eee15eb77219c4355d93db5e5f37e3889eaf2d",
+      "status": "failed",
+      "failure": {
+        "type": "TypeError",
+        "message": "SecurityProbe.kube() got an unexpected keyword argument 'data'"
+      },
+      "original_json": {
+        "filename": "agentmoor-node-loss-probe-2026-11-27-r1.json",
+        "bytes": 229520,
+        "sha256": "27a2c7b0ab198b608a1446f519093fb3d717683c313561f81653943d98f778bc"
+      },
+      "original_log": {
+        "filename": "agentmoor-node-loss-probe-2026-11-27-r1.log",
+        "bytes": 2118,
+        "sha256": "c05969f4a628168c8d9c7946b6799f7686b072049d4fb0de896f2379e4fcdda3"
+      },
+      "cleanup": {
+        "completed": true,
+        "node_containers_remaining": [],
+        "private_kubeconfig_removed": true,
+        "controller_image_tag_removed": true,
+        "private_fixture_credentials_removed": true
+      },
+      "fault_injected": false,
+      "classification": "harness/environment setup failure, not a product acceptance result"
+    },
+    {
+      "run": "R2",
+      "source_commit": "9a55d1e943188b68f82cdadabb80543ff4d8a54c",
+      "status": "failed",
+      "failure": {
+        "type": "RuntimeError",
+        "message": "PHYSICAL_CLEANUP_INVARIANT: API404 was declared physical cleanup while the same child/Sentry remained live"
+      },
+      "original_json": {
+        "filename": "agentmoor-node-loss-probe-2026-11-27-r2.json",
+        "bytes": 312211,
+        "sha256": "b4560b75c492dd047aa39bb333077f62631551b553e8b1c0f79220f675d28fce"
+      },
+      "original_log": {
+        "filename": "agentmoor-node-loss-probe-2026-11-27-r2.log",
+        "bytes": 2289,
+        "sha256": "261cdf9f91994339c7166bfc3573d73755b504cd8f3fd6597e95d12d1d53fc98"
+      },
+      "cleanup": {
+        "completed": true,
+        "node_containers_remaining": [],
+        "private_kubeconfig_removed": true,
+        "controller_image_tag_removed": true,
+        "private_fixture_credentials_removed": true
+      },
+      "classification": "expected negative: old controller falsely equated API absence to physical cleanup",
+      "expected_negative_reproduced": true,
+      "native_vendor": false,
+      "driver_summary": [
+        {
+          "mode": "pending",
+          "pod_terminal": false,
+          "pod_deleted": true,
+          "api_not_found": false,
+          "requests": {
+            "posts": 1,
+            "gets": 4,
+            "deletes": 1
+          }
+        },
+        {
+          "mode": "normal",
+          "pod_terminal": true,
+          "pod_deleted": true,
+          "api_not_found": false,
+          "requests": {
+            "posts": 1,
+            "gets": 29,
+            "deletes": 10
+          }
+        },
+        {
+          "mode": "lost",
+          "pod_terminal": false,
+          "pod_deleted": true,
+          "api_not_found": true,
+          "requests": {
+            "posts": 1,
+            "gets": 8,
+            "deletes": 1
+          }
+        }
+      ],
+      "lost_live_window": {
+        "metric": {
+          "mode": "lost",
+          "run_id": "7f767b253c7111e39a3c90f44a9ed5980973db381f7057d888e900ce3f1aef9e",
+          "pod_name": "sandbox-7f767b253c7111e39a3c90f44a9ed598",
+          "pod_uid": "6cd4c51c-aee3-45a2-a16c-826f1d4c310d",
+          "namespace": "agentmoor-gvisor-probe",
+          "turn_id": "5ea75c30-f9ff-4b49-a5b4-6fb735fce18c",
+          "attempt_sha256": "43dd7594f1301265430453a1f5cde8627babbe9fd65123f5a742e1e5a1432b39",
+          "original_deadline": "2026-11-27T09:30:10.111374Z",
+          "state": "failed",
+          "pod_terminal": false,
+          "pod_deleted": true,
+          "api_not_found": true,
+          "capabilities_denied": true,
+          "checkpoint_unchanged": true,
+          "identity_deadline_unchanged": true,
+          "requests": {
+            "posts": 0,
+            "gets": 0,
+            "deletes": 0
+          }
+        },
+        "kubelet": {
+          "before": {
+            "MainPID": "699",
+            "ActiveState": "active",
+            "SubState": "running"
+          },
+          "after": {
+            "MainPID": "0",
+            "ActiveState": "inactive",
+            "SubState": "dead"
+          },
+          "containerd_before": {
+            "MainPID": "3302",
+            "ActiveState": "active",
+            "SubState": "running"
+          },
+          "containerd_after": {
+            "MainPID": "3302",
+            "ActiveState": "active",
+            "SubState": "running"
+          },
+          "api_ready_after_stop": "ok",
+          "observed_at_utc": "2026-11-27T09:15:12.362668+00:00"
+        },
+        "runtime": {
+          "pod_uid": "6cd4c51c-aee3-45a2-a16c-826f1d4c310d",
+          "sandbox_id": "e70d32e9be41f013329d35bdf7f6f25801aa36b70c69e8214a440cd92d2fddfc",
+          "sentry_pid": 5475,
+          "sentry_process": "   5475 gvisor_sentry   runsc-sandbox --panic-log=/var/log/pods/agentmoor-gvisor-probe_sandbox-7f767b253c7111e39a3c90f44a9ed598_6cd4c51c-aee3-45a2-a16c-826f1d4c310d/gvisor_panic.log --overlay2=all:memory,size=512m --platform=systrap --root=/run/containerd/runsc/k8s.io --debug=true --log=/run/containerd/io.containerd.runtime.v2.task/k8s.io/e70d32e9be41f013329d35bdf7f6f25801aa36b70c69e8214a440cd92d2fddfc/log.json --log-format=json --debug-log=/run/runsc-probe/ --log-fd=4 --debug-log-fd=5 --panic-log-fd=6 boot --bundle=/run/containerd/io.containerd.runtime.v2.task/k8s.io/e70d32e9be41f013329d35bdf7f6f25801aa36b70c69e8214a440cd92d2fddfc --gofer-mount-confs=lisafs:none,lisafs:none --apply-caps=true --setup-root --total-host-memory 16816517120 --cpu-num 2 --cpu-quota 25000 --cpu-period 100000 --total-memory 268435456 --io-fds=7 --io-fds=8 --dev-io-fd=-1 --mounts-fd=9 --pin-ring-fd=10 --user-log-fd=11 --controller-fd=12 --spec-fd=13 --proc-umounter-fd=14 --stdio-fds=15 --stdio-fds=16 --stdio-fds=17 e70d32e9be41f013329d35bdf7f6f25801aa36b70c69e8214a440cd92d2fddfc",
+          "runtime_handler": "runsc",
+          "runtime_type": "io.containerd.runsc.v1",
+          "sentry_start_ticks": "90118707",
+          "container_id": "0c896b60311b8463b03c53bdca678999141e9886dcfdae58b501243a876d1a56",
+          "log_path": "/var/log/pods/agentmoor-gvisor-probe_sandbox-7f767b253c7111e39a3c90f44a9ed598_6cd4c51c-aee3-45a2-a16c-826f1d4c310d/guest/0.log"
+        },
+        "post_api404_samples": [
+          {
+            "observed_at_utc": "2026-11-27T09:15:13.547682+00:00",
+            "observed_monotonic": 985484.1525315,
+            "node_unix_nano": 1795770913428175830,
+            "same_sentry": true,
+            "sandbox_ready": true,
+            "container_running": true,
+            "heartbeat": {
+              "nonce": "d438ccdef7ce40897af16d9e9fb2dcb4",
+              "pid": 6,
+              "sequence": 9,
+              "elapsed_nano": 2012332894,
+              "wall_unix_nano": 1795770913334880266,
+              "uid": 65532
+            },
+            "recent_heartbeats": [
+              {
+                "nonce": "d438ccdef7ce40897af16d9e9fb2dcb4",
+                "pid": 6,
+                "sequence": 2,
+                "elapsed_nano": 254289849,
+                "wall_unix_nano": 1795770911576843670,
+                "uid": 65532
+              },
+              {
+                "nonce": "d438ccdef7ce40897af16d9e9fb2dcb4",
+                "pid": 6,
+                "sequence": 3,
+                "elapsed_nano": 504833726,
+                "wall_unix_nano": 1795770911827380788,
+                "uid": 65532
+              },
+              {
+                "nonce": "d438ccdef7ce40897af16d9e9fb2dcb4",
+                "pid": 6,
+                "sequence": 4,
+                "elapsed_nano": 755814071,
+                "wall_unix_nano": 1795770912078361122,
+                "uid": 65532
+              },
+              {
+                "nonce": "d438ccdef7ce40897af16d9e9fb2dcb4",
+                "pid": 6,
+                "sequence": 5,
+                "elapsed_nano": 1006226908,
+                "wall_unix_nano": 1795770912328773949,
+                "uid": 65532
+              },
+              {
+                "nonce": "d438ccdef7ce40897af16d9e9fb2dcb4",
+                "pid": 6,
+                "sequence": 6,
+                "elapsed_nano": 1258951313,
+                "wall_unix_nano": 1795770912581498386,
+                "uid": 65532
+              },
+              {
+                "nonce": "d438ccdef7ce40897af16d9e9fb2dcb4",
+                "pid": 6,
+                "sequence": 7,
+                "elapsed_nano": 1510393498,
+                "wall_unix_nano": 1795770912832940682,
+                "uid": 65532
+              },
+              {
+                "nonce": "d438ccdef7ce40897af16d9e9fb2dcb4",
+                "pid": 6,
+                "sequence": 8,
+                "elapsed_nano": 1761037713,
+                "wall_unix_nano": 1795770913083584846,
+                "uid": 65532
+              },
+              {
+                "nonce": "d438ccdef7ce40897af16d9e9fb2dcb4",
+                "pid": 6,
+                "sequence": 9,
+                "elapsed_nano": 2012332894,
+                "wall_unix_nano": 1795770913334880266,
+                "uid": 65532
+              }
+            ]
+          },
+          {
+            "observed_at_utc": "2026-11-27T09:15:14.319064+00:00",
+            "observed_monotonic": 985484.923904041,
+            "node_unix_nano": 1795770914196340757,
+            "same_sentry": true,
+            "sandbox_ready": true,
+            "container_running": true,
+            "heartbeat": {
+              "nonce": "d438ccdef7ce40897af16d9e9fb2dcb4",
+              "pid": 6,
+              "sequence": 12,
+              "elapsed_nano": 2766972931,
+              "wall_unix_nano": 1795770914089520111,
+              "uid": 65532
+            },
+            "recent_heartbeats": [
+              {
+                "nonce": "d438ccdef7ce40897af16d9e9fb2dcb4",
+                "pid": 6,
+                "sequence": 5,
+                "elapsed_nano": 1006226908,
+                "wall_unix_nano": 1795770912328773949,
+                "uid": 65532
+              },
+              {
+                "nonce": "d438ccdef7ce40897af16d9e9fb2dcb4",
+                "pid": 6,
+                "sequence": 6,
+                "elapsed_nano": 1258951313,
+                "wall_unix_nano": 1795770912581498386,
+                "uid": 65532
+              },
+              {
+                "nonce": "d438ccdef7ce40897af16d9e9fb2dcb4",
+                "pid": 6,
+                "sequence": 7,
+                "elapsed_nano": 1510393498,
+                "wall_unix_nano": 1795770912832940682,
+                "uid": 65532
+              },
+              {
+                "nonce": "d438ccdef7ce40897af16d9e9fb2dcb4",
+                "pid": 6,
+                "sequence": 8,
+                "elapsed_nano": 1761037713,
+                "wall_unix_nano": 1795770913083584846,
+                "uid": 65532
+              },
+              {
+                "nonce": "d438ccdef7ce40897af16d9e9fb2dcb4",
+                "pid": 6,
+                "sequence": 9,
+                "elapsed_nano": 2012332894,
+                "wall_unix_nano": 1795770913334880266,
+                "uid": 65532
+              },
+              {
+                "nonce": "d438ccdef7ce40897af16d9e9fb2dcb4",
+                "pid": 6,
+                "sequence": 10,
+                "elapsed_nano": 2264361207,
+                "wall_unix_nano": 1795770913586908361,
+                "uid": 65532
+              },
+              {
+                "nonce": "d438ccdef7ce40897af16d9e9fb2dcb4",
+                "pid": 6,
+                "sequence": 11,
+                "elapsed_nano": 2515069190,
+                "wall_unix_nano": 1795770913837616547,
+                "uid": 65532
+              },
+              {
+                "nonce": "d438ccdef7ce40897af16d9e9fb2dcb4",
+                "pid": 6,
+                "sequence": 12,
+                "elapsed_nano": 2766972931,
+                "wall_unix_nano": 1795770914089520111,
+                "uid": 65532
+              }
+            ]
+          }
+        ],
+        "physical_cleanup": {
+          "no_live_sentry_gofer_shim": true,
+          "no_ready_cri": true,
+          "no_running_child_container": true,
+          "observed_at_utc": "2026-11-27T09:15:16.852270+00:00",
+          "method": "natural kubelet/runtime cleanup; no stop/rmp/signal"
+        }
+      },
+      "counter_note": "R2 transient reconciled metric had a pre-refresh requests field; the final driver_result counter is authoritative and is preserved separately. R3 fixed event counters without relabeling R2."
+    },
+    {
+      "run": "R3",
+      "source_commit": "bd0b08779447ef3a7f221f498436491e4234a54b",
+      "status": "failed",
+      "failure": {
+        "type": "RuntimeError",
+        "message": "PHYSICAL_CLEANUP_INVARIANT: API404 was declared physical cleanup while the same child/Sentry remained live"
+      },
+      "original_json": {
+        "filename": "agentmoor-node-loss-probe-2026-11-27-r3.json",
+        "bytes": 368140,
+        "sha256": "4f2b30bf226553d28cd7ea39cd7d3fb597ff5bacb02c91059ea5de6c6894c9d8"
+      },
+      "original_log": {
+        "filename": "agentmoor-node-loss-probe-2026-11-27-r3.log",
+        "bytes": 2289,
+        "sha256": "7e9edc16b6b79c4ee29fc950cb567bfdaa9c9037a952965a89d18131729ae8a4"
+      },
+      "cleanup": {
+        "completed": true,
+        "node_containers_remaining": [],
+        "private_kubeconfig_removed": true,
+        "controller_image_tag_removed": true,
+        "private_fixture_credentials_removed": true
+      },
+      "classification": "expected negative: old controller falsely equated API absence to physical cleanup",
+      "expected_negative_reproduced": true,
+      "native_vendor": false,
+      "driver_summary": [
+        {
+          "mode": "pending",
+          "pod_terminal": false,
+          "pod_deleted": true,
+          "api_not_found": false,
+          "requests": {
+            "posts": 1,
+            "gets": 4,
+            "deletes": 1
+          }
+        },
+        {
+          "mode": "normal",
+          "pod_terminal": true,
+          "pod_deleted": true,
+          "api_not_found": false,
+          "requests": {
+            "posts": 1,
+            "gets": 35,
+            "deletes": 13
+          }
+        },
+        {
+          "mode": "lost",
+          "pod_terminal": false,
+          "pod_deleted": true,
+          "api_not_found": true,
+          "requests": {
+            "posts": 1,
+            "gets": 13,
+            "deletes": 1
+          }
+        }
+      ],
+      "lost_live_window": {
+        "metric": {
+          "mode": "lost",
+          "run_id": "7c9570a0a00f493866ba002e5382ba7585bcf13e905996bfcef93aacde91dd15",
+          "pod_name": "sandbox-7c9570a0a00f493866ba002e5382ba75",
+          "pod_uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+          "namespace": "agentmoor-gvisor-probe",
+          "turn_id": "65580d53-f5a1-4fe4-996a-93dfc4525a41",
+          "attempt_sha256": "e7ab412b8ed685a110def9212fb71e33da58f8ab976c3156ceac6ec2c673f5af",
+          "original_deadline": "2026-11-27T09:39:41.563299Z",
+          "state": "failed",
+          "pod_terminal": false,
+          "pod_deleted": true,
+          "api_not_found": true,
+          "capabilities_denied": true,
+          "checkpoint_unchanged": true,
+          "identity_deadline_unchanged": true,
+          "requests": {
+            "posts": 1,
+            "gets": 13,
+            "deletes": 1
+          },
+          "status_history": [
+            {
+              "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+              "resource_version": "817",
+              "node_name": "",
+              "phase": "Pending",
+              "deletion_timestamp": "",
+              "containers": null
+            },
+            {
+              "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+              "resource_version": "818",
+              "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+              "phase": "Pending",
+              "deletion_timestamp": "",
+              "containers": null
+            },
+            {
+              "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+              "resource_version": "820",
+              "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+              "phase": "Pending",
+              "deletion_timestamp": "",
+              "containers": [
+                {
+                  "name": "guest",
+                  "containerID": "",
+                  "restartCount": 0,
+                  "state": {}
+                }
+              ]
+            },
+            {
+              "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+              "resource_version": "820",
+              "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+              "phase": "Pending",
+              "deletion_timestamp": "",
+              "containers": [
+                {
+                  "name": "guest",
+                  "containerID": "",
+                  "restartCount": 0,
+                  "state": {}
+                }
+              ]
+            },
+            {
+              "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+              "resource_version": "823",
+              "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+              "phase": "Pending",
+              "deletion_timestamp": "",
+              "containers": [
+                {
+                  "name": "guest",
+                  "containerID": "",
+                  "restartCount": 0,
+                  "state": {}
+                }
+              ]
+            },
+            {
+              "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+              "resource_version": "823",
+              "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+              "phase": "Pending",
+              "deletion_timestamp": "",
+              "containers": [
+                {
+                  "name": "guest",
+                  "containerID": "",
+                  "restartCount": 0,
+                  "state": {}
+                }
+              ]
+            },
+            {
+              "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+              "resource_version": "823",
+              "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+              "phase": "Pending",
+              "deletion_timestamp": "",
+              "containers": [
+                {
+                  "name": "guest",
+                  "containerID": "",
+                  "restartCount": 0,
+                  "state": {}
+                }
+              ]
+            },
+            {
+              "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+              "resource_version": "823",
+              "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+              "phase": "Pending",
+              "deletion_timestamp": "",
+              "containers": [
+                {
+                  "name": "guest",
+                  "containerID": "",
+                  "restartCount": 0,
+                  "state": {}
+                }
+              ]
+            },
+            {
+              "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+              "resource_version": "823",
+              "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+              "phase": "Pending",
+              "deletion_timestamp": "",
+              "containers": [
+                {
+                  "name": "guest",
+                  "containerID": "",
+                  "restartCount": 0,
+                  "state": {}
+                }
+              ]
+            },
+            {
+              "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+              "resource_version": "829",
+              "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+              "phase": "Running",
+              "deletion_timestamp": "",
+              "containers": [
+                {
+                  "name": "guest",
+                  "containerID": "containerd://95be43eb925ab36d916a2f786fd7e5dbfa0453ecdb0adaf37e3964b6807b4cc4",
+                  "restartCount": 0,
+                  "state": {
+                    "running": {
+                      "startedAt": "2026-11-27T09:24:42Z"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+              "resource_version": "829",
+              "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+              "phase": "Running",
+              "deletion_timestamp": "",
+              "containers": [
+                {
+                  "name": "guest",
+                  "containerID": "containerd://95be43eb925ab36d916a2f786fd7e5dbfa0453ecdb0adaf37e3964b6807b4cc4",
+                  "restartCount": 0,
+                  "state": {
+                    "running": {
+                      "startedAt": "2026-11-27T09:24:42Z"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "kubelet": {
+          "before": {
+            "MainPID": "709",
+            "ActiveState": "active",
+            "SubState": "running"
+          },
+          "after": {
+            "MainPID": "0",
+            "ActiveState": "inactive",
+            "SubState": "dead"
+          },
+          "containerd_before": {
+            "MainPID": "3357",
+            "ActiveState": "active",
+            "SubState": "running"
+          },
+          "containerd_after": {
+            "MainPID": "3357",
+            "ActiveState": "active",
+            "SubState": "running"
+          },
+          "api_ready_after_stop": "ok",
+          "observed_at_utc": "2026-11-27T09:24:45.231970+00:00"
+        },
+        "runtime": {
+          "pod_uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+          "sandbox_id": "13284b0e8ace9cb0231329a66cfccbca5bf919f4549c830249be5448861dd661",
+          "sentry_pid": 5734,
+          "sentry_process": "   5734 gvisor_sentry   runsc-sandbox --root=/run/containerd/runsc/k8s.io --debug=true --log=/run/containerd/io.containerd.runtime.v2.task/k8s.io/13284b0e8ace9cb0231329a66cfccbca5bf919f4549c830249be5448861dd661/log.json --log-format=json --debug-log=/run/runsc-probe/ --panic-log=/var/log/pods/agentmoor-gvisor-probe_sandbox-7c9570a0a00f493866ba002e5382ba75_dcb44372-65b7-4773-b061-fa6f8968f9f4/gvisor_panic.log --overlay2=all:memory,size=512m --platform=systrap --log-fd=4 --debug-log-fd=5 --panic-log-fd=6 boot --bundle=/run/containerd/io.containerd.runtime.v2.task/k8s.io/13284b0e8ace9cb0231329a66cfccbca5bf919f4549c830249be5448861dd661 --gofer-mount-confs=lisafs:none,lisafs:none --apply-caps=true --setup-root --total-host-memory 16816517120 --cpu-num 2 --cpu-quota 25000 --cpu-period 100000 --total-memory 268435456 --io-fds=7 --io-fds=8 --dev-io-fd=-1 --mounts-fd=9 --pin-ring-fd=10 --user-log-fd=11 --controller-fd=12 --spec-fd=13 --proc-umounter-fd=14 --stdio-fds=15 --stdio-fds=16 --stdio-fds=17 13284b0e8ace9cb0231329a66cfccbca5bf919f4549c830249be5448861dd661",
+          "runtime_handler": "runsc",
+          "runtime_type": "io.containerd.runsc.v1",
+          "sentry_start_ticks": "90175877",
+          "container_id": "95be43eb925ab36d916a2f786fd7e5dbfa0453ecdb0adaf37e3964b6807b4cc4",
+          "log_path": "/var/log/pods/agentmoor-gvisor-probe_sandbox-7c9570a0a00f493866ba002e5382ba75_dcb44372-65b7-4773-b061-fa6f8968f9f4/guest/0.log"
+        },
+        "post_api404_samples": [
+          {
+            "observed_at_utc": "2026-11-27T09:24:46.312724+00:00",
+            "observed_monotonic": 986056.907977041,
+            "node_unix_nano": 1795771486179027594,
+            "same_sentry": true,
+            "sandbox_ready": true,
+            "container_running": true,
+            "heartbeat": {
+              "nonce": "553d791e1e4a1c948a1dc3fdeb1d36cb",
+              "pid": 6,
+              "sequence": 10,
+              "elapsed_nano": 2270364999,
+              "wall_unix_nano": 1795771486089900577,
+              "uid": 65532
+            },
+            "recent_heartbeats": [
+              {
+                "nonce": "553d791e1e4a1c948a1dc3fdeb1d36cb",
+                "pid": 6,
+                "sequence": 3,
+                "elapsed_nano": 503887517,
+                "wall_unix_nano": 1795771484323423096,
+                "uid": 65532
+              },
+              {
+                "nonce": "553d791e1e4a1c948a1dc3fdeb1d36cb",
+                "pid": 6,
+                "sequence": 4,
+                "elapsed_nano": 754315805,
+                "wall_unix_nano": 1795771484573851343,
+                "uid": 65532
+              },
+              {
+                "nonce": "553d791e1e4a1c948a1dc3fdeb1d36cb",
+                "pid": 6,
+                "sequence": 5,
+                "elapsed_nano": 1006424245,
+                "wall_unix_nano": 1795771484825959824,
+                "uid": 65532
+              },
+              {
+                "nonce": "553d791e1e4a1c948a1dc3fdeb1d36cb",
+                "pid": 6,
+                "sequence": 6,
+                "elapsed_nano": 1262651209,
+                "wall_unix_nano": 1795771485082186788,
+                "uid": 65532
+              },
+              {
+                "nonce": "553d791e1e4a1c948a1dc3fdeb1d36cb",
+                "pid": 6,
+                "sequence": 7,
+                "elapsed_nano": 1515378075,
+                "wall_unix_nano": 1795771485334913654,
+                "uid": 65532
+              },
+              {
+                "nonce": "553d791e1e4a1c948a1dc3fdeb1d36cb",
+                "pid": 6,
+                "sequence": 8,
+                "elapsed_nano": 1767353096,
+                "wall_unix_nano": 1795771485586888634,
+                "uid": 65532
+              },
+              {
+                "nonce": "553d791e1e4a1c948a1dc3fdeb1d36cb",
+                "pid": 6,
+                "sequence": 9,
+                "elapsed_nano": 2020129755,
+                "wall_unix_nano": 1795771485839665334,
+                "uid": 65532
+              },
+              {
+                "nonce": "553d791e1e4a1c948a1dc3fdeb1d36cb",
+                "pid": 6,
+                "sequence": 10,
+                "elapsed_nano": 2270364999,
+                "wall_unix_nano": 1795771486089900577,
+                "uid": 65532
+              }
+            ]
+          },
+          {
+            "observed_at_utc": "2026-11-27T09:24:47.093367+00:00",
+            "observed_monotonic": 986057.688609125,
+            "node_unix_nano": 1795771486963073150,
+            "same_sentry": true,
+            "sandbox_ready": true,
+            "container_running": true,
+            "heartbeat": {
+              "nonce": "553d791e1e4a1c948a1dc3fdeb1d36cb",
+              "pid": 6,
+              "sequence": 13,
+              "elapsed_nano": 3026725568,
+              "wall_unix_nano": 1795771486846261147,
+              "uid": 65532
+            },
+            "recent_heartbeats": [
+              {
+                "nonce": "553d791e1e4a1c948a1dc3fdeb1d36cb",
+                "pid": 6,
+                "sequence": 6,
+                "elapsed_nano": 1262651209,
+                "wall_unix_nano": 1795771485082186788,
+                "uid": 65532
+              },
+              {
+                "nonce": "553d791e1e4a1c948a1dc3fdeb1d36cb",
+                "pid": 6,
+                "sequence": 7,
+                "elapsed_nano": 1515378075,
+                "wall_unix_nano": 1795771485334913654,
+                "uid": 65532
+              },
+              {
+                "nonce": "553d791e1e4a1c948a1dc3fdeb1d36cb",
+                "pid": 6,
+                "sequence": 8,
+                "elapsed_nano": 1767353096,
+                "wall_unix_nano": 1795771485586888634,
+                "uid": 65532
+              },
+              {
+                "nonce": "553d791e1e4a1c948a1dc3fdeb1d36cb",
+                "pid": 6,
+                "sequence": 9,
+                "elapsed_nano": 2020129755,
+                "wall_unix_nano": 1795771485839665334,
+                "uid": 65532
+              },
+              {
+                "nonce": "553d791e1e4a1c948a1dc3fdeb1d36cb",
+                "pid": 6,
+                "sequence": 10,
+                "elapsed_nano": 2270364999,
+                "wall_unix_nano": 1795771486089900577,
+                "uid": 65532
+              },
+              {
+                "nonce": "553d791e1e4a1c948a1dc3fdeb1d36cb",
+                "pid": 6,
+                "sequence": 11,
+                "elapsed_nano": 2521541382,
+                "wall_unix_nano": 1795771486341076960,
+                "uid": 65532
+              },
+              {
+                "nonce": "553d791e1e4a1c948a1dc3fdeb1d36cb",
+                "pid": 6,
+                "sequence": 12,
+                "elapsed_nano": 2773603196,
+                "wall_unix_nano": 1795771486593138775,
+                "uid": 65532
+              },
+              {
+                "nonce": "553d791e1e4a1c948a1dc3fdeb1d36cb",
+                "pid": 6,
+                "sequence": 13,
+                "elapsed_nano": 3026725568,
+                "wall_unix_nano": 1795771486846261147,
+                "uid": 65532
+              }
+            ]
+          }
+        ],
+        "physical_cleanup": {
+          "no_live_sentry_gofer_shim": true,
+          "no_ready_cri": true,
+          "no_running_child_container": true,
+          "observed_at_utc": "2026-11-27T09:24:50.075629+00:00",
+          "method": "natural kubelet/runtime cleanup; no stop/rmp/signal"
+        }
+      },
+      "status_histories": {
+        "pending": [
+          {
+            "uid": "6d0875de-13d8-4f16-a7f1-068cf252079c",
+            "resource_version": "777",
+            "node_name": "",
+            "phase": "Pending",
+            "deletion_timestamp": "",
+            "containers": null
+          },
+          {
+            "uid": "6d0875de-13d8-4f16-a7f1-068cf252079c",
+            "resource_version": "777",
+            "node_name": "",
+            "phase": "Pending",
+            "deletion_timestamp": "",
+            "containers": null
+          },
+          {
+            "uid": "6d0875de-13d8-4f16-a7f1-068cf252079c",
+            "resource_version": "779",
+            "node_name": "",
+            "phase": "Pending",
+            "deletion_timestamp": "",
+            "containers": null
+          }
+        ],
+        "normal": [
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "789",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Pending",
+            "deletion_timestamp": "",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "",
+                "restartCount": 0,
+                "state": {}
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "789",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Pending",
+            "deletion_timestamp": "",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "",
+                "restartCount": 0,
+                "state": {}
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "792",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Pending",
+            "deletion_timestamp": "",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "",
+                "restartCount": 0,
+                "state": {}
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "792",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Pending",
+            "deletion_timestamp": "",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "",
+                "restartCount": 0,
+                "state": {}
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "792",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Pending",
+            "deletion_timestamp": "",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "",
+                "restartCount": 0,
+                "state": {}
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "792",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Pending",
+            "deletion_timestamp": "",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "",
+                "restartCount": 0,
+                "state": {}
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "799",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "799",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "802",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "802",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "802",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "802",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "802",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "802",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "805",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "805",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "805",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "805",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "805",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "805",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "805",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "805",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "805",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "805",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "805",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "805",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "805",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "808",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "808",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:36Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "813",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Failed",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "terminated": {
+                    "exitCode": 143,
+                    "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                    "startedAt": "2026-11-27T09:24:36Z",
+                    "finishedAt": "2026-11-27T09:24:39Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "813",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Failed",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "terminated": {
+                    "exitCode": 143,
+                    "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                    "startedAt": "2026-11-27T09:24:36Z",
+                    "finishedAt": "2026-11-27T09:24:39Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "4f18acab-6fff-4fd7-a2e0-f37400a31b23",
+            "resource_version": "813",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Failed",
+            "deletion_timestamp": "2026-11-27T09:24:43Z",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                "restartCount": 0,
+                "state": {
+                  "terminated": {
+                    "exitCode": 143,
+                    "containerID": "containerd://a7aca942b9411db21daf29f0aecb1885be3b5201c7483eee7de07c053d9e26c0",
+                    "startedAt": "2026-11-27T09:24:36Z",
+                    "finishedAt": "2026-11-27T09:24:39Z"
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "lost": [
+          {
+            "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+            "resource_version": "817",
+            "node_name": "",
+            "phase": "Pending",
+            "deletion_timestamp": "",
+            "containers": null
+          },
+          {
+            "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+            "resource_version": "818",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Pending",
+            "deletion_timestamp": "",
+            "containers": null
+          },
+          {
+            "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+            "resource_version": "820",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Pending",
+            "deletion_timestamp": "",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "",
+                "restartCount": 0,
+                "state": {}
+              }
+            ]
+          },
+          {
+            "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+            "resource_version": "820",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Pending",
+            "deletion_timestamp": "",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "",
+                "restartCount": 0,
+                "state": {}
+              }
+            ]
+          },
+          {
+            "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+            "resource_version": "823",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Pending",
+            "deletion_timestamp": "",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "",
+                "restartCount": 0,
+                "state": {}
+              }
+            ]
+          },
+          {
+            "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+            "resource_version": "823",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Pending",
+            "deletion_timestamp": "",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "",
+                "restartCount": 0,
+                "state": {}
+              }
+            ]
+          },
+          {
+            "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+            "resource_version": "823",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Pending",
+            "deletion_timestamp": "",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "",
+                "restartCount": 0,
+                "state": {}
+              }
+            ]
+          },
+          {
+            "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+            "resource_version": "823",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Pending",
+            "deletion_timestamp": "",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "",
+                "restartCount": 0,
+                "state": {}
+              }
+            ]
+          },
+          {
+            "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+            "resource_version": "823",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Pending",
+            "deletion_timestamp": "",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "",
+                "restartCount": 0,
+                "state": {}
+              }
+            ]
+          },
+          {
+            "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+            "resource_version": "829",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://95be43eb925ab36d916a2f786fd7e5dbfa0453ecdb0adaf37e3964b6807b4cc4",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:42Z"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "uid": "dcb44372-65b7-4773-b061-fa6f8968f9f4",
+            "resource_version": "829",
+            "node_name": "agentmoor-aef3b3aa1d7d-control-plane",
+            "phase": "Running",
+            "deletion_timestamp": "",
+            "containers": [
+              {
+                "name": "guest",
+                "containerID": "containerd://95be43eb925ab36d916a2f786fd7e5dbfa0453ecdb0adaf37e3964b6807b4cc4",
+                "restartCount": 0,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T09:24:42Z"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "run": "R4",
+      "source_commit": null,
+      "status": "failed",
+      "failure": {
+        "type": "FileNotFoundError",
+        "message": "[Errno 2] No such file or directory: 'docker'"
+      },
+      "original_json": {
+        "filename": "agentmoor-node-loss-probe-2026-11-27-r4.json",
+        "bytes": 3101,
+        "sha256": "be33ac66e68497cc465f6d91859a9ea999e3f03203412434fb7ece1b25ec7601"
+      },
+      "original_log": {
+        "filename": "agentmoor-node-loss-probe-2026-11-27-r4.log",
+        "bytes": 747,
+        "sha256": "e7d6ee1ca1e3575d2be40acd16e9c82d9e06c169b564861efaacc8587ca77498"
+      },
+      "cleanup": null,
+      "fault_injected": false,
+      "classification": "harness/environment setup failure, not a product acceptance result"
+    },
+    {
+      "run": "R5",
+      "source_commit": "bc9b29f7e37fd7363cb69dc5daf71f18ff5e0962",
+      "status": "passed",
+      "failure": null,
+      "original_json": {
+        "filename": "agentmoor-node-loss-probe-2026-11-27-r5.json",
+        "bytes": 514831,
+        "sha256": "69628aa2bb8a7fd9b7178afddba04e00a1486da2967db5312f4c66cf7927e9ca"
+      },
+      "original_log": {
+        "filename": "agentmoor-node-loss-probe-2026-11-27-r5.log",
+        "bytes": 2464,
+        "sha256": "26aaab7763b833b40171c94bd5a04ca48c5e67b58c05a615368a912ca9e9a5c0"
+      },
+      "cleanup": {
+        "completed": true,
+        "node_containers_remaining": [],
+        "private_kubeconfig_removed": true,
+        "controller_image_tag_removed": true,
+        "private_fixture_credentials_removed": true
+      },
+      "committed_raw": "node-loss-cleanup-r5-2026-11-27.json",
+      "classification": "fixed actual guest stop-proof component acceptance",
+      "native_vendor": false,
+      "fixed_guest_stop_matrix_passed": true,
+      "driver_exit_code": 0,
+      "fixture_source_sha256": {
+        "tests/kubernetes/node_loss_probe.py": "fd2d67c0d589c7ee05beab2c0fc128f37e32ee98d6f2369b6a71c11cb1d2709e",
+        "tests/kubernetes/node_loss_network.py": "4adb269dc9b8755d21746809a09c9a8e2849f5f9fae3d752382f03211068f9fe",
+        "internal/sandboxkube/node_loss_kubernetes_test.go": "69be9b2661a2b322b3ded7008a74eba54fff0d3976f3db97a124f0c422f51e6a",
+        "tests/kubernetes/controllerfixture/main.go": "1b34841716d55fce3d082f953713b8635f6f74f359ceef8e73cf7eb458a75e96"
+      },
+      "fixture_binary_sha256": "8888dab11fa808cfac2d9cf16d4b369698b828eb7cbdcec214ce86ee72306327",
+      "source_status": ""
+    }
+  ],
+  "runtime": {
+    "kubernetes": "v1.35.0",
+    "calico": "v3.33.0",
+    "gvisor_release": "release-20261123.1",
+    "gvisor_commit": "81f68cb7d4661a9313d891a1758a765abe8eb27e",
+    "containerd": "v2.4.2",
+    "platform": "systrap",
+    "architecture": "aarch64",
+    "guest_rlimit_nproc": 64,
+    "host_pod_pids_limit": 256,
+    "overlay2": "all:memory,size=512m",
+    "owned_parent_memory_bytes": 2147483648,
+    "owned_parent_swap_max": "0",
+    "scope": "R5 synthetic component node only; actual native provider node memory/configuration are recorded separately in its original artifact."
+  },
+  "source_provenance": {
+    "actual_component_source": "bc9b29f7e37fd7363cb69dc5daf71f18ff5e0962",
+    "difference": "Only internal/sandboxgateway/audit_test.go adds an explicit synthetic trusted controller stop-proof to its existing positive fixture. Production and node-loss fixture/harness unchanged.",
+    "pre_deadline_merge_checks_source": "3564b831ab536fc8bd5d5426545a102b7a82de22",
+    "final_combined_checks_source": "c383c8525c024d7e9fd55a05dbeab1a01f19b7dd",
+    "deadline_merge_head": "4c2462d132b328210807c88befa6f21be317e3fd",
+    "formal_main": "4c224d4ea6a9ef4182a83626df1c8d3da164ed93",
+    "post_main_check_source": "5244e194913538e079442d39419cc6448f0eac53"
+  },
+  "limitations": [
+    "One owned kind node; stopping kubelet is a partition surrogate, not physical power fencing or production multi-node HA.",
+    "Synthetic single Go child only; no vendor CLI, real model, customer Skill or SaaS chain acceptance in R5.",
+    "Terminated guest status attests runtime-reported guest stop, not release of every Sentry/gofer/shim or host resource; actual fixed-version process cleanup is observed separately.",
+    "Finite direct TCP canaries with fresh reachable controls; no arbitrary Internet isolation proof.",
+    "Component-only host TLS input exception is literal-IP/exact-port, absent from production reference NetworkPolicy.",
+    "count/pods proves object admission budget, not aggregate physical CPU/memory capacity or automatic failover.",
+    "Legacy no-proof rows remain readable, but protected new operations fail closed; no retroactive synthetic proof, custom shim or privileged host reaper."
+  ],
+  "validation": {
+    "final_local": {
+      "source_commit": "3564b831ab536fc8bd5d5426545a102b7a82de22",
+      "command": "make fmt && make check && make demo && make test-services",
+      "exit_code": 0,
+      "log": {
+        "filename": "agentmoor-nodeproof-final-checks-20261127-r8.log",
+        "bytes": 22770,
+        "sha256": "19e06fa0c82f8ed5560af7f74024e8ef5678b878258f412646cb2355835144e9"
+      },
+      "gateway_race_seconds": 5.521,
+      "actual_postgres_s3_seconds": 18.49,
+      "services_project": "agentmoor-test-58949",
+      "actual_services_cleanup": "postgres, s3 containers and compose network removed (recorded in log)",
+      "note": "make check initially found one old gateway audit positive fixture without proof; only the explicit synthetic trusted observation was added in 3564b83. Final complete check passed."
+    },
+    "focused": [
+      {
+        "command": "go test -race ./internal/sandboxkube ./internal/worker",
+        "stage": "before final test-only gateway fixture correction; production same as bc9b29f",
+        "exit_code": 0,
+        "log": {
+          "filename": "agentmoor-nodeproof-controller-worker-r7.log",
+          "bytes": 82,
+          "sha256": "32cea89494af668058a4f336136d2dde7c3546298d4269cc19b544ec72709899"
+        },
+        "sandboxkube_seconds": 4.978,
+        "worker_seconds": 63.421
+      },
+      {
+        "command": "go test -race -tags integration ./internal/sandboxkube -run ^TestNodeLossStatusTrace -count=1",
+        "source_commit": "bc9b29f7e37fd7363cb69dc5daf71f18ff5e0962",
+        "exit_code": 0,
+        "seconds": 1.569
+      },
+      {
+        "command": "python3 -m unittest discover -s tests/kubernetes -p node_loss_probe_test.py -v",
+        "source_commit": "bc9b29f7e37fd7363cb69dc5daf71f18ff5e0962",
+        "exit_code": 0,
+        "test_count": 9
+      }
+    ],
+    "platform_before_main_integration": {
+      "base": "89097334cb9d69537990941e2f0a38477988f78f",
+      "stage": "uncommitted final platform R6 before main INT89 integration",
+      "files": {
+        "internal/platform/audit.go": {
+          "bytes": 18903,
+          "sha256": "9b93dab1cc89e3d6cf7cb7a6bc7526e05e8e23a2cc204d0fc7a9e9afbe9c1f9a"
+        },
+        "internal/platform/object_collection_test.go": {
+          "bytes": 32105,
+          "sha256": "fb69718860358d199362af8ef4825afaaa28ed990cc4f58024a4577eb2815fc7"
+        },
+        "internal/platform/sandbox_controller_test.go": {
+          "bytes": 15182,
+          "sha256": "c9603c6dfbf05ff998da4925cd6d9531b46dc4fcd869e8cf02b431cc0c7dbc3e"
+        },
+        "internal/platform/sandbox_guest_stop.go": {
+          "bytes": 6057,
+          "sha256": "10d19430de05b899f7440668b9b74672b6c9753c6d899898d49e5b08d8130e45"
+        },
+        "internal/platform/sandbox_guest_stop_services_test.go": {
+          "bytes": 5516,
+          "sha256": "9a393ed19bddec4ce3991b05dd28dee3509e8bd88c4e0aead632f9be37a01e54"
+        },
+        "internal/platform/sandbox_guest_stop_test.go": {
+          "bytes": 20869,
+          "sha256": "81521b39163194f30110443a04606e4f848fd72b85294c662d86af4ce64dfd41"
+        },
+        "internal/platform/sandbox_http_test.go": {
+          "bytes": 12055,
+          "sha256": "fcbf2c1487900cb5bb2ce6b4dd072d3588fe329504cb1f9a4fe2437d9cf82b75"
+        },
+        "internal/platform/sandbox_model_budget_test.go": {
+          "bytes": 17775,
+          "sha256": "46fd50909d9f020105e7128404306f2f70b1730410d0b75f53907a8e0bcd6b1b"
+        },
+        "internal/platform/sandbox_runs.go": {
+          "bytes": 17953,
+          "sha256": "2db3794271ec05e92ab1eceb641275cc9557cdf8581d4fa43580a4cb230163a9"
+        },
+        "internal/platform/sandbox_runs_blobs.go": {
+          "bytes": 6798,
+          "sha256": "4bc40d3663a9333f9d1ced6329028d063e0460959ab79384b90c71ae18fa86d1"
+        },
+        "internal/platform/sandbox_runs_store.go": {
+          "bytes": 7272,
+          "sha256": "1f92c8a4649e131ba49074a66509cb5cec6fdaf2e917181d209e6de4714a9c63"
+        },
+        "internal/platform/sandbox_runs_test.go": {
+          "bytes": 28683,
+          "sha256": "d3a348cfb905e9b7907dd85a31423f49de61161291b5f5e291ed0e1072fae3d4"
+        },
+        "internal/platform/services_test.go": {
+          "bytes": 12181,
+          "sha256": "27204b59e60b2c43c6056e52fca3a040ed26bee4457c6d89f6c60b63588d1e85"
+        }
+      },
+      "logs": {
+        "/private/tmp/agentmoor-nodeproof-platform-full-r6-20261127.log": {
+          "bytes": 41,
+          "sha256": "147d5a1a117b73bcf35e2cafd74656703c6b3f59662029212e14ad66e5fee95c"
+        },
+        "/private/tmp/agentmoor-nodeproof-services-r6-20261127.log": {
+          "bytes": 1335,
+          "sha256": "0af8e2b62cda95dd01c581d14edbcd456375d27cfe9d9ee1db72bc74e384992d"
+        },
+        "/private/tmp/agentmoor-nodeproof-cleanup-unknown-before-20261127.log": {
+          "bytes": 217,
+          "sha256": "897585fd484c2c3a4bbb894186889c3c0c068b57e9ade2b9b2870da6b82abce0"
+        },
+        "/private/tmp/agentmoor-nodeproof-cleanup-unknown-after-20261127.log": {
+          "bytes": 40,
+          "sha256": "ccc6b779e27b9d5f82f4f426bde4763e3deab50175b7cbf7b93e74975d8284af"
+        },
+        "/private/tmp/agentmoor-nodeproof-frozen-binding-before-20261127.log": {
+          "bytes": 773,
+          "sha256": "431e6358a7fe3b3d52ed885340c7fe5b5f750476b2f301a162f6aa1406298e7c"
+        },
+        "/private/tmp/agentmoor-nodeproof-frozen-binding-after-20261127.log": {
+          "bytes": 40,
+          "sha256": "ccc6b779e27b9d5f82f4f426bde4763e3deab50175b7cbf7b93e74975d8284af"
+        }
+      },
+      "outcomes": {
+        "platform_race": "PASS 21.591s",
+        "services": "PASS; PostgreSQL/S3 containers/network removed",
+        "cleanup_unknown": "old FAIL then exact same test file PASS",
+        "frozen_binding": "old three-case FAIL then exact same test file PASS"
+      },
+      "ownership": "Only platform tests/helpers changed by untrusted_boundary_audit; native_gvisor_debug owns production. Not staged or committed."
+    },
+    "exact_same_test_regressions": [
+      {
+        "name": "cleanup-unknown",
+        "classification": "uncommitted intermediate implementation defect caught and fixed before final acceptance",
+        "before": "failed",
+        "after": "passed",
+        "same_test_file_sha256": "975cd7782f65ccb3c56fc17b82299659afeeb4dde39f5c0f40fefe269256fe9f",
+        "test_file_hash_equal": true,
+        "before_files": {
+          "internal/platform/sandbox_guest_stop.go": "cbe76042e6f0cc2e3f9213ccb1a361a60ab84cbb52bf2451a2a4ce9cee601777",
+          "internal/platform/sandbox_runs_store.go": "4d98ae4248f58afc0a5e6d74bbf9505050157b80412d3942f87a321242674442",
+          "internal/platform/sandbox_runs_blobs.go": "4bc40d3663a9333f9d1ced6329028d063e0460959ab79384b90c71ae18fa86d1",
+          "internal/platform/sandbox_runs.go": "2db3794271ec05e92ab1eceb641275cc9557cdf8581d4fa43580a4cb230163a9",
+          "internal/platform/audit.go": "9b93dab1cc89e3d6cf7cb7a6bc7526e05e8e23a2cc204d0fc7a9e9afbe9c1f9a",
+          "internal/platform/sandbox_guest_stop_test.go": "975cd7782f65ccb3c56fc17b82299659afeeb4dde39f5c0f40fefe269256fe9f"
+        },
+        "after_files": {
+          "internal/platform/sandbox_guest_stop.go": "9c0137c20169473d75315edd5553392c67a573bb80957cfed58e3a0edb2ead4b",
+          "internal/platform/sandbox_runs_store.go": "ecd620cab509e0caf46cf3be03355a8f86a9f49e81d3c988baf1d552c04832fd",
+          "internal/platform/sandbox_runs_blobs.go": "4bc40d3663a9333f9d1ced6329028d063e0460959ab79384b90c71ae18fa86d1",
+          "internal/platform/sandbox_runs.go": "2db3794271ec05e92ab1eceb641275cc9557cdf8581d4fa43580a4cb230163a9",
+          "internal/platform/audit.go": "9b93dab1cc89e3d6cf7cb7a6bc7526e05e8e23a2cc204d0fc7a9e9afbe9c1f9a",
+          "internal/platform/sandbox_guest_stop_test.go": "975cd7782f65ccb3c56fc17b82299659afeeb4dde39f5c0f40fefe269256fe9f"
+        },
+        "before_log": {
+          "filename": "agentmoor-nodeproof-cleanup-unknown-before-20261127.log",
+          "bytes": 217,
+          "sha256": "897585fd484c2c3a4bbb894186889c3c0c068b57e9ade2b9b2870da6b82abce0"
+        },
+        "after_log": {
+          "filename": "agentmoor-nodeproof-cleanup-unknown-after-20261127.log",
+          "bytes": 40,
+          "sha256": "ccc6b779e27b9d5f82f4f426bde4763e3deab50175b7cbf7b93e74975d8284af"
+        }
+      },
+      {
+        "name": "frozen-binding",
+        "classification": "uncommitted intermediate implementation defect caught and fixed before final acceptance",
+        "before": "failed",
+        "after": "passed",
+        "same_test_file_sha256": "81521b39163194f30110443a04606e4f848fd72b85294c662d86af4ce64dfd41",
+        "test_file_hash_equal": true,
+        "before_files": {
+          "internal/platform/sandbox_guest_stop.go": "9c0137c20169473d75315edd5553392c67a573bb80957cfed58e3a0edb2ead4b",
+          "internal/platform/sandbox_runs_store.go": "ecd620cab509e0caf46cf3be03355a8f86a9f49e81d3c988baf1d552c04832fd",
+          "internal/platform/sandbox_runs_blobs.go": "4bc40d3663a9333f9d1ced6329028d063e0460959ab79384b90c71ae18fa86d1",
+          "internal/platform/sandbox_runs.go": "2db3794271ec05e92ab1eceb641275cc9557cdf8581d4fa43580a4cb230163a9",
+          "internal/platform/audit.go": "9b93dab1cc89e3d6cf7cb7a6bc7526e05e8e23a2cc204d0fc7a9e9afbe9c1f9a",
+          "internal/platform/sandbox_guest_stop_test.go": "81521b39163194f30110443a04606e4f848fd72b85294c662d86af4ce64dfd41"
+        },
+        "after_files": {
+          "internal/platform/sandbox_guest_stop.go": "10d19430de05b899f7440668b9b74672b6c9753c6d899898d49e5b08d8130e45",
+          "internal/platform/sandbox_runs_store.go": "1f92c8a4649e131ba49074a66509cb5cec6fdaf2e917181d209e6de4714a9c63",
+          "internal/platform/sandbox_runs_blobs.go": "4bc40d3663a9333f9d1ced6329028d063e0460959ab79384b90c71ae18fa86d1",
+          "internal/platform/sandbox_runs.go": "2db3794271ec05e92ab1eceb641275cc9557cdf8581d4fa43580a4cb230163a9",
+          "internal/platform/audit.go": "9b93dab1cc89e3d6cf7cb7a6bc7526e05e8e23a2cc204d0fc7a9e9afbe9c1f9a",
+          "internal/platform/sandbox_guest_stop_test.go": "81521b39163194f30110443a04606e4f848fd72b85294c662d86af4ce64dfd41"
+        },
+        "before_log": {
+          "filename": "agentmoor-nodeproof-frozen-binding-before-20261127.log",
+          "bytes": 773,
+          "sha256": "431e6358a7fe3b3d52ed885340c7fe5b5f750476b2f301a162f6aa1406298e7c"
+        },
+        "after_log": {
+          "filename": "agentmoor-nodeproof-frozen-binding-after-20261127.log",
+          "bytes": 40,
+          "sha256": "ccc6b779e27b9d5f82f4f426bde4763e3deab50175b7cbf7b93e74975d8284af"
+        }
+      }
+    ],
+    "execute_http_bypass_regression": {
+      "before_production_source": "4509140 (old checkSandboxSuccessRun selected via read-only Go overlay)",
+      "after_production_source": "bc9b29f7e37fd7363cb69dc5daf71f18ff5e0962",
+      "cases": [
+        "missing proof with legacy Ready/terminal/deleted flags",
+        "CleanupUnknown with earlier matching proof",
+        "never-scheduled proof with old Ready flags",
+        "nonzero terminated proof with old success flags"
+      ],
+      "actual_http": true,
+      "before": "all four correctly failed the negative assertion because old guard accepted Finish",
+      "after": "all denied with task/checkpoint/accepted audit unchanged",
+      "same_test_file_sha256": "a29ae40550b669638acd3e772763ee16377c82d15f80319f8ae2d81f1ffec545",
+      "before_log": {
+        "filename": "before.log",
+        "bytes": 2998,
+        "sha256": "ccdf5006bcb25fdafa7c333aeb03b0cf5fba0ea81a0407cd68ca13eb48e0976c"
+      },
+      "after_log": {
+        "filename": "after.log",
+        "bytes": 40,
+        "sha256": "8b55e9917f7ef7b93b0133dbfa13cdc8093843a9044ae339e987c122e09ae63b"
+      },
+      "actual_services_log": {
+        "filename": "services.log",
+        "bytes": 1335,
+        "sha256": "800ed09d0fbbd60c2db47f435b0c9ed394e9f720662471906207fce2eb5f945a"
+      }
+    },
+    "gateway_positive_fixture_before_log": {
+      "filename": "agentmoor-nodeproof-gateway-positive-before.log",
+      "bytes": 3388,
+      "sha256": "de08814d455bd8ef8d5a34c0f2497a80664b240ef2749ee5dab12fe92e7703d0"
+    },
+    "gateway_positive_fixture_before_note": "Expected old test setup rejection by the new gate; not a production failure. Explicit trusted synthetic stop proof was then added and final whole package passed.",
+    "full_four_cli": {
+      "source_commit": "3564b831ab536fc8bd5d5426545a102b7a82de22",
+      "command": "make test-k8s",
+      "exit_code": 0,
+      "cluster": "agentmoor-391317f1b694",
+      "log": {
+        "filename": "agentmoor-nodeproof-full4-20261127-r8.log",
+        "bytes": 14117,
+        "sha256": "eb836d1fec90d2a65879afe1b75ee500c4b04a8e24ceb40e147fbe9d87173988"
+      },
+      "results": [
+        {
+          "adapter": "codex",
+          "report_after_pod_deletion": true,
+          "consecutive_new_job_turns": 2,
+          "active_followup_cancel": true,
+          "native_turn_cancel_seconds": 4.5
+        },
+        {
+          "adapter": "gemini-cli",
+          "report_after_pod_deletion": true,
+          "consecutive_new_job_turns": 2,
+          "active_followup_cancel": true,
+          "native_turn_cancel_seconds": 3.0
+        },
+        {
+          "adapter": "opencode",
+          "report_after_pod_deletion": true,
+          "consecutive_new_job_turns": 2,
+          "active_followup_cancel": true,
+          "native_turn_cancel_seconds": 3.7
+        },
+        {
+          "adapter": "claude-code",
+          "report_after_pod_deletion": true,
+          "consecutive_new_job_turns": 2,
+          "active_followup_cancel": true,
+          "native_turn_cancel_seconds": 3.8
+        }
+      ],
+      "actual_cleanup": {
+        "owned_node_containers_remaining": [],
+        "run_image_tags_removed": {
+          "agentmoor-contract:agentmoor-391317f1b694-codex": true,
+          "agentmoor-contract:agentmoor-391317f1b694-gemini-cli": true,
+          "agentmoor-contract:agentmoor-391317f1b694-opencode": true,
+          "agentmoor-contract:agentmoor-391317f1b694-claude-code": true
+        }
+      },
+      "scope": "default trusted-local text contract regression; separate from actual gVisor acceptance"
+    },
+    "actual_codex_saas": {
+      "source_commit": "3564b831ab536fc8bd5d5426545a102b7a82de22",
+      "status": "passed",
+      "native_vendor": true,
+      "real_model_key_used": false,
+      "command": "python3 tests/kubernetes/sandbox_audit_chain.py --output /private/tmp/agentmoor-nodeproof-native-audit-3564b83-20261127-r1.json --bundle /private/tmp/agentmoor-gvisor-probe/gvisor-aarch64.tar.bz2 --calico-manifest /private/tmp/agentmoor-calico-v3.33.0.yaml",
+      "operator_event_count": 73,
+      "action_counts": {
+        "task.queued": 1,
+        "task.claimed": 1,
+        "sandbox.begun": 3,
+        "sandbox.input_sealed": 3,
+        "sandbox.create_fenced": 3,
+        "sandbox.template_sealed": 3,
+        "sandbox.pod_bound": 3,
+        "sandbox.runtime_bound": 6,
+        "model.reserved": 3,
+        "sandbox.output_declared": 3,
+        "sandbox.output_sealed": 3,
+        "sandbox.terminated": 3,
+        "sandbox.guest_stop_proven": 3,
+        "sandbox.deleted": 3,
+        "revision.committed": 11,
+        "task.succeeded": 1,
+        "sandbox.result_accepted": 3,
+        "asset.linked": 11,
+        "turn.queued": 2,
+        "turn.claimed": 2,
+        "turn.succeeded": 2
+      },
+      "native_rounds": 3,
+      "immutable_downloads_rechecked": 11,
+      "proof_join_summary": [
+        {
+          "run_id": "309f7a6d4f3b8795b98d19ada6d3ae1d1744acee626f4912bf886f16c73926eb",
+          "turn_id": "be7a8f39-8250-446d-9bed-b69083e6a6ca",
+          "pod_uid": "67dd1063-5d89-4c46-8d5d-b99e2ceab611",
+          "container_id": "containerd://fccb569d63d401ba60baf0ef039ece63622f56d430dcf6fc418f6646264e3b00",
+          "proof_kind": "terminated.v1",
+          "proof_exit_code": 0,
+          "terminal_cursor": 36,
+          "stop_proven_cursor": 37,
+          "deleted_cursor": 38,
+          "accepted_cursor": 44,
+          "output_sha256": "df0ba99dac18487339231896f7399dfd3369f8f61ae02bbe93532d3f5a70ffea",
+          "asset_link_cursors": [
+            45,
+            46,
+            47,
+            48
+          ]
+        },
+        {
+          "run_id": "843a65eaeb7fd5245254cb71df238fc2f730d669aeb11081b71558747a22c3bc",
+          "turn_id": null,
+          "pod_uid": "276d80a8-4738-4c2e-bb8b-a1300b6826e6",
+          "container_id": "containerd://df72583787da203ead8075da906d6f0caee4872502c25c88975fc51850fdc61c",
+          "proof_kind": "terminated.v1",
+          "proof_exit_code": 0,
+          "terminal_cursor": 13,
+          "stop_proven_cursor": 14,
+          "deleted_cursor": 15,
+          "accepted_cursor": 20,
+          "output_sha256": "a2549b69cf99b78d90b6ea4a048d9284119aa5c5d5fd4f78df73dedbd69da1b8",
+          "asset_link_cursors": [
+            21,
+            22,
+            23
+          ]
+        },
+        {
+          "run_id": "ed6f1e7aa44ed99b32c6a8ea2c8186edc911a44d4a6fd810738e9bbc29e0e093",
+          "turn_id": "ded7067b-293b-4f8d-993f-69f81f9aaa63",
+          "pod_uid": "7beffc33-bf08-4ff6-baba-101df2a3409f",
+          "container_id": "containerd://263a4d0f3ffcc78b241b2b7d0aa336fc7c3ad8d57366842345774d9799312a1a",
+          "proof_kind": "terminated.v1",
+          "proof_exit_code": 0,
+          "terminal_cursor": 61,
+          "stop_proven_cursor": 62,
+          "deleted_cursor": 63,
+          "accepted_cursor": 69,
+          "output_sha256": "28aaa457f9f03cce932aeb7d4d82c3302c3b4097b5e9bb224d7151ff3c9fdd4f",
+          "asset_link_cursors": [
+            70,
+            71,
+            72,
+            73
+          ]
+        }
+      ],
+      "actual_cleanup": [
+        {
+          "kind": "container",
+          "name": "agentmoor-f6971a02f937-control-plane",
+          "absent": true
+        },
+        {
+          "kind": "container",
+          "name": "agentmoor-f6971a02f937-outside-fixture",
+          "absent": true
+        },
+        {
+          "kind": "image",
+          "name": "agentmoor-provider:agentmoor-f6971a02f937",
+          "absent": true
+        },
+        {
+          "kind": "image",
+          "name": "agentmoor-provider-base:agentmoor-f6971a02f937",
+          "absent": true
+        },
+        {
+          "kind": "image",
+          "name": "agentmoor-security-fixture:agentmoor-f6971a02f937",
+          "absent": true
+        }
+      ],
+      "retained_dependency_cache": {
+        "contains_run_secrets": false,
+        "contains_test_ca": false,
+        "image_id": "sha256:0ebb9800e6978dedb7d5097bb8fb736858ba8e9ecc16c75c85b5761fed2de7bd",
+        "reference": "agentmoor-validation-cache:provider-codex-0.171-alpha.13",
+        "retained": true
+      },
+      "artifacts": [
+        {
+          "original_filename": "agentmoor-nodeproof-native-audit-3564b83-20261127-r1.json",
+          "committed_file": "node-loss-native-audit-2026-11-27.json",
+          "bytes": 531587,
+          "sha256": "c9dfa768ebdc7aa9e62c4b3a33c90d81843d8299107f85ce6da1e58aed003087"
+        },
+        {
+          "original_filename": "agentmoor-nodeproof-native-metadata-3564b83-20261127-r1.json",
+          "committed_file": "node-loss-native-metadata-2026-11-27.json",
+          "bytes": 5093,
+          "sha256": "cd80949eeea5a7af3b358e8957f95779f4f9bf942db168a8d245976dd17f04b4"
+        },
+        {
+          "original_filename": "agentmoor-nodeproof-native-verified-3564b83-20261127-r1.json",
+          "committed_file": "node-loss-native-verified-2026-11-27.json",
+          "bytes": 5396,
+          "sha256": "e0bddaa95a2318985a41a1e7051af44ffaaeaea4a377e8bad6b4ad02a70ce9de"
+        },
+        {
+          "original_filename": "agentmoor-nodeproof-native-verify-3564b83.py",
+          "committed_file": "node-loss-native-verifier-3564b83.py.txt",
+          "bytes": 5349,
+          "sha256": "508a57fd57a20665a69479d78462db5cff2c0cc55654b70316d683470ec165d1"
+        },
+        {
+          "original_filename": "agentmoor-nodeproof-native-observer-3564b83.py",
+          "committed_file": "node-loss-native-observer-3564b83.py.txt",
+          "bytes": 5439,
+          "sha256": "f1c9f61167169af92a3454a5ceeaafa70345fdb52e0af33fd18ead9f5716ed22"
+        }
+      ],
+      "original_artifact_inventory": [
+        {
+          "path": "/private/tmp/agentmoor-nodeproof-native-audit-3564b83-20261127-r1.json",
+          "bytes": 531587,
+          "sha256": "c9dfa768ebdc7aa9e62c4b3a33c90d81843d8299107f85ce6da1e58aed003087"
+        },
+        {
+          "path": "/private/tmp/agentmoor-nodeproof-native-audit-3564b83-20261127-r1.log",
+          "bytes": 137262,
+          "sha256": "91a678f457891b4778e3bd56a57cf4494bdbae74cc60708e74f8b4701de72c9e"
+        },
+        {
+          "path": "/private/tmp/agentmoor-nodeproof-native-metadata-3564b83-20261127-r1.json",
+          "bytes": 5093,
+          "sha256": "cd80949eeea5a7af3b358e8957f95779f4f9bf942db168a8d245976dd17f04b4"
+        },
+        {
+          "path": "/private/tmp/agentmoor-nodeproof-native-verify-3564b83.py",
+          "bytes": 5349,
+          "sha256": "508a57fd57a20665a69479d78462db5cff2c0cc55654b70316d683470ec165d1"
+        },
+        {
+          "path": "/private/tmp/agentmoor-nodeproof-native-observer-3564b83.py",
+          "bytes": 5439,
+          "sha256": "f1c9f61167169af92a3454a5ceeaafa70345fdb52e0af33fd18ead9f5716ed22"
+        }
+      ],
+      "metadata_observer_method": "trusted operator exec; existing SQLite URI mode=ro/query_only; exact scope and JSON field whitelist; no Source/attempt/cap/payload/signing key/model key read",
+      "boundary": "Audit events prove persisted ordering; a separate approved read-only exact-scope metadata observation proves real terminated.v1 exit0 and matches previously observed live CRI container IDs. Trusted Worker remains the output-to-asset byte publisher. Scripted model, actual Codex; no real model key.",
+      "additional_observation": "Independent trusted read-only metadata whitelist observer while the owned cluster was live, followed by a bounded post-run verifier. Exact one-run scripts are committed as text evidence, not generic operational commands."
+    },
+    "final_combined": {
+      "source_commit": "c383c8525c024d7e9fd55a05dbeab1a01f19b7dd",
+      "merged_deadline_head": "4c2462d132b328210807c88befa6f21be317e3fd",
+      "command": "make fmt && make check && make demo && make test-services && make test-k8s",
+      "exit_code": 0,
+      "log": {
+        "filename": "agentmoor-nodeproof-combined-checks-20261127-r9.log",
+        "bytes": 36834,
+        "sha256": "35c7166daf0327420dfb0e65cc58d59897f9949a2626acb029aba83936679215",
+        "committed_gzip": "node-loss-combined-checks-2026-11-27.log.gz",
+        "gzip_sha256": "0fde1250fc84a74da88f9fc36d09883b85a995fe01c2de68f2cf1686c4e920b4"
+      },
+      "platform_race_seconds": 38.844,
+      "gateway_race_seconds": 8.466,
+      "controller_race_seconds": 6.463,
+      "worker_race_seconds": 62.732,
+      "actual_postgres_s3_seconds": 43.865,
+      "four_cli": [
+        {
+          "adapter": "codex",
+          "report_after_pod_deletion": true,
+          "consecutive_new_job_turns": 2,
+          "active_followup_cancel": true,
+          "native_turn_cancel_seconds": 3.0
+        },
+        {
+          "adapter": "gemini-cli",
+          "report_after_pod_deletion": true,
+          "consecutive_new_job_turns": 2,
+          "active_followup_cancel": true,
+          "native_turn_cancel_seconds": 3.1
+        },
+        {
+          "adapter": "opencode",
+          "report_after_pod_deletion": true,
+          "consecutive_new_job_turns": 2,
+          "active_followup_cancel": true,
+          "native_turn_cancel_seconds": 3.8
+        },
+        {
+          "adapter": "claude-code",
+          "report_after_pod_deletion": true,
+          "consecutive_new_job_turns": 2,
+          "active_followup_cancel": true,
+          "native_turn_cancel_seconds": 2.3
+        }
+      ],
+      "actual_cleanup": {
+        "cluster": "agentmoor-7031b14840cc",
+        "owned_node_containers_remaining": [],
+        "run_image_tags_removed": {
+          "agentmoor-contract:agentmoor-7031b14840cc-codex": true,
+          "agentmoor-contract:agentmoor-7031b14840cc-gemini-cli": true,
+          "agentmoor-contract:agentmoor-7031b14840cc-opencode": true,
+          "agentmoor-contract:agentmoor-7031b14840cc-claude-code": true
+        },
+        "services_project": "agentmoor-test-64557",
+        "services_containers_remaining": [],
+        "services_network_removed": true
+      },
+      "scope": "Integrated stop-proof and deadline-maintenance production source; full4 remains the default trusted-local text regression. Earlier R5 and real Codex results retain their original source hashes."
+    },
+    "post_main_merge": {
+      "source_commit": "5244e194913538e079442d39419cc6448f0eac53",
+      "formal_main": "4c224d4ea6a9ef4182a83626df1c8d3da164ed93",
+      "test_fix_commit": "ee1dea2670ff8cefb4e8e671d699c60221332c82",
+      "command": "make fmt && go test -race ./internal/sandboxkube -run '^TestControllerCreateTimeoutRecoversWithGETOnly$' -count=5 -v && make check",
+      "exit_code": 0,
+      "focused_pass_count": 5,
+      "focused_race_seconds": 22.565,
+      "whole_controller_race_seconds": 8.222,
+      "log": {
+        "filename": "agentmoor-nodeproof-main-final-check-20261127-r10.log",
+        "bytes": 17731,
+        "sha256": "b457df2062fa85ddcbcbde364d579ed526d8ec778e7c34da366bdaaaa175456d",
+        "committed_gzip": "node-loss-main-final-check-2026-11-27.log.gz",
+        "gzip_sha256": "ff1701478b47d30dae573349acd5636f4e165d7596802fa12826de5397bb8809"
+      },
+      "execution_file_diff_from_full_matrix_source": [
+        "internal/sandboxkube/controller_test.go"
+      ],
+      "production_and_acceptance_harness_changed": false,
+      "formal_main_merge_tree_diff": [],
+      "note": "Only the pre-existing unit timeout fixture changed: real POST accepted/release synchronization, real timeout preserved, then normal GET budget. Production parameters are unchanged. The complete five-command result stays attributed to c383c85; no R5/native/full4 retagging."
+    }
+  }
+}

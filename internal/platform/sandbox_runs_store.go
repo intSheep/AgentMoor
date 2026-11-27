@@ -47,6 +47,9 @@ func scanSandbox(row sandboxScanner) (SandboxRun, error) {
 	if fingerprint != r.RecordFingerprint || !r.Deadline.Equal(r.Source.Deadline) {
 		return SandboxRun{}, ErrConflict
 	}
+	if !r.validGuestBinding() {
+		return SandboxRun{}, ErrConflict
+	}
 	return r, nil
 }
 
@@ -85,6 +88,9 @@ func (c *Catalog) ListSandboxRuns(ctx context.Context, scope asset.Scope) ([]San
 // saveSandbox is called under c.mu; all reads use the pool and the transaction
 // only mutates on the connection owning the service lease.
 func (c *Catalog) saveSandbox(ctx context.Context, r *SandboxRun, revoke string, caps []sandboxCap) error {
+	if !r.validGuestBinding() {
+		return ErrConflict
+	}
 	before, err := c.loadSandbox(ctx, r.Address())
 	if err != nil {
 		return err
@@ -180,7 +186,9 @@ func (c *Catalog) collectSandbox(ctx context.Context, scope asset.Scope, before 
 		if current != nil && !errors.Is(current, ErrConflict) && !errors.Is(current, ErrMissing) {
 			return 0, current
 		}
-		active[r.ID] = current == nil
+		// A lost/legacy created sandbox without guest stop-proof is retained,
+		// even if its task is inactive or its old API-deleted flag is true.
+		active[r.ID] = current == nil || (r.CreateStarted && (!r.PodDeleted || !r.GuestStopped()))
 		keep := !r.UpdatedAt.Before(before) || active[r.ID]
 		if !keep {
 			continue

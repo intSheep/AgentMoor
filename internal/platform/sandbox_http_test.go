@@ -131,6 +131,7 @@ func (f handoffHTTPFixture) prepare(t *testing.T) {
 	if _, err := f.c.RecordSandboxTerminal(t.Context(), f.address, uid, 0); err != nil {
 		t.Fatal(err)
 	}
+	sandboxTestGuestStop(t, f.c, f.address, uid, 0)
 	if _, err := f.c.ConfirmSandboxDeleted(t.Context(), f.address, uid); err != nil {
 		t.Fatal(err)
 	}

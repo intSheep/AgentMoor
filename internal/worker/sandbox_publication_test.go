@@ -246,6 +246,9 @@ func (h *sandboxPublicationHarness) packet(record task.Record, session string, w
 	if _, err := h.catalog.RecordSandboxTerminal(h.t.Context(), a, uid, 0); err != nil {
 		h.t.Fatal(err)
 	}
+	if err := fixtureGuestStopped(h.t.Context(), h.catalog, a, uid, 0); err != nil {
+		h.t.Fatal(err)
+	}
 	if _, err := h.catalog.ConfirmSandboxDeleted(h.t.Context(), a, uid); err != nil {
 		h.t.Fatal(err)
 	}
