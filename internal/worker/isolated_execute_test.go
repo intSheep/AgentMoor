@@ -120,17 +120,18 @@ func (c *isolatedExecutionControl) Cancel(ctx context.Context, a platform.Sandbo
 
 type isolatedExecutionHarness struct {
 	*sandboxPublicationHarness
-	adapter     *isolatedExecutionAdapter
-	controller  *isolatedExecutionControl
-	realAPI     http.Handler
-	requests    atomic.Int64
-	faultUsed   atomic.Bool
-	fault       string
-	finishEarly atomic.Bool
-	claimMu     sync.Mutex
-	claims      map[string][]task.Claim
-	outputReads atomic.Int64
-	session     string
+	adapter        *isolatedExecutionAdapter
+	controller     *isolatedExecutionControl
+	realAPI        http.Handler
+	requests       atomic.Int64
+	faultUsed      atomic.Bool
+	fault          string
+	finishEarly    atomic.Bool
+	claimMu        sync.Mutex
+	claims         map[string][]task.Claim
+	outputReads    atomic.Int64
+	finishRequests atomic.Int64
+	session        string
 }
 
 func newIsolatedExecutionHarness(t *testing.T) *isolatedExecutionHarness {
@@ -167,6 +168,7 @@ func (h *isolatedExecutionHarness) serveIsolated(w http.ResponseWriter, r *http.
 		h.claimMu.Unlock()
 	}
 	if strings.HasSuffix(r.URL.Path, "/finish") {
+		h.finishRequests.Add(1)
 		turn := ""
 		parts := strings.Split(r.URL.Path, "/")
 		if len(parts) == 7 {
@@ -183,6 +185,10 @@ func (h *isolatedExecutionHarness) serveIsolated(w http.ResponseWriter, r *http.
 		}
 	}
 	start := r.Method == "POST" && strings.HasSuffix(r.URL.Path, "/sandbox")
+	if strings.HasSuffix(r.URL.Path, "/sandbox/cancel") && h.fault == "cleanup-forbidden" {
+		http.Error(w, "synthetic cleanup authority denied", http.StatusForbidden)
+		return
+	}
 	if start && h.fault == "before-start-503" && h.faultUsed.CompareAndSwap(false, true) {
 		http.Error(w, "synthetic pre-start outage", 503)
 		return
@@ -440,6 +446,60 @@ func TestIsolatedProviderCleansCreatedPodBeforeCancelledOrDeadlineFinish(t *test
 				t.Fatal("cancelled/deadline turn changed the successful checkpoint or old bytes")
 			}
 		})
+	}
+}
+
+func TestIsolatedProviderRefusesFinishWhenCleanupDeletionIsUnconfirmed(t *testing.T) {
+	h := newIsolatedExecutionHarness(t)
+	h.submit("")
+	first := h.engine()
+	if err := first.RunTask(t.Context(), 0); err != nil {
+		t.Fatal("positive parent control failed", err)
+	}
+	checkpoint := h.checkpoint()
+	oldWorkspace, oldSession := h.download(checkpoint.Workspace), h.download(checkpoint.Session)
+	turn := uuid.NewString()
+	h.submit(turn)
+	h.controller.mu.Lock()
+	h.controller.hold = true
+	h.controller.started = make(chan struct{})
+	h.controller.startOnce = sync.Once{}
+	h.controller.mu.Unlock()
+	h.fault = "cleanup-forbidden"
+	beforeFinish := h.finishRequests.Load()
+	e := h.engine()
+	done := make(chan error, 1)
+	go func() { done <- e.RunTurn(t.Context(), turn) }()
+	select {
+	case <-h.controller.started:
+	case <-time.After(5 * time.Second):
+		t.Fatal("synthetic execution did not start")
+	}
+	var cancelled task.Record
+	if err := h.saas.JSON(t.Context(), "POST", h.route(turn)+"/cancel", nil, &cancelled); err != nil || cancelled.State != task.Cancelling {
+		t.Fatal("public cancellation did not enter cancelling", err)
+	}
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Fatal("cleanup rejection was hidden by a cancelled acknowledgement")
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("Worker did not report rejected cleanup")
+	}
+	var current task.Record
+	if err := h.saas.JSON(t.Context(), "GET", h.route(turn), nil, &current); err != nil || current.State != task.Cancelling || len(current.Assets) != 0 || h.finishRequests.Load() != beforeFinish {
+		t.Fatal("Worker finished cancellation without confirmed deletion", current, err)
+	}
+	h.controller.mu.Lock()
+	address := h.controller.addresses[turn]
+	h.controller.mu.Unlock()
+	status, err := h.worker.SandboxTask(t.Context(), h.route(turn)+"/sandbox", "/status", address.Attempt)
+	if err != nil || !status.Run.CreateStarted || status.Run.PodDeleted || h.adapter.nativeCalls.Load() != 0 {
+		t.Fatal("negative control did not retain a live unconfirmed owner", err)
+	}
+	if !reflect.DeepEqual(checkpoint, h.checkpoint()) || !bytes.Equal(oldWorkspace, h.download(checkpoint.Workspace)) || !bytes.Equal(oldSession, h.download(checkpoint.Session)) {
+		t.Fatal("unconfirmed cleanup changed the successful checkpoint or bytes")
 	}
 }
 
