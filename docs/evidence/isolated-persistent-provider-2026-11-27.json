@@ -159,5 +159,8 @@
   },
   "post_main_go_diff_paths": [
     "internal/sandboxkube/controller_test.go"
-  ]
+  ],
+  "final_main_merge_source": "56d81ac4942af372d0e3751eac7deb80cd336896",
+  "final_main_commit": "d56da4e42ad6305b9d17f89961621b28fbceb2ff",
+  "final_main_code_fixture_diff_from_checked_source": []
 }
