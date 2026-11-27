@@ -28,6 +28,7 @@ type Config struct {
 	RuntimeCLI        string          `json:"runtime_cli,omitempty"`
 	RuntimeVersion    string          `json:"runtime_version,omitempty"`
 	ExecutionPolicy   string          `json:"execution_policy,omitempty"`
+	IsolatedProvider  string          `json:"isolated_provider,omitempty"`
 	NativeSessions    bool            `json:"native_sessions,omitempty"`
 	WorkspaceTransfer string          `json:"workspace_transfer,omitempty"`
 }
@@ -73,6 +74,9 @@ func resolve(p string) (string, error) {
 }
 
 func (c Config) Validate() error {
+	if c.IsolatedProvider != "" && (c.IsolatedProvider != KubernetesGVisorProvider || c.ExecutionPolicy != ExecutionUntrustedIsolated) {
+		return fmt.Errorf("unsupported isolated_provider or execution_policy")
+	}
 	switch c.ExecutionPolicy {
 	case "", ExecutionTrustedLocal, ExecutionUntrustedIsolated:
 	default:
@@ -125,7 +129,7 @@ func (c Config) Validate() error {
 	if c.NativeSessions && (c.RuntimeCLI == "" || c.Sessions != "") {
 		return fmt.Errorf("native_sessions requires runtime_cli and a separate native home instead of a sessions directory")
 	}
-	if c.RuntimeVersion != "" && c.RuntimeCLI == "" {
+	if c.RuntimeVersion != "" && c.RuntimeCLI == "" && c.IsolatedProvider != KubernetesGVisorProvider {
 		return fmt.Errorf("version check needs runtime_cli")
 	}
 	return nil
