@@ -1,0 +1,298 @@
+{
+  "kind": "audit_successful_asset_links_evidence",
+  "linear_issue": "INT-85",
+  "scope": "platform operations audit; authenticated successful Finish only",
+  "implementation_commits": {
+    "asset_links": "4e76d071f873809691ac77510e44f88c31905e3b",
+    "original_deadline_fix": "e3e33ccecaca76ad6755a89ddcc92a5a6ba799d6",
+    "deadline_fix_delivery_cherry_pick": "40d579fd7ac738b200fab1a623415fd4562a9a41"
+  },
+  "initial_implementation_validation": {
+    "focused": {
+      "command": "go test -race ./internal/platform -run '^TestAuditAssetLinks' -count=1 -v",
+      "exit_code": 0,
+      "log_path": "/private/tmp/agentmoor-audit-asset-links-focused-2026-11-27-r2.log",
+      "log_sha256": "c8bfa127b49662667d8d1df86fd37bdaf62cd10b21868b707b7791f3ee3f01f1",
+      "production_source_commit": "4e76d071f873809691ac77510e44f88c31905e3b",
+      "run_source_note": "Pre-commit focused run. Production files match the implementation commit; the later test-only sync.Once trigger-cleanup adjustment was not yet present."
+    },
+    "services": {
+      "source_commit": "4e76d071f873809691ac77510e44f88c31905e3b",
+      "command": "make test-services",
+      "exit_code": 0,
+      "log_path": "/private/tmp/agentmoor-audit-asset-links-services-2026-11-27-r2.log",
+      "log_sha256": "66afaa71be72327a9fbc4a5749a0f8f4e859ead7685b38d7dd0d9e20115e9117"
+    },
+    "check": {
+      "source_commit": "4e76d071f873809691ac77510e44f88c31905e3b",
+      "command": "make check",
+      "exit_code": 0,
+      "log_path": "/private/tmp/agentmoor-audit-asset-links-check-2026-11-27-r1.log",
+      "log_sha256": "16204c1226cd8a10d8a0197ad2af4116a86b028bf8bc3eef1307580fa3b0e7ee"
+    },
+    "demo": {
+      "source_commit": "4e76d071f873809691ac77510e44f88c31905e3b",
+      "command": "make demo",
+      "exit_code": 0,
+      "log_path": "/private/tmp/agentmoor-audit-asset-links-demo-2026-11-27-r1.log",
+      "log_sha256": "c2608aad4d5d93514020328683f79bd3d9511b34837e3c27a1a6dbb960ffb38d"
+    },
+    "full_cli_matrix": {
+      "source_commit": "4e76d071f873809691ac77510e44f88c31905e3b",
+      "command": "make test-k8s",
+      "exit_code": 0,
+      "log_path": "/private/tmp/agentmoor-audit-asset-links-k8s-2026-11-27-r1.log",
+      "log_sha256": "36ab7a2485e447227e4df9d2d3582b6834f8ff70f72d0266deee7a4810df5136",
+      "adapters": [
+        "codex",
+        "gemini-cli",
+        "opencode",
+        "claude-code"
+      ],
+      "contract_groups": 16,
+      "successful_followups": 8,
+      "cancellation_seconds": {
+        "codex": 3.7,
+        "gemini-cli": 3.8,
+        "opencode": 3.1,
+        "claude-code": 2.3
+      },
+      "owned_cluster": "agentmoor-a0d0742c9dde",
+      "cleanup": {
+        "node_absent_verified": true,
+        "four_owned_image_tags_absent_verified": true
+      }
+    }
+  },
+  "assertions": {
+    "transports": "actual TCP HTTP API; SQLite/local objects and actual PostgreSQL/S3 service fixtures",
+    "authoritative_address": "Scope/Task/Turn from taskAddress, not a parsed asset ID/path",
+    "receipt": "initial and two followups each link two declared artifacts plus workspace/session; unlisted artifact and a newer primary head remain unlinked",
+    "maximum": {
+      "artifacts": 128,
+      "workspace": 1,
+      "session": 1,
+      "total_links": 130,
+      "one_over_rejected_without_audit_change": true
+    },
+    "ack_loss": "actual TCP connection closed after successful transaction before reply; explicit retry returns old receipt without new events",
+    "negative_authority": [
+      "forged turn-like revision path",
+      "foreign-scope-only asset reference",
+      "wrong digest",
+      "duplicate ref",
+      "wrong attempt",
+      "failed Finish",
+      "cancelled Finish"
+    ],
+    "rollback": "actual database triggers reject link 1, 2 or 4 after earlier transaction writes; task, all audit rows and old checkpoint remain unchanged in both SQLite and PostgreSQL",
+    "writer_loss": "second link trigger actually terminates the leased PostgreSQL backend in an owned database; no partial success, no read-pool write fallback, fresh owner completes, replay remains deduplicated",
+    "privacy": "raw native Session ID, attempt, asset ID/path, body, token and signing secret absent from stored audit events",
+    "history": "previous audit prefix remains byte-equivalent; legacy successful checkpoint fixture does not invent a historical audit link"
+  },
+  "deadline_fix_validation": {
+    "focused": {
+      "command": "go test -race ./internal/platform -run '^TestAuditAssetLinks' -count=1 -v",
+      "exit_code": 0,
+      "log_path": "/private/tmp/agentmoor-audit-asset-links-deadline-fixed-focused-2026-11-27-r1.log",
+      "log_sha256": "3b6ce6dc3881ddfb9eafe6e3a830d7a8fc84eae8f8fc16a7a28c2346548f50dd",
+      "compiled_source_commit": "e3e33ccecaca76ad6755a89ddcc92a5a6ba799d6",
+      "run_source_note": "Pre-commit focused run. All compiled source files match this commit; the later integration-only owned-database helper refactor is excluded without the integration build tag."
+    },
+    "services": {
+      "source_commit": "e3e33ccecaca76ad6755a89ddcc92a5a6ba799d6",
+      "command": "make test-services",
+      "exit_code": 0,
+      "log_path": "/private/tmp/agentmoor-audit-asset-links-deadline-fixed-services-2026-11-27-r2.log",
+      "log_sha256": "5b5c91a858a440e119cb81742c3f195fa4515608cc4128315e64337aa4557894"
+    },
+    "sqlite": "actual writer SQLite function blocks inside link 2 until original deadline passes; entire transaction rolls back",
+    "postgres": "real writer backend observed in PgSleep inside link 2; original two-second task deadline cancels four-second SQL sleep; entire transaction rolls back",
+    "deadline_preserved": "no new deadline on expired retry; already successful acknowledgement replay remains accepted after its original deadline and adds no audit",
+    "lease_note": "libpq cancellation may discard the leased connection; mutations remain fail closed and never fall back to the read pool; destructive controls use isolated owned test databases",
+    "delivered_equivalent_tree_commit": "40d579fd7ac738b200fab1a623415fd4562a9a41",
+    "git_tree_id": "5801adcc29b7458d6746320a51c2f39d1b954541",
+    "source_note": "Execution used the independent committed fix worktree; delivery cherry-pick has the exact same Git tree. Original executed source attribution is retained."
+  },
+  "old_implementation_negative_controls": {
+    "test_tree_commit": "e3e33ccecaca76ad6755a89ddcc92a5a6ba799d6",
+    "production_overlay": {
+      "repository_path": "internal/platform/tasks.go",
+      "from_commit": "4e76d071f873809691ac77510e44f88c31905e3b",
+      "sha256": "c91482d73299eca491e708309b5c9a00a1cab6f3f07f4a2d4072de2d4c0fb53d"
+    },
+    "sqlite": {
+      "source_commit": "e3e33ccecaca76ad6755a89ddcc92a5a6ba799d6",
+      "command": "go test -race -overlay=<old-tasks-overlay> ./internal/platform -run '^TestAuditAssetLinksSQLiteWait' -count=1 -v",
+      "exit_code": 1,
+      "log_path": "/private/tmp/agentmoor-audit-asset-links-deadline-control/sqlite.log",
+      "log_sha256": "873dbebae28578084e62ca90595368e218eacd6eb4398767a75ac9f780dcbb09"
+    },
+    "postgres": {
+      "source_commit": "e3e33ccecaca76ad6755a89ddcc92a5a6ba799d6",
+      "command": "GOFLAGS=-overlay=<old-tasks-overlay> make test-services",
+      "exit_code": 2,
+      "log_path": "/private/tmp/agentmoor-audit-asset-links-deadline-control/services.log",
+      "log_sha256": "44abe547b5801083b81479fca948c8853da63afe39a898d5ab8b6cbbca1612eb"
+    },
+    "expected_failure": "same committed deadline tests against exact old tasks.go both observed success committed after the original deadline",
+    "delivered_equivalent_tree_commit": "40d579fd7ac738b200fab1a623415fd4562a9a41",
+    "git_tree_id": "5801adcc29b7458d6746320a51c2f39d1b954541",
+    "source_note": "Execution used the independent committed fix worktree; delivery cherry-pick has the exact same Git tree. Original executed source attribution is retained."
+  },
+  "retained_failed_runs": [
+    {
+      "source_commit": "uncommitted initial asset-links implementation",
+      "command": "make test-services",
+      "exit_code": 2,
+      "log_path": "/private/tmp/agentmoor-audit-asset-links-services-2026-11-27-r1.log",
+      "log_sha256": "41f8747a6784f1afc521d3ae31b92db9aa5845794314efd318ab68acd3e3b573",
+      "reason": "business rollback assertions passed; duplicate trigger cleanup queried an already closed shared Catalog; test cleanup fixed with sync.Once"
+    },
+    {
+      "source_commit": "uncommitted deadline fix",
+      "command": "make test-services",
+      "exit_code": 2,
+      "log_path": "/private/tmp/agentmoor-audit-asset-links-deadline-fixed-services-2026-11-27-r1.log",
+      "log_sha256": "c4867f2eab571a61ce4005016efc267627cce63b2b973c9f9beb2335d31957d1",
+      "reason": "deadline rollback passed; libpq cancellation discarded shared integration writer; deadline test moved to separate owned database"
+    }
+  ],
+  "not_claimed": [
+    "sandbox Run-to-Finish authoritative linkage",
+    "new user audit HTTP endpoint",
+    "physical GC or HTTP-denial/duration audit",
+    "real model or SaaS recovery acceptance",
+    "new isolation-provider acceptance"
+  ],
+  "final_integrated_validation": {
+    "source_commit": "56fee1d527ba2fa7df473cd2d4815d7365cb663d",
+    "integrated_core_commit": "6c41ac28ebe54ed16c8c9e8109f40be9c31a8093",
+    "integrated_main_provider_commit": "b23c78c",
+    "format": {
+      "command": "make fmt",
+      "exit_code": 0,
+      "tracked_source_changes": false
+    },
+    "check": {
+      "source_commit": "56fee1d527ba2fa7df473cd2d4815d7365cb663d",
+      "command": "make check",
+      "exit_code": 0,
+      "log_path": "/private/tmp/agentmoor-audit-asset-links-final-check-2026-11-27-r1.log",
+      "log_sha256": "f00e6d64ece0bfceecae139806dbbf948f8962cc2a986343154d4ea8fb42ea18"
+    },
+    "services": {
+      "source_commit": "56fee1d527ba2fa7df473cd2d4815d7365cb663d",
+      "command": "make test-services",
+      "exit_code": 0,
+      "log_path": "/private/tmp/agentmoor-audit-asset-links-final-services-2026-11-27-r1.log",
+      "log_sha256": "b127455e258e4624b878380387203fb2de6bd27aa126f22c5ada24f1ebc5b8dc"
+    },
+    "demo": {
+      "source_commit": "56fee1d527ba2fa7df473cd2d4815d7365cb663d",
+      "command": "make demo",
+      "exit_code": 0,
+      "log_path": "/private/tmp/agentmoor-audit-asset-links-final-demo-2026-11-27-r1.log",
+      "log_sha256": "c2608aad4d5d93514020328683f79bd3d9511b34837e3c27a1a6dbb960ffb38d"
+    },
+    "full_cli_matrix": {
+      "source_commit": "56fee1d527ba2fa7df473cd2d4815d7365cb663d",
+      "command": "make test-k8s",
+      "exit_code": 0,
+      "log_path": "/private/tmp/agentmoor-audit-asset-links-final-k8s-2026-11-27-r1.log",
+      "log_sha256": "49927fd9befac065128dc0ccbab92897c141147c6b5f2785212297d956af510b",
+      "adapters": [
+        "codex",
+        "gemini-cli",
+        "opencode",
+        "claude-code"
+      ],
+      "contract_groups": 16,
+      "successful_followups": 8,
+      "cancellation_seconds": {
+        "codex": 2.3,
+        "gemini-cli": 3.1,
+        "opencode": 4.6,
+        "claude-code": 2.3
+      },
+      "owned_cluster": "agentmoor-22673abbeb54",
+      "cleanup_observations": [
+        {
+          "type": "container",
+          "name": "agentmoor-22673abbeb54-control-plane",
+          "present": false
+        },
+        {
+          "type": "image",
+          "name": "agentmoor-contract:agentmoor-22673abbeb54-codex",
+          "present": false
+        },
+        {
+          "type": "image",
+          "name": "agentmoor-contract:agentmoor-22673abbeb54-gemini-cli",
+          "present": false
+        },
+        {
+          "type": "image",
+          "name": "agentmoor-contract:agentmoor-22673abbeb54-opencode",
+          "present": false
+        },
+        {
+          "type": "image",
+          "name": "agentmoor-contract:agentmoor-22673abbeb54-claude-code",
+          "present": false
+        },
+        {
+          "type": "container",
+          "name": "agentmoor-test-10020-postgres-1",
+          "present": false
+        },
+        {
+          "type": "container",
+          "name": "agentmoor-test-10020-s3-1",
+          "present": false
+        },
+        {
+          "type": "network",
+          "name": "agentmoor-test-10020_default",
+          "present": false
+        }
+      ],
+      "retained_dependency_fixture_caches": [
+        {
+          "tag": "agentmoor-contract-cache:audit-links-codex",
+          "image": "sha256:f2f2f964c16c5e2505f81c0f21f9eff34e8a184d5af8150c922046faba521907",
+          "origin": "this run Step 13 checksum-pinned native dependency fixture; no AgentMoor binary included"
+        },
+        {
+          "tag": "agentmoor-contract-cache:audit-links-gemini-cli",
+          "image": "sha256:2bbac78d49280efa763f7604191c8f6383ad16e6f277d9650d0b230bbf9abbad",
+          "origin": "this run Step 13 checksum-pinned native dependency fixture; no AgentMoor binary included"
+        }
+      ]
+    },
+    "later_main_docs_merge": {
+      "merged_main_commit": "43e454cb58d3d92f7f2c39df80db029000505949",
+      "result_commit": "54077bdadc73e1e0471b735c7abd0a5c30e2eea4",
+      "changed_paths": [
+        "docs/audit.md",
+        "docs/evidence/audit-core-2026-11-27.json"
+      ],
+      "compared_code_paths": [
+        "cmd",
+        "internal",
+        "tests",
+        "testdata",
+        "examples",
+        "deploy",
+        "Makefile",
+        "go.mod",
+        "go.sum",
+        ".dockerignore"
+      ],
+      "code_diff_empty": true,
+      "git_ls_tree_sha256": "145db914f0303654f84b2a057b78fac52e100bab809af394ae54c1b61fb4a708",
+      "note": "The frozen full-matrix run remains attributed to its actual source commit; this later merge changes docs/evidence only."
+    }
+  }
+}
