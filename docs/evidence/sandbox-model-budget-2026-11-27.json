@@ -1,0 +1,30 @@
+{
+  "issue": "INT-76",
+  "source_commit": "99d1821dbe82cc5db032dd1a313087f53ffbe9e2",
+  "scope": "persistent model request/byte allowance only",
+  "checks": {
+    "make fmt": "passed",
+    "make check": "passed, including race",
+    "make demo": "passed",
+    "make test-services": "passed on actual disposable PostgreSQL/S3-compatible services"
+  },
+  "concurrency": {"callers": 48, "request_allowance": 7, "successful_reservations": 7, "denied_reservations": 41},
+  "verified": [
+    "full policy freezes on first reservation and drift conflicts",
+    "exact request/input/output boundaries and one-over rejection",
+    "counter corruption fails before unsafe arithmetic",
+    "active current model capability required, wrong purpose and stale attempt denied",
+    "cancellation, original deadline, task finish and sealed output deny further reservations",
+    "lost successful return followed by catalog restart does not restore allowance",
+    "actual PostgreSQL leased writer termination denies fresh and existing ledger writes without changing counters"
+  ],
+  "actual_service_run": {
+    "owned_compose_project": "agentmoor-test-7090",
+    "platform_integration_seconds": 5.737,
+    "server_versions_not_recorded_in_this_run": true,
+    "owned_services_and_volumes_cleaned": true,
+    "log_sha256": "19945522becef13ef31d7a2f2e06434beb1d4f8cbb0397f13b46d102018a7d39"
+  },
+  "not_implemented_or_verified": ["HTTP proxy or real model requests", "token pricing or monetary billing", "request concurrency and stream interruption", "untrusted application provider", "network/resource adversarial tests", "production HA"],
+  "untrusted_execution_gate": "closed"
+}

@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS revision_parts (
  scope TEXT NOT NULL, kind TEXT NOT NULL, asset_id TEXT NOT NULL, version BIGINT NOT NULL, op TEXT NOT NULL,
  PRIMARY KEY(scope,kind,asset_id,version));
 CREATE INDEX IF NOT EXISTS revision_manifests ON revision_parts(scope,op);
-` + sandboxSchema
+` + sandboxSchema + sandboxModelSchema
 
 // OpenCatalog takes an exclusive service lease. Many workers may use the HTTP
 // API concurrently. A second service must not collect the first one's uploads.
