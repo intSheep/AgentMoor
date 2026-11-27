@@ -13,6 +13,7 @@
 - 节点 kubelet 设置有限 `podPidsLimit`；guest 启动器在任何原生版本探测、导入或执行前，另设不可提升的进程硬上限。gVisor 的虚拟进程与宿主进程不是一对一，不能用宿主 `pids.max` 替代 guest 的实际 fork 负例。
 - 先应用并实际验证 [sandbox-network.yaml](../deploy/kubernetes/sandbox-network.yaml)，再运行任务。只有专用模型/能力网关 TCP 7443 可达；主 API 7401、Kubernetes API、其他租户、metadata、外网和 DNS 不开放。NetworkPolicy 的执行依赖具体 CNI。[Kubernetes 说明](https://kubernetes.io/docs/concepts/services-networking/network-policies/)
 - 安装 [sandbox-rbac.yaml](../deploy/kubernetes/sandbox-rbac.yaml)，将受信控制面的 ServiceAccount 绑定到沙箱 namespace 的 `pods get/create/delete`。它不需要 guest 的 exec、日志、Secrets、TokenRequest 或 RBAC 权限；与可选追问 Job dispatcher 的权限分别配置。
+- 按专用节点容量设置 [sandbox-quota.yaml](../deploy/kubernetes/sandbox-quota.yaml) 的 Pod 数和总 CPU/内存额度；网关的流并发限制不能代替 Pod 配额。达到额度时 Kubernetes 拒绝创建，不重置原 attempt 或重新运行旧任务。另给容器运行时和 kubelet 配置有限日志轮换，生产关闭 runsc debug；探针的调试日志仅用于专属临时节点。
 
 节点、CNI、镜像、证书与上述约束属于受信部署配置。新集群要复验实际允许/拒绝流量、运行时进程和资源耗尽，不能只检查 YAML 是否存在。运行前的两个固定连接探针仅能发现常见缺配；它们不能证明所有 IP、端口或未来策略变更都安全。
 

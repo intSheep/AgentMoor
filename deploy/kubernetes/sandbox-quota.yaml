@@ -1,0 +1,15 @@
+# Trusted operator quota. Choose totals for the dedicated sandbox nodes.
+# Reaching quota refuses new Pod creation; it does not replay an old attempt.
+# No LimitRange defaults are injected into the immutable Pod template.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: agentmoor-sandbox-capacity
+  namespace: agentmoor-sandboxes
+spec:
+  hard:
+    pods: "16"
+    requests.cpu: "8"
+    limits.cpu: "8"
+    requests.memory: 16Gi
+    limits.memory: 16Gi
