@@ -31,9 +31,10 @@ type Catalog struct {
 		ExecContext(context.Context, string, ...any) (sql.Result, error)
 		BeginTx(context.Context, *sql.TxOptions) (*sql.Tx, error)
 	}
-	objects Objects
-	mu      sync.Mutex // composes conditional publication and collection for this store owner
-	release func()
+	objects     Objects
+	mu          sync.Mutex // composes conditional publication and collection for this store owner
+	sandboxTemp string
+	release     func()
 }
 
 const schema = `
@@ -63,7 +64,7 @@ CREATE TABLE IF NOT EXISTS revision_parts (
  scope TEXT NOT NULL, kind TEXT NOT NULL, asset_id TEXT NOT NULL, version BIGINT NOT NULL, op TEXT NOT NULL,
  PRIMARY KEY(scope,kind,asset_id,version));
 CREATE INDEX IF NOT EXISTS revision_manifests ON revision_parts(scope,op);
-`
+` + sandboxSchema
 
 // OpenCatalog takes an exclusive service lease. Many workers may use the HTTP
 // API concurrently. A second service must not collect the first one's uploads.
@@ -79,7 +80,7 @@ func OpenCatalog(ctx context.Context, dir, postgres string, objects Objects) (*C
 	if err != nil {
 		return nil, err
 	}
-	c := &Catalog{db: db, writer: db, objects: objects}
+	c := &Catalog{db: db, writer: db, objects: objects, sandboxTemp: filepath.Join(dir, "sandbox-incoming")}
 	ok := false
 	defer func() {
 		if !ok {
@@ -111,6 +112,9 @@ func OpenCatalog(ctx context.Context, dir, postgres string, objects Objects) (*C
 		c.release = func() { lock.Close() }
 	}
 	if _, err = c.writer.ExecContext(ctx, schema); err != nil {
+		return nil, err
+	}
+	if err = PrepareUploads(c.sandboxTemp); err != nil {
 		return nil, err
 	}
 	ok = true
@@ -458,5 +462,9 @@ func (c *Catalog) Collect(ctx context.Context, s asset.Scope, before time.Time) 
 		}
 	}
 	parts, err := c.collectParts(ctx, s, before)
-	return n + parts, err
+	if err != nil {
+		return n + parts, err
+	}
+	sandbox, err := c.collectSandbox(ctx, s, before)
+	return n + parts + sandbox, err
 }

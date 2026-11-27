@@ -39,11 +39,12 @@ func TestPostgresAndS3(t *testing.T) {
 		}
 		time.Sleep(time.Second)
 	}
-	c, err := OpenCatalog(t.Context(), t.TempDir(), dsn, objects)
+	dir := t.TempDir()
+	c, err := OpenCatalog(t.Context(), dir, dsn, objects)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer c.Close()
+	defer func() { c.Close() }()
 	checkTarPartsStorage(t, c, scope("integration-parts"))
 	checkTarPartsCollection(t, c, scope("integration-parts-gc"))
 	checkTurnQueue(t, c, scope("followup"))
@@ -76,8 +77,28 @@ func TestPostgresAndS3(t *testing.T) {
 	if n, err := c.Collect(t.Context(), s, time.Now().Add(time.Second)); err != nil || n != 1 {
 		t.Fatal(n, err)
 	}
+	checkSandboxStorage(t, c, scope("sandbox-integration"))
+	// Exercise actual PostgreSQL persistence and S3 bytes across service restart.
+	a := sandboxTestClaim(t, c, scope("sandbox-integration-restart"))
+	p := sandboxTestFence(t, c, a, "frozen input")
+	if err = c.Close(); err != nil {
+		t.Fatal(err)
+	}
+	c, err = OpenCatalog(t.Context(), dir, dsn, objects)
+	if err != nil {
+		t.Fatal(err)
+	}
+	q, err := c.FenceSandboxCreate(t.Context(), a, p.Run.Deadline)
+	if err != nil || q.CreateAllowed || q.Capabilities != (SandboxCapabilities{}) || q.Run.PodName != p.Run.PodName {
+		t.Fatal("PostgreSQL restart authorized a second create", q, err)
+	}
+	blob, stream, err := c.ReadSandboxInput(t.Context(), p.Capabilities.Input)
+	sandboxTestRead(t, blob, stream, err, "frozen input")
 	checkPostgresTaskReaderIsolation(t, c)
-	checkPostgresLeaseFailureClosed(t, c)
+	checkSandboxLostLease := prepareSandboxLeaseFailure(t, c)
+	checkSandboxFinalSealFailure(t, c, func() { terminatePostgresWriter(t, c) })
+	checkPostgresMutationDeniedAfterLeaseLoss(t, c)
+	checkSandboxLostLease()
 }
 
 func checkPostgresTaskReaderIsolation(t *testing.T, c *Catalog) {
@@ -206,7 +227,7 @@ func checkPostgresTaskReaderIsolation(t *testing.T, c *Catalog) {
 	}
 }
 
-func checkPostgresLeaseFailureClosed(t *testing.T, c *Catalog) {
+func terminatePostgresWriter(t *testing.T, c *Catalog) {
 	t.Helper()
 	var pid int
 	if err := c.writer.QueryRowContext(t.Context(), "SELECT pg_backend_pid()").Scan(&pid); err != nil {
@@ -231,6 +252,10 @@ func checkPostgresLeaseFailureClosed(t *testing.T, c *Catalog) {
 		}
 		time.Sleep(time.Millisecond)
 	}
+}
+
+func checkPostgresMutationDeniedAfterLeaseLoss(t *testing.T, c *Catalog) {
+	t.Helper()
 	a := taskAddress{Scope: scope("lost-lease")}
 	if _, err := c.submitTask(t.Context(), a, task.Spec{Instruction: "must not be saved", Output: "report.json"}); err == nil {
 		t.Fatal("mutation replaced the lost lease with an ordinary pooled writer")
