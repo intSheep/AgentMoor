@@ -17,7 +17,7 @@ func TestPodHasCredentiallessFixedSecurityBoundary(t *testing.T) {
 	f.kube.mu.Lock()
 	defer f.kube.mu.Unlock()
 	s := f.kube.pod["spec"].(map[string]any)
-	if s["runtimeClassName"] != "gvisor" || s["restartPolicy"] != "Never" || s["automountServiceAccountToken"] != false || s["enableServiceLinks"] != false || s["dnsPolicy"] != "None" {
+	if s["runtimeClassName"] != "gvisor" || s["restartPolicy"] != "Never" || s["automountServiceAccountToken"] != false || s["enableServiceLinks"] != false || s["dnsPolicy"] != "None" || s["preemptionPolicy"] != "Never" || s["priorityClassName"] != "agentmoor-sandbox" {
 		t.Fatal("wrong fixed Pod execution policy")
 	}
 	security := s["securityContext"].(map[string]any)

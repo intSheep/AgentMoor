@@ -68,7 +68,7 @@ func podTemplate(p Profile, r platform.SandboxRun, caps platform.SandboxCapabili
 		"spec": map[string]any{
 			"runtimeClassName": p.RuntimeClass, "restartPolicy": "Never", "activeDeadlineSeconds": seconds,
 			"automountServiceAccountToken": false, "enableServiceLinks": false,
-			"terminationGracePeriodSeconds": 5, "schedulerName": "default-scheduler", "preemptionPolicy": "Never",
+			"terminationGracePeriodSeconds": 5, "schedulerName": "default-scheduler", "preemptionPolicy": "Never", "priorityClassName": "agentmoor-sandbox",
 			"dnsPolicy": "None", "dnsConfig": map[string]any{"nameservers": []string{"127.0.0.1"}},
 			"hostAliases": []any{map[string]any{"ip": p.GatewayIP, "hostnames": []string{u.Hostname()}}},
 			"securityContext": map[string]any{"runAsNonRoot": true, "runAsUser": 65532, "runAsGroup": 65532,
