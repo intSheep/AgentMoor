@@ -163,6 +163,47 @@ class CleanupTest(unittest.TestCase):
             instance.clean_security()
         self.assertEqual(calls, [])
 
+    def test_debug_signals_require_explicit_mode_and_owned_shim_only(self):
+        instance = probe.SecurityProbe.__new__(probe.SecurityProbe)
+        instance.debug_orphans = False
+        with mock.patch.object(probe.subprocess, "run") as run, self.assertRaises(RuntimeError):
+            instance.diagnose_orphan({}, {})
+        run.assert_not_called()
+        instance.debug_orphans = True
+        instance.cluster, instance.node = "owned", "owned-node"
+        record = {"cleanup_last_observation": {"cri_sandboxes": [], "live_processes": ["123 runsc-sandbox owned-id"]}}
+        instance.run = lambda *args: json.dumps([{"Config": {"Labels": {"io.x-k8s.kind.cluster": "another"}}}])
+        with mock.patch.object(probe.subprocess, "run") as run, self.assertRaises(RuntimeError):
+            instance.diagnose_orphan({}, record)
+        run.assert_not_called()
+        instance.run = lambda *args: json.dumps([{"Config": {"Labels": {"io.x-k8s.kind.cluster": "owned"}}}])
+        with mock.patch.object(probe.subprocess, "run") as run, self.assertRaises(RuntimeError):
+            instance.diagnose_orphan({}, record)
+        run.assert_not_called()
+
+    def test_debug_rechecks_pid_identity_before_any_signal(self):
+        instance = probe.SecurityProbe.__new__(probe.SecurityProbe)
+        instance.debug_orphans, instance.cluster, instance.node = True, "owned", "owned-node"
+        instance.run = lambda *args: json.dumps([{"Config": {"Labels": {"io.x-k8s.kind.cluster": "owned"}}}])
+        runtime = {"sandbox_id": "sandbox-own", "pod_uid": "pod-own"}
+        line = "123 1 Sl containerd-shim-runsc-v1 -id sandbox-own"
+        record = {"pod_delete_started_monotonic": 0, "cleanup_last_observation": {"cri_sandboxes": [], "live_processes": [line]}}
+        calls = []
+        def command(argv, **kwargs):
+            calls.append(argv)
+            if "pods" in argv:
+                out = json.dumps({"items": []})
+            elif "ps" in argv:
+                out = line
+            elif argv[-1].endswith("cmdline"):
+                out = "/bin/another\0-id\0other-sandbox\0"
+            else:
+                out = ""
+            return SimpleNamespace(returncode=0, stdout=out, stderr="")
+        with mock.patch.object(probe.subprocess, "run", side_effect=command), self.assertRaises(RuntimeError):
+            instance.diagnose_orphan(runtime, record)
+        self.assertFalse(any("kill" in argv for argv in calls))
+
     def test_only_stopped_owned_cri_records_are_removed_after_natural_exit(self):
         instance = probe.SecurityProbe.__new__(probe.SecurityProbe)
         instance.base = ["kubectl-owned"]
