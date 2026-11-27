@@ -1,0 +1,45 @@
+{
+  "source_commit": "11c4a7dc3d85bfcf7806c8ba0c132d18a5dc8b91",
+  "initial_git_status": "clean",
+  "checks": [
+    {
+      "command": [
+        "make",
+        "fmt"
+      ],
+      "exit_code": 0,
+      "seconds": 0.031
+    },
+    {
+      "command": [
+        "go",
+        "test",
+        "-race",
+        "./sdk",
+        "./sdk/contracttest",
+        "-count=1",
+        "-v"
+      ],
+      "exit_code": 0,
+      "seconds": 7.804
+    },
+    {
+      "command": [
+        "make",
+        "check"
+      ],
+      "exit_code": 0,
+      "seconds": 11.029
+    },
+    {
+      "command": [
+        "make",
+        "demo"
+      ],
+      "exit_code": 0,
+      "seconds": 2.086
+    }
+  ],
+  "status": "passed",
+  "final_git_status": ""
+}

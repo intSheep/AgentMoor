@@ -273,6 +273,147 @@
       "purpose": "original independent source/go.mod/resolve/reflection/setup failures and pass; 21 safe archive members",
       "bytes": 18763,
       "sha256": "524e0e49e89d7d19084cbba4abb8ca0c4cb80dd5a237241a7e10b254893acea1"
+    },
+    {
+      "path": "public-go-sdk-offline-checks-2026-11-27.json",
+      "purpose": "clean offline bootstrap fix source verification",
+      "bytes": 730,
+      "sha256": "c08349001f53f9ab1ebaf87b41a2a0e5b6d123d0caaeb22c13bf29b77048d22b"
+    },
+    {
+      "path": "public-go-sdk-offline-checks-2026-11-27.log.gz",
+      "purpose": "fixed source focused/full check/demo raw log",
+      "bytes": 5043,
+      "sha256": "f70d66200462e40cfd51745c95128a9c86d61b211a9165e59033ca895e9cc225",
+      "encoding": "lossless gzip",
+      "raw_bytes": 26659,
+      "raw_sha256": "f1fd12d7d543ae1167e6d58bf24a1d582fae24361dd638e1ed544844215c28c1"
+    },
+    {
+      "path": "public-go-sdk-sparse-cache-2026-11-27.json",
+      "purpose": "same selected-version-only cache old failure to fixed pass and owned cleanup",
+      "bytes": 20568,
+      "sha256": "74c983d947be50ae336540ad2a1676ad0e054ae831a9a479dd5239a4aa908069"
+    },
+    {
+      "path": "public-go-sdk-sparse-old-failed-2026-11-27.log.gz",
+      "purpose": "actual old bootstrap requests unavailable obsolete metadata",
+      "bytes": 260,
+      "sha256": "bdbb21421d0b8f1c8dc6b886cdbec314c9bc267e5580762eb51a2464a4241b06",
+      "encoding": "lossless gzip",
+      "raw_bytes": 344,
+      "raw_sha256": "821b2d2ef06abf2b99640f260920fb84c0a1b0d3da2224e075e2ff5a8bb70c05"
+    },
+    {
+      "path": "public-go-sdk-sparse-fixed-2026-11-27.log.gz",
+      "purpose": "same sparse cache fixed bootstrap actual race pass",
+      "bytes": 472,
+      "sha256": "83e2fe92b1c3dd972357b23e092b324c64c56060184c158868af5e1273675652",
+      "encoding": "lossless gzip",
+      "raw_bytes": 857,
+      "raw_sha256": "861cdae97ff8b304a6e20aba04ee0a39f1f7662f061036ae1589ff8a3407a7f2"
+    },
+    {
+      "path": "public-go-sdk-offline-before-2026-11-27.go.gz",
+      "purpose": "exact old test source snapshot",
+      "bytes": 3857,
+      "sha256": "30312b9865aab1a7a10f2e650c1d8babb85a345d12315c0649772d5c3a4f03bc",
+      "encoding": "lossless gzip",
+      "raw_bytes": 10865,
+      "raw_sha256": "80f9e297e1f7e5fb33d9be435587d7de5d8820f07ca7363c720a2c82d9bf46b8"
+    },
+    {
+      "path": "public-go-sdk-offline-after-2026-11-27.go.gz",
+      "purpose": "exact fixed test source snapshot",
+      "bytes": 4447,
+      "sha256": "2e634952d129218a06c56b0ea60922910a3839d80ebb5f1d8ad3325e9fb0a7ca",
+      "encoding": "lossless gzip",
+      "raw_bytes": 12970,
+      "raw_sha256": "e311a232e781aff8b6bfd7cf3ca96dc4f4e362624bb88023734f00e2eeedc4d0"
+    },
+    {
+      "path": "public-go-sdk-goenv-control-2026-11-27.json",
+      "purpose": "owned saved-config proxy bypass control; no network performed",
+      "bytes": 633,
+      "sha256": "9d3fe073110382792c349f81d53493a0005f35259b9e8e77e6c6ae77c40e1f19"
+    },
+    {
+      "path": "public-go-sdk-ci-45995216344-failed-2026-11-27.log.gz",
+      "purpose": "actual initial Linux CI failure; not relabelled as passed",
+      "bytes": 4516,
+      "sha256": "5c68b0cfeafbf84e93de3c5daf7f9a849b0e9835aede0ec09f591487ba9b3ee9",
+      "encoding": "lossless gzip",
+      "raw_bytes": 22755,
+      "raw_sha256": "e241b149b87af0edbdb4b1685d840e9b5a56c886d1bf5f60bcd9903d8586a0ef"
+    },
+    {
+      "path": "public-go-sdk-ci-45995264281-failed-2026-11-27.log.gz",
+      "purpose": "actual initial Linux CI failure; not relabelled as passed",
+      "bytes": 4526,
+      "sha256": "b8a51375db3be3a22316b976a1b73b28de47ae13b8a7b929b6aacf991d414586",
+      "encoding": "lossless gzip",
+      "raw_bytes": 22756,
+      "raw_sha256": "0513c6c89a099ba65001240a9d0511863450b521030383def9aa4c0236143279"
     }
-  ]
+  ],
+  "offline_bootstrap_fix": {
+    "source_commit": "11c4a7dc3d85bfcf7806c8ba0c132d18a5dc8b91",
+    "changed_source_files": [
+      "sdk/external_test.go"
+    ],
+    "source_sha256": "e311a232e781aff8b6bfd7cf3ca96dc4f4e362624bb88023734f00e2eeedc4d0",
+    "checks": {
+      "source_commit": "11c4a7dc3d85bfcf7806c8ba0c132d18a5dc8b91",
+      "initial_git_status": "clean",
+      "checks": [
+        {
+          "command": [
+            "make",
+            "fmt"
+          ],
+          "exit_code": 0,
+          "seconds": 0.031
+        },
+        {
+          "command": [
+            "go",
+            "test",
+            "-race",
+            "./sdk",
+            "./sdk/contracttest",
+            "-count=1",
+            "-v"
+          ],
+          "exit_code": 0,
+          "seconds": 7.804
+        },
+        {
+          "command": [
+            "make",
+            "check"
+          ],
+          "exit_code": 0,
+          "seconds": 11.029
+        },
+        {
+          "command": [
+            "make",
+            "demo"
+          ],
+          "exit_code": 0,
+          "seconds": 2.086
+        }
+      ],
+      "status": "passed",
+      "final_git_status": ""
+    },
+    "explicit_sdk_require_roots": 22,
+    "source_of_roots": "current SDK go.mod Require only, not a claim to compute the full MVS graph",
+    "test_setup": "same pinned roots in temporary positive and negative main modules; production go.mod/go.sum unchanged; no inherited replace/exclude/workspace/toolchain directives",
+    "GOENV": "off",
+    "cold_cache": "88 original artifacts for current22requireversionsonly; old cpuid/v2@v2.0.1.mod absent before AND after fixed pass",
+    "cold_fixed_race_seconds": 16.184,
+    "cache_cleanup": "only owned cache removed after identity guard; global cache untouched",
+    "limits": "Does not claim one-line-SDK-require offline bootstrap succeeds with obsolete transitive metadata missing. Normal online consumers do not need this test-specific pinning."
+  }
 }
