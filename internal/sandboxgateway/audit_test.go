@@ -141,6 +141,16 @@ func TestGatewayAuditDelegatedModelAndOutputActors(t *testing.T) {
 	if _, err = f.catalog.RecordSandboxTerminal(t.Context(), run.Address(), run.PodUID, 0); err != nil {
 		t.Fatal(err)
 	}
+	// This unit fixture explicitly supplies the trusted controller observation;
+	// terminal classification alone is no longer guest stop evidence.
+	code := 0
+	if _, err = f.catalog.RecordSandboxGuestStopped(t.Context(), run.Address(), platform.SandboxGuestStopProof{
+		Kind: platform.SandboxGuestTerminated, PodUID: run.PodUID, ResourceVersion: "synthetic-controller-stop-observation",
+		NodeName: "synthetic-controller-node", ContainerID: "containerd://" + strings.Repeat("a", 64),
+		ContainerName: "guest", RestartCount: 0, ExitCode: &code,
+	}); err != nil {
+		t.Fatal(err)
+	}
 	if _, err = f.catalog.ConfirmSandboxDeleted(t.Context(), run.Address(), run.PodUID); err != nil {
 		t.Fatal(err)
 	}
