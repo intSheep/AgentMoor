@@ -67,8 +67,9 @@ func checkPostgresDeadlineSweepAvailability(t *testing.T, objects Objects, dsn s
 		err    error
 	}
 	done := make(chan outcome, 1)
+	started := make(chan time.Time, 1)
 	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
-	start := time.Now()
+	var start time.Time
 	received := false
 	t.Cleanup(func() {
 		unblock()
@@ -83,9 +84,15 @@ func checkPostgresDeadlineSweepAvailability(t *testing.T, objects Objects, dsn s
 		}
 	})
 	go func() {
+		started <- time.Now()
 		result, err := c.SweepExpired(ctx, DeadlineSweepCursor{})
 		done <- outcome{result, err}
 	}()
+	select {
+	case start = <-started:
+	case <-ctx.Done():
+		t.Fatal("availability sweep did not start within its bounded caller context")
+	}
 	// Confirm that this exact keyset read is really blocked on PostgreSQL,
 	// rather than sleeping in the test while no production statement runs.
 	for until := time.Now().Add(time.Second); ; {
