@@ -21,7 +21,7 @@ import (
 	"syscall"
 	"time"
 
-	"agentmoor/internal/nativeguest"
+	"github.com/intSheep/AgentMoor/internal/nativeguest"
 )
 
 type Config struct {

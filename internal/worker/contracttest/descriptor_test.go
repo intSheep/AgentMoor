@@ -6,13 +6,13 @@ import (
 	"strings"
 	"testing"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/adapters/claudecode"
-	"agentmoor/internal/adapters/codex"
-	"agentmoor/internal/adapters/gemini"
-	"agentmoor/internal/adapters/opencode"
-	"agentmoor/internal/task"
-	"agentmoor/internal/worker/contracttest"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/adapters/claudecode"
+	"github.com/intSheep/AgentMoor/internal/adapters/codex"
+	"github.com/intSheep/AgentMoor/internal/adapters/gemini"
+	"github.com/intSheep/AgentMoor/internal/adapters/opencode"
+	"github.com/intSheep/AgentMoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/worker/contracttest"
 )
 
 type discoveryFixture struct{ descriptor adapter.Descriptor }

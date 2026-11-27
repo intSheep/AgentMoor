@@ -8,8 +8,8 @@ import (
 	"slices"
 	"time"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 // The acceptance record is also the durable dispatch intent. All state changes

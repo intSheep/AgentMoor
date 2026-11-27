@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/task"
 	"github.com/google/uuid"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 func checkPostgresAuditAssetLinks(t *testing.T, c *Catalog, dir, dsn string) {

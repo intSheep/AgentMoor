@@ -3,9 +3,9 @@ package adapter_test
 import (
 	"testing"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/adapters/claudecode"
-	"agentmoor/internal/adapters/codex"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/adapters/claudecode"
+	"github.com/intSheep/AgentMoor/internal/adapters/codex"
 )
 
 func TestRegistry(t *testing.T) {

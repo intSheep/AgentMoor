@@ -27,9 +27,9 @@ import (
 	"syscall"
 	"time"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/httptrace"
-	"agentmoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/httptrace"
+	"github.com/intSheep/AgentMoor/internal/platform"
 )
 
 const MaxProfiles = 1024

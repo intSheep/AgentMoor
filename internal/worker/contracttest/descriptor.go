@@ -3,8 +3,8 @@ package contracttest
 import (
 	"fmt"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 // ValidateDescriptor checks minimum identifiers and the declaration/interface

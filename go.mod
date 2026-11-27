@@ -1,4 +1,4 @@
-module agentmoor
+module github.com/intSheep/AgentMoor
 
 go 1.27.4
 

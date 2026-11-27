@@ -16,11 +16,11 @@ import (
 	"syscall"
 	"time"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/asset"
-	"agentmoor/internal/platform"
-	"agentmoor/internal/snapshot"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/snapshot"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 type Engine struct {

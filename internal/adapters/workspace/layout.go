@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"agentmoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/adapter"
 )
 
 // Layout describes one runtime's supported project-local conventions.

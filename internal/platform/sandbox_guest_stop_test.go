@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/task"
 	"github.com/google/uuid"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 // Synthetic controller authority for unit/service fixtures only. Actual node

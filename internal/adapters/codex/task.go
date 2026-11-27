@@ -12,10 +12,10 @@ import (
 	"strconv"
 	"strings"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/adapters/sessionfile"
-	"agentmoor/internal/asset"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/adapters/sessionfile"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 var nativeSkillName = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{0,63}$`)

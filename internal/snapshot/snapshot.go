@@ -14,7 +14,7 @@ import (
 	"path"
 	"time"
 
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 type Entry struct{ Source, Name string }

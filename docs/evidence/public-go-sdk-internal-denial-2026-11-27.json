@@ -1,0 +1,17 @@
+{
+  "source_commit": "02e6fbd01f129b4dec6b3939b736d3a981e035f4",
+  "consumer_module": "example.invalid/explicit-sdk-denial",
+  "outside_checkout": true,
+  "command": [
+    "go",
+    "test",
+    "-mod=mod",
+    "-run=^$",
+    "."
+  ],
+  "exit_code": 1,
+  "exact_internal_diagnostic_seen": true,
+  "seconds": 0.021,
+  "log_sha256": "891c06f71f4c1a472b6ab8a905ea077ee1059283b764716e92a3edc294e61311",
+  "owned_temp_directory_removed": true
+}

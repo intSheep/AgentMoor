@@ -7,9 +7,9 @@ import (
 	"reflect"
 	"testing"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/task"
 	"github.com/google/uuid"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 // The physical blobs are exercised by the cluster contract. This fixture

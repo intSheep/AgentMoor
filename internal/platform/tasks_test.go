@@ -10,8 +10,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 func TestTaskHTTPContract(t *testing.T) {

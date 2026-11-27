@@ -21,12 +21,12 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/asset"
-	"agentmoor/internal/nativeguest"
-	"agentmoor/internal/platform"
-	"agentmoor/internal/task"
 	"github.com/google/uuid"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/nativeguest"
+	"github.com/intSheep/AgentMoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 const sandboxPublicationSkill = ".agents/skills/native/SKILL.md"

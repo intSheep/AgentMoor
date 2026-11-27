@@ -8,7 +8,7 @@ import (
 	"os/exec"
 	"syscall"
 
-	"agentmoor/internal/guesttransport"
+	"github.com/intSheep/AgentMoor/internal/guesttransport"
 )
 
 func main() {

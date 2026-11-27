@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 func TestDecodeTurnRequiresCompletedTextAndNativeIdentity(t *testing.T) {

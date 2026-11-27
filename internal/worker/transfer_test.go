@@ -18,10 +18,10 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/adapters/workspace"
-	"agentmoor/internal/asset"
-	"agentmoor/internal/platform"
-	"agentmoor/internal/snapshot"
+	"github.com/intSheep/AgentMoor/internal/adapters/workspace"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/snapshot"
 )
 
 type transferRequest struct {

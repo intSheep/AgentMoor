@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"strings"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/task"
 	"github.com/google/uuid"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 // appendAssetLinks runs only on the first successful Finish, in the same

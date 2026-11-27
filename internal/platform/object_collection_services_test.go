@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/asset"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )

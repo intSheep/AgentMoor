@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/platform"
 )
 
 // auditCommand is an operator-only local database reader. It neither accepts

@@ -1,0 +1,71 @@
+{
+  "status": "pass",
+  "evidence_kind": "independent agent public-documentation-and-reflection rehearsal",
+  "consumer_module": "example.invalid/agentmoor-docs-only",
+  "directory": "/private/tmp/agentmoor-docs-only-97ye2zco",
+  "sdk_checkout": "/private/tmp/agentmoor-public-go-sdk",
+  "sdk_frozen_commit": "02e6fbd01f129b4dec6b3939b736d3a981e035f4",
+  "mechanism": "filesystem",
+  "adapter_id": "aurora-notes",
+  "original_docs_fully_sufficient": false,
+  "public_reflection_used": true,
+  "manual_internal_source_read": false,
+  "existing_adapter_or_consumer_source_read": false,
+  "new_dependency_downloads": false,
+  "task_modes_declared": [],
+  "environment": {
+    "GOWORK": "off",
+    "GOTOOLCHAIN": "local",
+    "GOPROXY": "off",
+    "GOSUMDB": "off",
+    "GOCACHE": "/private/tmp/agentmoor-docs-only-97ye2zco/go-build",
+    "TMPDIR": "/private/tmp/agentmoor-docs-only-97ye2zco/tmp",
+    "toolchain": "go1.27.4 darwin/arm64"
+  },
+  "command": [
+    "go",
+    "test",
+    "-mod=mod",
+    "-race",
+    "-count=1",
+    "-timeout=60s",
+    "-v",
+    "."
+  ],
+  "outer_command_timeout_seconds": 30,
+  "final_outer_elapsed_seconds": 5.09,
+  "exit_code": 0,
+  "actual_passing_top_level_tests": [
+    "TestPublicDocsOnlyAssetRoundtrip"
+  ],
+  "actual_passing_subtests": [
+    "TestPublicDocsOnlyAssetRoundtrip/aurora-public-docs-only-files"
+  ],
+  "runner_observation": "ADAPTER_CONTRACT mechanism=filesystem runtime=aurora-notes four_assets=true old_versions=true",
+  "runtime_workspace_sessions_nonoverlap_asserted": true,
+  "prepare_writes": [
+    "Workspace/.aurora-agent",
+    "Sessions/thread.aurora"
+  ],
+  "skill_written_by_runner": ".agents/skills/aurora-clock/SKILL.md",
+  "session_files": {
+    "": "original thread.aurora bytes; Raw=true"
+  },
+  "session_original_sha256": "a9321de6b7d3f6934787c64da94c16f971899c29e1eb9d115b63c96d13fc9dd3",
+  "sources": {
+    "docs/adapter-sdk.md": "977c3c8e529265f39193b9dead15cea977fb2d6ac7a73409a045420c0502902b",
+    "sdk/sdk.go": "f715244269af47d6d3d85f53a2bcac7541e1fe10840509157b41554b99f657dd",
+    "sdk/contracttest/contracttest.go": "fb80c73e84d6aebedca426e04dc3d8a741d99fceb2226ba3f8c92eb689c431e6"
+  },
+  "observed_gaps": [
+    "Original adapter-sdk.md names aliases but omits SessionSource/SkillDiscoverer signatures and Descriptor, NativeSession, Entry, Case, Paths, Fixture fields. go doc -all prints alias targets, not their exported members. Public reflect supplied those signatures and fields.",
+    "The documented go mod tidy command traverses dependency tests and requires uncached github.com/zeebo/assert. Offline go run/test -mod=mod used cached build dependencies successfully; no new modules downloaded.",
+    "go list -m -json all requires unavailable offline module graph metadata; targeted go list -m -json github.com/intSheep/AgentMoor succeeds and proves the local replacement."
+  ],
+  "execution_notes": [
+    "Default Go build-cache writes were denied; cache and temporary paths were redirected into this independent directory.",
+    "First actual race test reached the suite but the local environment denied loopback bind. Authorized require_escalated rerun passed.",
+    "Adapter implements only Adapter, SessionSource and SkillDiscoverer; synthetic note format and workspace marker were designed independently.",
+    "Passing this rehearsal does not certify a human third-party integration, vendor CLI, real model, published version or isolation."
+  ]
+}

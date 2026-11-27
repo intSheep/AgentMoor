@@ -11,8 +11,8 @@ import (
 	"regexp"
 	"time"
 
-	"agentmoor/internal/asset"
 	"github.com/google/uuid"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 const Schema = "http-request.v1"

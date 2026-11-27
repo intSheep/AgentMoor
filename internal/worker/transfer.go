@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 func (s *scan) publishFrozen(ctx context.Context, p *pending, file string) (int64, error) {

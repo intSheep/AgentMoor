@@ -8,8 +8,8 @@ import (
 	"slices"
 	"testing"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 var supported = []string{"claude-code", "codex", "gemini-cli", "opencode"}

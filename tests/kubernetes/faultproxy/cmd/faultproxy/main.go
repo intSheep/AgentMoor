@@ -13,7 +13,7 @@ import (
 	"syscall"
 	"time"
 
-	"agentmoor/tests/kubernetes/faultproxy"
+	"github.com/intSheep/AgentMoor/tests/kubernetes/faultproxy"
 )
 
 func main() {

@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/adapters/sessionfile"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/adapters/sessionfile"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 func (a Adapter) ExecuteTask(ctx context.Context, env task.Environment, spec task.Spec) (task.Execution, error) {

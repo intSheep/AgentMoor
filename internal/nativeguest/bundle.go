@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"time"
 
-	"agentmoor/internal/snapshot"
+	"github.com/intSheep/AgentMoor/internal/snapshot"
 )
 
 type part struct {

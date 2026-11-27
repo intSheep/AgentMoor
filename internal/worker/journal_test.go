@@ -3,7 +3,7 @@ package worker
 import (
 	"testing"
 
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 func TestStatusDistinguishesInterruptedRun(t *testing.T) {

@@ -10,11 +10,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/adapters/claudecode"
-	"agentmoor/internal/adapters/codex"
-	"agentmoor/internal/adapters/gemini"
-	"agentmoor/internal/adapters/opencode"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/adapters/claudecode"
+	"github.com/intSheep/AgentMoor/internal/adapters/codex"
+	"github.com/intSheep/AgentMoor/internal/adapters/gemini"
+	"github.com/intSheep/AgentMoor/internal/adapters/opencode"
 )
 
 const usage = `Usage:

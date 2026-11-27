@@ -11,9 +11,9 @@ import (
 	"os"
 	"strconv"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/nativeguest"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/nativeguest"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 // SandboxExecutionProfile is selected by trusted deployment code, never by a

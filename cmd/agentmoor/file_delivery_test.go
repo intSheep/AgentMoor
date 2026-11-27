@@ -19,13 +19,13 @@ import (
 
 	"github.com/google/uuid"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/adapters/workspace"
-	"agentmoor/internal/asset"
-	"agentmoor/internal/platform"
-	"agentmoor/internal/snapshot"
-	"agentmoor/internal/task"
-	"agentmoor/internal/worker"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/adapters/workspace"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/snapshot"
+	"github.com/intSheep/AgentMoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/worker"
 )
 
 // The fixture adapter runs the real CSV tool and returns a deliberately

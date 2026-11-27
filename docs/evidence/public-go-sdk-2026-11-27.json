@@ -1,0 +1,419 @@
+{
+  "schema": "public-go-sdk-evidence.v1",
+  "issue": "INT-95",
+  "source_commit": "02e6fbd01f129b4dec6b3939b736d3a981e035f4",
+  "base_main": "7a7ea92e1febaea084285c522e5fb8b00eb36afd",
+  "synthetic_data_only": true,
+  "commits": {
+    "canonical_imports": "d11d12b841929db8efeb5a8cf55d3c3c986e8a2d",
+    "empty_argv_helper_fix": "a7b2268ff3270b83fe4cd18347efca9964a54051",
+    "sdk_surface_and_external_consumer": "02e6fbd01f129b4dec6b3939b736d3a981e035f4"
+  },
+  "module": "github.com/intSheep/AgentMoor",
+  "sdk_types_are_aliases": 21,
+  "public_platform_authority_added": false,
+  "source_change_boundary": "156 existing Go files only ImportSpec changes (348 imports); go.mod only canonical module directive. Separately, internal RunCLIInput error reporting guards args[0] for an empty argv. No native argv, task interface shape, JSON, platform allocation or guest execution policy changes.",
+  "checks": {
+    "source_commit": "02e6fbd01f129b4dec6b3939b736d3a981e035f4",
+    "initial_git_status": "",
+    "checks": [
+      {
+        "command": [
+          "make",
+          "fmt"
+        ],
+        "environment_overrides": {},
+        "exit_code": 0,
+        "seconds": 0.029
+      },
+      {
+        "command": [
+          "go",
+          "test",
+          "-race",
+          "./sdk",
+          "./sdk/contracttest",
+          "./internal/adapter",
+          "-count=1",
+          "-v"
+        ],
+        "environment_overrides": {},
+        "exit_code": 0,
+        "seconds": 7.375
+      },
+      {
+        "command": [
+          "go",
+          "build",
+          "./sdk"
+        ],
+        "environment_overrides": {
+          "CGO_ENABLED": "0"
+        },
+        "exit_code": 0,
+        "seconds": 0.049
+      },
+      {
+        "command": [
+          "go",
+          "list",
+          "-deps",
+          "-f",
+          "{{.ImportPath}}",
+          "./sdk"
+        ],
+        "environment_overrides": {
+          "CGO_ENABLED": "0"
+        },
+        "exit_code": 0,
+        "seconds": 0.024
+      },
+      {
+        "command": [
+          "make",
+          "check"
+        ],
+        "environment_overrides": {},
+        "exit_code": 0,
+        "seconds": 73.925
+      },
+      {
+        "command": [
+          "make",
+          "demo"
+        ],
+        "environment_overrides": {},
+        "exit_code": 0,
+        "seconds": 1.654
+      }
+    ],
+    "status": "passed",
+    "final_git_status": ""
+  },
+  "external_consumer": {
+    "module": "example.invalid/agentmoor-sdk-consumer",
+    "physically_outside_checkout": true,
+    "GOWORK": "off",
+    "GOTOOLCHAIN": "local",
+    "GOPROXY": "off",
+    "GOSUMDB": "off",
+    "sdk_resolution": "explicit local replace to this checkout, validated with targeted go list -m -json",
+    "imports": "stdlib + sdk + sdk/contracttest (AST checked)",
+    "actual_tests_required": [
+      "TestExternalRegistryAndInspect",
+      "TestExternalNativeConformance",
+      "TestExternalNativeConformance/external-native-custom-commands"
+    ],
+    "native_calls": {
+      "Version": 9,
+      "List": 3,
+      "Export": 3,
+      "Import": 1
+    },
+    "native_commands": [
+      "list",
+      "dump",
+      "load"
+    ],
+    "direct_internal_import_compiler_denied": true,
+    "task_optional_interfaces": "compile-time signature closure only; no TaskModes declared or executed"
+  },
+  "core_dependencies": {
+    "CGO_ENABLED": "0",
+    "core_build_passed": true,
+    "sdk_dependency_count": 121,
+    "own_packages": [
+      "internal/asset",
+      "internal/snapshot",
+      "internal/adapter",
+      "internal/task",
+      "sdk"
+    ],
+    "forbidden_absent": [
+      "internal/worker",
+      "internal/platform",
+      "sdk/contracttest",
+      "database/sql",
+      "pq",
+      "go-sqlite3",
+      "minio"
+    ]
+  },
+  "independent_agent": {
+    "result": "public-go-sdk-independent-agent-2026-11-27.json",
+    "source": "02e6fbd01f129b4dec6b3939b736d3a981e035f4",
+    "consumer_module": "example.invalid/agentmoor-docs-only",
+    "adapter_id": "aurora-notes",
+    "mechanism": "filesystem with own Raw Session format",
+    "public_reflection_used": true,
+    "initial_docs_fully_sufficient": false,
+    "manual_internal_or_existing_consumer_source_read": false,
+    "human_third_party_certification": false,
+    "document_fixes_after_feedback": "Full signature/DTO/Entry/fixture reference; offline go test -mod=mod rather than tidy dependency tests. No Go source change after clean acceptance."
+  },
+  "code_sha256": {
+    "sdk/contracttest/contracttest.go": "fb80c73e84d6aebedca426e04dc3d8a741d99fceb2226ba3f8c92eb689c431e6",
+    "sdk/external_test.go": "80f9e297e1f7e5fb33d9be435587d7de5d8820f07ca7363c720a2c82d9bf46b8",
+    "sdk/sdk.go": "f715244269af47d6d3d85f53a2bcac7541e1fe10840509157b41554b99f657dd",
+    "sdk/sdk_test.go": "4ba4a573e976f4543abbb059e6958b6c5046661609135f1caaad48d04fcfef94",
+    "testdata/sdkconsumer/adapter.go": "c42b1314b00290d00f73b46678a04779ea7d9cfa8f658ace6a7c989ef4ffc39b",
+    "testdata/sdkconsumer/consumer_test.go": "0acf08cc505096bd319230903c12e523925e117ef3e62371a36964cdae5009be",
+    "testdata/sdkconsumer/go.mod": "b704b7938e30c4d334b1edacf4cfacec4f6896ecf9191bdd2423df2fc7d9ac50"
+  },
+  "limitations": [
+    "Preview from this checkout and explicit local replace; no new remote SDK tag, @latest or v1 compatibility window promised.",
+    "Old v0.1.0-alpha.1 tag retains module agentmoor and has no SDK; it is not rewritten.",
+    "Go1.27.4 and current Unix code; no Windows or other Go/OS promise.",
+    "Core works without CGO; optional full conformance helper needs CGO/C compiler and local loopback.",
+    "Synthetic consumers and independent agent rehearsal are not vendor CLI, true third-party engineer, live model or new cluster-isolation acceptance.",
+    "All prior source evidence remains byte-identical; no repeat PG/S3/native-roundtrip/full4/gVisor attributed to this source."
+  ],
+  "artifacts": [
+    {
+      "path": "public-go-sdk-checks-2026-11-27.json",
+      "purpose": "clean frozen six-step acceptance",
+      "bytes": 1356,
+      "sha256": "8780bb9047e77a43d0423907726a5115ad43fa35aab6500ed9e094ee49b6a800"
+    },
+    {
+      "path": "public-go-sdk-checks-2026-11-27.log.gz",
+      "purpose": "raw SDK/external/core-deps/full check/demo results",
+      "bytes": 5989,
+      "sha256": "410197e72e01f5e3aee45b5e3299fa7cc9cb65e8b15a2c4c790674709ac63c45",
+      "encoding": "lossless gzip",
+      "raw_bytes": 30342,
+      "raw_sha256": "b757d5bd1e1a572cf4dc778e45ba6d990127e1d7c6252c5eb57ea475cdba3bf2"
+    },
+    {
+      "path": "public-go-sdk-import-migration-2026-11-27.json",
+      "purpose": "156 tracked Go bodies equal after imports removed; module directive only",
+      "bytes": 7045,
+      "sha256": "3f3dc813363d849f3001039e81a7d10e64275362ca52a3f36fe8d5db7432869f"
+    },
+    {
+      "path": "public-go-sdk-import-rewriter-2026-11-27.go.gz",
+      "purpose": "AST ImportSpec-only migration tool",
+      "bytes": 697,
+      "sha256": "f4b4ac40d80652e30263ada1a3b7dea31925ddb403edcf49b24496b4b1e76dfd",
+      "encoding": "lossless gzip",
+      "raw_bytes": 1383,
+      "raw_sha256": "1338064869ddb70399b2a838a47b0feef5e2bbea955fedcf4173caa5e35c99e5"
+    },
+    {
+      "path": "public-go-sdk-import-verifier-2026-11-27.go.gz",
+      "purpose": "independent normalized-Go-body verifier",
+      "bytes": 987,
+      "sha256": "58ed6a585ca15609fd1afe23fcf23cecbf1c7971f6b7fc520dc89c855188bb77",
+      "encoding": "lossless gzip",
+      "raw_bytes": 1991,
+      "raw_sha256": "4254cafe74ade31ac2599c10bc5f2c07121a4ee1bfbe8de298d5eeeb1e7126d2"
+    },
+    {
+      "path": "public-go-sdk-zero-args-negative-source-2026-11-27.json",
+      "purpose": "old helper plus exact uncommitted regression source identity",
+      "bytes": 378,
+      "sha256": "fa8e50bccfe96ae3f7d1ab7db08612cfbe8bab6f3c85a9a164b50ebc2660215f"
+    },
+    {
+      "path": "public-go-sdk-zero-args-negative-2026-11-27.log.gz",
+      "purpose": "actual pre-fix empty-argv failure panic; not a new task invocation",
+      "bytes": 577,
+      "sha256": "140397a341eb3e1a09a795a166600a10cdbb94bc257e8d88fbab49dce2cf7695",
+      "encoding": "lossless gzip",
+      "raw_bytes": 1778,
+      "raw_sha256": "154dcff8b92bc342ceb608a90d063b17de258615591bb6e93414f47b6afe7ef6"
+    },
+    {
+      "path": "public-go-sdk-zero-args-fixed-2026-11-27.log.gz",
+      "purpose": "focused post-fix success and error regressions; final clean checks also rerun them",
+      "bytes": 201,
+      "sha256": "be51d924b473681cd2167e7efbd59e75b3d7ffbd77b15bdc0c0b832f2807c142",
+      "encoding": "lossless gzip",
+      "raw_bytes": 554,
+      "raw_sha256": "cb9244ce572d0855aae8f25390ee0845cb764fc66118ca34d44589c28a77625c"
+    },
+    {
+      "path": "public-go-sdk-internal-denial-2026-11-27.json",
+      "purpose": "independent outside-module direct-internal rejection",
+      "bytes": 439,
+      "sha256": "bad43002cdbde73ceb014d188b480727a20ba27d85555afaf9115ac876b1c3e4"
+    },
+    {
+      "path": "public-go-sdk-internal-denial-2026-11-27.log.gz",
+      "purpose": "real compiler internal-package denial diagnostic",
+      "bytes": 172,
+      "sha256": "49689156f88ef81e8ec4240054047af06046596b10c8b57377fdfa6e670754ef",
+      "encoding": "lossless gzip",
+      "raw_bytes": 254,
+      "raw_sha256": "891c06f71f4c1a472b6ab8a905ea077ee1059283b764716e92a3edc294e61311"
+    },
+    {
+      "path": "public-go-sdk-public-fields-2026-11-27.json",
+      "purpose": "public-only reflection verifies complete published signature/field reference",
+      "bytes": 2546,
+      "sha256": "68c51a8792f41127dd92ff915bbf1648e892a4f8b9dfc6b52de62a4456d54af1"
+    },
+    {
+      "path": "public-go-sdk-independent-agent-2026-11-27.json",
+      "purpose": "independent agent original public-documentation/reflection rehearsal, not a human certification",
+      "bytes": 3437,
+      "sha256": "5171b2a4e72df1e651197b2ab8e22114c8c45adf27b2742f97f184fa8c744bc6"
+    },
+    {
+      "path": "public-go-sdk-independent-agent-2026-11-27.log.gz",
+      "purpose": "actual public suite pass from original third adapter, no internal manual source read",
+      "bytes": 2767,
+      "sha256": "b1ed0183f88db9c5a16bb7172eb190c9cff737d57ed3a9d41fe6d028c814655c",
+      "encoding": "lossless gzip",
+      "raw_bytes": 26931,
+      "raw_sha256": "7f5bce1c53e753fd06f21d4b95852304621d57b91cd8e81109a0a4ee71d66ffd"
+    },
+    {
+      "path": "public-go-sdk-independent-agent-2026-11-27.tar.gz",
+      "purpose": "original independent source/go.mod/resolve/reflection/setup failures and pass; 21 safe archive members",
+      "bytes": 18763,
+      "sha256": "524e0e49e89d7d19084cbba4abb8ca0c4cb80dd5a237241a7e10b254893acea1"
+    },
+    {
+      "path": "public-go-sdk-offline-checks-2026-11-27.json",
+      "purpose": "clean offline bootstrap fix source verification",
+      "bytes": 730,
+      "sha256": "c08349001f53f9ab1ebaf87b41a2a0e5b6d123d0caaeb22c13bf29b77048d22b"
+    },
+    {
+      "path": "public-go-sdk-offline-checks-2026-11-27.log.gz",
+      "purpose": "fixed source focused/full check/demo raw log",
+      "bytes": 5043,
+      "sha256": "f70d66200462e40cfd51745c95128a9c86d61b211a9165e59033ca895e9cc225",
+      "encoding": "lossless gzip",
+      "raw_bytes": 26659,
+      "raw_sha256": "f1fd12d7d543ae1167e6d58bf24a1d582fae24361dd638e1ed544844215c28c1"
+    },
+    {
+      "path": "public-go-sdk-sparse-cache-2026-11-27.json",
+      "purpose": "same selected-version-only cache old failure to fixed pass and owned cleanup",
+      "bytes": 20568,
+      "sha256": "74c983d947be50ae336540ad2a1676ad0e054ae831a9a479dd5239a4aa908069"
+    },
+    {
+      "path": "public-go-sdk-sparse-old-failed-2026-11-27.log.gz",
+      "purpose": "actual old bootstrap requests unavailable obsolete metadata",
+      "bytes": 260,
+      "sha256": "bdbb21421d0b8f1c8dc6b886cdbec314c9bc267e5580762eb51a2464a4241b06",
+      "encoding": "lossless gzip",
+      "raw_bytes": 344,
+      "raw_sha256": "821b2d2ef06abf2b99640f260920fb84c0a1b0d3da2224e075e2ff5a8bb70c05"
+    },
+    {
+      "path": "public-go-sdk-sparse-fixed-2026-11-27.log.gz",
+      "purpose": "same sparse cache fixed bootstrap actual race pass",
+      "bytes": 472,
+      "sha256": "83e2fe92b1c3dd972357b23e092b324c64c56060184c158868af5e1273675652",
+      "encoding": "lossless gzip",
+      "raw_bytes": 857,
+      "raw_sha256": "861cdae97ff8b304a6e20aba04ee0a39f1f7662f061036ae1589ff8a3407a7f2"
+    },
+    {
+      "path": "public-go-sdk-offline-before-2026-11-27.go.gz",
+      "purpose": "exact old test source snapshot",
+      "bytes": 3857,
+      "sha256": "30312b9865aab1a7a10f2e650c1d8babb85a345d12315c0649772d5c3a4f03bc",
+      "encoding": "lossless gzip",
+      "raw_bytes": 10865,
+      "raw_sha256": "80f9e297e1f7e5fb33d9be435587d7de5d8820f07ca7363c720a2c82d9bf46b8"
+    },
+    {
+      "path": "public-go-sdk-offline-after-2026-11-27.go.gz",
+      "purpose": "exact fixed test source snapshot",
+      "bytes": 4447,
+      "sha256": "2e634952d129218a06c56b0ea60922910a3839d80ebb5f1d8ad3325e9fb0a7ca",
+      "encoding": "lossless gzip",
+      "raw_bytes": 12970,
+      "raw_sha256": "e311a232e781aff8b6bfd7cf3ca96dc4f4e362624bb88023734f00e2eeedc4d0"
+    },
+    {
+      "path": "public-go-sdk-goenv-control-2026-11-27.json",
+      "purpose": "owned saved-config proxy bypass control; no network performed",
+      "bytes": 633,
+      "sha256": "9d3fe073110382792c349f81d53493a0005f35259b9e8e77e6c6ae77c40e1f19"
+    },
+    {
+      "path": "public-go-sdk-ci-45995216344-failed-2026-11-27.log.gz",
+      "purpose": "actual initial Linux CI failure; not relabelled as passed",
+      "bytes": 4516,
+      "sha256": "5c68b0cfeafbf84e93de3c5daf7f9a849b0e9835aede0ec09f591487ba9b3ee9",
+      "encoding": "lossless gzip",
+      "raw_bytes": 22755,
+      "raw_sha256": "e241b149b87af0edbdb4b1685d840e9b5a56c886d1bf5f60bcd9903d8586a0ef"
+    },
+    {
+      "path": "public-go-sdk-ci-45995264281-failed-2026-11-27.log.gz",
+      "purpose": "actual initial Linux CI failure; not relabelled as passed",
+      "bytes": 4526,
+      "sha256": "b8a51375db3be3a22316b976a1b73b28de47ae13b8a7b929b6aacf991d414586",
+      "encoding": "lossless gzip",
+      "raw_bytes": 22756,
+      "raw_sha256": "0513c6c89a099ba65001240a9d0511863450b521030383def9aa4c0236143279"
+    }
+  ],
+  "offline_bootstrap_fix": {
+    "source_commit": "11c4a7dc3d85bfcf7806c8ba0c132d18a5dc8b91",
+    "changed_source_files": [
+      "sdk/external_test.go"
+    ],
+    "source_sha256": "e311a232e781aff8b6bfd7cf3ca96dc4f4e362624bb88023734f00e2eeedc4d0",
+    "checks": {
+      "source_commit": "11c4a7dc3d85bfcf7806c8ba0c132d18a5dc8b91",
+      "initial_git_status": "clean",
+      "checks": [
+        {
+          "command": [
+            "make",
+            "fmt"
+          ],
+          "exit_code": 0,
+          "seconds": 0.031
+        },
+        {
+          "command": [
+            "go",
+            "test",
+            "-race",
+            "./sdk",
+            "./sdk/contracttest",
+            "-count=1",
+            "-v"
+          ],
+          "exit_code": 0,
+          "seconds": 7.804
+        },
+        {
+          "command": [
+            "make",
+            "check"
+          ],
+          "exit_code": 0,
+          "seconds": 11.029
+        },
+        {
+          "command": [
+            "make",
+            "demo"
+          ],
+          "exit_code": 0,
+          "seconds": 2.086
+        }
+      ],
+      "status": "passed",
+      "final_git_status": ""
+    },
+    "explicit_sdk_require_roots": 22,
+    "source_of_roots": "current SDK go.mod Require only, not a claim to compute the full MVS graph",
+    "test_setup": "same pinned roots in temporary positive and negative main modules; production go.mod/go.sum unchanged; no inherited replace/exclude/workspace/toolchain directives",
+    "GOENV": "off",
+    "cold_cache": "88 original artifacts for current22requireversionsonly; old cpuid/v2@v2.0.1.mod absent before AND after fixed pass",
+    "cold_fixed_race_seconds": 16.184,
+    "cache_cleanup": "only owned cache removed after identity guard; global cache untouched",
+    "limits": "Does not claim one-line-SDK-require offline bootstrap succeeds with obsolete transitive metadata missing. Normal online consumers do not need this test-specific pinning."
+  }
+}

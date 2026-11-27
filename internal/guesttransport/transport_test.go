@@ -27,7 +27,7 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/nativeguest"
+	"github.com/intSheep/AgentMoor/internal/nativeguest"
 )
 
 const (

@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/adapters/codex"
-	"agentmoor/internal/nativeguest"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/adapters/codex"
+	"github.com/intSheep/AgentMoor/internal/nativeguest"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 func TestGuestCommandRejectsInvalidHandoffWithoutNativeInvocation(t *testing.T) {

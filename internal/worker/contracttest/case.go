@@ -5,7 +5,7 @@ package contracttest
 import (
 	"testing"
 
-	"agentmoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/adapter"
 )
 
 type Mechanism string

@@ -22,13 +22,13 @@ check: test-file-report
 	PYTHONDONTWRITEBYTECODE=1 python3 tests/kubernetes/sandbox_audit_chain.py --help > /dev/null
 	PYTHONDONTWRITEBYTECODE=1 python3 tests/kubernetes/sandbox_persistent_chain.py --help > /dev/null
 	sh tests/check-kind-prereqs.sh
-	@unformatted=$$(gofmt -l cmd internal) && test -z "$$unformatted" || { echo "Run make fmt"; exit 1; }
+	@unformatted=$$(gofmt -l cmd internal sdk testdata/sdkconsumer) && test -z "$$unformatted" || { echo "Run make fmt"; exit 1; }
 	go vet ./...
 	go test -race ./...
 	go build ./...
 
 fmt:
-	gofmt -w cmd internal
+	gofmt -w cmd internal sdk testdata/sdkconsumer
 
 build:
 	go build -o bin/agentmoor ./cmd/agentmoor

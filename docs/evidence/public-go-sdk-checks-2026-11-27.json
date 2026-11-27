@@ -1,0 +1,77 @@
+{
+  "source_commit": "02e6fbd01f129b4dec6b3939b736d3a981e035f4",
+  "initial_git_status": "",
+  "checks": [
+    {
+      "command": [
+        "make",
+        "fmt"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "seconds": 0.029
+    },
+    {
+      "command": [
+        "go",
+        "test",
+        "-race",
+        "./sdk",
+        "./sdk/contracttest",
+        "./internal/adapter",
+        "-count=1",
+        "-v"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "seconds": 7.375
+    },
+    {
+      "command": [
+        "go",
+        "build",
+        "./sdk"
+      ],
+      "environment_overrides": {
+        "CGO_ENABLED": "0"
+      },
+      "exit_code": 0,
+      "seconds": 0.049
+    },
+    {
+      "command": [
+        "go",
+        "list",
+        "-deps",
+        "-f",
+        "{{.ImportPath}}",
+        "./sdk"
+      ],
+      "environment_overrides": {
+        "CGO_ENABLED": "0"
+      },
+      "exit_code": 0,
+      "seconds": 0.024
+    },
+    {
+      "command": [
+        "make",
+        "check"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "seconds": 73.925
+    },
+    {
+      "command": [
+        "make",
+        "demo"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "seconds": 1.654
+    }
+  ],
+  "status": "passed",
+  "final_git_status": ""
+}

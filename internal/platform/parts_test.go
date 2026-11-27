@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/snapshot"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/snapshot"
 )
 
 type tarFile struct{ name, body string }

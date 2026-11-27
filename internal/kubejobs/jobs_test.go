@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"agentmoor/internal/asset"
 	"github.com/google/uuid"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 func TestEnsureReusesJobAfterAmbiguousCreate(t *testing.T) {

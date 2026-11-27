@@ -18,7 +18,7 @@ import (
 
 	"github.com/minio/minio-go/v7"
 
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 func TestPostgresAndS3(t *testing.T) {

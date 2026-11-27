@@ -5,7 +5,7 @@ import (
 	"net"
 	"testing"
 
-	"agentmoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/platform"
 )
 
 func TestTaskStartupRetriesOnlyNetworkFailures(t *testing.T) {

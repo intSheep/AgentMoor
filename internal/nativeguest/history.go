@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/asset"
-	"agentmoor/internal/snapshot"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/snapshot"
 )
 
 type guestHistory struct {

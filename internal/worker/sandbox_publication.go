@@ -17,12 +17,12 @@ import (
 	"slices"
 	"time"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/nativeguest"
-	"agentmoor/internal/platform"
-	"agentmoor/internal/snapshot"
-	"agentmoor/internal/task"
 	"github.com/google/uuid"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/nativeguest"
+	"github.com/intSheep/AgentMoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/snapshot"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 var sealedDigest = regexp.MustCompile(`^[a-f0-9]{64}$`)

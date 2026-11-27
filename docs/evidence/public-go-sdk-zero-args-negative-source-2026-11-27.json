@@ -1,0 +1,7 @@
+{
+  "base_commit": "d11d12b841929db8efeb5a8cf55d3c3c986e8a2d",
+  "test_file": "internal/adapter/runtime_empty_args_test.go",
+  "test_sha256": "ae06f82a0be8120325e655a3c2d047a863700011083f4d9cce5a1432e954d114",
+  "test_status": "uncommitted new regression, runtime helper unchanged from base",
+  "log_sha256": "154dcff8b92bc342ceb608a90d063b17de258615591bb6e93414f47b6afe7ef6"
+}

@@ -182,3 +182,7 @@ INT-90 保留旧实现 R2/R3 的真实失败：只停止自有节点 kubelet，A
 ## 2026-11-27：P3 共用 Adapter 契约验收首片
 
 `be35146` 将 Codex 文件 Session 与 OpenCode 实际 NativeSessions 方法接入同一公开 HTTP 资产断言，CLI 使用有界合成程序。四类资产、原 Session/Skill 完整文件集合与字节、历史版本、新路径、实际 post-commit 503 重试及不兼容版本拒绝通过；后者在空的新分配验证导出、已有合法 Session 验证导入，避免无关错误掩盖门槛。四个临时 overlay 反例均准确失败；聚焦 race/check/demo 全通过，生产文件未改。[工具、版本与实际范围](adapter-contract.md) · [来源、诊断与无损日志](evidence/adapter-conformance-2026-11-27.json)。这仍是内部工具，未宣称稳定外部 SDK、真实厂商 CLI 或第三方工程师已验收。
+
+## 2026-11-27：公开 Go SDK 与仓库外模块预览
+
+`02e6fbd` 提供保持原类型身份的公开接口、参数与原生 CLI helper，并把共用资产测试放在独立 `sdk/contracttest` 包。无关模块仅使用公开入口，实际通过注册/版本及自有 list/dump/load 的资产往返；直接导入内部包则由 Go 编译器明确拒绝。另一个独立 agent 仅通过公开文档/反射新写适配器也通过，文档缺口和离线设置诊断均保留。fmt、SDK race、无 CGO 核心构建/依赖、完整 check/demo 通过；历史证据未改，旧无参数错误 panic 单独复现并修复。[SDK 用法与范围](adapter-sdk.md) · [来源、独立材料及原始日志](evidence/public-go-sdk-2026-11-27.json)。尚未发布新标签、承诺稳定兼容窗口或完成真人第三方认证。

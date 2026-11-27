@@ -12,7 +12,7 @@ import (
 	"io"
 	"time"
 
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 func partKey(s asset.Scope, digest string) string { return s.Prefix() + "/parts/" + digest }

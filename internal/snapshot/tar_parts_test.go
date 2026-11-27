@@ -14,7 +14,7 @@ import (
 	"strings"
 	"testing"
 
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 func capturePartsTree(t *testing.T, dir string) Blob {

@@ -8,9 +8,9 @@ import (
 	"path"
 	"strings"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/adapters/sessionfile"
-	"agentmoor/internal/snapshot"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/adapters/sessionfile"
+	"github.com/intSheep/AgentMoor/internal/snapshot"
 )
 
 func sessions(ctx context.Context, root *os.Root) ([]adapter.NativeSession, error) {

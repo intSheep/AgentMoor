@@ -12,9 +12,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/platform"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 // RunTask handles one control-plane allocation. A replacement process never

@@ -10,11 +10,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/asset"
-	"agentmoor/internal/snapshot"
-	"agentmoor/internal/task"
 	"github.com/google/uuid"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/snapshot"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 // Execute is a native driver, not an isolation mechanism. Its caller must run

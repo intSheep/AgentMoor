@@ -26,12 +26,12 @@ import (
 
 	"github.com/google/uuid"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/adapters/workspace"
-	"agentmoor/internal/asset"
-	"agentmoor/internal/platform"
-	"agentmoor/internal/snapshot"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/adapters/workspace"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/snapshot"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 // This test-only adapter calls a real child process and exports its own tiny

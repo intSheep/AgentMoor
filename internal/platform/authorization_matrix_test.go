@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/task"
 	"github.com/google/uuid"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 // These are independent capabilities, rather than the convenient combinations

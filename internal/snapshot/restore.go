@@ -14,7 +14,7 @@ import (
 	"slices"
 	"strings"
 
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 // Restore verifies the entire payload before exposing a new target. The caller

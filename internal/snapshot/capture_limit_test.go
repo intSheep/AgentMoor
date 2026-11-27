@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 func TestCapturesRespectCallerLimitsAndKeepDefaultBytes(t *testing.T) {

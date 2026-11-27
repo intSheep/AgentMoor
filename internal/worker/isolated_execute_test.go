@@ -18,11 +18,11 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/asset"
-	"agentmoor/internal/platform"
-	"agentmoor/internal/task"
 	"github.com/google/uuid"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 // This adapter has the assigned Codex ID so the provider's allocation check is

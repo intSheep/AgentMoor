@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 const MaxTreeEntries = 65536

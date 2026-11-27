@@ -15,9 +15,9 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/task"
 	"github.com/google/uuid"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 var objectCollectionPrivateFailure = errors.New("synthetic private object fault /host/private-data AGENTMOOR_TOKEN=not-for-audit")

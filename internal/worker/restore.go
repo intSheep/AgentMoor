@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/asset"
-	"agentmoor/internal/snapshot"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/snapshot"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 func (e *Engine) Restore(ctx context.Context, k asset.Key, version int64, dest string) error {

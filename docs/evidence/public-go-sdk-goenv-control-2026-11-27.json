@@ -1,0 +1,19 @@
+{
+  "scope": "owned HOME/Go environment only; GOVCS=*:off prevents VCS invocation; no SDK/source or user cache/config mutation",
+  "setup_exit": 0,
+  "setup_error": "",
+  "results": [
+    {
+      "mode": "default-goenv",
+      "exit": 1,
+      "stdout": "",
+      "stderr": "go: github.com/intSheep/AgentMoor@v0.0.0-sdk-review-missing: GOVCS disallows using git for public github.com/intSheep/AgentMoor; see 'go help vcs'\n"
+    },
+    {
+      "mode": "goenv-off",
+      "exit": 1,
+      "stdout": "",
+      "stderr": "go: github.com/intSheep/AgentMoor@v0.0.0-sdk-review-missing: module lookup disabled by GOPROXY=off\n"
+    }
+  ]
+}

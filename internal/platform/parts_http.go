@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 func (a *API) partRoutes(handle func(string, string, func(http.ResponseWriter, *http.Request, Grant) error)) {

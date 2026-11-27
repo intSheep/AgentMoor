@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 const maxCases, maxEvents = 32, 4096
