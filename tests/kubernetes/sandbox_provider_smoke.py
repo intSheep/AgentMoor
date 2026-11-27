@@ -50,7 +50,7 @@ class ProviderSmoke:
         self.base_image = "agentmoor-provider-base:" + probe.cluster
         self.origin = "agentmoor." + CONTROL_NS + ".svc"
         self.model_origin = "model." + CONTROL_NS + ".svc"
-        self.observed, self.observer_errors = {}, []
+        self.observed, self.observer_errors, self.seen_pods = {}, [], {}
         self.lock, self.stop = threading.Lock(), threading.Event()
         self.result = {"status": "in_progress", "started_at_utc": now(),
                        "scope": "production sandbox provider / real Codex / scripted private-CA TLS model",
@@ -201,6 +201,7 @@ class ProviderSmoke:
                 for pod in pods:
                     uid = pod["metadata"]["uid"]
                     with self.lock:
+                        self.seen_pods[uid] = {"pod": redact_pod(pod), "annotation_keys": sorted(pod.get("metadata", {}).get("annotations", {}))}
                         if uid in self.observed:
                             continue
                     if pod.get("status", {}).get("phase") != "Running":
@@ -295,10 +296,22 @@ class ProviderSmoke:
             observer.join(timeout=15)
             with self.lock:
                 self.result["running_guest_observations"] = list(self.observed.values())
+                self.result["seen_guest_pods"] = list(self.seen_pods.values())
                 self.result["observer_errors"] = self.observer_errors[-10:]
         self.result["status"] = "passed"
 
     def diagnostics(self):
+        try:
+            pods = json.loads(self.kube("get", "pods", "-o", "json", namespace=GUEST_NS))
+            self.result["failure_guest_pods"] = [{"pod": redact_pod(pod), "annotation_keys": sorted(pod.get("metadata", {}).get("annotations", {}))} for pod in pods["items"]]
+            workers = json.loads(self.kube("get", "pods", "-l", "job-name=file-produce", "-o", "json"))["items"]
+            self.result["failure_worker_pods"] = [redact_pod(pod) for pod in workers]
+            for pod in workers:
+                text = self.kube("logs", pod["metadata"]["name"], "--all-containers=true", "--tail=100")
+                require("sbx1." not in text, "worker diagnostics contain a capability")
+                self.result.setdefault("logs", {})[pod["metadata"]["name"]] = text
+        except Exception as error:
+            self.result.setdefault("diagnostic_errors", []).append(str(error))
         for namespace, name in ((CONTROL_NS, "agentmoor"), (CONTROL_NS, "provider-model")):
             try:
                 text = self.kube("logs", name, "--all-containers=true", "--tail=100", namespace=namespace)
