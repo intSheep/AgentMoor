@@ -1,0 +1,42 @@
+{
+  "recorded_date_utc": "2026-11-27",
+  "issue": "INT-73",
+  "source_commit": "b7ab6f14ce44199825c23b081468983b5d295a65",
+  "scope": "private sandbox execution persistence only",
+  "checks": {
+    "make fmt": "passed",
+    "make check": "passed, including race",
+    "make demo": "passed",
+    "make test-services": "passed against actual disposable PostgreSQL and S3-compatible service"
+  },
+  "services": {
+    "postgres_image_configuration": "postgres:18-alpine",
+    "s3_image_configuration": "pgsty/minio:RELEASE.2026-04-17T00-00-00Z",
+    "exact_server_versions_recorded_in_this_run": false,
+    "owned_compose_project": "agentmoor-test-92047",
+    "owned_services_and_volumes_cleaned": true,
+    "local_log": "/private/tmp/agentmoor-int73-services-20261127.log",
+    "log_sha256": "0ae7a4fb5695afbec3a374c74a9ad89c67b09f0afa0ca236c7d30a982d18f0a9"
+  },
+  "verified": [
+    "concurrent fence permits one create attempt and returns no capabilities on replay",
+    "catalog restart preserves fence and hashed capability authority",
+    "actual frozen task, parent, Skill pins, attempt and profile binding",
+    "whole-envelope SHA256 and length validation with 64 MiB bounds",
+    "cancelled, expired, wrong-purpose and cross-scope access denial",
+    "equal output retry after lost object acknowledgement and conflict rejection",
+    "output requires matching terminal Pod UID and deletion confirmation metadata",
+    "shared and retained references protected while actual orphan objects are removed",
+    "failed object deletion can retry without removing the create tombstone",
+    "actual PostgreSQL writer termination denies mutation before object Put",
+    "actual successful S3 Put followed by PostgreSQL writer termination cannot seal output"
+  ],
+  "not_verified_or_implemented": [
+    "Kubernetes creation, UID observation or actual Pod deletion",
+    "HTTP controller or capability/model gateway",
+    "persistent model budget reservation",
+    "untrusted application execution, native CLI or Skill isolation",
+    "network policies, resource exhaustion or production HA"
+  ],
+  "untrusted_execution_gate": "closed"
+}
