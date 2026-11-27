@@ -19,6 +19,8 @@
 
 客户代码和第三方 Skill 按不可信代码处理。当前同容器直接执行路径只供受信开发及批准工具使用；可信 Worker 与不可信执行区的分离、实际沙箱与对抗验收按 [P2 执行边界](security-boundary.md)推进，不能用既有文件/Skill 契约通过代替。
 
+受信配置的 `execution_policy: "untrusted-isolated.v1"` 当前会在授权、claim、原生版本检查及执行前明确拒绝，首轮/追问不会改写 queued 记录或成功 checkpoint。空值及 `trusted-local.v1` 只兼容旧受信路径；SaaS 指令无法选择或降级策略。[配置行为与范围](operations.md#任务执行的信任策略)
+
 | 操作 | 权限 | 语义 |
 | --- | --- | --- |
 | `PUT /v1/tasks/{id}` | `issue --submit` | 创建不可变任务，返回当前记录。相同 ID 和内容重试安全，修改已提交内容返回 409。尚未实现文本执行的适配器返回 422。 |

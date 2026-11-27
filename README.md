@@ -84,6 +84,7 @@ The linked guides are in Chinese.
 | [Asset lifecycle](docs/asset-lifecycle.md) | Creation, updates, local deletion, fixed references, recovery, and garbage collection. |
 | [Credential lifecycle](docs/authentication-policy.md) | Opt into live key rotation and individual credential revocation through a private operator-managed policy. |
 | [Untrusted execution boundary](docs/security-boundary.md) | The customer-code decision, required separation from trusted workers, and the remaining sandbox acceptance work. |
+| [gVisor runtime feasibility](docs/gvisor-feasibility.md) | Reproduce a pinned real runsc/systrap Pod and a missing-handler denial in a disposable kind cluster; separate from application isolation acceptance. |
 | [v0.1 acceptance results](docs/mvp.md) | Tested CLI versions, product requirements, test coverage, and known limits. |
 | [Adapter research](docs/research.md) | Design references from Magpie, CC Switch, and the four supported agents. |
 | [Repository guide](AGENTS.md) | Code layout, adapter conventions, and checks to run before submitting a change. |
