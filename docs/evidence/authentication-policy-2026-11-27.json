@@ -1,0 +1,52 @@
+{
+  "record_type": "test execution summary; not a raw HTTP transcript",
+  "recorded_at_utc": "2026-11-27T03:51:38.686588+00:00",
+  "source_commit": "e3738562d3d607c4dd963f7d66cb2885fa8c3619",
+  "status": "passed",
+  "host": {
+    "go": "go1.27.4 darwin/arm64",
+    "python": "3.15.2"
+  },
+  "commands": [
+    {
+      "command": "go test -race ./internal/platform ./cmd/agentmoor -run 'TestAuthPolicy|TestAuthCLI|TestHTTPAuthority' -count=1",
+      "exit_code": 0,
+      "origin": "implementation-agent tool result",
+      "package_seconds": {
+        "platform": 2.479,
+        "cmd/agentmoor": 1.583
+      }
+    },
+    {
+      "command": "make fmt && make check && make demo",
+      "exit_code": 0,
+      "origin": "root tool session32315",
+      "demo_result": "Workspace restored and verified."
+    }
+  ],
+  "coverage": [
+    "live HTTP key rotation overlap, key retirement and unique credential revocation",
+    "explicit legacy-key migration and legacy token revocation",
+    "atomic file-client renewal without HTTP service restart",
+    "revoked and unavailable policy rejection across current22 public routes",
+    "canonical base64, version/key/credential selectors, lower-case ASCII field names and valid-MAC alias negatives",
+    "nonregular files, projected policy symlink reads and refused management symlinks",
+    "concurrent policy updates, system lock release after owner exit and failed writes",
+    "existing HTTP role and scope authorization matrix"
+  ],
+  "limits": {
+    "policy_bytes": 1048576,
+    "verification_keys": 16,
+    "revoked_credentials": 4096,
+    "maximum_issued_ttl_hours": 24,
+    "management_lock_wait_seconds": 10
+  },
+  "production_behavior": "optional explicit --auth-policy; default single-key mode unchanged",
+  "limitations": [
+    "Only services explicitly configured with --auth-policy participate in rotation/revocation.",
+    "Subsequent authentication requests only; accepted requests and external side effects are not automatically cancelled.",
+    "No Kubernetes Secret propagation timing or multi-replica consistency/HA proof.",
+    "No native CLI or untrusted execution sandbox acceptance.",
+    "All credentials and fixtures used for tests are synthetic; no keys or bearer values are in this summary."
+  ]
+}
