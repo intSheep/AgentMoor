@@ -70,6 +70,67 @@ func TestCatalogRefusesLegacyQuestionMarkFilename(t *testing.T) {
 	}
 }
 
+func TestCatalogRefusesRelativeLegacyFileURI(t *testing.T) {
+	base := t.TempDir()
+	t.Chdir(base)
+	legacy := filepath.Join(base, "legacy")
+	c, err := OpenCatalog(t.Context(), legacy, "", DiskObjects{Dir: filepath.Join(legacy, "objects")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = c.submitTask(t.Context(), taskAddress{Scope: scope("legacy-uri")}, task.Spec{Instruction: "old synthetic data", Output: "report.txt"}); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Close(); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(legacy, "catalog.sqlite")
+	original, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, dir := range []string{"file:legacy", "./file:legacy", "child/../file:legacy"} {
+		if c, err = OpenCatalog(t.Context(), dir, "", DiskObjects{Dir: filepath.Join(base, "unused-objects")}); err == nil {
+			c.Close()
+			t.Fatal("legacy URI was silently interpreted as a new literal directory", dir)
+		}
+	}
+	got, err := os.ReadFile(path)
+	if err != nil || !bytes.Equal(got, original) {
+		t.Fatal("legacy URI database bytes changed", err)
+	}
+	if _, err = os.Lstat(filepath.Join(base, "file:legacy")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatal("a second literal store was created", err)
+	}
+	// An explicit absolute filesystem path has no old URI interpretation.
+	literal := filepath.Join(base, "file:literal")
+	c, err = OpenCatalog(t.Context(), literal, "", DiskObjects{Dir: filepath.Join(literal, "objects")})
+	if err != nil {
+		t.Fatal("absolute literal directory was rejected", err)
+	}
+	if err = c.Close(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestAuditReaderRejectsNULDirectoryInsteadOfOpeningPrefix(t *testing.T) {
+	dir := t.TempDir()
+	c, err := OpenCatalog(t.Context(), dir, "", DiskObjects{Dir: filepath.Join(dir, "objects")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+	prefix := filepath.Join(dir, "catalog.sqlite") + "\x00ignored"
+	if reader, err := OpenAuditReader(t.Context(), prefix, ""); err == nil {
+		reader.Close()
+		t.Fatal("NUL-truncated prefix database was opened")
+	}
+	if other, err := OpenCatalog(t.Context(), prefix, "", DiskObjects{Dir: filepath.Join(dir, "unused")}); err == nil {
+		other.Close()
+		t.Fatal("NUL-truncated writer was opened")
+	}
+}
+
 func scope(tenant string) asset.Scope {
 	return asset.Scope{Tenant: tenant, Project: "demo", Runtime: "logical-1", Adapter: "codex"}
 }

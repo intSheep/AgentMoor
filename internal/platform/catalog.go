@@ -71,6 +71,15 @@ CREATE INDEX IF NOT EXISTS revision_manifests ON revision_parts(scope,op);
 // OpenCatalog takes an exclusive service lease. Many workers may use the HTTP
 // API concurrently. A second service must not collect the first one's uploads.
 func OpenCatalog(ctx context.Context, dir, postgres string, objects Objects) (*Catalog, error) {
+	if strings.ContainsRune(dir, 0) {
+		return nil, errors.New("invalid catalog directory")
+	}
+	if postgres == "" && strings.HasPrefix(filepath.Join(dir, "catalog.sqlite"), "file:") {
+		// The old driver treated this relative filesystem name as a SQLite
+		// URI. Require an explicit absolute path instead of silently choosing
+		// a different database while converting directory paths to file URIs.
+		return nil, errors.New("legacy SQLite URI directory requires an explicit absolute path")
+	}
 	dir, err := filepath.Abs(dir)
 	if err != nil {
 		return nil, err

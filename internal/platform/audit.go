@@ -299,7 +299,7 @@ func decodeAudit(raw string, event *AuditEvent) error {
 func OpenAuditReader(ctx context.Context, dir, postgres string) (*AuditReader, error) {
 	driver, dsn := "postgres", postgres
 	if postgres == "" {
-		if !filepath.IsAbs(dir) {
+		if !filepath.IsAbs(dir) || strings.ContainsRune(dir, 0) {
 			return nil, ErrAudit
 		}
 		u := url.URL{Scheme: "file", Path: filepath.Join(dir, "catalog.sqlite")}
