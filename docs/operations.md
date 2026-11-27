@@ -96,6 +96,22 @@ HTTP 按以下能力分别授权；同一凭据可以组合多种能力。
 
 `runtime_cli` 可指定工作区外受信可执行文件的绝对路径。提供它时，平台会记录实测版本。`runtime_version` 可要求该程序的 `--version` 输出精确匹配，`adapter_version` 可固定适配器实现版本。使用 `agentmoor inspect <adapter> <workspace> <绝对可执行文件>` 查看两者。
 
+### 任务执行的信任策略
+
+`run-task` 的 `execution_policy` 由受信 Worker 配置指定，任务文本不能覆盖它：
+
+| 配置值 | 当前行为 |
+| --- | --- |
+| 未填写或 `trusted-local.v1` | 兼容已有受信开发/批准工具的本地子进程流程，尚无代码隔离保证。 |
+| `untrusted-isolated.v1` | 要求独立隔离提供方；当前尚未接入提供方，在读取执行凭据、授权/claim 和原生命令前返回 `ErrIsolationUnavailable`。 |
+| 其他值 | 配置校验失败。 |
+
+客户代码和第三方 Skill 必须按不可信执行处理，不能因提供方尚未完成就改成 `trusted-local.v1`。当前显式选择不可信策略会拒绝执行，首轮或追问的 queued 记录、已有成功 checkpoint、固定内容和游标保持不变，不产生成功资产或新执行目录。
+
+这个门禁覆盖任务首轮和追问，不覆盖普通 `sync` 或 `restore-native` 等受信维护入口。原生导入/导出的完整隔离属于后续提供方工作。[执行边界](security-boundary.md)
+
+`make test-k8s-gvisor-feasibility` 可独立检验本机 gVisor 运行时和缺 handler 拒绝；探针通过后，应用提供方仍须完成 Worker/guest 分离、模型网关、网络与资源验收。[命令、实际结果与限制](gvisor-feasibility.md)
+
 ### 可选：固定任务 Skill
 
 任务执行可通过受信 Worker 配置的 `skill_pins` 固定 Skill。以下示例中的引用应从该作用域的资产 API 取得，替换为真实 ID、固定版本、SHA-256 及对应 content_path；不能写 `version: 0` 或指向可变 head。

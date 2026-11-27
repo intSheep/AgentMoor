@@ -18,7 +18,7 @@
 
 ## 首个参考运行时
 
-先以 gVisor systrap 验证可运行的参考后端；后续如果部署需要硬件虚拟机边界，再按节点条件接入相应提供方。gVisor 的系统调用隔离仍允许程序访问主动分配的文件和网络，因此不能把 Worker token 挂进沙箱后就认为它已被保护。资源上限与网络访问也需要各自的实际验证。[gVisor 安全模型](https://gvisor.dev/docs/architecture_guide/security/) · [平台条件](https://gvisor.dev/docs/architecture_guide/platforms/)
+2026-11-27 用户进一步确定：首版生产目标是可自行配置的 Linux Kubernetes 集群，部署方可以安装和配置 gVisor。先以 gVisor systrap 接入可复验后端；后续如果部署需要硬件虚拟机边界，再按节点条件接入相应提供方。gVisor 的系统调用隔离仍允许程序访问主动分配的文件和网络，因此不能把 Worker token 挂进沙箱后就认为它已被保护。资源上限与网络访问也需要各自的实际验证。[gVisor 安全模型](https://gvisor.dev/docs/architecture_guide/security/) · [平台条件](https://gvisor.dev/docs/architecture_guide/platforms/)
 
 Kubernetes 的 RuntimeClass、Pod 限制、RBAC、网络策略与资源额度共同组成部署约束。普通容器限制或只有一份 YAML 不构成强隔离实证；须确认实际使用指定沙箱，并运行允许/拒绝流量与恶意程序探针。[Kubernetes 多租户说明](https://kubernetes.io/docs/concepts/security/multi-tenancy/)
 
@@ -38,7 +38,7 @@ Kubernetes 的 RuntimeClass、Pod 限制、RBAC、网络策略与资源额度共
 | --- | --- |
 | [INT-68](https://linear.app/intsheep/issue/INT-68) | 已合并：当前 22 条 HTTP 路由的角色及四维作用域矩阵。没有由此宣称代码隔离。 |
 | [INT-69](https://linear.app/intsheep/issue/INT-69) | 已实现：可信控制面的密钥轮换、单凭据撤销与受信管理入口；[实际验证](authentication-policy.md#2026-11-27-实际验证)。 |
-| [INT-70](https://linear.app/intsheep/issue/INT-70) | 进行中：显式任务执行策略与不可信执行不可用时的拒绝门禁，不把门禁当作沙箱。 |
-| [INT-71](https://linear.app/intsheep/issue/INT-71) | 进行中：真正分离执行区、限权模型网关和首个 gVisor 后端；当前环境探针不能代替完整任务/攻击验收。 |
+| [INT-70](https://linear.app/intsheep/issue/INT-70) | 已实现任务首轮/追问的显式策略与拒绝门禁；[运行手册](operations.md#任务执行的信任策略)。普通原生维护入口和真正 provider 仍待后续，门禁不是沙箱。 |
+| [INT-71](https://linear.app/intsheep/issue/INT-71) | 进行中：gVisor systrap 的[独立可行性命令与正反例已通过](gvisor-feasibility.md)，真正执行区分离、模型网关、网络/资源及真实 CLI/Skill 对抗验收尚未完成。 |
 
 各项完成时更新对应实际源码、命令、镜像和结果。真实模型按用户安排后补；不以本机沙箱成功宣称生产 HA、所有系统调用兼容或硬件侧信道防护。

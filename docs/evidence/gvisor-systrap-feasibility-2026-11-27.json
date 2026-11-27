@@ -1,0 +1,1937 @@
+{
+  "status": "runtime_feasibility_passed",
+  "started_at_utc": "2026-11-27T03:49:07.593814+00:00",
+  "cluster": "agentmoor-4114ee7daecc",
+  "release_tag": "release-20261123.1",
+  "release_commit": "81f68cb7d4661a9313d891a1758a765abe8eb27e",
+  "release_url": "https://github.com/gvisor/gvisor/releases/tag/release-20261123.1",
+  "kind_node_image": "kindest/node:v1.35.0",
+  "busybox_image": "docker.io/library/busybox@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec",
+  "limitations": [
+    "BusyBox runtime/handler feasibility only; no AgentMoor, native CLI or Skill acceptance.",
+    "No Worker credential separation, egress/NetworkPolicy, resource exhaustion, cancellation, tenant escape or production HA acceptance.",
+    "No KVM/VM boundary tested; systrap uses the Linux host kernel and the gVisor userspace kernel.",
+    "RuntimeClass names alone are insufficient; this probe also checks node CRI type, running systrap process and installed binary hashes."
+  ],
+  "raw": {
+    "docker_version": {
+      "Client": {
+        "Version": "29.8.2",
+        "ApiVersion": "1.56",
+        "DefaultAPIVersion": "1.56",
+        "GitCommit": "7fc2dff",
+        "GoVersion": "go1.26.8",
+        "Os": "darwin",
+        "Arch": "arm64",
+        "BuildTime": "Sun Oct 11 12:42:20 2026",
+        "Context": "orbstack"
+      },
+      "Server": {
+        "Platform": {
+          "Name": "Docker Engine - Community"
+        },
+        "Version": "29.8.2",
+        "ApiVersion": "1.56",
+        "MinAPIVersion": "1.40",
+        "Os": "linux",
+        "Arch": "arm64",
+        "Components": [
+          {
+            "Name": "Engine",
+            "Version": "29.8.2",
+            "Details": {
+              "ApiVersion": "1.56",
+              "Arch": "arm64",
+              "BuildTime": "Wed Sep 30 19:32:49 2026",
+              "Experimental": "true",
+              "GitCommit": "8af9fe3",
+              "GoVersion": "go1.26.8",
+              "KernelVersion": "7.2.12-orbstack-00394-gbecdd6130068",
+              "MinAPIVersion": "1.40",
+              "Module": "github.com/moby/moby/v2",
+              "ModuleVersion": "v2.0.0+unknown",
+              "Os": "linux"
+            }
+          },
+          {
+            "Name": "containerd",
+            "Version": "v2.3.6",
+            "Details": {
+              "GitCommit": "ee2735368117d2eb259779949d5e75cdafec9761"
+            }
+          },
+          {
+            "Name": "runc",
+            "Version": "1.5.2",
+            "Details": {
+              "GitCommit": "29dd3dc2b13b4123162e5fe132504bb4b15569f1"
+            }
+          },
+          {
+            "Name": "docker-init",
+            "Version": "0.19.0",
+            "Details": {
+              "GitCommit": "de40ad0"
+            }
+          }
+        ],
+        "GitCommit": "8af9fe3",
+        "GoVersion": "go1.26.8",
+        "KernelVersion": "7.2.12-orbstack-00394-gbecdd6130068",
+        "Experimental": true,
+        "BuildTime": "2026-09-30T19:32:49.000000000+00:00"
+      }
+    },
+    "kind_create": "Creating cluster \"agentmoor-4114ee7daecc\" ...\n \u2022 Ensuring node image (kindest/node:v1.35.0) \ud83d\uddbc\ufe0f  ...\n \u2713 Ensuring node image (kindest/node:v1.35.0) \ud83d\uddbc\ufe0f\n \u2022 Preparing nodes \ud83d\udce6   ...\n \u2713 Preparing nodes \ud83d\udce6 \n \u2022 Writing configuration \ud83d\udcdc  ...\n \u2713 Writing configuration \ud83d\udcdc\n \u2022 Starting control-plane \ud83d\udd79\ufe0f  ...\n \u2713 Starting control-plane \ud83d\udd79\ufe0f\n \u2022 Installing CNI \ud83d\udd0c  ...\n \u2713 Installing CNI \ud83d\udd0c\n \u2022 Installing StorageClass \ud83d\udcbe  ...\n \u2713 Installing StorageClass \ud83d\udcbe\n \u2022 Waiting \u2264 2m0s for control-plane = Ready \u23f3  ...\n \u2713 Waiting \u2264 2m0s for control-plane = Ready \u23f3\n \u2022 Ready after 16s \ud83d\udc9a\nSet kubectl context to \"kind-agentmoor-4114ee7daecc\"\nYou can now use your cluster with:\n\nkubectl cluster-info --context kind-agentmoor-4114ee7daecc --kubeconfig /var/folders/6y/141xqnc57b9cq5vts67ycqz80000gn/T/agentmoor-gvisor-93grk37g/kubeconfig\n\nHave a nice day! \ud83d\udc4b\n",
+    "node_uname": "Linux agentmoor-4114ee7daecc-control-plane 7.2.12-orbstack-00394-gbecdd6130068 #1 SMP PREEMPT Thu Oct 22 22:17:17 UTC 2026 aarch64 GNU/Linux\n",
+    "node_containerd_version": "containerd github.com/containerd/containerd/v2 v2.2.0 1c4457e00facac03ce1d75f7b6777a7a851e5c41\n",
+    "containerd_before": "# explicitly use v2 config format\nversion = 2\n\n[proxy_plugins]\n# fuse-overlayfs is used for rootless\n[proxy_plugins.\"fuse-overlayfs\"]\n  type = \"snapshot\"\n  address = \"/run/containerd-fuse-overlayfs.sock\"\n\n[plugins.\"io.containerd.grpc.v1.cri\".containerd]\n  # save disk space when using a single snapshotter\n  discard_unpacked_layers = true\n  # explicitly use default snapshotter so we can sed it in entrypoint\n  snapshotter = \"overlayfs\"\n  # explicit default here, as we're configuring it below\n  default_runtime_name = \"runc\"\n[plugins.\"io.containerd.grpc.v1.cri\".containerd.runtimes.runc]\n  # set default runtime handler to v2, which has a per-pod shim\n  runtime_type = \"io.containerd.runc.v2\"\n  # Generated by \"ctr oci spec\" and modified at base container to mount poduct_uuid\n  base_runtime_spec = \"/etc/containerd/cri-base.json\"\n  [plugins.\"io.containerd.grpc.v1.cri\".containerd.runtimes.runc.options]\n    # use systemd cgroup by default\n    SystemdCgroup = true\n\n# Setup a runtime with the magic name (\"test-handler\") used for Kubernetes\n# runtime class tests ...\n[plugins.\"io.containerd.grpc.v1.cri\".containerd.runtimes.test-handler]\n  # same settings as runc\n  runtime_type = \"io.containerd.runc.v2\"\n  base_runtime_spec = \"/etc/containerd/cri-base.json\"\n  [plugins.\"io.containerd.grpc.v1.cri\".containerd.runtimes.test-handler.options]\n    SystemdCgroup = true\n\n[plugins.\"io.containerd.grpc.v1.cri\"]\n  # use fixed sandbox image\n  sandbox_image = \"registry.k8s.io/pause:3.10\"\n  # allow hugepages controller to be missing\n  # see https://github.com/containerd/cri/pull/1501\n  tolerate_missing_hugepages_controller = true\n  # restrict_oom_score_adj needs to be true when running inside UserNS (rootless)\n  restrict_oom_score_adj = false\n",
+    "containerd_after": "# explicitly use v2 config format\nversion = 2\n\n[proxy_plugins]\n# fuse-overlayfs is used for rootless\n[proxy_plugins.\"fuse-overlayfs\"]\n  type = \"snapshot\"\n  address = \"/run/containerd-fuse-overlayfs.sock\"\n\n[plugins.\"io.containerd.grpc.v1.cri\".containerd]\n  # save disk space when using a single snapshotter\n  discard_unpacked_layers = true\n  # explicitly use default snapshotter so we can sed it in entrypoint\n  snapshotter = \"overlayfs\"\n  # explicit default here, as we're configuring it below\n  default_runtime_name = \"runc\"\n[plugins.\"io.containerd.grpc.v1.cri\".containerd.runtimes.runc]\n  # set default runtime handler to v2, which has a per-pod shim\n  runtime_type = \"io.containerd.runc.v2\"\n  # Generated by \"ctr oci spec\" and modified at base container to mount poduct_uuid\n  base_runtime_spec = \"/etc/containerd/cri-base.json\"\n  [plugins.\"io.containerd.grpc.v1.cri\".containerd.runtimes.runc.options]\n    # use systemd cgroup by default\n    SystemdCgroup = true\n\n# Setup a runtime with the magic name (\"test-handler\") used for Kubernetes\n# runtime class tests ...\n[plugins.\"io.containerd.grpc.v1.cri\".containerd.runtimes.test-handler]\n  # same settings as runc\n  runtime_type = \"io.containerd.runc.v2\"\n  base_runtime_spec = \"/etc/containerd/cri-base.json\"\n  [plugins.\"io.containerd.grpc.v1.cri\".containerd.runtimes.test-handler.options]\n    SystemdCgroup = true\n\n[plugins.\"io.containerd.grpc.v1.cri\"]\n  # use fixed sandbox image\n  sandbox_image = \"registry.k8s.io/pause:3.10\"\n  # allow hugepages controller to be missing\n  # see https://github.com/containerd/cri/pull/1501\n  tolerate_missing_hugepages_controller = true\n  # restrict_oom_score_adj needs to be true when running inside UserNS (rootless)\n  restrict_oom_score_adj = false\n\n[plugins.\"io.containerd.grpc.v1.cri\".containerd.runtimes.runsc]\n  runtime_type = \"io.containerd.runsc.v1\"\n  [plugins.\"io.containerd.grpc.v1.cri\".containerd.runtimes.runsc.options]\n    TypeUrl = \"io.containerd.runsc.v1.options\"\n    ConfigPath = \"/etc/containerd/runsc.toml\"\n",
+    "runsc_config": "[runsc_config]\n  platform = \"systrap\"\n  debug = \"true\"\n  debug-log = \"/run/runsc-probe/\"\n",
+    "installed_core_binary_sha512": "25665aeaae3d99ecf7b3dced10d35ba63ab04a2b71721f22d232cbd7109b4f45f928bcecaf48574a691420bdf322c212743b68321c07308a835049958b833c4b  /usr/local/bin/runsc\n481b1c1ff18fdd361f0dbfb0a47e034173f1da4f7ce64c0eb3d7315fdad60b6e9ad60fb39df704c94fa17b0e421cb58ab28812acbae2c963e5cdefc5e3b4e728  /usr/local/bin/containerd-shim-runsc-v1\n09a8a663a6286cffa78f0bf23164f83c5ed5b9045e9c16be6505d07e7697a46f54b63bbfa276336932d9819de81d51dfaff0f856187d77bd746d8a9ed37d122f  /usr/local/bin/gvisor-bin/gvisor_sentry\n",
+    "manifest": {
+      "apiVersion": "v1",
+      "kind": "List",
+      "items": [
+        {
+          "apiVersion": "v1",
+          "kind": "Namespace",
+          "metadata": {
+            "name": "agentmoor-gvisor-probe"
+          }
+        },
+        {
+          "apiVersion": "node.k8s.io/v1",
+          "kind": "RuntimeClass",
+          "metadata": {
+            "name": "agentmoor-gvisor"
+          },
+          "handler": "runsc"
+        },
+        {
+          "apiVersion": "node.k8s.io/v1",
+          "kind": "RuntimeClass",
+          "metadata": {
+            "name": "agentmoor-missing"
+          },
+          "handler": "agentmoor-nonexistent-handler"
+        },
+        {
+          "apiVersion": "v1",
+          "kind": "Pod",
+          "metadata": {
+            "namespace": "agentmoor-gvisor-probe",
+            "name": "gvisor-positive"
+          },
+          "spec": {
+            "runtimeClassName": "agentmoor-gvisor",
+            "restartPolicy": "Never",
+            "activeDeadlineSeconds": 240,
+            "automountServiceAccountToken": false,
+            "enableServiceLinks": false,
+            "securityContext": {
+              "runAsNonRoot": true,
+              "runAsUser": 65532,
+              "runAsGroup": 65532,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "containers": [
+              {
+                "name": "probe",
+                "image": "docker.io/library/busybox@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec",
+                "imagePullPolicy": "IfNotPresent",
+                "command": [
+                  "sh",
+                  "-c",
+                  "echo AGENTMOOR_GVISOR_PROBE; id; uname -a; cat /proc/version; sleep 600"
+                ],
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "readOnlyRootFilesystem": true,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  }
+                },
+                "resources": {
+                  "requests": {
+                    "cpu": "10m",
+                    "memory": "32Mi"
+                  },
+                  "limits": {
+                    "cpu": "500m",
+                    "memory": "256Mi",
+                    "ephemeral-storage": "64Mi"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "apiVersion": "v1",
+          "kind": "Pod",
+          "metadata": {
+            "namespace": "agentmoor-gvisor-probe",
+            "name": "missing-handler-negative"
+          },
+          "spec": {
+            "runtimeClassName": "agentmoor-missing",
+            "restartPolicy": "Never",
+            "activeDeadlineSeconds": 240,
+            "automountServiceAccountToken": false,
+            "enableServiceLinks": false,
+            "securityContext": {
+              "runAsNonRoot": true,
+              "runAsUser": 65532,
+              "runAsGroup": 65532,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "containers": [
+              {
+                "name": "probe",
+                "image": "docker.io/library/busybox@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec",
+                "imagePullPolicy": "IfNotPresent",
+                "command": [
+                  "sh",
+                  "-c",
+                  "echo UNEXPECTED_RUNTIME_FALLBACK; sleep 600"
+                ],
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "readOnlyRootFilesystem": true,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  }
+                },
+                "resources": {
+                  "requests": {
+                    "cpu": "10m",
+                    "memory": "32Mi"
+                  },
+                  "limits": {
+                    "cpu": "500m",
+                    "memory": "256Mi",
+                    "ephemeral-storage": "64Mi"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "pods": {
+      "apiVersion": "v1",
+      "items": [
+        {
+          "apiVersion": "v1",
+          "kind": "Pod",
+          "metadata": {
+            "annotations": {
+              "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Pod\",\"metadata\":{\"annotations\":{},\"name\":\"gvisor-positive\",\"namespace\":\"agentmoor-gvisor-probe\"},\"spec\":{\"activeDeadlineSeconds\":240,\"automountServiceAccountToken\":false,\"containers\":[{\"command\":[\"sh\",\"-c\",\"echo AGENTMOOR_GVISOR_PROBE; id; uname -a; cat /proc/version; sleep 600\"],\"image\":\"docker.io/library/busybox@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec\",\"imagePullPolicy\":\"IfNotPresent\",\"name\":\"probe\",\"resources\":{\"limits\":{\"cpu\":\"500m\",\"ephemeral-storage\":\"64Mi\",\"memory\":\"256Mi\"},\"requests\":{\"cpu\":\"10m\",\"memory\":\"32Mi\"}},\"securityContext\":{\"allowPrivilegeEscalation\":false,\"capabilities\":{\"drop\":[\"ALL\"]},\"readOnlyRootFilesystem\":true}}],\"enableServiceLinks\":false,\"restartPolicy\":\"Never\",\"runtimeClassName\":\"agentmoor-gvisor\",\"securityContext\":{\"runAsGroup\":65532,\"runAsNonRoot\":true,\"runAsUser\":65532,\"seccompProfile\":{\"type\":\"RuntimeDefault\"}}}}\n"
+            },
+            "creationTimestamp": "2026-11-27T03:49:47Z",
+            "generation": 1,
+            "name": "gvisor-positive",
+            "namespace": "agentmoor-gvisor-probe",
+            "resourceVersion": "497",
+            "uid": "f7321cc3-0360-4fd9-b32a-94bfcfa28f00"
+          },
+          "spec": {
+            "activeDeadlineSeconds": 240,
+            "automountServiceAccountToken": false,
+            "containers": [
+              {
+                "command": [
+                  "sh",
+                  "-c",
+                  "echo AGENTMOOR_GVISOR_PROBE; id; uname -a; cat /proc/version; sleep 600"
+                ],
+                "image": "docker.io/library/busybox@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec",
+                "imagePullPolicy": "IfNotPresent",
+                "name": "probe",
+                "resources": {
+                  "limits": {
+                    "cpu": "500m",
+                    "ephemeral-storage": "64Mi",
+                    "memory": "256Mi"
+                  },
+                  "requests": {
+                    "cpu": "10m",
+                    "ephemeral-storage": "64Mi",
+                    "memory": "32Mi"
+                  }
+                },
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  },
+                  "readOnlyRootFilesystem": true
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File"
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "enableServiceLinks": false,
+            "nodeName": "agentmoor-4114ee7daecc-control-plane",
+            "preemptionPolicy": "PreemptLowerPriority",
+            "priority": 0,
+            "restartPolicy": "Never",
+            "runtimeClassName": "agentmoor-gvisor",
+            "schedulerName": "default-scheduler",
+            "securityContext": {
+              "runAsGroup": 65532,
+              "runAsNonRoot": true,
+              "runAsUser": 65532,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "serviceAccount": "default",
+            "serviceAccountName": "default",
+            "terminationGracePeriodSeconds": 30,
+            "tolerations": [
+              {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/not-ready",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+              },
+              {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/unreachable",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+              }
+            ]
+          },
+          "status": {
+            "conditions": [
+              {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-11-27T03:49:56Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "PodReadyToStartContainers"
+              },
+              {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-11-27T03:49:47Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "Initialized"
+              },
+              {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-11-27T03:49:56Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "Ready"
+              },
+              {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-11-27T03:49:56Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "ContainersReady"
+              },
+              {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-11-27T03:49:47Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "PodScheduled"
+              }
+            ],
+            "containerStatuses": [
+              {
+                "allocatedResources": {
+                  "cpu": "10m",
+                  "ephemeral-storage": "64Mi",
+                  "memory": "32Mi"
+                },
+                "containerID": "containerd://87bb6a553765b9f82ccf40a419d9be8cbd9ec8ead93c96f379f779eee762d4c7",
+                "image": "sha256:ad4f11f7c85f87c0a6d6c0fe492ad53f9cdcff6e8c88b881360c70eff701c67b",
+                "imageID": "docker.io/library/busybox@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec",
+                "lastState": {},
+                "name": "probe",
+                "ready": true,
+                "resources": {
+                  "limits": {
+                    "cpu": "500m",
+                    "ephemeral-storage": "64Mi",
+                    "memory": "256Mi"
+                  },
+                  "requests": {
+                    "cpu": "10m",
+                    "ephemeral-storage": "64Mi",
+                    "memory": "32Mi"
+                  }
+                },
+                "restartCount": 0,
+                "started": true,
+                "state": {
+                  "running": {
+                    "startedAt": "2026-11-27T03:49:56Z"
+                  }
+                },
+                "user": {
+                  "linux": {
+                    "gid": 65532,
+                    "supplementalGroups": [
+                      65532
+                    ],
+                    "uid": 65532
+                  }
+                }
+              }
+            ],
+            "hostIP": "192.168.117.3",
+            "hostIPs": [
+              {
+                "ip": "192.168.117.3"
+              }
+            ],
+            "observedGeneration": 1,
+            "phase": "Running",
+            "podIP": "10.244.0.5",
+            "podIPs": [
+              {
+                "ip": "10.244.0.5"
+              }
+            ],
+            "qosClass": "Burstable",
+            "startTime": "2026-11-27T03:49:47Z"
+          }
+        },
+        {
+          "apiVersion": "v1",
+          "kind": "Pod",
+          "metadata": {
+            "annotations": {
+              "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Pod\",\"metadata\":{\"annotations\":{},\"name\":\"missing-handler-negative\",\"namespace\":\"agentmoor-gvisor-probe\"},\"spec\":{\"activeDeadlineSeconds\":240,\"automountServiceAccountToken\":false,\"containers\":[{\"command\":[\"sh\",\"-c\",\"echo UNEXPECTED_RUNTIME_FALLBACK; sleep 600\"],\"image\":\"docker.io/library/busybox@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec\",\"imagePullPolicy\":\"IfNotPresent\",\"name\":\"probe\",\"resources\":{\"limits\":{\"cpu\":\"500m\",\"ephemeral-storage\":\"64Mi\",\"memory\":\"256Mi\"},\"requests\":{\"cpu\":\"10m\",\"memory\":\"32Mi\"}},\"securityContext\":{\"allowPrivilegeEscalation\":false,\"capabilities\":{\"drop\":[\"ALL\"]},\"readOnlyRootFilesystem\":true}}],\"enableServiceLinks\":false,\"restartPolicy\":\"Never\",\"runtimeClassName\":\"agentmoor-missing\",\"securityContext\":{\"runAsGroup\":65532,\"runAsNonRoot\":true,\"runAsUser\":65532,\"seccompProfile\":{\"type\":\"RuntimeDefault\"}}}}\n"
+            },
+            "creationTimestamp": "2026-11-27T03:49:47Z",
+            "generation": 1,
+            "name": "missing-handler-negative",
+            "namespace": "agentmoor-gvisor-probe",
+            "resourceVersion": "458",
+            "uid": "3ba38358-1722-4270-b659-05f484a384dc"
+          },
+          "spec": {
+            "activeDeadlineSeconds": 240,
+            "automountServiceAccountToken": false,
+            "containers": [
+              {
+                "command": [
+                  "sh",
+                  "-c",
+                  "echo UNEXPECTED_RUNTIME_FALLBACK; sleep 600"
+                ],
+                "image": "docker.io/library/busybox@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec",
+                "imagePullPolicy": "IfNotPresent",
+                "name": "probe",
+                "resources": {
+                  "limits": {
+                    "cpu": "500m",
+                    "ephemeral-storage": "64Mi",
+                    "memory": "256Mi"
+                  },
+                  "requests": {
+                    "cpu": "10m",
+                    "ephemeral-storage": "64Mi",
+                    "memory": "32Mi"
+                  }
+                },
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  },
+                  "readOnlyRootFilesystem": true
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File"
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "enableServiceLinks": false,
+            "nodeName": "agentmoor-4114ee7daecc-control-plane",
+            "preemptionPolicy": "PreemptLowerPriority",
+            "priority": 0,
+            "restartPolicy": "Never",
+            "runtimeClassName": "agentmoor-missing",
+            "schedulerName": "default-scheduler",
+            "securityContext": {
+              "runAsGroup": 65532,
+              "runAsNonRoot": true,
+              "runAsUser": 65532,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "serviceAccount": "default",
+            "serviceAccountName": "default",
+            "terminationGracePeriodSeconds": 30,
+            "tolerations": [
+              {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/not-ready",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+              },
+              {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/unreachable",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+              }
+            ]
+          },
+          "status": {
+            "conditions": [
+              {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-11-27T03:49:47Z",
+                "observedGeneration": 1,
+                "status": "False",
+                "type": "PodReadyToStartContainers"
+              },
+              {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-11-27T03:49:47Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "Initialized"
+              },
+              {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-11-27T03:49:47Z",
+                "message": "containers with unready status: [probe]",
+                "observedGeneration": 1,
+                "reason": "ContainersNotReady",
+                "status": "False",
+                "type": "Ready"
+              },
+              {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-11-27T03:49:47Z",
+                "message": "containers with unready status: [probe]",
+                "observedGeneration": 1,
+                "reason": "ContainersNotReady",
+                "status": "False",
+                "type": "ContainersReady"
+              },
+              {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-11-27T03:49:47Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "PodScheduled"
+              }
+            ],
+            "containerStatuses": [
+              {
+                "image": "docker.io/library/busybox@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec",
+                "imageID": "",
+                "lastState": {},
+                "name": "probe",
+                "ready": false,
+                "restartCount": 0,
+                "started": false,
+                "state": {
+                  "waiting": {
+                    "reason": "ContainerCreating"
+                  }
+                }
+              }
+            ],
+            "hostIP": "192.168.117.3",
+            "hostIPs": [
+              {
+                "ip": "192.168.117.3"
+              }
+            ],
+            "observedGeneration": 1,
+            "phase": "Pending",
+            "qosClass": "Burstable",
+            "startTime": "2026-11-27T03:49:47Z"
+          }
+        }
+      ],
+      "kind": "List",
+      "metadata": {
+        "resourceVersion": ""
+      }
+    },
+    "events": {
+      "apiVersion": "v1",
+      "items": [
+        {
+          "apiVersion": "v1",
+          "count": 1,
+          "eventTime": null,
+          "firstTimestamp": "2026-11-27T03:49:47Z",
+          "involvedObject": {
+            "apiVersion": "v1",
+            "kind": "Pod",
+            "name": "gvisor-positive",
+            "namespace": "agentmoor-gvisor-probe",
+            "resourceVersion": "451",
+            "uid": "f7321cc3-0360-4fd9-b32a-94bfcfa28f00"
+          },
+          "kind": "Event",
+          "lastTimestamp": "2026-11-27T03:49:47Z",
+          "message": "Successfully assigned agentmoor-gvisor-probe/gvisor-positive to agentmoor-4114ee7daecc-control-plane",
+          "metadata": {
+            "creationTimestamp": "2026-11-27T03:49:47Z",
+            "name": "gvisor-positive.18ebca5f788176c4",
+            "namespace": "agentmoor-gvisor-probe",
+            "resourceVersion": "453",
+            "uid": "8c292c39-4ac4-4ba7-ab65-fdd088ea5daf"
+          },
+          "reason": "Scheduled",
+          "reportingComponent": "default-scheduler",
+          "reportingInstance": "",
+          "source": {
+            "component": "default-scheduler"
+          },
+          "type": "Normal"
+        },
+        {
+          "apiVersion": "v1",
+          "count": 1,
+          "eventTime": null,
+          "firstTimestamp": "2026-11-27T03:49:48Z",
+          "involvedObject": {
+            "apiVersion": "v1",
+            "fieldPath": "spec.containers{probe}",
+            "kind": "Pod",
+            "name": "gvisor-positive",
+            "namespace": "agentmoor-gvisor-probe",
+            "resourceVersion": "452",
+            "uid": "f7321cc3-0360-4fd9-b32a-94bfcfa28f00"
+          },
+          "kind": "Event",
+          "lastTimestamp": "2026-11-27T03:49:48Z",
+          "message": "Pulling image \"docker.io/library/busybox@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec\"",
+          "metadata": {
+            "creationTimestamp": "2026-11-27T03:49:48Z",
+            "name": "gvisor-positive.18ebca5f9b1dae12",
+            "namespace": "agentmoor-gvisor-probe",
+            "resourceVersion": "465",
+            "uid": "258741f9-1933-4798-b798-68453e302116"
+          },
+          "reason": "Pulling",
+          "reportingComponent": "kubelet",
+          "reportingInstance": "agentmoor-4114ee7daecc-control-plane",
+          "source": {
+            "component": "kubelet",
+            "host": "agentmoor-4114ee7daecc-control-plane"
+          },
+          "type": "Normal"
+        },
+        {
+          "apiVersion": "v1",
+          "count": 1,
+          "eventTime": null,
+          "firstTimestamp": "2026-11-27T03:49:56Z",
+          "involvedObject": {
+            "apiVersion": "v1",
+            "fieldPath": "spec.containers{probe}",
+            "kind": "Pod",
+            "name": "gvisor-positive",
+            "namespace": "agentmoor-gvisor-probe",
+            "resourceVersion": "452",
+            "uid": "f7321cc3-0360-4fd9-b32a-94bfcfa28f00"
+          },
+          "kind": "Event",
+          "lastTimestamp": "2026-11-27T03:49:56Z",
+          "message": "Successfully pulled image \"docker.io/library/busybox@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec\" in 7.674s (7.674s including waiting). Image size: 1911395 bytes.",
+          "metadata": {
+            "creationTimestamp": "2026-11-27T03:49:56Z",
+            "name": "gvisor-positive.18ebca6164995419",
+            "namespace": "agentmoor-gvisor-probe",
+            "resourceVersion": "494",
+            "uid": "c8cc2b45-2301-420d-b02b-a1fdfb94d228"
+          },
+          "reason": "Pulled",
+          "reportingComponent": "kubelet",
+          "reportingInstance": "agentmoor-4114ee7daecc-control-plane",
+          "source": {
+            "component": "kubelet",
+            "host": "agentmoor-4114ee7daecc-control-plane"
+          },
+          "type": "Normal"
+        },
+        {
+          "apiVersion": "v1",
+          "count": 1,
+          "eventTime": null,
+          "firstTimestamp": "2026-11-27T03:49:56Z",
+          "involvedObject": {
+            "apiVersion": "v1",
+            "fieldPath": "spec.containers{probe}",
+            "kind": "Pod",
+            "name": "gvisor-positive",
+            "namespace": "agentmoor-gvisor-probe",
+            "resourceVersion": "452",
+            "uid": "f7321cc3-0360-4fd9-b32a-94bfcfa28f00"
+          },
+          "kind": "Event",
+          "lastTimestamp": "2026-11-27T03:49:56Z",
+          "message": "Container created",
+          "metadata": {
+            "creationTimestamp": "2026-11-27T03:49:56Z",
+            "name": "gvisor-positive.18ebca616603376f",
+            "namespace": "agentmoor-gvisor-probe",
+            "resourceVersion": "495",
+            "uid": "febe2bd5-0bb7-48a7-95fb-76151694349e"
+          },
+          "reason": "Created",
+          "reportingComponent": "kubelet",
+          "reportingInstance": "agentmoor-4114ee7daecc-control-plane",
+          "source": {
+            "component": "kubelet",
+            "host": "agentmoor-4114ee7daecc-control-plane"
+          },
+          "type": "Normal"
+        },
+        {
+          "apiVersion": "v1",
+          "count": 1,
+          "eventTime": null,
+          "firstTimestamp": "2026-11-27T03:49:56Z",
+          "involvedObject": {
+            "apiVersion": "v1",
+            "fieldPath": "spec.containers{probe}",
+            "kind": "Pod",
+            "name": "gvisor-positive",
+            "namespace": "agentmoor-gvisor-probe",
+            "resourceVersion": "452",
+            "uid": "f7321cc3-0360-4fd9-b32a-94bfcfa28f00"
+          },
+          "kind": "Event",
+          "lastTimestamp": "2026-11-27T03:49:56Z",
+          "message": "Container started",
+          "metadata": {
+            "creationTimestamp": "2026-11-27T03:49:56Z",
+            "name": "gvisor-positive.18ebca6169f7cc3c",
+            "namespace": "agentmoor-gvisor-probe",
+            "resourceVersion": "496",
+            "uid": "fe5d4c68-de9e-4080-89ed-495d0a061769"
+          },
+          "reason": "Started",
+          "reportingComponent": "kubelet",
+          "reportingInstance": "agentmoor-4114ee7daecc-control-plane",
+          "source": {
+            "component": "kubelet",
+            "host": "agentmoor-4114ee7daecc-control-plane"
+          },
+          "type": "Normal"
+        },
+        {
+          "apiVersion": "v1",
+          "count": 1,
+          "eventTime": null,
+          "firstTimestamp": "2026-11-27T03:49:47Z",
+          "involvedObject": {
+            "apiVersion": "v1",
+            "kind": "Pod",
+            "name": "missing-handler-negative",
+            "namespace": "agentmoor-gvisor-probe",
+            "resourceVersion": "454",
+            "uid": "3ba38358-1722-4270-b659-05f484a384dc"
+          },
+          "kind": "Event",
+          "lastTimestamp": "2026-11-27T03:49:47Z",
+          "message": "Successfully assigned agentmoor-gvisor-probe/missing-handler-negative to agentmoor-4114ee7daecc-control-plane",
+          "metadata": {
+            "creationTimestamp": "2026-11-27T03:49:47Z",
+            "name": "missing-handler-negative.18ebca5f7ab14dfc",
+            "namespace": "agentmoor-gvisor-probe",
+            "resourceVersion": "457",
+            "uid": "7a941c4c-12d2-471b-b9e4-cbf2b53709a0"
+          },
+          "reason": "Scheduled",
+          "reportingComponent": "default-scheduler",
+          "reportingInstance": "",
+          "source": {
+            "component": "default-scheduler"
+          },
+          "type": "Normal"
+        },
+        {
+          "apiVersion": "v1",
+          "count": 1,
+          "eventTime": null,
+          "firstTimestamp": "2026-11-27T03:49:48Z",
+          "involvedObject": {
+            "apiVersion": "v1",
+            "kind": "Pod",
+            "name": "missing-handler-negative",
+            "namespace": "agentmoor-gvisor-probe",
+            "resourceVersion": "455",
+            "uid": "3ba38358-1722-4270-b659-05f484a384dc"
+          },
+          "kind": "Event",
+          "lastTimestamp": "2026-11-27T03:49:48Z",
+          "message": "Failed to create pod sandbox: rpc error: code = Unknown desc = unable to get OCI runtime for sandbox \"0470d01b6a03d7262d11d5fef3d0b78c9c8cdc7a16113ab8498871394fdc97fa\": no runtime for \"agentmoor-nonexistent-handler\" is configured",
+          "metadata": {
+            "creationTimestamp": "2026-11-27T03:49:48Z",
+            "name": "missing-handler-negative.18ebca5f851f0255",
+            "namespace": "agentmoor-gvisor-probe",
+            "resourceVersion": "460",
+            "uid": "b2427052-406d-496f-a9cd-7bbe1320177b"
+          },
+          "reason": "FailedCreatePodSandBox",
+          "reportingComponent": "kubelet",
+          "reportingInstance": "agentmoor-4114ee7daecc-control-plane",
+          "source": {
+            "component": "kubelet",
+            "host": "agentmoor-4114ee7daecc-control-plane"
+          },
+          "type": "Warning"
+        },
+        {
+          "apiVersion": "v1",
+          "count": 1,
+          "eventTime": null,
+          "firstTimestamp": "2026-11-27T03:50:01Z",
+          "involvedObject": {
+            "apiVersion": "v1",
+            "kind": "Pod",
+            "name": "missing-handler-negative",
+            "namespace": "agentmoor-gvisor-probe",
+            "resourceVersion": "455",
+            "uid": "3ba38358-1722-4270-b659-05f484a384dc"
+          },
+          "kind": "Event",
+          "lastTimestamp": "2026-11-27T03:50:01Z",
+          "message": "Failed to create pod sandbox: rpc error: code = Unknown desc = unable to get OCI runtime for sandbox \"e0d6b645eabcc17eadfa2d5caa20873f49fad7b0255538029b8bebbb129ba448\": no runtime for \"agentmoor-nonexistent-handler\" is configured",
+          "metadata": {
+            "creationTimestamp": "2026-11-27T03:50:01Z",
+            "name": "missing-handler-negative.18ebca62a23ddd62",
+            "namespace": "agentmoor-gvisor-probe",
+            "resourceVersion": "508",
+            "uid": "c0b52d2c-93f9-4ade-b5d3-0b4590373aaf"
+          },
+          "reason": "FailedCreatePodSandBox",
+          "reportingComponent": "kubelet",
+          "reportingInstance": "agentmoor-4114ee7daecc-control-plane",
+          "source": {
+            "component": "kubelet",
+            "host": "agentmoor-4114ee7daecc-control-plane"
+          },
+          "type": "Warning"
+        }
+      ],
+      "kind": "List",
+      "metadata": {
+        "resourceVersion": ""
+      }
+    },
+    "cri_pods": {
+      "items": [
+        {
+          "id": "81c886e46e079b72da14512bcba91bca29b65a599cff6256f2479960f40bcfb5",
+          "metadata": {
+            "name": "gvisor-positive",
+            "uid": "f7321cc3-0360-4fd9-b32a-94bfcfa28f00",
+            "namespace": "agentmoor-gvisor-probe",
+            "attempt": 0
+          },
+          "state": "SANDBOX_READY",
+          "createdAt": "1795751388331033530",
+          "labels": {
+            "io.kubernetes.pod.name": "gvisor-positive",
+            "io.kubernetes.pod.namespace": "agentmoor-gvisor-probe",
+            "io.kubernetes.pod.uid": "f7321cc3-0360-4fd9-b32a-94bfcfa28f00"
+          },
+          "annotations": {
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Pod\",\"metadata\":{\"annotations\":{},\"name\":\"gvisor-positive\",\"namespace\":\"agentmoor-gvisor-probe\"},\"spec\":{\"activeDeadlineSeconds\":240,\"automountServiceAccountToken\":false,\"containers\":[{\"command\":[\"sh\",\"-c\",\"echo AGENTMOOR_GVISOR_PROBE; id; uname -a; cat /proc/version; sleep 600\"],\"image\":\"docker.io/library/busybox@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec\",\"imagePullPolicy\":\"IfNotPresent\",\"name\":\"probe\",\"resources\":{\"limits\":{\"cpu\":\"500m\",\"ephemeral-storage\":\"64Mi\",\"memory\":\"256Mi\"},\"requests\":{\"cpu\":\"10m\",\"memory\":\"32Mi\"}},\"securityContext\":{\"allowPrivilegeEscalation\":false,\"capabilities\":{\"drop\":[\"ALL\"]},\"readOnlyRootFilesystem\":true}}],\"enableServiceLinks\":false,\"restartPolicy\":\"Never\",\"runtimeClassName\":\"agentmoor-gvisor\",\"securityContext\":{\"runAsGroup\":65532,\"runAsNonRoot\":true,\"runAsUser\":65532,\"seccompProfile\":{\"type\":\"RuntimeDefault\"}}}}\n",
+            "kubernetes.io/config.seen": "2026-11-27T03:49:47.829978425Z",
+            "kubernetes.io/config.source": "api"
+          },
+          "runtimeHandler": "runsc"
+        }
+      ]
+    },
+    "cri_inspect": {
+      "info": {
+        "cniResult": {
+          "DNS": [
+            {},
+            {}
+          ],
+          "Interfaces": {
+            "eth0": {
+              "IPConfigs": [
+                {
+                  "Gateway": "10.244.0.1",
+                  "IP": "10.244.0.5"
+                }
+              ],
+              "Mac": "ea:17:19:b6:dd:1d",
+              "PciID": "",
+              "Sandbox": "/var/run/netns/cni-5c3cf247-6151-711d-e194-b020c63347b9",
+              "SocketPath": ""
+            },
+            "lo": {
+              "IPConfigs": [
+                {
+                  "Gateway": "",
+                  "IP": "127.0.0.1"
+                },
+                {
+                  "Gateway": "",
+                  "IP": "::1"
+                }
+              ],
+              "Mac": "00:00:00:00:00:00",
+              "PciID": "",
+              "Sandbox": "/var/run/netns/cni-5c3cf247-6151-711d-e194-b020c63347b9",
+              "SocketPath": ""
+            },
+            "vethdd0d25dc": {
+              "IPConfigs": null,
+              "Mac": "ce:57:03:fc:40:12",
+              "PciID": "",
+              "Sandbox": "",
+              "SocketPath": ""
+            }
+          },
+          "Routes": [
+            {
+              "dst": "0.0.0.0/0"
+            }
+          ]
+        },
+        "config": {
+          "annotations": {
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Pod\",\"metadata\":{\"annotations\":{},\"name\":\"gvisor-positive\",\"namespace\":\"agentmoor-gvisor-probe\"},\"spec\":{\"activeDeadlineSeconds\":240,\"automountServiceAccountToken\":false,\"containers\":[{\"command\":[\"sh\",\"-c\",\"echo AGENTMOOR_GVISOR_PROBE; id; uname -a; cat /proc/version; sleep 600\"],\"image\":\"docker.io/library/busybox@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec\",\"imagePullPolicy\":\"IfNotPresent\",\"name\":\"probe\",\"resources\":{\"limits\":{\"cpu\":\"500m\",\"ephemeral-storage\":\"64Mi\",\"memory\":\"256Mi\"},\"requests\":{\"cpu\":\"10m\",\"memory\":\"32Mi\"}},\"securityContext\":{\"allowPrivilegeEscalation\":false,\"capabilities\":{\"drop\":[\"ALL\"]},\"readOnlyRootFilesystem\":true}}],\"enableServiceLinks\":false,\"restartPolicy\":\"Never\",\"runtimeClassName\":\"agentmoor-gvisor\",\"securityContext\":{\"runAsGroup\":65532,\"runAsNonRoot\":true,\"runAsUser\":65532,\"seccompProfile\":{\"type\":\"RuntimeDefault\"}}}}\n",
+            "kubernetes.io/config.seen": "2026-11-27T03:49:47.829978425Z",
+            "kubernetes.io/config.source": "api"
+          },
+          "dns_config": {
+            "options": [
+              "ndots:5"
+            ],
+            "searches": [
+              "agentmoor-gvisor-probe.svc.cluster.local",
+              "svc.cluster.local",
+              "cluster.local"
+            ],
+            "servers": [
+              "10.96.0.10"
+            ]
+          },
+          "hostname": "gvisor-positive",
+          "labels": {
+            "io.kubernetes.pod.name": "gvisor-positive",
+            "io.kubernetes.pod.namespace": "agentmoor-gvisor-probe",
+            "io.kubernetes.pod.uid": "f7321cc3-0360-4fd9-b32a-94bfcfa28f00"
+          },
+          "linux": {
+            "cgroup_parent": "/kubelet.slice/kubelet-kubepods.slice/kubelet-kubepods-burstable.slice/kubelet-kubepods-burstable-podf7321cc3_0360_4fd9_b32a_94bfcfa28f00.slice",
+            "overhead": {},
+            "resources": {
+              "cpu_period": 100000,
+              "cpu_quota": 50000,
+              "cpu_shares": 10,
+              "memory_limit_in_bytes": 268435456,
+              "unified": {
+                "memory.oom.group": "1"
+              }
+            },
+            "security_context": {
+              "namespace_options": {
+                "pid": 1,
+                "userns_options": {
+                  "mode": 2
+                }
+              },
+              "run_as_group": {
+                "value": 65532
+              },
+              "run_as_user": {
+                "value": 65532
+              },
+              "seccomp": {}
+            }
+          },
+          "log_directory": "/var/log/pods/agentmoor-gvisor-probe_gvisor-positive_f7321cc3-0360-4fd9-b32a-94bfcfa28f00",
+          "metadata": {
+            "name": "gvisor-positive",
+            "namespace": "agentmoor-gvisor-probe",
+            "uid": "f7321cc3-0360-4fd9-b32a-94bfcfa28f00"
+          }
+        },
+        "image": "registry.k8s.io/pause:3.10",
+        "netNamespaceClosed": false,
+        "pid": 5856,
+        "processStatus": "running",
+        "runtimeOptions": {
+          "config_path": "/etc/containerd/runsc.toml",
+          "type_url": "io.containerd.runsc.v1.options"
+        },
+        "runtimeSpec": {
+          "annotations": {
+            "io.kubernetes.cri.container-type": "sandbox",
+            "io.kubernetes.cri.podsandbox.image-name": "registry.k8s.io/pause:3.10",
+            "io.kubernetes.cri.sandbox-cpu-period": "100000",
+            "io.kubernetes.cri.sandbox-cpu-quota": "50000",
+            "io.kubernetes.cri.sandbox-cpu-shares": "10",
+            "io.kubernetes.cri.sandbox-id": "81c886e46e079b72da14512bcba91bca29b65a599cff6256f2479960f40bcfb5",
+            "io.kubernetes.cri.sandbox-log-directory": "/var/log/pods/agentmoor-gvisor-probe_gvisor-positive_f7321cc3-0360-4fd9-b32a-94bfcfa28f00",
+            "io.kubernetes.cri.sandbox-memory": "268435456",
+            "io.kubernetes.cri.sandbox-name": "gvisor-positive",
+            "io.kubernetes.cri.sandbox-namespace": "agentmoor-gvisor-probe",
+            "io.kubernetes.cri.sandbox-uid": "f7321cc3-0360-4fd9-b32a-94bfcfa28f00"
+          },
+          "hostname": "gvisor-positive",
+          "linux": {
+            "cgroupsPath": "kubelet-kubepods-burstable-podf7321cc3_0360_4fd9_b32a_94bfcfa28f00.slice:cri-containerd:81c886e46e079b72da14512bcba91bca29b65a599cff6256f2479960f40bcfb5",
+            "maskedPaths": [
+              "/proc/acpi",
+              "/proc/asound",
+              "/proc/kcore",
+              "/proc/keys",
+              "/proc/latency_stats",
+              "/proc/timer_list",
+              "/proc/timer_stats",
+              "/proc/sched_debug",
+              "/sys/firmware",
+              "/sys/devices/virtual/powercap",
+              "/proc/scsi"
+            ],
+            "namespaces": [
+              {
+                "type": "pid"
+              },
+              {
+                "type": "ipc"
+              },
+              {
+                "type": "uts"
+              },
+              {
+                "type": "mount"
+              },
+              {
+                "path": "/var/run/netns/cni-5c3cf247-6151-711d-e194-b020c63347b9",
+                "type": "network"
+              }
+            ],
+            "readonlyPaths": [
+              "/proc/bus",
+              "/proc/fs",
+              "/proc/irq",
+              "/proc/sys",
+              "/proc/sysrq-trigger"
+            ],
+            "resources": {
+              "cpu": {
+                "shares": 2
+              },
+              "devices": [
+                {
+                  "access": "rwm",
+                  "allow": false
+                }
+              ]
+            },
+            "seccomp": {
+              "architectures": [
+                "SCMP_ARCH_ARM",
+                "SCMP_ARCH_AARCH64"
+              ],
+              "defaultAction": "SCMP_ACT_ERRNO",
+              "syscalls": [
+                {
+                  "action": "SCMP_ACT_ALLOW",
+                  "names": [
+                    "accept",
+                    "accept4",
+                    "access",
+                    "adjtimex",
+                    "alarm",
+                    "bind",
+                    "brk",
+                    "cachestat",
+                    "capget",
+                    "capset",
+                    "chdir",
+                    "chmod",
+                    "chown",
+                    "chown32",
+                    "clock_adjtime",
+                    "clock_adjtime64",
+                    "clock_getres",
+                    "clock_getres_time64",
+                    "clock_gettime",
+                    "clock_gettime64",
+                    "clock_nanosleep",
+                    "clock_nanosleep_time64",
+                    "close",
+                    "close_range",
+                    "connect",
+                    "copy_file_range",
+                    "creat",
+                    "dup",
+                    "dup2",
+                    "dup3",
+                    "epoll_create",
+                    "epoll_create1",
+                    "epoll_ctl",
+                    "epoll_ctl_old",
+                    "epoll_pwait",
+                    "epoll_pwait2",
+                    "epoll_wait",
+                    "epoll_wait_old",
+                    "eventfd",
+                    "eventfd2",
+                    "execve",
+                    "execveat",
+                    "exit",
+                    "exit_group",
+                    "faccessat",
+                    "faccessat2",
+                    "fadvise64",
+                    "fadvise64_64",
+                    "fallocate",
+                    "fanotify_mark",
+                    "fchdir",
+                    "fchmod",
+                    "fchmodat",
+                    "fchmodat2",
+                    "fchown",
+                    "fchown32",
+                    "fchownat",
+                    "fcntl",
+                    "fcntl64",
+                    "fdatasync",
+                    "fgetxattr",
+                    "flistxattr",
+                    "flock",
+                    "fork",
+                    "fremovexattr",
+                    "fsetxattr",
+                    "fstat",
+                    "fstat64",
+                    "fstatat64",
+                    "fstatfs",
+                    "fstatfs64",
+                    "fsync",
+                    "ftruncate",
+                    "ftruncate64",
+                    "futex",
+                    "futex_requeue",
+                    "futex_time64",
+                    "futex_wait",
+                    "futex_waitv",
+                    "futex_wake",
+                    "futimesat",
+                    "getcpu",
+                    "getcwd",
+                    "getdents",
+                    "getdents64",
+                    "getegid",
+                    "getegid32",
+                    "geteuid",
+                    "geteuid32",
+                    "getgid",
+                    "getgid32",
+                    "getgroups",
+                    "getgroups32",
+                    "getitimer",
+                    "getpeername",
+                    "getpgid",
+                    "getpgrp",
+                    "getpid",
+                    "getppid",
+                    "getpriority",
+                    "getrandom",
+                    "getresgid",
+                    "getresgid32",
+                    "getresuid",
+                    "getresuid32",
+                    "getrlimit",
+                    "get_robust_list",
+                    "getrusage",
+                    "getsid",
+                    "getsockname",
+                    "getsockopt",
+                    "get_thread_area",
+                    "gettid",
+                    "gettimeofday",
+                    "getuid",
+                    "getuid32",
+                    "getxattr",
+                    "getxattrat",
+                    "inotify_add_watch",
+                    "inotify_init",
+                    "inotify_init1",
+                    "inotify_rm_watch",
+                    "io_cancel",
+                    "ioctl",
+                    "io_destroy",
+                    "io_getevents",
+                    "io_pgetevents",
+                    "io_pgetevents_time64",
+                    "ioprio_get",
+                    "ioprio_set",
+                    "io_setup",
+                    "io_submit",
+                    "ipc",
+                    "kill",
+                    "landlock_add_rule",
+                    "landlock_create_ruleset",
+                    "landlock_restrict_self",
+                    "lchown",
+                    "lchown32",
+                    "lgetxattr",
+                    "link",
+                    "linkat",
+                    "listen",
+                    "listmount",
+                    "listxattr",
+                    "listxattrat",
+                    "llistxattr",
+                    "_llseek",
+                    "lremovexattr",
+                    "lseek",
+                    "lsetxattr",
+                    "lsm_get_self_attr",
+                    "lsm_list_modules",
+                    "lsm_set_self_attr",
+                    "lstat",
+                    "lstat64",
+                    "madvise",
+                    "membarrier",
+                    "memfd_create",
+                    "memfd_secret",
+                    "mincore",
+                    "mkdir",
+                    "mkdirat",
+                    "mknod",
+                    "mknodat",
+                    "mlock",
+                    "mlock2",
+                    "mlockall",
+                    "map_shadow_stack",
+                    "mmap",
+                    "mmap2",
+                    "mprotect",
+                    "mq_getsetattr",
+                    "mq_notify",
+                    "mq_open",
+                    "mq_timedreceive",
+                    "mq_timedreceive_time64",
+                    "mq_timedsend",
+                    "mq_timedsend_time64",
+                    "mq_unlink",
+                    "mremap",
+                    "mseal",
+                    "msgctl",
+                    "msgget",
+                    "msgrcv",
+                    "msgsnd",
+                    "msync",
+                    "munlock",
+                    "munlockall",
+                    "munmap",
+                    "name_to_handle_at",
+                    "nanosleep",
+                    "newfstatat",
+                    "_newselect",
+                    "open",
+                    "openat",
+                    "openat2",
+                    "pause",
+                    "pidfd_open",
+                    "pidfd_send_signal",
+                    "pipe",
+                    "pipe2",
+                    "pkey_alloc",
+                    "pkey_free",
+                    "pkey_mprotect",
+                    "poll",
+                    "ppoll",
+                    "ppoll_time64",
+                    "prctl",
+                    "pread64",
+                    "preadv",
+                    "preadv2",
+                    "prlimit64",
+                    "process_mrelease",
+                    "pselect6",
+                    "pselect6_time64",
+                    "pwrite64",
+                    "pwritev",
+                    "pwritev2",
+                    "read",
+                    "readahead",
+                    "readlink",
+                    "readlinkat",
+                    "readv",
+                    "recv",
+                    "recvfrom",
+                    "recvmmsg",
+                    "recvmmsg_time64",
+                    "recvmsg",
+                    "remap_file_pages",
+                    "removexattr",
+                    "removexattrat",
+                    "rename",
+                    "renameat",
+                    "renameat2",
+                    "restart_syscall",
+                    "rmdir",
+                    "rseq",
+                    "rt_sigaction",
+                    "rt_sigpending",
+                    "rt_sigprocmask",
+                    "rt_sigqueueinfo",
+                    "rt_sigreturn",
+                    "rt_sigsuspend",
+                    "rt_sigtimedwait",
+                    "rt_sigtimedwait_time64",
+                    "rt_tgsigqueueinfo",
+                    "sched_getaffinity",
+                    "sched_getattr",
+                    "sched_getparam",
+                    "sched_get_priority_max",
+                    "sched_get_priority_min",
+                    "sched_getscheduler",
+                    "sched_rr_get_interval",
+                    "sched_rr_get_interval_time64",
+                    "sched_setaffinity",
+                    "sched_setattr",
+                    "sched_setparam",
+                    "sched_setscheduler",
+                    "sched_yield",
+                    "seccomp",
+                    "select",
+                    "semctl",
+                    "semget",
+                    "semop",
+                    "semtimedop",
+                    "semtimedop_time64",
+                    "send",
+                    "sendfile",
+                    "sendfile64",
+                    "sendmmsg",
+                    "sendmsg",
+                    "sendto",
+                    "setfsgid",
+                    "setfsgid32",
+                    "setfsuid",
+                    "setfsuid32",
+                    "setgid",
+                    "setgid32",
+                    "setgroups",
+                    "setgroups32",
+                    "setitimer",
+                    "setpgid",
+                    "setpriority",
+                    "setregid",
+                    "setregid32",
+                    "setresgid",
+                    "setresgid32",
+                    "setresuid",
+                    "setresuid32",
+                    "setreuid",
+                    "setreuid32",
+                    "setrlimit",
+                    "set_robust_list",
+                    "setsid",
+                    "setsockopt",
+                    "set_thread_area",
+                    "set_tid_address",
+                    "setuid",
+                    "setuid32",
+                    "setxattr",
+                    "setxattrat",
+                    "shmat",
+                    "shmctl",
+                    "shmdt",
+                    "shmget",
+                    "shutdown",
+                    "sigaltstack",
+                    "signalfd",
+                    "signalfd4",
+                    "sigprocmask",
+                    "sigreturn",
+                    "socketcall",
+                    "socketpair",
+                    "splice",
+                    "stat",
+                    "stat64",
+                    "statfs",
+                    "statfs64",
+                    "statmount",
+                    "statx",
+                    "symlink",
+                    "symlinkat",
+                    "sync",
+                    "sync_file_range",
+                    "syncfs",
+                    "sysinfo",
+                    "tee",
+                    "tgkill",
+                    "time",
+                    "timer_create",
+                    "timer_delete",
+                    "timer_getoverrun",
+                    "timer_gettime",
+                    "timer_gettime64",
+                    "timer_settime",
+                    "timer_settime64",
+                    "timerfd_create",
+                    "timerfd_gettime",
+                    "timerfd_gettime64",
+                    "timerfd_settime",
+                    "timerfd_settime64",
+                    "times",
+                    "tkill",
+                    "truncate",
+                    "truncate64",
+                    "ugetrlimit",
+                    "umask",
+                    "uname",
+                    "unlink",
+                    "unlinkat",
+                    "uretprobe",
+                    "utime",
+                    "utimensat",
+                    "utimensat_time64",
+                    "utimes",
+                    "vfork",
+                    "vmsplice",
+                    "wait4",
+                    "waitid",
+                    "waitpid",
+                    "write",
+                    "writev"
+                  ]
+                },
+                {
+                  "action": "SCMP_ACT_ALLOW",
+                  "args": [
+                    {
+                      "index": 0,
+                      "op": "SCMP_CMP_NE",
+                      "value": 40
+                    }
+                  ],
+                  "names": [
+                    "socket"
+                  ]
+                },
+                {
+                  "action": "SCMP_ACT_ALLOW",
+                  "args": [
+                    {
+                      "index": 0,
+                      "op": "SCMP_CMP_EQ",
+                      "value": 0
+                    }
+                  ],
+                  "names": [
+                    "personality"
+                  ]
+                },
+                {
+                  "action": "SCMP_ACT_ALLOW",
+                  "args": [
+                    {
+                      "index": 0,
+                      "op": "SCMP_CMP_EQ",
+                      "value": 8
+                    }
+                  ],
+                  "names": [
+                    "personality"
+                  ]
+                },
+                {
+                  "action": "SCMP_ACT_ALLOW",
+                  "args": [
+                    {
+                      "index": 0,
+                      "op": "SCMP_CMP_EQ",
+                      "value": 131072
+                    }
+                  ],
+                  "names": [
+                    "personality"
+                  ]
+                },
+                {
+                  "action": "SCMP_ACT_ALLOW",
+                  "args": [
+                    {
+                      "index": 0,
+                      "op": "SCMP_CMP_EQ",
+                      "value": 131080
+                    }
+                  ],
+                  "names": [
+                    "personality"
+                  ]
+                },
+                {
+                  "action": "SCMP_ACT_ALLOW",
+                  "args": [
+                    {
+                      "index": 0,
+                      "op": "SCMP_CMP_EQ",
+                      "value": 4294967295
+                    }
+                  ],
+                  "names": [
+                    "personality"
+                  ]
+                },
+                {
+                  "action": "SCMP_ACT_ALLOW",
+                  "names": [
+                    "process_vm_readv",
+                    "process_vm_writev",
+                    "ptrace"
+                  ]
+                },
+                {
+                  "action": "SCMP_ACT_ALLOW",
+                  "names": [
+                    "arm_fadvise64_64",
+                    "arm_sync_file_range",
+                    "sync_file_range2",
+                    "breakpoint",
+                    "cacheflush",
+                    "set_tls"
+                  ]
+                },
+                {
+                  "action": "SCMP_ACT_ALLOW",
+                  "names": [
+                    "chroot"
+                  ]
+                },
+                {
+                  "action": "SCMP_ACT_ALLOW",
+                  "args": [
+                    {
+                      "index": 0,
+                      "op": "SCMP_CMP_MASKED_EQ",
+                      "value": 2114060288
+                    }
+                  ],
+                  "names": [
+                    "clone"
+                  ]
+                },
+                {
+                  "action": "SCMP_ACT_ERRNO",
+                  "errnoRet": 38,
+                  "names": [
+                    "clone3"
+                  ]
+                }
+              ]
+            },
+            "sysctl": {
+              "net.ipv4.ip_unprivileged_port_start": "0",
+              "net.ipv4.ping_group_range": "0 2147483647"
+            }
+          },
+          "mounts": [
+            {
+              "destination": "/proc",
+              "options": [
+                "nosuid",
+                "noexec",
+                "nodev"
+              ],
+              "source": "proc",
+              "type": "proc"
+            },
+            {
+              "destination": "/dev",
+              "options": [
+                "nosuid",
+                "strictatime",
+                "mode=755",
+                "size=65536k"
+              ],
+              "source": "tmpfs",
+              "type": "tmpfs"
+            },
+            {
+              "destination": "/dev/pts",
+              "options": [
+                "nosuid",
+                "noexec",
+                "newinstance",
+                "ptmxmode=0666",
+                "mode=0620",
+                "gid=5"
+              ],
+              "source": "devpts",
+              "type": "devpts"
+            },
+            {
+              "destination": "/dev/mqueue",
+              "options": [
+                "nosuid",
+                "noexec",
+                "nodev"
+              ],
+              "source": "mqueue",
+              "type": "mqueue"
+            },
+            {
+              "destination": "/sys",
+              "options": [
+                "nosuid",
+                "noexec",
+                "nodev",
+                "ro"
+              ],
+              "source": "sysfs",
+              "type": "sysfs"
+            },
+            {
+              "destination": "/dev/shm",
+              "options": [
+                "rbind",
+                "ro",
+                "nosuid",
+                "nodev",
+                "noexec"
+              ],
+              "source": "/run/containerd/io.containerd.grpc.v1.cri/sandboxes/81c886e46e079b72da14512bcba91bca29b65a599cff6256f2479960f40bcfb5/shm",
+              "type": "bind"
+            },
+            {
+              "destination": "/etc/resolv.conf",
+              "options": [
+                "rbind",
+                "ro",
+                "nosuid",
+                "nodev",
+                "noexec"
+              ],
+              "source": "/var/lib/containerd/io.containerd.grpc.v1.cri/sandboxes/81c886e46e079b72da14512bcba91bca29b65a599cff6256f2479960f40bcfb5/resolv.conf",
+              "type": "bind"
+            }
+          ],
+          "ociVersion": "1.2.1",
+          "process": {
+            "args": [
+              "/pause"
+            ],
+            "capabilities": {
+              "bounding": [
+                "CAP_CHOWN",
+                "CAP_DAC_OVERRIDE",
+                "CAP_FSETID",
+                "CAP_FOWNER",
+                "CAP_MKNOD",
+                "CAP_NET_RAW",
+                "CAP_SETGID",
+                "CAP_SETUID",
+                "CAP_SETFCAP",
+                "CAP_SETPCAP",
+                "CAP_NET_BIND_SERVICE",
+                "CAP_SYS_CHROOT",
+                "CAP_KILL",
+                "CAP_AUDIT_WRITE"
+              ],
+              "effective": [
+                "CAP_CHOWN",
+                "CAP_DAC_OVERRIDE",
+                "CAP_FSETID",
+                "CAP_FOWNER",
+                "CAP_MKNOD",
+                "CAP_NET_RAW",
+                "CAP_SETGID",
+                "CAP_SETUID",
+                "CAP_SETFCAP",
+                "CAP_SETPCAP",
+                "CAP_NET_BIND_SERVICE",
+                "CAP_SYS_CHROOT",
+                "CAP_KILL",
+                "CAP_AUDIT_WRITE"
+              ],
+              "permitted": [
+                "CAP_CHOWN",
+                "CAP_DAC_OVERRIDE",
+                "CAP_FSETID",
+                "CAP_FOWNER",
+                "CAP_MKNOD",
+                "CAP_NET_RAW",
+                "CAP_SETGID",
+                "CAP_SETUID",
+                "CAP_SETFCAP",
+                "CAP_SETPCAP",
+                "CAP_NET_BIND_SERVICE",
+                "CAP_SYS_CHROOT",
+                "CAP_KILL",
+                "CAP_AUDIT_WRITE"
+              ]
+            },
+            "cwd": "/",
+            "env": [
+              "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ],
+            "noNewPrivileges": true,
+            "oomScoreAdj": -998,
+            "user": {
+              "additionalGids": [
+                65532
+              ],
+              "gid": 65532,
+              "uid": 65532
+            }
+          },
+          "root": {
+            "path": "rootfs",
+            "readonly": true
+          }
+        },
+        "runtimeType": "io.containerd.runsc.v1",
+        "sandboxMetadata": {
+          "Metadata": {
+            "AdditionalIPs": null,
+            "CNIResult": {
+              "DNS": [
+                {},
+                {}
+              ],
+              "Interfaces": {
+                "eth0": {
+                  "IPConfigs": [
+                    {
+                      "Gateway": "10.244.0.1",
+                      "IP": "10.244.0.5"
+                    }
+                  ],
+                  "Mac": "ea:17:19:b6:dd:1d",
+                  "PciID": "",
+                  "Sandbox": "/var/run/netns/cni-5c3cf247-6151-711d-e194-b020c63347b9",
+                  "SocketPath": ""
+                },
+                "lo": {
+                  "IPConfigs": [
+                    {
+                      "Gateway": "",
+                      "IP": "127.0.0.1"
+                    },
+                    {
+                      "Gateway": "",
+                      "IP": "::1"
+                    }
+                  ],
+                  "Mac": "00:00:00:00:00:00",
+                  "PciID": "",
+                  "Sandbox": "/var/run/netns/cni-5c3cf247-6151-711d-e194-b020c63347b9",
+                  "SocketPath": ""
+                },
+                "vethdd0d25dc": {
+                  "IPConfigs": null,
+                  "Mac": "ce:57:03:fc:40:12",
+                  "PciID": "",
+                  "Sandbox": "",
+                  "SocketPath": ""
+                }
+              },
+              "Routes": [
+                {
+                  "dst": "0.0.0.0/0"
+                }
+              ]
+            },
+            "Config": {
+              "annotations": {
+                "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Pod\",\"metadata\":{\"annotations\":{},\"name\":\"gvisor-positive\",\"namespace\":\"agentmoor-gvisor-probe\"},\"spec\":{\"activeDeadlineSeconds\":240,\"automountServiceAccountToken\":false,\"containers\":[{\"command\":[\"sh\",\"-c\",\"echo AGENTMOOR_GVISOR_PROBE; id; uname -a; cat /proc/version; sleep 600\"],\"image\":\"docker.io/library/busybox@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec\",\"imagePullPolicy\":\"IfNotPresent\",\"name\":\"probe\",\"resources\":{\"limits\":{\"cpu\":\"500m\",\"ephemeral-storage\":\"64Mi\",\"memory\":\"256Mi\"},\"requests\":{\"cpu\":\"10m\",\"memory\":\"32Mi\"}},\"securityContext\":{\"allowPrivilegeEscalation\":false,\"capabilities\":{\"drop\":[\"ALL\"]},\"readOnlyRootFilesystem\":true}}],\"enableServiceLinks\":false,\"restartPolicy\":\"Never\",\"runtimeClassName\":\"agentmoor-gvisor\",\"securityContext\":{\"runAsGroup\":65532,\"runAsNonRoot\":true,\"runAsUser\":65532,\"seccompProfile\":{\"type\":\"RuntimeDefault\"}}}}\n",
+                "kubernetes.io/config.seen": "2026-11-27T03:49:47.829978425Z",
+                "kubernetes.io/config.source": "api"
+              },
+              "dns_config": {
+                "options": [
+                  "ndots:5"
+                ],
+                "searches": [
+                  "agentmoor-gvisor-probe.svc.cluster.local",
+                  "svc.cluster.local",
+                  "cluster.local"
+                ],
+                "servers": [
+                  "10.96.0.10"
+                ]
+              },
+              "hostname": "gvisor-positive",
+              "labels": {
+                "io.kubernetes.pod.name": "gvisor-positive",
+                "io.kubernetes.pod.namespace": "agentmoor-gvisor-probe",
+                "io.kubernetes.pod.uid": "f7321cc3-0360-4fd9-b32a-94bfcfa28f00"
+              },
+              "linux": {
+                "cgroup_parent": "/kubelet.slice/kubelet-kubepods.slice/kubelet-kubepods-burstable.slice/kubelet-kubepods-burstable-podf7321cc3_0360_4fd9_b32a_94bfcfa28f00.slice",
+                "overhead": {},
+                "resources": {
+                  "cpu_period": 100000,
+                  "cpu_quota": 50000,
+                  "cpu_shares": 10,
+                  "memory_limit_in_bytes": 268435456,
+                  "unified": {
+                    "memory.oom.group": "1"
+                  }
+                },
+                "security_context": {
+                  "namespace_options": {
+                    "pid": 1,
+                    "userns_options": {
+                      "mode": 2
+                    }
+                  },
+                  "run_as_group": {
+                    "value": 65532
+                  },
+                  "run_as_user": {
+                    "value": 65532
+                  },
+                  "seccomp": {}
+                }
+              },
+              "log_directory": "/var/log/pods/agentmoor-gvisor-probe_gvisor-positive_f7321cc3-0360-4fd9-b32a-94bfcfa28f00",
+              "metadata": {
+                "name": "gvisor-positive",
+                "namespace": "agentmoor-gvisor-probe",
+                "uid": "f7321cc3-0360-4fd9-b32a-94bfcfa28f00"
+              }
+            },
+            "ID": "81c886e46e079b72da14512bcba91bca29b65a599cff6256f2479960f40bcfb5",
+            "IP": "10.244.0.5",
+            "Name": "gvisor-positive_agentmoor-gvisor-probe_f7321cc3-0360-4fd9-b32a-94bfcfa28f00_0",
+            "NetNSPath": "/var/run/netns/cni-5c3cf247-6151-711d-e194-b020c63347b9",
+            "ProcessLabel": "",
+            "RuntimeHandler": "runsc"
+          },
+          "Version": "v1"
+        },
+        "snapshotKey": "81c886e46e079b72da14512bcba91bca29b65a599cff6256f2479960f40bcfb5",
+        "snapshotter": "overlayfs"
+      },
+      "status": {
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Pod\",\"metadata\":{\"annotations\":{},\"name\":\"gvisor-positive\",\"namespace\":\"agentmoor-gvisor-probe\"},\"spec\":{\"activeDeadlineSeconds\":240,\"automountServiceAccountToken\":false,\"containers\":[{\"command\":[\"sh\",\"-c\",\"echo AGENTMOOR_GVISOR_PROBE; id; uname -a; cat /proc/version; sleep 600\"],\"image\":\"docker.io/library/busybox@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec\",\"imagePullPolicy\":\"IfNotPresent\",\"name\":\"probe\",\"resources\":{\"limits\":{\"cpu\":\"500m\",\"ephemeral-storage\":\"64Mi\",\"memory\":\"256Mi\"},\"requests\":{\"cpu\":\"10m\",\"memory\":\"32Mi\"}},\"securityContext\":{\"allowPrivilegeEscalation\":false,\"capabilities\":{\"drop\":[\"ALL\"]},\"readOnlyRootFilesystem\":true}}],\"enableServiceLinks\":false,\"restartPolicy\":\"Never\",\"runtimeClassName\":\"agentmoor-gvisor\",\"securityContext\":{\"runAsGroup\":65532,\"runAsNonRoot\":true,\"runAsUser\":65532,\"seccompProfile\":{\"type\":\"RuntimeDefault\"}}}}\n",
+          "kubernetes.io/config.seen": "2026-11-27T03:49:47.829978425Z",
+          "kubernetes.io/config.source": "api"
+        },
+        "createdAt": "2026-11-27T03:49:48.33103353Z",
+        "id": "81c886e46e079b72da14512bcba91bca29b65a599cff6256f2479960f40bcfb5",
+        "labels": {
+          "io.kubernetes.pod.name": "gvisor-positive",
+          "io.kubernetes.pod.namespace": "agentmoor-gvisor-probe",
+          "io.kubernetes.pod.uid": "f7321cc3-0360-4fd9-b32a-94bfcfa28f00"
+        },
+        "linux": {
+          "namespaces": {
+            "options": {
+              "ipc": "POD",
+              "network": "POD",
+              "pid": "CONTAINER",
+              "targetId": "",
+              "usernsOptions": {
+                "gids": [],
+                "mode": "NODE",
+                "uids": []
+              }
+            }
+          }
+        },
+        "metadata": {
+          "attempt": 0,
+          "name": "gvisor-positive",
+          "namespace": "agentmoor-gvisor-probe",
+          "uid": "f7321cc3-0360-4fd9-b32a-94bfcfa28f00"
+        },
+        "network": {
+          "additionalIps": [],
+          "ip": "10.244.0.5"
+        },
+        "runtimeHandler": "runsc",
+        "state": "SANDBOX_READY"
+      }
+    },
+    "runtime_processes": "   5833       1 containerd-shim /usr/local/bin/containerd-shim-runsc-v1 -namespace k8s.io -address /run/containerd/containerd.sock -id 81c886e46e079b72da14512bcba91bca29b65a599cff6256f2479960f40bcfb5\n   5852    5833 exe             runsc-gofer --root=/run/containerd/runsc/k8s.io --debug=true --log=/run/containerd/io.containerd.runtime.v2.task/k8s.io/81c886e46e079b72da14512bcba91bca29b65a599cff6256f2479960f40bcfb5/log.json --log-format=json --debug-log=/run/runsc-probe/ --panic-log=/var/log/pods/agentmoor-gvisor-probe_gvisor-positive_f7321cc3-0360-4fd9-b32a-94bfcfa28f00/gvisor_panic.log --platform=systrap --log-fd=3 --debug-log-fd=4 gofer --bundle /run/containerd/io.containerd.runtime.v2.task/k8s.io/81c886e46e079b72da14512bcba91bca29b65a599cff6256f2479960f40bcfb5 --gofer-mount-confs=lisafs:none,lisafs:none --spec-fd=5 --mounts-fd=6 --io-fds=7 --io-fds=8 --sync-chroot-fd=9 81c886e46e079b72da14512bcba91bca29b65a599cff6256f2479960f40bcfb5\n   5856    5833 gvisor_sentry   runsc-sandbox --debug-log=/run/runsc-probe/ --panic-log=/var/log/pods/agentmoor-gvisor-probe_gvisor-positive_f7321cc3-0360-4fd9-b32a-94bfcfa28f00/gvisor_panic.log --platform=systrap --root=/run/containerd/runsc/k8s.io --debug=true --log=/run/containerd/io.containerd.runtime.v2.task/k8s.io/81c886e46e079b72da14512bcba91bca29b65a599cff6256f2479960f40bcfb5/log.json --log-format=json --log-fd=4 --debug-log-fd=5 --panic-log-fd=6 boot --bundle=/run/containerd/io.containerd.runtime.v2.task/k8s.io/81c886e46e079b72da14512bcba91bca29b65a599cff6256f2479960f40bcfb5 --gofer-mount-confs=lisafs:none,lisafs:none --apply-caps=true --setup-root --total-host-memory 16816517120 --cpu-num 2 --cpu-quota 50000 --cpu-period 100000 --total-memory 268435456 --io-fds=7 --io-fds=8 --dev-io-fd=-1 --mounts-fd=9 --pin-ring-fd=10 --user-log-fd=11 --controller-fd=12 --spec-fd=13 --proc-umounter-fd=14 --stdio-fds=15 --stdio-fds=16 --stdio-fds=17 81c886e46e079b72da14512bcba91bca29b65a599cff6256f2479960f40bcfb5\n   5857    5833 runsc-fd-parkin runsc-fd-parking\n   5871    5856 gvisor_sentry   [gvisor_sentry]\n   5875    5856 gvisor_sentry   [gvisor_sentry]\n   5876    5875 gvisor_sentry   [gvisor_sentry]\n   5881    5833 runsc           runsc --root=/run/containerd/runsc/k8s.io --log=/run/containerd/io.containerd.runtime.v2.task/k8s.io/81c886e46e079b72da14512bcba91bca29b65a599cff6256f2479960f40bcfb5/log.json --log-format=json --panic-log=/var/log/pods/agentmoor-gvisor-probe_gvisor-positive_f7321cc3-0360-4fd9-b32a-94bfcfa28f00/gvisor_panic.log --debug=true --debug-log=/run/runsc-probe/ --platform=systrap wait 81c886e46e079b72da14512bcba91bca29b65a599cff6256f2479960f40bcfb5\n   6011    5833 exe             runsc-gofer --debug=true --log=/run/containerd/io.containerd.runtime.v2.task/k8s.io/87bb6a553765b9f82ccf40a419d9be8cbd9ec8ead93c96f379f779eee762d4c7/log.json --log-format=json --debug-log=/run/runsc-probe/ --platform=systrap --root=/run/containerd/runsc/k8s.io --log-fd=3 --debug-log-fd=4 gofer --bundle /run/containerd/io.containerd.runtime.v2.task/k8s.io/87bb6a553765b9f82ccf40a419d9be8cbd9ec8ead93c96f379f779eee762d4c7 --gofer-mount-confs=lisafs:none,lisafs:none,lisafs:none,lisafs:none,lisafs:none --spec-fd=5 --mounts-fd=6 --io-fds=7 --io-fds=8 --io-fds=9 --io-fds=10 --io-fds=11 --sync-chroot-fd=12 87bb6a553765b9f82ccf40a419d9be8cbd9ec8ead93c96f379f779eee762d4c7\n   6021    5856 gvisor_sentry   [gvisor_sentry]\n   6022    6021 gvisor_sentry   [gvisor_sentry]\n   6024    5833 runsc           runsc --root=/run/containerd/runsc/k8s.io --log=/run/containerd/io.containerd.runtime.v2.task/k8s.io/87bb6a553765b9f82ccf40a419d9be8cbd9ec8ead93c96f379f779eee762d4c7/log.json --log-format=json --debug-log=/run/runsc-probe/ --platform=systrap --debug=true wait 87bb6a553765b9f82ccf40a419d9be8cbd9ec8ead93c96f379f779eee762d4c7\n   6036    5856 gvisor_sentry   [gvisor_sentry]\n   6038    6036 gvisor_sentry   [gvisor_sentry]\n   6039    5856 gvisor_sentry   [gvisor_sentry]\n   6040    6039 gvisor_sentry   [gvisor_sentry]",
+    "positive_log": "AGENTMOOR_GVISOR_PROBE\nuid=65532 gid=65532 groups=65532\nLinux gvisor-positive 4.19.0-gvisor #1 SMP Sun Jan 10 15:06:54 PST 2016 aarch64 GNU/Linux\nLinux version 4.19.0-gvisor #1 SMP Sun Jan 10 15:06:54 PST 2016\n",
+    "kind_delete": "Deleting cluster \"agentmoor-4114ee7daecc\" ...\nDeleted nodes: [\"agentmoor-4114ee7daecc-control-plane\"]\n"
+  },
+  "cleanup": {
+    "completed": true,
+    "node_containers_remaining": [],
+    "private_kubeconfig_removed": true
+  },
+  "source": {
+    "probe_script_sha256": "113bde3493d6a4a0ff54e2688a45d0fc4a584791039c1d02eac8b8972411e417",
+    "agentmoor_workload_executed": false,
+    "repository_commit": "cf143f8910294d61d003326f1b4f3c9c182df304",
+    "repository_status": "M Makefile\n?? tests/kubernetes/gvisor_probe.py\n?? tests/kubernetes/gvisor_probe_test.py"
+  },
+  "architecture": "aarch64",
+  "bundle_url": "https://github.com/gvisor/gvisor/releases/download/release-20261123.1/gvisor-aarch64.tar.bz2",
+  "bundle_source": "fixed official release download",
+  "bundle_sha512": "930967c01eaa8c91a90903ba866070dd165c580d3197287747bb1444ee11dab7350db11d8f90bf00efb2cdcfb2318602d3f329c522c9e9436a86fe6a93c7b7fc",
+  "bundle_size": 77920389,
+  "node_image_id": "sha256:4613778f3cfcd10e615029370f5786704559103cf27bef934597ba562b269661",
+  "runsc_version": "runsc version release-20261123.1\nspec: 1.2.1\n",
+  "proof": {
+    "positive_pod_uid": "f7321cc3-0360-4fd9-b32a-94bfcfa28f00",
+    "sandbox_id": "81c886e46e079b72da14512bcba91bca29b65a599cff6256f2479960f40bcfb5",
+    "runtime_handler": "runsc",
+    "cri_runtime_type": "io.containerd.runsc.v1",
+    "platform": "systrap",
+    "actual_uid": 65532,
+    "actual_gid": 65532,
+    "restart_count": 0,
+    "image_id": "docker.io/library/busybox@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec",
+    "negative_pod_uid": "3ba38358-1722-4270-b659-05f484a384dc",
+    "negative_phase": "Pending",
+    "negative_container_started": false,
+    "negative_sandbox_created": false,
+    "negative_failure_count": 2,
+    "negative_observation_seconds": 10
+  },
+  "finished_at_utc": "2026-11-27T03:50:07.298517+00:00",
+  "execution": {
+    "entrypoint": "make test-k8s-gvisor-feasibility",
+    "actual_exit_code": 0,
+    "tool_session": 4301,
+    "output_capture": "Complete result written by the new repository entrypoint; no AgentMoor workload was executed.",
+    "source_note": "Repository base cf143f8910294d61d003326f1b4f3c9c182df304 with the recorded uncommitted probe script SHA256; subsequent commits are not claimed as reruns."
+  },
+  "offline_regressions": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p gvisor_probe_test.py -v",
+    "status": "passed",
+    "test_count": 8,
+    "scope": "Offline proof and bundle validation; no runtime execution or network."
+  }
+}
