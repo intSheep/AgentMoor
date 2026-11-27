@@ -126,6 +126,21 @@ class ResourceProofTest(unittest.TestCase):
             with self.subTest(mutation=mutation), self.assertRaises(RuntimeError):
                 probe.verify_resource("tmpfs", changed)
 
+    def test_one_failure_keeps_other_bounded_resource_observations_but_run_fails(self):
+        instance = probe.SecurityProbe.__new__(probe.SecurityProbe)
+        instance.security = {"resources": {}}
+        instance.stage = lambda _: None
+        calls = []
+        def resource(mode):
+            calls.append(mode)
+            if mode == "memory":
+                raise RuntimeError("synthetic evidence failure")
+        instance.resource = resource
+        with self.assertRaisesRegex(RuntimeError, "memory"):
+            instance.resources()
+        self.assertEqual(calls, ["cpu", "memory", "tmpfs", "file-memory", "pids", "wall", "cancel"])
+        self.assertEqual(instance.security["resources"]["memory"]["failure"]["type"], "RuntimeError")
+
     def test_cgroup_scope_must_belong_to_the_attested_pod(self):
         instance = probe.SecurityProbe.__new__(probe.SecurityProbe)
         runtime = {"sentry_pid": 123, "pod_uid": "abc-def"}
