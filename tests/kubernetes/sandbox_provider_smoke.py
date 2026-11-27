@@ -14,6 +14,8 @@ import sys
 import tempfile
 import threading
 import time
+import urllib.error
+import urllib.request
 
 from gvisor_probe import require
 from gvisor_security_probe import SecurityProbe, GUEST_NS, CONTROL_NS, GATEWAY_LABEL, network_policy
@@ -25,6 +27,7 @@ sys.path.insert(0, str(ROOT / "tests"))
 from saas_file_contract import FileReportClient
 from skill_report_contract import SkillCatalog, SkillReportClient
 from sandbox_provider_skill import IsolatedSkillCatalog, PROOF_PATH
+from sandbox_provider_quota import PrivateKubernetesAPI
 
 
 def now():
@@ -75,7 +78,8 @@ class ProviderSmoke:
         self.stage("build_real_codex_with_public_ca_only")
         relevant = ["cmd", "internal", "tests/kubernetes/sandbox_provider_smoke.py",
                     "tests/kubernetes/sandbox_provider_native.py", "tests/kubernetes/sandbox_provider_model.py",
-                    "tests/kubernetes/sandbox_provider_skill.py", "tests/kubernetes/gvisor_security_probe.py"]
+                    "tests/kubernetes/sandbox_provider_skill.py", "tests/kubernetes/sandbox_provider_quota.py",
+                    "tests/kubernetes/gvisor_security_probe.py", "tests/kubernetes/gvisor_probe.py"]
         require(not self.p.run("git", "-C", ROOT, "status", "--short", "--", *relevant).strip(),
                 "commit implementation and provider fixtures before acceptance")
         self.result["source_commit"] = self.p.run("git", "-C", ROOT, "rev-parse", "HEAD").strip()
@@ -151,6 +155,8 @@ class ProviderSmoke:
         self.p.run("docker", "update", "--memory", str(4 << 30), "--memory-swap", str(4 << 30), self.p.node)
         self.result["node_memory"] = {name: self.p.node_run("cat", "/sys/fs/cgroup/" + name).strip() for name in ("memory.max", "memory.swap.max")}
         require(self.result["node_memory"] == {"memory.max": str(4 << 30), "memory.swap.max": "0"}, "node swap was not denied")
+        self.result["actual_containerd"] = self.p.node_run("containerd", "--version").strip()
+        self.result["containerd_service_exec_start"] = self.p.node_run("systemctl", "show", "containerd", "-p", "ExecStart").strip()
         self.secret("provider-tls", {"cert.pem": self.cert, "key.pem": self.key})
         self.secret("provider-model-auth", {"key": self.model_key})
         self.secret("provider-signing", {"signing.key": self.platform / "signing.key"})
@@ -227,7 +233,7 @@ class ProviderSmoke:
 
     def deleted(self, counter):
         name = counter["pod"]
-        require(counter["count"] == 1, "native CLI re-executed inside one guest")
+        require(counter["count"] == 1 and counter["rlimit_nproc"] == [64, 64], "native CLI re-executed or lacks its fixed process hard limit")
         until = time.monotonic() + 10
         while time.monotonic() < until:
             with self.lock:
@@ -239,9 +245,21 @@ class ProviderSmoke:
         row = records[0]
         missing = subprocess.run([*self.p.base, "-n", GUEST_NS, "get", "pod", name], capture_output=True, text=True)
         require(missing.returncode and "NotFound" in missing.stderr, "completed guest Pod still exists")
-        processes = self.p.node_run("ps", "-eo", "pid,comm,args")
-        require(not any("runsc-sandbox " in line and row["runtime"]["sandbox_id"] in line for line in processes.splitlines()), "deleted guest retained a live Sentry")
-        return {"pod_uid": row["pod"]["metadata"]["uid"], "pod_name": name, "counter": counter, "deleted": True, "no_live_sentry": True}
+        until = time.monotonic() + 60
+        while time.monotonic() < until:
+            processes = self.p.node_run("ps", "-eo", "pid,stat,comm,args")
+            live = [line for line in processes.splitlines() if row["runtime"]["sandbox_id"] in line and
+                    any(value in line for value in ("runsc-sandbox", "runsc-gofer", "containerd-shim-runsc"))]
+            cri = json.loads(self.p.node_run("crictl", "pods", "--namespace", GUEST_NS, "-o", "json"))
+            retained = [item for item in cri["items"] if item["metadata"]["uid"] == row["pod"]["metadata"]["uid"]]
+            ready = [item for item in retained if item.get("state") == "SANDBOX_READY"]
+            if not live and not ready:
+                return {"pod_uid": row["pod"]["metadata"]["uid"], "pod_name": name, "counter": counter,
+                        "deleted": True, "no_live_sentry": True, "no_live_gofer_or_shim": True, "no_ready_cri": True,
+                        "stopped_cri_history": [{key: item.get(key) for key in ("id", "state")} for item in retained]}
+            time.sleep(.2)
+        self.result.setdefault("cleanup_failures", []).append({"pod_uid": row["pod"]["metadata"]["uid"], "live_processes": live, "ready_cri": strip_private(ready)})
+        raise RuntimeError("deleted guest retained a live runtime process or Ready CRI sandbox")
 
     def scenario(self, endpoint, scenario):
         self.stage(scenario + "_three_real_isolated_rounds")
@@ -350,6 +368,78 @@ class ProviderSmoke:
         self.result["file_cancellation"] = {"turn_id": turn, "cancel_seconds": cancel_seconds,
             "checkpoint_preserved": True, "cancelled": receipt, "recovery": recovery, "unpublished_files_restored": False}
 
+    def lose_file_guest(self, client, _cp, marker, deliveries, directory):
+        self.stage("lose_exact_active_guest_uid_without_saas_cancellation")
+        cp = json.loads(client.request("GET", client.route + "/checkpoint"))
+        session = cp["session_id"]
+        message = "Hold the report tool for an injected guest loss."
+        turn = client.ask(session, message)
+        counter, pod = None, None
+        until = time.monotonic() + 90
+        while time.monotonic() < until:
+            pods = json.loads(self.kube("get", "pods", "-l", "app.kubernetes.io/name=agentmoor-sandbox", "-o", "json", namespace=GUEST_NS))["items"]
+            require(len(pods) <= 1, "loss injection found multiple live execution owners")
+            for candidate in pods:
+                if candidate.get("status", {}).get("phase") != "Running":
+                    continue
+                try:
+                    raw = self.kube("exec", candidate["metadata"]["name"], "--", "python3", "-c",
+                        "import json;from pathlib import Path;p=Path('/run/guest/run/workspace');print(json.dumps(json.loads((p/'.agentmoor-native-count.json').read_bytes()) if (p/'.hold-started').is_file() else None))", namespace=GUEST_NS)
+                except RuntimeError:
+                    continue
+                counter = json.loads(raw)
+                if counter:
+                    pod = candidate
+                    break
+            if pod:
+                break
+            time.sleep(.4)
+        require(pod is not None and counter["pod"] == pod["metadata"]["name"], "loss injection did not observe the active native tool")
+        uid, name = pod["metadata"]["uid"], pod["metadata"]["name"]
+        with self.lock:
+            require(uid in self.observed, "loss target lacks an actual running CRI/Sentry observation")
+        active = json.loads(client.request("GET", client.route + "/turns/" + turn))
+        require(active["state"] == "running" and active["parent"] == cp and not active.get("assets"), "loss target was not the active original turn")
+        # This actor uses only this owned cluster's private client certificate.
+        # UID preconditions prevent deleting any replacement with the same name.
+        actor = PrivateKubernetesAPI(self.p)
+        path = "/api/v1/namespaces/" + GUEST_NS + "/pods/" + name
+        body = json.dumps({"apiVersion": "v1", "kind": "DeleteOptions", "preconditions": {"uid": uid}, "gracePeriodSeconds": 0}).encode()
+        request = urllib.request.Request(actor.origin + path, data=body, method="DELETE", headers={"Content-Type": "application/json"})
+        with actor.opener.open(request, timeout=15) as response:
+            require(response.status in (200, 202), "exact guest UID deletion failed")
+            response.read(1 << 20)  # Never save the API's capability-bearing Pod body.
+        until = time.monotonic() + 30
+        while time.monotonic() < until:
+            failed = json.loads(client.request("GET", client.route + "/turns/" + turn))
+            if failed["state"] not in ("queued", "running"):
+                break
+            time.sleep(.3)
+        require(failed["state"] == "failed" and not failed.get("assets") and failed["deadline"] == active["deadline"], "lost guest was retried, extended or published as success")
+        require(json.loads(client.request("GET", client.route + "/checkpoint")) == cp, "lost guest advanced checkpoint")
+        lost = self.deleted(counter)
+        with self.lock:
+            before = set(self.observed)
+        for _ in range(2):
+            require(json.loads(client.request("PUT", client.route + "/turns/" + turn, {"session_id": session, "message": message})) == failed, "old UUID recreated or changed its failed execution")
+        time.sleep(2.2)
+        require(not json.loads(self.kube("get", "pods", "-l", "app.kubernetes.io/name=agentmoor-sandbox", "-o", "json", namespace=GUEST_NS))["items"], "old UUID created another guest")
+        with self.lock:
+            require(set(self.observed) == before, "old UUID performed another native execution")
+        recovered_turn = client.ask(session, "Audit the saved report after the guest Pod disappeared.")
+        recovered, _ = client.answer(recovered_turn, seconds=240)
+        require(recovered["parent"] == cp, "fresh UUID did not resume the last successful state")
+        operations = ["produce", "revise"] + ["audit"] * (len(deliveries) - 1)
+        _, delivery = client.observe(recovered, session, "audit", marker, expected_operations=operations)
+        archive = client.archive(client.refs(recovered)["workspace"])
+        require("unpublished-draft.txt" not in archive and ".hold-started" not in archive, "lost local changes entered the restored checkpoint")
+        recovery = self.deleted(json.loads(archive[".agentmoor-native-count.json"]))
+        deliveries.append((recovered_turn, delivery))
+        client.verify_stored(deliveries, directory)
+        self.result["guest_loss"] = {"turn_id": turn, "delete_precondition_uid": uid, "lost": lost,
+            "original_deadline": active["deadline"], "original_uuid_replays": 2, "replacement_guests_after_replay": 0,
+            "checkpoint_preserved": True, "unpublished_files_restored": False, "recovery": recovery}
+
     def execute(self, scenarios):
         self.build()
         self.configure()
@@ -361,6 +451,7 @@ class ProviderSmoke:
                     state = self.scenario(endpoint, scenario)
                     if scenario == "file":
                         self.cancel_file(*state)
+                        self.lose_file_guest(*state)
         finally:
             self.stop.set()
             observer.join(timeout=15)
@@ -414,11 +505,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bundle", type=Path)
     parser.add_argument("--calico-manifest", type=Path)
+    parser.add_argument("--containerd-cache", type=Path, default=os.environ.get("GVISOR_SECURITY_CONTAINERD_CACHE"))
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--scenario", choices=("file", "skill", "both"), default="file")
     options = parser.parse_args()
     with tempfile.TemporaryDirectory(prefix="agentmoor-provider-") as directory:
-        probe = SecurityProbe(Path(directory), options.bundle, options.calico_manifest)
+        probe = SecurityProbe(Path(directory), options.bundle, options.calico_manifest, containerd_cache=options.containerd_cache)
         smoke = ProviderSmoke(probe)
         code = 1
         try:

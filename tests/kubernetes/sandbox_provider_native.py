@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import socket
+import resource
 import sys
 import time
 import uuid
@@ -12,7 +13,8 @@ if sys.argv[1:2] == ["exec"]:
     path = Path(".agentmoor-native-count.json")
     pod = socket.gethostname()
     previous = json.loads(path.read_text()) if path.is_file() else {}
-    record = {"pod": pod, "nonce": str(uuid.uuid4()), "count": 1}
+    record = {"pod": pod, "nonce": str(uuid.uuid4()), "count": 1,
+              "rlimit_nproc": list(resource.getrlimit(resource.RLIMIT_NPROC))}
     if previous.get("pod") == pod:
         record["count"] += previous["count"]
     path.write_text(json.dumps(record, sort_keys=True) + "\n")
