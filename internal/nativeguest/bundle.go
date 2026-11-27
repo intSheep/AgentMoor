@@ -291,19 +291,26 @@ func readParts(ctx context.Context, r io.Reader, root *os.Root, parts []part) er
 		if h.Name != p.name || h.Size != p.meta.Size {
 			return fmt.Errorf("guest blob slot differs from metadata")
 		}
-		if err = root.MkdirAll(filepath.Dir(p.name), 0700); err != nil {
-			return err
-		}
-		f, err := root.OpenFile(p.name, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
-		if err != nil {
-			return err
-		}
 		digest := sha256.New()
-		_, err = io.CopyN(io.MultiWriter(f, digest), contextReader{ctx, r}, h.Size)
-		if err == nil {
-			err = f.Sync()
+		var f *os.File
+		var destination io.Writer = digest
+		if root != nil {
+			if err = root.MkdirAll(filepath.Dir(p.name), 0700); err != nil {
+				return err
+			}
+			f, err = root.OpenFile(p.name, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+			if err != nil {
+				return err
+			}
+			destination = io.MultiWriter(f, digest)
 		}
-		err = errors.Join(err, f.Close())
+		_, err = io.CopyN(destination, contextReader{ctx, r}, h.Size)
+		if f != nil {
+			if err == nil {
+				err = f.Sync()
+			}
+			err = errors.Join(err, f.Close())
+		}
 		if err != nil {
 			return err
 		}
@@ -353,6 +360,40 @@ func WriteResult(ctx context.Context, dst io.Writer, result Result, open func(st
 		return err
 	}
 	return writeEnvelope(ctx, dst, "result.json", result, MaxResultJSONBytes, resultParts(result), open, l.MaxOutputBytes)
+}
+
+// InspectRequest validates the complete outer request envelope, including its
+// strict metadata, fixed regular slots, individual blob hashes and exact EOF.
+// It writes no files and does not unpack or interpret any inner tree/native
+// payload. Callers must independently verify the sealed outer digest and size.
+func InspectRequest(ctx context.Context, src io.Reader, limits Limits) (Request, error) {
+	l, err := limits.normalized()
+	if err != nil {
+		return Request{}, err
+	}
+	if src == nil {
+		return Request{}, fmt.Errorf("missing guest envelope source")
+	}
+	reader := &io.LimitedReader{R: contextReader{ctx, src}, N: l.MaxInputBytes + 1}
+	var req Request
+	raw, _, err := readMetadata(reader, "request.json", min(int64(MaxRequestJSONBytes), l.MaxInputBytes), &req)
+	if err != nil {
+		return Request{}, err
+	}
+	if err = req.Validate(); err != nil {
+		return Request{}, err
+	}
+	parts := requestParts(req)
+	if envelopeSize(len(raw), parts) > l.MaxInputBytes {
+		return Request{}, fmt.Errorf("guest envelope exceeds limit")
+	}
+	if err = readParts(ctx, reader, nil, parts); err != nil {
+		return Request{}, err
+	}
+	if l.MaxInputBytes+1-reader.N > l.MaxInputBytes {
+		return Request{}, fmt.Errorf("guest envelope exceeds limit")
+	}
+	return req, nil
 }
 func DecodeRequest(ctx context.Context, src io.Reader, freshDir string, limits Limits) (Request, Files, error) {
 	l, err := limits.normalized()

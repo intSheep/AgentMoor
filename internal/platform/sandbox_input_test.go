@@ -3,6 +3,7 @@ package platform
 import (
 	"archive/tar"
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -66,6 +67,49 @@ func handoffClaim(t *testing.T, c *Catalog, s asset.Scope, pins []task.SkillPin)
 	return a
 }
 
+// Explicit metadata provider fixture: no Kubernetes Pod or native CLI runs.
+// Success must nevertheless have the same sealed, terminal/deleted identity
+// that the server now requires from every isolated execution.
+func handoffReadyForFinish(t *testing.T, c *Catalog, a SandboxAddress, p SandboxExecutionProfile, existing *SandboxCreatePermit) SandboxRun {
+	t.Helper()
+	var permit SandboxCreatePermit
+	if existing != nil {
+		permit = *existing
+	} else {
+		r, _, err := c.PrepareSandboxInput(t.Context(), a, p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		permit, err = c.FenceSandboxCreate(t.Context(), a, r.Deadline)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := c.SealSandboxPodTemplate(t.Context(), a, "handoff-fixture", sandboxTestProfile); err != nil {
+		t.Fatal(err)
+	}
+	uid := uuid.NewString()
+	if _, err := c.BindSandboxPod(t.Context(), a, uid); err != nil {
+		t.Fatal(err)
+	}
+	const body = "sealed synthetic handoff result; trusted worker validates result bytes separately"
+	if _, err := c.SealSandboxOutput(t.Context(), permit.Capabilities.Output, sandboxTestBlob(body), strings.NewReader(body)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := c.RecordSandboxTerminal(t.Context(), a, uid, 0); err != nil {
+		t.Fatal(err)
+	}
+	r, err := c.ConfirmSandboxDeleted(t.Context(), a, uid)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return r
+}
+
+func handoffFinishContext(ctx context.Context, s asset.Scope) context.Context {
+	return sandboxFinishContext(ctx, func(got asset.Scope) (SandboxExecutionProfile, bool) { return handoffProfile(s), got == s })
+}
+
 func checkSandboxPreparedInput(t *testing.T, c *Catalog, s asset.Scope) {
 	t.Helper()
 	// This protocol fixture never invokes or impersonates a vendor CLI.
@@ -122,7 +166,8 @@ func checkSandboxPreparedInput(t *testing.T, c *Catalog, s asset.Scope) {
 	workspaceRef := handoffPublish(t, c, s, asset.Key{Kind: "workspace", ID: "root"}, workspaceBytes, "workspace-tar.v1", "application/x-tar", "", 0)
 	sessionRef := handoffPublish(t, c, s, asset.Key{Kind: "session", ID: session}, sessionBytes, "fixture-session.v1", "application/x-tar", "", 0)
 	handoffPublish(t, c, s, asset.Key{Kind: "artifact", ID: "out/report.txt"}, []byte("synthetic report"), "file.v1", "text/plain", session, 0)
-	if _, err = c.finishTask(t.Context(), taskAddress{Scope: s}, task.Finish{Attempt: a.Attempt, SessionID: session}); err != nil {
+	handoffReadyForFinish(t, c, a, profile, &permit)
+	if _, err = c.finishTask(handoffFinishContext(t.Context(), s), taskAddress{Scope: s}, task.Finish{Attempt: a.Attempt, SessionID: session}); err != nil {
 		t.Fatal(err)
 	}
 	turn := uuid.NewString()

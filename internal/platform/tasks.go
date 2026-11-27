@@ -27,6 +27,7 @@ type taskSlot struct {
 	// Present only after finishTask validates the successful receipt. Never
 	// persisted in the task or inferred from an arbitrary asset ID/path.
 	linkedSessionID string
+	acceptedSandbox *SandboxRun // ephemeral verified source; never stored in Record
 }
 
 // Each logical runtime is one allocation. A claim token is never exposed by
@@ -92,6 +93,9 @@ func (c *Catalog) changeTask(ctx context.Context, s taskAddress, create bool, ch
 	// acknowledgement replays and failure/cancellation keep their semantics.
 	newSuccess := before.State == task.Running && slot.State == task.Succeeded
 	if newSuccess {
+		if slot.ExecutionPolicy == task.ExecutionUntrustedIsolated && slot.acceptedSandbox == nil {
+			return task.Record{}, ErrConflict
+		}
 		if !time.Now().Before(before.Deadline) {
 			return task.Record{}, ErrConflict
 		}
@@ -118,6 +122,11 @@ func (c *Catalog) changeTask(ctx context.Context, s taskAddress, create bool, ch
 			return task.Record{}, err
 		}
 		if slot.State == task.Succeeded {
+			if slot.acceptedSandbox != nil {
+				if err = appendSandboxResultAccepted(ctx, tx, s, slot, *slot.acceptedSandbox); err != nil {
+					return task.Record{}, err
+				}
+			}
 			if err = appendAssetLinks(ctx, tx, s, slot); err != nil {
 				return task.Record{}, err
 			}
@@ -215,6 +224,15 @@ func (c *Catalog) finishTask(ctx context.Context, s taskAddress, finish task.Fin
 	if (finish.Error == "") == (finish.SessionID == "") || len(finish.Error) > 256 || len(finish.Artifacts) > task.MaxArtifacts || (finish.Error != "" && len(finish.Artifacts) != 0) {
 		return task.Record{}, errBadRequest
 	}
+	evidence, err := c.prepareSandboxSuccess(ctx, s, finish)
+	if err != nil {
+		return task.Record{}, err
+	}
+	if evidence != nil {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithDeadline(ctx, evidence.run.Deadline)
+		defer cancel()
+	}
 	return c.changeTask(ctx, s, false, func(slot *taskSlot) error {
 		if slot.attempt == "" || slot.attempt != finish.Attempt {
 			return ErrConflict
@@ -250,6 +268,12 @@ func (c *Catalog) finishTask(ctx context.Context, s taskAddress, finish task.Fin
 		refs, err := c.taskAssets(ctx, s, slot.Spec.Output, finish.SessionID, finish.Artifacts)
 		if err != nil {
 			return err
+		}
+		if slot.ExecutionPolicy == task.ExecutionUntrustedIsolated {
+			slot.acceptedSandbox, err = c.recheckSandboxSuccess(ctx, s, *slot, evidence)
+			if err != nil {
+				return err
+			}
 		}
 		slot.Assets = refs
 		slot.linkedSessionID = finish.SessionID
