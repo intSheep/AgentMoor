@@ -16,6 +16,7 @@ import signal
 import subprocess
 import tempfile
 import time
+import tomllib
 
 from gvisor_probe import Probe, NAMESPACE, require, HANDLER, RUNTIME_TYPE, IMAGE
 
@@ -146,6 +147,7 @@ class SecurityProbe(Probe):
         super().__init__(directory, bundle)
         self.manifest_source = manifest
         self.enforcing = enforcing
+        self.debug_orphans = False
         self.image = "agentmoor-security-fixture:" + self.cluster
         self.outside = self.cluster + "-outside-fixture"
         self.security = {"status": "in_progress", "limitations": LIMITATIONS, "resources": {}, "network": {}, "cleanup": {}}
@@ -545,6 +547,8 @@ class SecurityProbe(Probe):
         return rows
 
     def remove_pod(self, namespace, name, runtime, record):
+        record["pod_delete_started_monotonic"] = time.monotonic()
+        record["pod_delete_started_at_utc"] = datetime.now(timezone.utc).isoformat()
         self.run(*self.base, "-n", namespace, "delete", "pod", name, "--wait=true", "--timeout=60s", timeout=70)
         for until in [time.monotonic() + 60]:
             while time.monotonic() < until:
@@ -553,6 +557,8 @@ class SecurityProbe(Probe):
                 cri = json.loads(self.node_run("crictl", "pods", "--namespace", namespace, "-o", "json"))
                 retained = [row for row in cri["items"] if row["metadata"]["uid"] == runtime["pod_uid"]]
                 record["cleanup_last_observation"] = {"live_processes": live, "cri_sandboxes": retained}
+                record.setdefault("cleanup_timeline", []).append({"elapsed_seconds": time.monotonic() - record["pod_delete_started_monotonic"],
+                    "processes": live, "cri_states": [{"id": row["id"], "state": row.get("state")} for row in retained]})
                 if not live:
                     # Kubelet may retain a stopped sandbox until its normal
                     # periodic GC. Never kill a live sandbox to manufacture a
@@ -575,7 +581,160 @@ class SecurityProbe(Probe):
                     except Exception as error:
                         diagnostics[pid + "/" + file] = str(error)
         record["cleanup_process_diagnostics"] = diagnostics
+        if self.debug_orphans:
+            self.diagnose_orphan(runtime, record)
         raise RuntimeError("deleted Pod left a live Sentry/gofer/shim or CRI sandbox")
+
+    def diagnose_orphan(self, runtime, record):
+        # Debug only. SIGQUIT changes runtime state, so this run is never
+        # acceptance evidence. Do not add this recovery to production.
+        require(self.debug_orphans, "unsafe diagnostic target")
+        owned = json.loads(self.run("docker", "inspect", self.node))[0]
+        require(owned["Config"]["Labels"].get("io.x-k8s.kind.cluster") == self.cluster, "diagnostic node is not owned")
+        rows = record["cleanup_last_observation"]["live_processes"]
+        require(rows and all("containerd-shim-runsc-v1" in line for line in rows), "guest/Sentry/gofer still present; refusing shim-only debug")
+        diagnostic = {"acceptance_eligible": False, "signal": "SIGQUIT", "sandbox_id": runtime["sandbox_id"],
+                      "observed_sentry_gofer_gone": True, "observed_guest_sentry_gofer_cri_gone": False, "raw": {}}
+        record["orphan_diagnostic"] = diagnostic
+        def capture(label, *args, timeout=15):
+            action_started = time.monotonic()
+            try:
+                process = subprocess.run(["docker", "exec", self.node, *args], capture_output=True, text=True, timeout=timeout)
+                diagnostic["raw"][label] = {"returncode": process.returncode, "stdout": process.stdout[-262144:],
+                                              "stderr": process.stderr[-32768:], "stdout_truncated": len(process.stdout) > 262144,
+                                              "started_after_pod_delete_seconds": action_started - record["pod_delete_started_monotonic"],
+                                              "finished_after_pod_delete_seconds": time.monotonic() - record["pod_delete_started_monotonic"]}
+                return process.stdout
+            except subprocess.TimeoutExpired as error:
+                def bounded(value):
+                    return (value.decode(errors="replace") if isinstance(value, bytes) else value or "")[-262144:]
+                diagnostic["raw"][label] = {"timeout": True, "stdout": bounded(error.stdout), "stderr": bounded(error.stderr)}
+                return ""
+        capture("containerd_version", "containerd", "--version")
+        capture("shim_version", "/usr/local/bin/containerd-shim-runsc-v1", "-v")
+        capture("ctr_tasks", "ctr", "--namespace=k8s.io", "tasks", "list")
+        capture("ctr_containers", "ctr", "--namespace=k8s.io", "containers", "list")
+        capture("cri_pods", "crictl", "pods", "-o", "json")
+        capture("cri_containers", "crictl", "ps", "-a", "-o", "json")
+        capture("processes_before", "ps", "-eo", "pid,ppid,stat,comm,args")
+        capture("journal_before", "journalctl", "-u", "containerd", "--no-pager", "-o", "short-iso", "-n", "2000")
+        retained = record["cleanup_last_observation"]["cri_sandboxes"]
+        for row in retained:
+            require(row["metadata"]["uid"] == runtime["pod_uid"] and row.get("state") == "SANDBOX_NOTREADY", "unsafe active GC target")
+            diagnostic["active_stopped_record_gc"] = True
+            capture("active_gc_" + row["id"], "crictl", "rmp", row["id"], timeout=20)
+        actual_cri = json.loads(capture("cri_after_optional_active_gc", "crictl", "pods", "-o", "json"))
+        require(not any(row["metadata"]["uid"] == runtime["pod_uid"] for row in actual_cri["items"]), "CRI still retains target; refusing shim signal")
+        actual_processes = capture("processes_before_signals", "ps", "-eo", "pid,ppid,stat,comm,args")
+        rows = [line for line in actual_processes.splitlines() if runtime["sandbox_id"] in line and
+                any(name in line for name in ("containerd-shim-runsc", "runsc-sandbox", "runsc-gofer"))]
+        if not rows:
+            diagnostic["shim_exited_before_signals"] = True
+            return
+        require(all("containerd-shim-runsc-v1" in line for line in rows), "Sentry/gofer remains; refusing shim signal")
+        diagnostic["observed_guest_sentry_gofer_cri_gone"] = True
+        target_ids = [runtime["sandbox_id"]] + [identity for identity in record.get("pre_oom", {}).get("raw", {}) if identity != runtime["sandbox_id"]]
+        if len(target_ids) >= 2:
+            capture("journal_target_timeline", "sh", "-c", 'journalctl -u containerd --no-pager -o short-iso -n 5000 | grep -F -e "$1" -e "$2" -e "Shutdown," -e "shim might be leaked"', "timeline", *target_ids[:2])
+        for line in rows:
+            pid = line.split()[0]
+            require(pid.isdigit(), "invalid orphan PID")
+            command = capture(pid + "_cmdline", "cat", "/proc/" + pid + "/cmdline").split("\0")
+            require("-id" in command and command[command.index("-id") + 1] == runtime["sandbox_id"] and
+                    any("containerd-shim-runsc-v1" in argument for argument in command), "orphan PID no longer belongs to the sandbox")
+            cgroup = capture(pid + "_cgroup", "cat", "/proc/" + pid + "/cgroup")
+            relative = next((line[3:] for line in cgroup.splitlines() if line.startswith("0::")), "")
+            path = PurePosixPath(relative)
+            require(path.is_absolute() and ".." not in path.parts, "invalid orphan cgroup path")
+            diagnostic.setdefault("shim_cgroups", {})[pid] = self.cgroups(["/sys/fs/cgroup" + str(path)])
+            capture(pid + "_proc", "sh", "-c", 'for file in status cgroup limits wchan stack; do printf "FILE %s\\n" "$file"; cat "/proc/$1/$file"; done', "diagnostic", pid)
+            capture(pid + "_threads", "sh", "-c", 'count=0; for task in /proc/$1/task/*; do count=$((count+1)); [ "$count" -le 256 ] || break; printf "TASK %s\\n" "$task"; cat "$task/status" "$task/wchan" "$task/stack"; done', "diagnostic", pid)
+            capture(pid + "_fds", "ls", "-la", "/proc/" + pid + "/fd")
+            capture(pid + "_sockets", "sh", "-c", 'head -n 512 "/proc/$1/net/unix"; head -n 512 "/proc/$1/net/tcp"', "diagnostic", pid)
+            capture(pid + "_bundle", "readlink", "/proc/" + pid + "/cwd")
+            kind = capture(pid + "_stderr_kind", "stat", "-Lc", "%F", "/proc/" + pid + "/fd/2").strip()
+            dump = "/opt/agentmoor-shim-signal-" + pid + ".log"
+            # Keep a bounded reader on the deleted log FIFO before signaling;
+            # containerd already closed its ordinary log forwarder at delete.
+            if kind == "fifo":
+                capture(pid + "_start_log_reader", "sh", "-c", 'timeout 6 head -c 262144 "/proc/$1/fd/2" > "$2" 2>&1 </dev/null & printf "%s\\n" "$!"', "diagnostic", pid, dump)
+                time.sleep(.1)
+                capture(pid + "_usr1", "kill", "-USR1", pid)
+                time.sleep(1)
+                capture("journal_after_usr1", "journalctl", "-u", "containerd", "--no-pager", "-o", "short-iso", "-n", "2000")
+                capture(pid + "_quit", "kill", "-QUIT", pid)
+                time.sleep(1)
+                capture(pid + "_signal_log", "cat", dump)
+                capture(pid + "_remove_signal_log", "rm", "-f", dump)
+            elif kind == "regular file":
+                capture(pid + "_signal_log", "sh", "-c", 'exec 3<"/proc/$1/fd/2"; kill -USR1 "$1"; sleep 1; kill -QUIT "$1"; sleep 1; tail -c 262144 <&3', "diagnostic", pid)
+            else:
+                raise RuntimeError("unsupported orphan stderr sink; no signal sent")
+            diagnostic["signals_requested"] = ["SIGUSR1", "SIGQUIT"]
+        time.sleep(2)
+        capture("journal_after_sigquit", "journalctl", "-u", "containerd", "--no-pager", "-o", "short-iso", "-n", "2500")
+        capture("processes_after", "ps", "-eo", "pid,ppid,stat,comm,args")
+        capture("ctr_tasks_after", "ctr", "--namespace=k8s.io", "tasks", "list")
+
+    def enable_diagnostic_logging(self):
+        require(self.debug_orphans, "diagnostic logging outside debug run")
+        before = self.node_run("cat", "/etc/containerd/config.toml")
+        require("debug" not in tomllib.loads(before), "unexpected existing containerd debug configuration")
+        after = before + '\n[debug]\n  level = "debug"\n'
+        require(tomllib.loads(after)["debug"]["level"] == "debug", "diagnostic logging invalid")
+        path = self.directory / "containerd-diagnostic.toml"
+        path.write_text(after)
+        self.run("docker", "cp", path, self.node + ":/etc/containerd/config.toml")
+        self.node_run("systemctl", "restart", "containerd")
+        require(self.node_run("systemctl", "is-active", "containerd").strip() == "active", "diagnostic containerd failed")
+        self.security["diagnostic_logging"] = {"before": before, "after": self.node_run("cat", "/etc/containerd/config.toml"),
+                                                 "acceptance_eligible": False}
+
+    def pre_oom_diagnostic(self, runtime, pod, record):
+        ids = [runtime["sandbox_id"]] + [row["containerID"].split("://", 1)[1] for row in pod["status"]["containerStatuses"]]
+        raw = {}
+        for identity in ids:
+            require(re.fullmatch(r"[a-f0-9]{64}", identity), "invalid diagnostic container ID")
+            commands = {"container_info": ["ctr", "--namespace=k8s.io", "containers", "info", identity],
+                        "sandbox_info": ["ctr", "--namespace=k8s.io", "sandboxes", "info", identity],
+                        "bootstrap": ["cat", "/run/containerd/io.containerd.runtime.v2.task/k8s.io/" + identity + "/bootstrap.json"]}
+            raw[identity] = {}
+            for label, command in commands.items():
+                process = subprocess.run(["docker", "exec", self.node, *command], capture_output=True, text=True, timeout=10)
+                raw[identity][label] = {"returncode": process.returncode, "stdout": process.stdout[-65536:], "stderr": process.stderr[-4096:]}
+        record["pre_oom"] = {"raw": raw, "processes": self.node_run("ps", "-eo", "pid,ppid,stat,comm,args")}
+
+    def finish_oom_diagnostic(self, record):
+        ids = list(record.get("pre_oom", {}).get("raw", {}))
+        if len(ids) < 2:
+            return
+        process = subprocess.run(["docker", "exec", self.node, "sh", "-c",
+            'journalctl -u containerd --no-pager -o short-iso -n 5000 | grep -F -e "$1" -e "$2" -e "Shutdown," -e "shim might be leaked"',
+            "timeline", *ids[:2]], capture_output=True, text=True, timeout=15)
+        record["debug_target_journal"] = {"returncode": process.returncode, "stdout": process.stdout[-524288:],
+                                          "stderr": process.stderr[-4096:], "truncated": len(process.stdout) > 524288}
+
+    def oom_diagnostic(self):
+        require(self.debug_orphans, "diagnostic-only mode required")
+        self.enable_diagnostic_logging()
+        attempts = self.security["oom_diagnostic_attempts"] = []
+        # At most three serial bounded Pods to capture this intermittent race.
+        # No debug result is eligible for a successful acceptance status.
+        for attempt in range(3):
+            self.stage("oom_diagnostic_attempt_" + str(attempt + 1))
+            error = None
+            try:
+                self.resource("file-memory")
+            except Exception as current:
+                error = current
+            record = self.security["resources"].get("file-memory", {})
+            if error:
+                record["debug_failure"] = {"type": type(error).__name__, "message": str(error)}
+            self.finish_oom_diagnostic(record)
+            attempts.append(record)
+            if error:
+                raise error
+        raise RuntimeError("diagnostic-only run; no acceptance; no orphan in three attempts")
 
     def resources(self):
         self.stage("run_bounded_resource_fixtures")
@@ -592,7 +751,7 @@ class SecurityProbe(Probe):
 
     def resource(self, mode):
         name = "resource-" + mode
-        memory = "256Mi" if mode in ("tmpfs", "pids") else "128Mi"
+        memory = "1Gi" if mode == "pids" else ("256Mi" if mode == "tmpfs" else "128Mi")
         deadline = 8 if mode == "wall" else 30
         manifest = self.pod(GUEST_NS, name, ["/opt/process-limit", "python3", "/opt/fixture.py", "workload", "--mode", mode], GUEST_LABEL,
                             memory=memory, deadline=deadline)
@@ -607,6 +766,8 @@ class SecurityProbe(Probe):
                   "observations": [], "terminated": False}
         self.security["resources"][mode] = record
         require(any(row.get("pids.max") == "128" for row in before), "resource Pod lacks actual host PID bound before load")
+        if self.debug_orphans:
+            self.pre_oom_diagnostic(runtime, pod, record)
         self.run(*self.base, "-n", GUEST_NS, "exec", name, "--", "touch", "/run/work/start")
         for until in [time.monotonic() + 35]:
             while time.monotonic() < until:
@@ -669,7 +830,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bundle", type=Path, default=os.environ.get("GVISOR_SECURITY_BUNDLE"))
     parser.add_argument("--calico-manifest", type=Path, default=os.environ.get("GVISOR_SECURITY_CALICO_MANIFEST"))
-    parser.add_argument("--stage", choices=("bootstrap", "network", "resources", "kindnet-negative", "all"), default="all")
+    parser.add_argument("--stage", choices=("bootstrap", "network", "resources", "kindnet-negative", "pids", "oom-diagnostic", "all"), default="all")
     parser.add_argument("--output", type=Path, default=os.environ.get("GVISOR_SECURITY_OUTPUT"))
     options = parser.parse_args()
     if options.output:
@@ -678,6 +839,8 @@ def main():
     failure = None
     with tempfile.TemporaryDirectory(prefix="agentmoor-gvisor-security-") as directory:
         probe = SecurityProbe(directory, options.bundle, options.calico_manifest, enforcing=options.stage != "kindnet-negative")
+        probe.debug_orphans = options.stage == "oom-diagnostic"
+        probe.security["diagnostic_only"] = probe.debug_orphans
         probe.security["started_at_utc"] = datetime.now(timezone.utc).isoformat()
         probe.security["source"] = {"commit": probe.run("git", "-C", ROOT, "rev-parse", "HEAD").strip(),
                                     "status": probe.run("git", "-C", ROOT, "status", "--short"),
@@ -689,6 +852,10 @@ def main():
                 probe.network()
             if options.stage in ("resources", "all"):
                 probe.resources()
+            if options.stage == "pids":
+                probe.resource("pids")
+            if options.stage == "oom-diagnostic":
+                probe.oom_diagnostic()
         except BaseException as error:
             failure = error
             probe.security["failure"] = {"type": type(error).__name__, "message": str(error)}
