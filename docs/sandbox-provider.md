@@ -6,11 +6,13 @@
 
 控制面、可信 Worker 和不可信 Pod 分开。控制面持有 Kubernetes 身份、平台私钥和上游模型密钥；Worker 持有自己范围的 Execute token 和发布 journal；guest 只得到本次输入、输出、模型三种短期能力。guest 的原生命令、客户代码和第三方 Skill 都按不可信程序处理。
 
-首版要求部署方管理 Linux Kubernetes 节点，安装已经验证的 gVisor `runsc`/systrap 和执行 NetworkPolicy 的 CNI。参考配置使用固定版本与镜像摘要；不能把某个 RuntimeClass 名称当作实际沙箱的证明。[gVisor 可行性](gvisor-feasibility.md) · [文件系统要求](native-guest.md)
+首版要求部署方管理 Linux Kubernetes 节点，安装已经验证的 gVisor `runsc`/systrap、官方 containerd **2.4.2** 和执行 NetworkPolicy 的 CNI。当前参考组合使用 Kubernetes 1.35、gVisor `release-20261123.1`、Calico 3.33；其他组合需独立复验，不能把某个 RuntimeClass 名称当作实际沙箱的证明。[gVisor 可行性](gvisor-feasibility.md) · [文件系统要求](native-guest.md)
+
+旧 containerd 2.2 在 pause 先于 guest 删除时会漏发最后一次 Shutdown，已实际复现管理进程在 Pod/CRI 消失后残留。官方 2.4.2 包含[每次任务删除后发 Shutdown 的修复](https://github.com/containerd/containerd/commit/402eb3166e088938090c759965f2ea7a3bbf22d4)；参考探针在新节点上按 2.2→2.3.7→2.4.2 逐 minor 升级并保留元数据验证。它不是已有生产集群的自动升级器。生产部署须事先完成节点配置和验收，不使用额外的特权回收器弥补旧运行时。
 
 - 节点的 runsc 配置必须有 `overlay2 = "all:memory,size=512m"`，并保留只读根、公开 CA 和只读能力挂载。512 MiB 是每个可写挂载的 overlay 上限，不是额外的内存预算；Sentry、匿名内存和文件写入仍需一起受实际 cgroup 限制。
 - 首版禁用 guest 的 swap，节点按 `NoSwap` 配置，并检查真实 Sentry/Pod 的 cgroup 及父层，不能只看 Pod 的 `memory` YAML。使用嵌套 Docker 测试节点时，父容器 `--memory-swap` 与有限的 `--memory` 相同才禁用 swap。[Kubernetes swap 管理](https://kubernetes.io/docs/concepts/cluster-administration/swap-memory-management/) · [Docker 资源约束](https://docs.docker.com/engine/containers/resource_constraints/)
-- 节点 kubelet 设置有限 `podPidsLimit`；guest 启动器在任何原生版本探测、导入或执行前，另设不可提升的进程硬上限。gVisor 的虚拟进程与宿主进程不是一对一，不能用宿主 `pids.max` 替代 guest 的实际 fork 负例。
+- 节点 kubelet 设置 `podPidsLimit: 256`；guest 启动器在任何原生版本探测、导入或执行前，另设不可提升的 **64** 个虚拟进程/线程硬上限。gVisor 的虚拟任务还需要 Sentry/sysmsg 等宿主任务，不能将两种计数一对一换算。实际 fork 负例须证明 guest 到限拒绝，且宿主 `pids.events` 和 OOM 计数未先增加；旧的宿主 128 额度会先耗尽，不是合格的 guest 64 验收。
 - 先应用并实际验证 [sandbox-network.yaml](../deploy/kubernetes/sandbox-network.yaml)，再运行任务。只有专用模型/能力网关 TCP 7443 可达；主 API 7401、Kubernetes API、其他租户、metadata、外网和 DNS 不开放。NetworkPolicy 的执行依赖具体 CNI。[Kubernetes 说明](https://kubernetes.io/docs/concepts/services-networking/network-policies/)
 - 安装 [sandbox-rbac.yaml](../deploy/kubernetes/sandbox-rbac.yaml)，将受信控制面的 ServiceAccount 绑定到沙箱 namespace 的 `pods get/create/delete`。它不需要 guest 的 exec、日志、Secrets、TokenRequest 或 RBAC 权限；与可选追问 Job dispatcher 的权限分别配置。
 - 按专用节点容量设置 [sandbox-quota.yaml](../deploy/kubernetes/sandbox-quota.yaml) 的 Pod 数和总 CPU/内存额度；网关的流并发限制不能代替 Pod 配额。达到额度时 Kubernetes 拒绝创建，不重置原 attempt 或重新运行旧任务。另给容器运行时和 kubelet 配置有限日志轮换，生产关闭 runsc debug；探针的调试日志仅用于专属临时节点。
