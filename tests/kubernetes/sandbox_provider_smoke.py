@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import re
+import secrets
 import shutil
 import signal
 import ssl
@@ -25,6 +26,7 @@ from contract import forward
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tests"))
 from saas_file_contract import FileReportClient
+from saas_contract import ReportClient
 from skill_report_contract import SkillCatalog, SkillReportClient
 from sandbox_provider_skill import IsolatedSkillCatalog, PROOF_PATH
 from sandbox_provider_quota import PrivateKubernetesAPI
@@ -166,7 +168,7 @@ class ProviderSmoke:
         self.gateway_ip = service["spec"]["clusterIP"]
         self.kube_ip = json.loads(self.kube("get", "service", "kubernetes", "-o", "json", namespace="default"))["spec"]["clusterIP"]
         self.scopes, allocations, jobs = {}, [], []
-        for scenario in ("file", "skill", "no-skill"):
+        for scenario in ("file", "skill", "no-skill", "text"):
             scope = {"tenant": "saas", "project": "reports", "runtime": scenario + "-job", "adapter": "codex"}
             self.scopes[scenario] = scope
             config = {"scope": scope, "endpoint": "https://" + self.origin + ":7401", "workspace": "/run/task/work", "state_dir": "/run/task/state", "artifacts": "out", "execution_policy": "untrusted-isolated.v1", "isolated_provider": "kubernetes-gvisor.v1"}
@@ -179,7 +181,7 @@ class ProviderSmoke:
             allocations.append({"execution": {"scope": scope, "namespace": GUEST_NS, "image": self.pinned_image,
                 "runtime_class": "agentmoor-gvisor", "gateway_url": "https://" + self.origin + ":7443", "gateway_ip": self.gateway_ip,
                 "gateway_ca_path": "/etc/agentmoor/gateway-ca.pem", "runtime_executable": "/opt/test/sandbox_provider_native.py", "model": "gpt-5",
-                "file_tool": "/opt/test/report_tool.py" if scenario == "file" else "/opt/test/skill_tool.py",
+                "file_tool": "" if scenario == "text" else "/opt/test/report_tool.py" if scenario == "file" else "/opt/test/skill_tool.py",
                 "filesystem_class": "gvisor-overlay2-memory.v1", "cpu_millis": 1000, "memory_mib": 1024, "workspace_mib": 512, "temp_mib": 128},
                 "model": {"upstream_url": "https://" + self.model_origin + ":8443/v1/responses", "api_key_file": "/model-auth/key", "ca_file": "/tls/cert.pem", "max_requests": 32, "max_input_bytes": 8388608, "max_output_bytes": 8388608, "per_request_output_bytes": 524288, "concurrency": 1, "max_output_tokens": 2048}})
         self.configmap("provider-config", {"sandbox.json": json.dumps({"version": "sandbox-deployment.v1", "network_policy": "gateway-only.v1", "gateway_listen": "0.0.0.0:7443", "kubernetes": {}, "profiles": allocations}), "profiles.json": json.dumps(jobs)})
@@ -316,6 +318,56 @@ class ProviderSmoke:
         self.result["scenarios"].append(result)
         return client, cp, marker, deliveries, directory
 
+    def text_scenario(self, endpoint):
+        self.stage("text_three_real_isolated_rounds")
+        scope = self.scopes["text"]
+        context = ssl.create_default_context(cafile=str(self.cert))
+        client = ReportClient(endpoint, self.token(scope, "--submit"), scope["runtime"], context)
+        # Reuse only public fixed-asset download/archive helpers; no file tool
+        # or managed Skill is configured for this independent text profile.
+        assets = FileReportClient(endpoint, client.token, scope["runtime"], context)
+        self.launch("text")
+        client.submit()
+        client.await_result(seconds=240)
+        row = json.loads(client.request("GET", client.route))
+        cp = json.loads(client.request("GET", client.route + "/checkpoint"))
+        session = cp["session_id"]
+        nonce, check = secrets.token_hex(12), secrets.token_hex(12)
+        expected = {"totals_cents": {client.region: client.amount - 7, "west": 31}}
+        steps = [("initial", "", expected),
+                 ("confirmation", "Repeat the totals from the original CSV. Confirmation " + nonce,
+                  {**expected, "confirmation": nonce}),
+                 ("recall", "Recall the last confirmation and totals. Check " + check,
+                  {**expected, "confirmation": nonce, "check": check})]
+        rounds, frozen = [], []
+        for operation, message, answer in steps:
+            if message:
+                turn = client.ask(session, message)
+                row, reply = client.answer(turn, seconds=240)
+                require(reply == answer and row["parent"] == cp, "text follow-up lost original totals, confirmation or frozen parent")
+            refs = assets.refs(row)
+            require(json.loads(assets.download(refs["artifact"])) == answer, "text report failed independent business verification")
+            archive = assets.archive(refs["workspace"])
+            counter = json.loads(archive[".agentmoor-native-count.json"])
+            histories = assets.archive(refs["session"])
+            rollouts = [raw for name, raw in histories.items() if name.endswith(".jsonl")]
+            require(len(rollouts) == 1, "text execution published multiple native sessions")
+            native = [json.loads(line) for line in rollouts[0].splitlines()]
+            require(native[0]["type"] == "session_meta" and native[0]["payload"]["id"] == session,
+                    "text continuation changed the original native Session ID")
+            rounds.append({"operation": operation, "assets": row["assets"], "answer": answer,
+                           "native_session_sha256": sha(session.encode()), **self.deleted(counter)})
+            frozen.extend((ref, assets.download(ref)) for ref in row["assets"])
+            cp = json.loads(client.request("GET", client.route + "/checkpoint"))
+            require(cp["session_id"] == session, "text checkpoint changed native Session ID")
+        require(len({r["pod_uid"] for r in rounds}) == 3 and len({r["counter"]["nonce"] for r in rounds}) == 3,
+                "text turns reused a native execution Pod or nonce")
+        for ref, raw in frozen:
+            require(assets.download(ref) == raw, "later text turns changed an immutable old version")
+        self.result["scenarios"].append({"scenario": "text", "rounds": rounds,
+            "session_sha256": sha(session.encode()), "checkpoint": cp, "file_tool_configured": False,
+            "skill_pins_configured": False, "immutable_downloads_rechecked": len(frozen)})
+
     def cancel_file(self, client, cp, marker, deliveries, directory):
         self.stage("cancel_active_native_tool_and_recover_old_checkpoint")
         session = cp["session_id"]
@@ -448,6 +500,9 @@ class ProviderSmoke:
         try:
             with forward(self.p.base, CONTROL_NS) as endpoint:
                 for scenario in scenarios:
+                    if scenario == "text":
+                        self.text_scenario(endpoint)
+                        continue
                     state = self.scenario(endpoint, scenario)
                     if scenario == "file":
                         self.cancel_file(*state)
@@ -476,7 +531,8 @@ class ProviderSmoke:
         try:
             pods = json.loads(self.kube("get", "pods", "-o", "json", namespace=GUEST_NS))
             self.result["failure_guest_pods"] = [{"pod": redact_pod(pod), "annotation_keys": sorted(pod.get("metadata", {}).get("annotations", {}))} for pod in pods["items"]]
-            workers = json.loads(self.kube("get", "pods", "-l", "job-name=file-produce", "-o", "json"))["items"]
+            workers = json.loads(self.kube("get", "pods", "-o", "json"))["items"]
+            workers = [pod for pod in workers if pod.get("metadata", {}).get("labels", {}).get("job-name")]
             self.result["failure_worker_pods"] = [redact_pod(pod) for pod in workers]
             for pod in workers:
                 text = self.kube("logs", pod["metadata"]["name"], "--all-containers=true", "--tail=100")
@@ -507,7 +563,7 @@ def main():
     parser.add_argument("--calico-manifest", type=Path)
     parser.add_argument("--containerd-cache", type=Path, default=os.environ.get("GVISOR_SECURITY_CONTAINERD_CACHE"))
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--scenario", choices=("file", "skill", "both"), default="file")
+    parser.add_argument("--scenario", choices=("file", "skill", "both", "text"), default="file")
     options = parser.parse_args()
     with tempfile.TemporaryDirectory(prefix="agentmoor-provider-") as directory:
         probe = SecurityProbe(Path(directory), options.bundle, options.calico_manifest, containerd_cache=options.containerd_cache)
