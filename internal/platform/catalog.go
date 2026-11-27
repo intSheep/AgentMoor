@@ -19,7 +19,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/sys/unix"
 
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 var ErrConflict = errors.New("version conflict")

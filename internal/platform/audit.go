@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 const AuditMaxLimit = 1000

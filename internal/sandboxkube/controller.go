@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/platform"
 )
 
 var (

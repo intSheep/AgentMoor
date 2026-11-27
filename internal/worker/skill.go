@@ -14,8 +14,8 @@ import (
 
 	"go.yaml.in/yaml/v3"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/snapshot"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/snapshot"
 )
 
 func (s *scan) skill(ctx context.Context, root *os.Root, manifest string) error {

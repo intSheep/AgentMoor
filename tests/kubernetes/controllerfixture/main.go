@@ -25,8 +25,8 @@ import (
 	"syscall"
 	"time"
 
-	"agentmoor/internal/guesttransport"
-	"agentmoor/internal/snapshot"
+	"github.com/intSheep/AgentMoor/internal/guesttransport"
+	"github.com/intSheep/AgentMoor/internal/snapshot"
 	"golang.org/x/sys/unix"
 )
 

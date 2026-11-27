@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"strings"
 
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 var ErrProfile = errors.New("invalid sandbox profile")

@@ -10,9 +10,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/adapters/sessionfile"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/adapters/sessionfile"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 // ExecuteTask supports one text-to-text turn. Workspace state and credentials

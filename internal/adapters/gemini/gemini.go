@@ -1,9 +1,9 @@
 package gemini
 
 import (
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/adapters/workspace"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/adapters/workspace"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 type Adapter struct{ workspace.Layout }

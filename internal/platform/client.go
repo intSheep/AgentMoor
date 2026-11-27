@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 // Bound waiting for headers while allowing large objects to stream.

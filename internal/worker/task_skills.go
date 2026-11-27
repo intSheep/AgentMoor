@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"agentmoor/internal/snapshot"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/snapshot"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 // Pinned packages are restored to a fresh, private runtime home on every turn.

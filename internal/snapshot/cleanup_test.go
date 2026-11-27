@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 func TestRemoveDirectoryRestoresAccessWithoutFollowingSymlinks(t *testing.T) {

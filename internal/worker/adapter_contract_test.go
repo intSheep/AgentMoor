@@ -3,9 +3,9 @@ package worker_test
 import (
 	"testing"
 
-	"agentmoor/internal/worker/contracttest"
-	"agentmoor/internal/worker/contracttest/codexcase"
-	"agentmoor/internal/worker/contracttest/opencodecase"
+	"github.com/intSheep/AgentMoor/internal/worker/contracttest"
+	"github.com/intSheep/AgentMoor/internal/worker/contracttest/codexcase"
+	"github.com/intSheep/AgentMoor/internal/worker/contracttest/opencodecase"
 )
 
 func TestAdapterAssetContract(t *testing.T) {

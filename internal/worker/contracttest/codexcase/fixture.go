@@ -6,8 +6,8 @@ import (
 	"path"
 	"testing"
 
-	"agentmoor/internal/adapters/codex"
-	"agentmoor/internal/worker/contracttest"
+	"github.com/intSheep/AgentMoor/internal/adapters/codex"
+	"github.com/intSheep/AgentMoor/internal/worker/contracttest"
 )
 
 // New exercises file-backed sessions, without invoking a Codex executable.

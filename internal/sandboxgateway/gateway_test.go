@@ -28,11 +28,11 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/guesttransport"
-	"agentmoor/internal/platform"
-	"agentmoor/internal/task"
 	"github.com/google/uuid"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/guesttransport"
+	"github.com/intSheep/AgentMoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 const syntheticProviderKey = "synthetic-provider-secret-for-gateway-tests"

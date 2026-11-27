@@ -9,7 +9,7 @@ import (
 	"io"
 	"os"
 
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 // PartRange locates one object body in the original frozen tar. Duplicate

@@ -10,8 +10,8 @@ import (
 	"os"
 	"sync"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/snapshot"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/snapshot"
 )
 
 // PublishTarParts transfers missing file bodies from an already frozen tar.

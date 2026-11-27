@@ -5,7 +5,7 @@ package platform
 import (
 	"testing"
 
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 func checkSandboxProvenancePostgres(t *testing.T, c *Catalog, dir, dsn string) {

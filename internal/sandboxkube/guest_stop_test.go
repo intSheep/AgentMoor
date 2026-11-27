@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"agentmoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/platform"
 )
 
 func TestControllerAPI404WithoutGuestStopRemainsUnknown(t *testing.T) {

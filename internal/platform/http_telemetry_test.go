@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/httptrace"
+	"github.com/intSheep/AgentMoor/internal/httptrace"
 )
 
 type telemetryErrorObjects struct {

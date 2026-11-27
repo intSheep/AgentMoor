@@ -9,8 +9,8 @@ import (
 	"net/url"
 	"time"
 
-	"agentmoor/internal/platform"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 var errIsolatedCleanup = errors.New("isolated sandbox deletion was not confirmed")

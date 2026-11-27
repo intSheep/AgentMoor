@@ -10,9 +10,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/adapters/sessionfile"
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/adapters/sessionfile"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 func (a Adapter) ExportNative(ctx context.Context, exe, workspace, dir string) error {

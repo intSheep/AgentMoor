@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/asset"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/task"
 	"go.yaml.in/yaml/v3"
 )
 

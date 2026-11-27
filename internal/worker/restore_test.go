@@ -11,9 +11,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/platform"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 // Bulk restore must materialize a native ID once, even when independent

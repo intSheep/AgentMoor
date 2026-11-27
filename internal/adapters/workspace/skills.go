@@ -9,7 +9,7 @@ import (
 	"path"
 	"strings"
 
-	"agentmoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/adapter"
 )
 
 // has tests the entry itself, so a symlink cannot serve as a marker.

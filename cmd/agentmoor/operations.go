@@ -14,13 +14,13 @@ import (
 	"strconv"
 	"time"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/asset"
-	"agentmoor/internal/kubejobs"
-	"agentmoor/internal/platform"
-	"agentmoor/internal/sandboxgateway"
-	"agentmoor/internal/task"
-	"agentmoor/internal/worker"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/kubejobs"
+	"github.com/intSheep/AgentMoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/sandboxgateway"
+	"github.com/intSheep/AgentMoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/worker"
 )
 
 func commandFlags(name string) *flag.FlagSet {

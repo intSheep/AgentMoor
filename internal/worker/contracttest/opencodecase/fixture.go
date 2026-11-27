@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"agentmoor/internal/adapters/opencode"
-	"agentmoor/internal/worker/contracttest"
+	"github.com/intSheep/AgentMoor/internal/adapters/opencode"
+	"github.com/intSheep/AgentMoor/internal/worker/contracttest"
 )
 
 const sessionID = "ses_contract123"

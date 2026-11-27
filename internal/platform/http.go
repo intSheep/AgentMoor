@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/httptrace"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/httptrace"
 )
 
 type API struct {

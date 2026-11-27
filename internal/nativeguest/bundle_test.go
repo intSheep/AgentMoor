@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 func bundleTestMeta(body []byte, format, media string) BlobMeta {

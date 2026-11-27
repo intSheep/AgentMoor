@@ -11,7 +11,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"agentmoor/internal/snapshot"
+	"github.com/intSheep/AgentMoor/internal/snapshot"
 )
 
 func UUID(s string) bool { _, err := uuid.Parse(s); return err == nil && len(s) == 36 }

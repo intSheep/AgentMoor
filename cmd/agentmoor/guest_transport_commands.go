@@ -9,9 +9,9 @@ import (
 	"regexp"
 	"time"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/guesttransport"
-	"agentmoor/internal/nativeguest"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/guesttransport"
+	"github.com/intSheep/AgentMoor/internal/nativeguest"
 )
 
 // guestRunCommand is the fixed sandbox PID1, not a Worker entrypoint. A Pod

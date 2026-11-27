@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 // This PostgreSQL v3 plaintext proxy never logs or persists protocol payloads.

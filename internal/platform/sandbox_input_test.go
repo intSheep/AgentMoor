@@ -16,10 +16,10 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/nativeguest"
-	"agentmoor/internal/task"
 	"github.com/google/uuid"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/nativeguest"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 func handoffProfile(s asset.Scope) SandboxExecutionProfile {

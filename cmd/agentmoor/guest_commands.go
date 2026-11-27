@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/nativeguest"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/nativeguest"
 )
 
 // guestCommand does not read Worker configuration, platform credentials or

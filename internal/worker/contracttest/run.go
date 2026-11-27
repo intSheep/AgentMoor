@@ -16,10 +16,10 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/asset"
-	"agentmoor/internal/platform"
-	"agentmoor/internal/worker"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/worker"
 )
 
 var skillBytes = []byte("---\nname: contract-greeting\nmetadata:\n  version: '2.0'\ndependencies: [helper]\n---\nOriginal Skill body.\n")

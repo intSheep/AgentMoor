@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 var fixtureTarget = asset.Key{Kind: "workspace", ID: "turns/9a8ded69-f941-43a4-95d4-24648187c15c/root"}

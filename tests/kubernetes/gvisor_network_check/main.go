@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"agentmoor/internal/guesttransport"
+	"github.com/intSheep/AgentMoor/internal/guesttransport"
 )
 
 func main() {

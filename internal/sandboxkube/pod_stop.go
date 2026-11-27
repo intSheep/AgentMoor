@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"agentmoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/platform"
 )
 
 func podResourceVersion(v string) bool {

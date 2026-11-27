@@ -15,10 +15,10 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/snapshot"
-	"agentmoor/internal/task"
 	"github.com/google/uuid"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/snapshot"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 // This is an explicitly named test runtime with its own session format. Its

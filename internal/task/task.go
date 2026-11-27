@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 const (

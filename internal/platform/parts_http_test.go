@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 func TestTarPartsHTTP(t *testing.T) {

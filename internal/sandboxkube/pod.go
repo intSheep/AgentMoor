@@ -14,9 +14,9 @@ import (
 	"strings"
 	"time"
 
-	"agentmoor/internal/platform"
-	"agentmoor/internal/task"
 	"github.com/google/uuid"
+	"github.com/intSheep/AgentMoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 var ErrPod = errors.New("sandbox Pod does not match its frozen template")

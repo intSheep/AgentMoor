@@ -9,8 +9,8 @@ import (
 	"regexp"
 	"strings"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 const (

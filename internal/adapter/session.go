@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"agentmoor/internal/snapshot"
+	"github.com/intSheep/AgentMoor/internal/snapshot"
 )
 
 // SessionSource reads an operator-assigned, single-scope native history root.

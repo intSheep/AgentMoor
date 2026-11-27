@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"testing"
 
-	"agentmoor/internal/httptrace"
+	"github.com/intSheep/AgentMoor/internal/httptrace"
 )
 
 func TestGatewayTelemetryVerifiedDelegationAndNoCapabilityFingerprint(t *testing.T) {

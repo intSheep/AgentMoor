@@ -10,7 +10,7 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	"agentmoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 type cursor struct {

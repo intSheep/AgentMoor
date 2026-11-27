@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"agentmoor/internal/nativeguest"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/nativeguest"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 // SandboxController runs only in the trusted control plane. Guest requests are

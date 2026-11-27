@@ -8,9 +8,9 @@ import (
 	"reflect"
 	"time"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/nativeguest"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/nativeguest"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 // This key and selector are provided only by the authenticated platform route.

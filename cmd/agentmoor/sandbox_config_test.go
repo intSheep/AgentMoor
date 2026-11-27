@@ -17,12 +17,12 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/adapters/codex"
-	"agentmoor/internal/asset"
-	"agentmoor/internal/platform"
-	"agentmoor/internal/sandboxgateway"
-	"agentmoor/internal/sandboxkube"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/adapters/codex"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/sandboxgateway"
+	"github.com/intSheep/AgentMoor/internal/sandboxkube"
 )
 
 func sandboxDeploymentFixture(t *testing.T) (sandboxDeployment, *adapter.Registry, *platform.Catalog, string, string, *atomic.Int64) {

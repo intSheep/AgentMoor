@@ -9,11 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/adapters/codex"
-	"agentmoor/internal/asset"
-	"agentmoor/internal/platform"
-	"agentmoor/internal/snapshot"
-	"agentmoor/internal/task"
+	"github.com/intSheep/AgentMoor/internal/adapters/codex"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/snapshot"
+	"github.com/intSheep/AgentMoor/internal/task"
 )
 
 func TestPinnedSkillUsesOriginalVersionInFreshPrivateHomes(t *testing.T) {

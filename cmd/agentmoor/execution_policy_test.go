@@ -11,9 +11,9 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/worker"
 	"github.com/google/uuid"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/worker"
 )
 
 func TestCLIUntrustedTaskPolicyFailsBeforeCredentialsOrExecution(t *testing.T) {

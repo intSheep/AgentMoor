@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 
-	"agentmoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/platform"
 )
 
 // Explicit synthetic controller attestation, not evidence of native execution

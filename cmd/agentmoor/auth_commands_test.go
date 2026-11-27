@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/platform"
+	"github.com/intSheep/AgentMoor/internal/platform"
 	"golang.org/x/sys/unix"
 )
 

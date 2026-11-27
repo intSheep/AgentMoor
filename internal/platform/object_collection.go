@@ -6,8 +6,8 @@ import (
 	"errors"
 	"time"
 
-	"agentmoor/internal/asset"
 	"github.com/google/uuid"
+	"github.com/intSheep/AgentMoor/internal/asset"
 )
 
 const (

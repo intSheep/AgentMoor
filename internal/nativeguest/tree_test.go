@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/asset"
-	"agentmoor/internal/snapshot"
+	"github.com/intSheep/AgentMoor/internal/asset"
+	"github.com/intSheep/AgentMoor/internal/snapshot"
 )
 
 func treeTestHeader(t *testing.T, name string, kind byte, size int64) []byte {

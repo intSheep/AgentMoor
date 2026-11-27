@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	"agentmoor/internal/adapter"
-	"agentmoor/internal/adapters/codex"
+	"github.com/intSheep/AgentMoor/internal/adapter"
+	"github.com/intSheep/AgentMoor/internal/adapters/codex"
 )
 
 func TestGuestRunCLIRejectsInvalidHandoffBeforeNativeAndRestoresEnvironment(t *testing.T) {
