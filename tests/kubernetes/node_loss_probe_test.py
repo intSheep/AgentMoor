@@ -1,8 +1,9 @@
 """Offline negative controls for the physical node-loss evidence validator."""
 import copy
 import unittest
+from unittest.mock import Mock
 
-from node_loss_probe import verify_orphan_window, verify_physical_cleanup_claim
+from node_loss_probe import NAMESPACE, NodeLossSecurityProbe, verify_orphan_window, verify_physical_cleanup_claim
 
 
 def fixture():
@@ -20,6 +21,13 @@ def fixture():
 
 
 class NodeLossEvidenceTest(unittest.TestCase):
+    def test_controller_rbac_stdin_apply_is_supported_by_probe_adapter(self):
+        probe = object.__new__(NodeLossSecurityProbe)
+        probe.base = ["kubectl", "--context", "owned-only"]
+        probe.run = Mock(return_value="created")
+        self.assertEqual(probe.kube("apply", "-f", "-", data="{}"), "created")
+        probe.run.assert_called_once_with(*probe.base, "-n", NAMESPACE, "apply", "-f", "-", data="{}")
+
     def test_real_orphan_evidence_does_not_pass_physical_cleanup(self):
         row = fixture()
         self.assertTrue(verify_orphan_window(row))

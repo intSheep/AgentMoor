@@ -24,6 +24,15 @@ EVENT = "SANDBOX_NODE_LOSS_EVENT "
 HEARTBEAT = "AGENTMOOR_NODE_LOSS_HEARTBEAT "
 
 
+class NodeLossSecurityProbe(SecurityProbe):
+    # The controller RBAC fixture applies JSON via stdin; the resource probe's
+    # read-only kube wrapper intentionally lacks that optional argument.
+    def kube(self, *args, data=None):
+        if data is None:
+            return super().kube(*args)
+        return self.run(*self.base, "-n", NAMESPACE, *args, data=data)
+
+
 def now():
     return datetime.now(timezone.utc).isoformat()
 
@@ -364,7 +373,7 @@ def main():
     output = options.output.resolve()
     require(not os.path.lexists(output) and output.parent.is_dir(), "new evidence output path required")
     directory = Path(tempfile.mkdtemp(prefix="agentmoor-node-loss-"))
-    probe = SecurityProbe(directory, options.bundle, options.calico_manifest, containerd_cache=options.containerd_cache)
+    probe = NodeLossSecurityProbe(directory, options.bundle, options.calico_manifest, containerd_cache=options.containerd_cache)
     smoke = NodeLossSmoke(probe)
     failure = None
     signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt()))
