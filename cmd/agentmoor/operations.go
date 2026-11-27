@@ -8,7 +8,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -19,6 +18,7 @@ import (
 	"agentmoor/internal/asset"
 	"agentmoor/internal/kubejobs"
 	"agentmoor/internal/platform"
+	"agentmoor/internal/sandboxgateway"
 	"agentmoor/internal/task"
 	"agentmoor/internal/worker"
 )
@@ -107,6 +107,7 @@ func platformCommand(ctx context.Context, args []string, out io.Writer, registry
 	case "serve":
 		authPolicy := f.String("auth-policy", "", "private authentication policy file, reloaded for each request")
 		jobsFile := f.String("turn-jobs", "", "in-cluster follow-up Job profiles (JSON)")
+		sandboxFile := f.String("sandbox-config", "", "trusted isolated execution deployment (JSON)")
 		cert := f.String("tls-cert", "", "TLS certificate PEM")
 		keyFile := f.String("tls-key", "", "TLS private key PEM")
 		addr := f.String("listen", "127.0.0.1:7401", "listen address")
@@ -115,6 +116,9 @@ func platformCommand(ctx context.Context, args []string, out io.Writer, registry
 		}
 		if *dir == "" || f.NArg() != 0 {
 			return fmt.Errorf("serve --data DIR [--listen ADDRESS]")
+		}
+		if *sandboxFile != "" && (*cert == "" || *keyFile == "") {
+			return errors.New("sandbox deployment requires API and gateway TLS")
 		}
 		var key []byte
 		var err error
@@ -162,6 +166,19 @@ func platformCommand(ctx context.Context, args []string, out io.Writer, registry
 			return errors.New("TLS requires certificate and key")
 		}
 		api := platform.API{Catalog: catalog, Secret: key, AuthPolicy: *authPolicy, Temp: incoming, TaskAdapters: enabled, FileTaskAdapters: files}
+		var sandbox *sandboxRuntime
+		if *sandboxFile != "" {
+			sandbox, err = newSandboxRuntime(ctx, *sandboxFile, *addr, registry, catalog)
+			if err != nil {
+				return err
+			}
+			defer sandbox.gateway.Close()
+			api.SandboxProfiles, api.SandboxControl = sandbox.selection, sandbox.controller
+			reconcileCtx, stopReconcile := context.WithCancel(ctx)
+			done := make(chan struct{})
+			go func() { defer close(done); sandbox.reconcile(reconcileCtx) }()
+			defer func() { stopReconcile(); <-done }()
+		}
 		if *jobsFile != "" {
 			dispatch, err := kubejobs.InCluster(*jobsFile)
 			if err != nil {
@@ -180,32 +197,12 @@ func platformCommand(ctx context.Context, args []string, out io.Writer, registry
 			go func() { defer close(done); dispatch.Run(dispatchCtx, catalog) }()
 			defer func() { stopDispatch(); <-done }()
 		}
-		server := &http.Server{Addr: *addr, Handler: api.Handler(), BaseContext: func(net.Listener) context.Context { return ctx }, ReadHeaderTimeout: 10 * time.Second, IdleTimeout: time.Minute, MaxHeaderBytes: 64 << 10}
-		ln, err := net.Listen("tcp", *addr)
-		if err != nil {
-			return err
+		server := &http.Server{Addr: *addr, Handler: api.Handler(), ReadHeaderTimeout: 10 * time.Second, IdleTimeout: time.Minute, MaxHeaderBytes: 64 << 10}
+		servers := []*http.Server{server}
+		if sandbox != nil {
+			servers = append(servers, sandboxgateway.NewTLSServer(sandbox.listen, sandbox.gateway))
 		}
-		fmt.Fprintln(out, "listening", ln.Addr())
-		stopped := make(chan struct{})
-		go func() {
-			defer close(stopped)
-			<-ctx.Done()
-			closeCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			defer cancel()
-			if err := server.Shutdown(closeCtx); err != nil {
-				_ = server.Close()
-			}
-		}()
-		if *cert != "" {
-			err = server.ServeTLS(ln, *cert, *keyFile)
-		} else {
-			err = server.Serve(ln)
-		}
-		if errors.Is(err, http.ErrServerClosed) {
-			<-stopped
-			return nil
-		}
-		return err
+		return serveHTTPServers(ctx, out, *cert, *keyFile, servers...)
 	}
 	return errors.New(usage)
 }

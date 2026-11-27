@@ -17,9 +17,9 @@
 
 作用域由控制面签发的短期凭据决定。`{id}` 等于已分配的 `scope.runtime`，同一租户、项目、适配器下每个新任务使用独立 ID。请求体不能指定租户、镜像、命令、可执行文件路径或云端凭据。
 
-客户代码和第三方 Skill 按不可信代码处理。当前同容器直接执行路径只供受信开发及批准工具使用；可信 Worker 与不可信执行区的分离、实际沙箱与对抗验收按 [P2 执行边界](security-boundary.md)推进，不能用既有文件/Skill 契约通过代替。
+客户代码和第三方 Skill 按不可信代码处理。同容器直接执行路径只供受信开发及批准工具使用；不可信执行使用明确配置的[隔离提供方](sandbox-provider.md)。真实 Codex 文件/Skill 三轮、取消及精确 guest 丢失已有独立证据；`4ce08cf` 另通过无 FileTool/pins 的隔离文本首轮与两次同 Session 新 Pod 追问，不能用默认受信四 CLI 矩阵代替。
 
-现有 `run-task` Worker 对受信配置的 `execution_policy: "untrusted-isolated.v1"` 仍会在授权、claim、原生版本检查及执行前明确拒绝，首轮/追问不会改写 queued 记录或成功 checkpoint。空值及 `trusted-local.v1` 只兼容旧受信路径；SaaS 指令无法选择或降级策略。控制面已有可由部署代码装配的[沙箱交接 API](sandbox-task-handoff.md)，但 Worker 与 `serve` 尚未接线，不能据此开启不可信任务。[配置行为与范围](operations.md#任务执行的信任策略)
+`run-task` Worker 的 `execution_policy: "untrusted-isolated.v1"` 与 `isolated_provider: "kubernetes-gvisor.v1"` 已连接生产 `serve --sandbox-config` 和[沙箱交接 API](sandbox-task-handoff.md)。可信 Worker 只准备/校验数据和发布，原生版本探测、导入/执行留在 guest；缺提供方、错版本或不可用分配明确拒绝，不回退。空值及 `trusted-local.v1` 只兼容旧受信路径；SaaS 指令无法选择或降级策略。[配置行为与范围](operations.md#任务执行的信任策略)
 
 | 操作 | 权限 | 语义 |
 | --- | --- | --- |
@@ -104,7 +104,7 @@ print(json.dumps([{"scope":scope,"pod_spec":job["spec"]["template"]["spec"]}]))
 
 Worker 调用 `POST /v1/tasks/{id}/claim`，传入随机 `attempt`。并发争抢只有一个执行者获准，相同 attempt 可安全重发。它以相同 attempt 调用 `POST /v1/tasks/{id}/finish`，成功时提交 `session_id` 和 `artifacts` 固定版本引用数组，失败时提交 `error`。`finish` 请求体最多 1 MiB，清单最多 128 项，不允许重复路径。平台检查清单及工作区、会话版本后，才对外发布成功记录。旧 Worker 省略 `artifacts` 时，仍按原协议仅交付 `out/<output>`。成功应答丢失后重发 `finish` 返回已冻结的成功记录，不读取更新的资产 head。SaaS 客户端使用提交凭据，不持有执行权限。
 
-claim 可携带受信的 `execution_policy`，与 pins 一起冻结；未配置沙箱策略时省略值兼容 `trusted-local.v1`。同一 attempt 改换策略返回冲突。控制面一旦配置 `SandboxProfiles`，只有存在分配 profile、可用 controller 且明确要求 `untrusted-isolated.v1` 才可领取，缺 profile 不会启用本地执行。新增的首轮/追问 `POST …/sandbox`、`…/sandbox/status`、`…/sandbox/output`、`…/sandbox/cancel` 均只接收私有 attempt 和执行权限；输入由平台从原记录固定版本构建，输出必须按独立 sealed 元数据读完核验后再处理。这是[组件级交接契约](sandbox-task-handoff.md#八条执行方接口)，尚未替换当前 Worker 执行路径。
+claim 可携带受信的 `execution_policy`，与 pins 一起冻结；未配置沙箱策略时省略值兼容 `trusted-local.v1`。同一 attempt 改换策略返回冲突。控制面一旦配置 `SandboxProfiles`，只有存在分配 profile、可用 controller 且明确要求 `untrusted-isolated.v1` 才可领取，缺 profile 不会启用本地执行。新增的首轮/追问 `POST …/sandbox`、`…/sandbox/status`、`…/sandbox/output`、`…/sandbox/cancel` 均只接收私有 attempt 和执行权限；输入由平台从原记录固定版本构建，输出必须按独立 sealed 元数据读完核验后再处理。[八条交接接口](sandbox-task-handoff.md#八条执行方接口)已用于生产隔离 Worker；取消须先确认原 UID 删除，清理失败不发送 finish，不改旧 checkpoint。[实际接续与故障结果](sandbox-provider.md#2026-11-27-实际验收)
 
 任务的每份冻结资产发布最多尝试三次（100、200 毫秒退避），覆盖 Begin、Upload、Commit 的瞬态失败和成功后应答丢失。HTTP 408/429/500/502/503/504、EOF、连接重置/拒绝与网络超时可重试；任务上下文取消或到期优先停止。HTTP 自己较短的响应头超时与任务期限分别判断：任务仍有效时可以重试前者。重试不重新执行 Agent、不重扫工作目录，也不改变冻结 blob、元数据、base 或操作键。永久错误及耗尽仍报告失败，保留待发文件和 journal，未提交内容的游标不会前进；最近成功 checkpoint 与旧引用继续可读。普通 `sync` 仍在首次错误时退出，由下一次扫描使用 journal 恢复。[故障边界验证](verification-matrix.md#2026-11-26任务冻结发布重试与历史引用回收)
 

@@ -1,0 +1,143 @@
+{
+  "source_commit": "19d0d5b40a48226402768f49d49228f9845901a3",
+  "evidence_files": [
+    {
+      "file": "sandbox-provider-2026-11-27.json",
+      "bytes": 812490,
+      "sha256": "b38e107336a7b0ca88949cdb0859474279cd9ab2b0e00660762c9045850b84dc"
+    },
+    {
+      "file": "sandbox-pod-quota-2026-11-27.json",
+      "bytes": 261323,
+      "sha256": "5e32a56d9036ede99831984409a2ee0b0dfd0080636c77da2a34a903cbf1133c"
+    },
+    {
+      "file": "sandbox-provider-trusted-mounts-2026-11-27.json",
+      "bytes": 22394,
+      "sha256": "75dd12b00cea7f19a7480ce99b0209b0ffcb665928eec475fd880968f01fa56f"
+    },
+    {
+      "file": "sandbox-provider-regressions-2026-11-27.json",
+      "bytes": 1583,
+      "sha256": "702c2af06e5de4ab72f5f8817f90d07570caa92db6b310aaf50fb3eb7be3ff2c"
+    },
+    {
+      "file": "sandbox-provider-text-2026-11-27.json",
+      "bytes": 388490,
+      "sha256": "8b5de3ab82d4932b6a32b64bd6eda7fad3607308833d8a46de4a41ac3f27e308"
+    },
+    {
+      "file": "sandbox-provider-text-wire-2026-11-27.json",
+      "bytes": 1694,
+      "sha256": "12a09fb91c294277f7add033519be56672243c5df9611cca910b8843453c8a35"
+    },
+    {
+      "file": "sandbox-provider-text-fixture-failed-2026-11-27.json",
+      "bytes": 335639,
+      "sha256": "0a9c4b5835ff7a091a50388609de22b36feb6a06ba5b553228f2c3d70e529102"
+    }
+  ],
+  "external_raw_logs": [
+    {
+      "path": "/private/tmp/agentmoor-sandbox-provider-official-2026-11-27.log",
+      "bytes": 75635,
+      "sha256": "c6485ff4d1ecbe102829ae8abd3e2e1782667d66ba416917e167297e5f03b13d"
+    },
+    {
+      "path": "/private/tmp/agentmoor-sandbox-provider-quota-2026-11-27.log",
+      "bytes": 2017,
+      "sha256": "81e88b008c68c04b514088f1497d044217f76ac852f6b6aa4dcd03eccd5f1ee1"
+    },
+    {
+      "path": "/private/tmp/agentmoor-sandbox-provider-text-retry-2026-11-27.log",
+      "bytes": 28133,
+      "sha256": "606f0eb49f813f82c542430d32d810dcb1655cf39746281faa26bcbc889f5dcc"
+    },
+    {
+      "path": "/private/tmp/agentmoor-sandbox-provider-text-failed-refs-2026-11-27.log",
+      "bytes": 27991,
+      "sha256": "6276fd36bf761a071db5903ce92798b81f651ab7895767f6fc9bb8bf900857aa"
+    },
+    {
+      "path": "/private/tmp/agentmoor-sandbox-text-model-check-2026-11-27.log",
+      "bytes": 1140,
+      "sha256": "0ac5e0b7a53fce5c59da1f0506189f21b75b1286d801d189e0d8ac85f1293017"
+    }
+  ],
+  "scope": "Real fixed Codex, production isolated provider, private-CA TLS scripted model, SQLite/local objects; no live-model key.",
+  "independent_review": {
+    "official_status": "passed",
+    "unique_native_pods": 10,
+    "native_exec_count_per_pod": 1,
+    "guest_rlimit_nproc": [
+      64,
+      64
+    ],
+    "host_kubelet_pod_pids_limit": 256,
+    "file_business_rounds": 3,
+    "skill_business_rounds": 3,
+    "actual_skill_proofs": 3,
+    "unreadable_private_paths_per_proof": 9,
+    "cancel_seconds": 1.247,
+    "guest_loss_original_uuid_replays": 2,
+    "quota_status": "synthetic_pod_quota_passed",
+    "quota_first_admission": 201,
+    "quota_second_admission": 403,
+    "quota_second_get": 404,
+    "quota_second_pod_uid": null,
+    "trusted_mount_observation": "Read-only live Pod/Service/EndpointSlice observation; annotations and managedFields removed; Secret bodies never read.",
+    "capability_and_private_key_scan": "No capability token value or private-key PEM in committed evidence."
+  },
+  "limitations": [
+    "Scripted model responses and synthetic business inputs; no live model or arbitrary escape proof.",
+    "The original 19d0d5b provider artifact covers isolated Codex file-turn only; isolated Codex text-turn passed separately at the follow-up source below. Other CLIs remain outside this isolated-provider acceptance.",
+    "Single owned kind node; no production HA or PG/S3 isolated-provider combination.",
+    "Quota is independent synthetic Pod admission, not simultaneous SaaS/native task acceptance."
+  ],
+  "isolated_text_followup": {
+    "source_commit": "4ce08cf815581dfc5d31820aed3756e8ee5975ed",
+    "exit_code": 0,
+    "unique_native_pods": 3,
+    "native_exec_count_per_pod": 1,
+    "guest_rlimit_nproc": [
+      64,
+      64
+    ],
+    "immutable_downloads_rechecked": 11,
+    "original_session_preserved": true,
+    "file_tool_configured": false,
+    "skill_pins_configured": false,
+    "actual_request_count": 3,
+    "actual_text_format": "absent",
+    "actual_text_verbosity": "absent",
+    "mcp_report_render_advertised": false,
+    "named_sse_text_responses": 3,
+    "fixture_failure": {
+      "source_commit": "24cf98368317f2f95cee0600a869dbf088f9b34c",
+      "exit_code": 1,
+      "reason": "The test selected the previous report.json instead of the public row.spec.output reply.txt; production initial and first continuation had succeeded. The corrected fixture reran on a fresh node."
+    },
+    "independent_post_cleanup": {
+      "owned_nodes_absent": [
+        "agentmoor-712ae9f60ceb-control-plane",
+        "agentmoor-7ce5ebb47d27-control-plane"
+      ],
+      "retained_public_dependency_cache": {
+        "reference": "agentmoor-validation-cache:provider-codex-0.171-alpha.13",
+        "image_id": "sha256:5a64da15e8149f0f1d286d8db209ee1f8326d256aef9b7e86871403e240532b7",
+        "contains_this_run_ca_or_secrets": false
+      },
+      "owned_tags_absent": [
+        "agentmoor-provider:agentmoor-712ae9f60ceb",
+        "agentmoor-provider-base:agentmoor-712ae9f60ceb",
+        "agentmoor-provider:agentmoor-7ce5ebb47d27",
+        "agentmoor-provider-base:agentmoor-7ce5ebb47d27"
+      ]
+    },
+    "limits": [
+      "Scripted Responses model and synthetic CSV; no live model.",
+      "The existing gateway validator was unchanged. No claim that arbitrary json_schema requests are supported.",
+      "The 19d0d5b fmt/check/demo and four-CLI matrix remain attributed to 19d0d5b, not this later fixture source."
+    ]
+  }
+}
