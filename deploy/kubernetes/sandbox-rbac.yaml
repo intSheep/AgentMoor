@@ -1,0 +1,54 @@
+# Operator-owned prerequisites. The controller cannot create or change these.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: agentmoor-sandboxes
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: v1.35
+---
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: agentmoor-gvisor
+handler: runsc
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: agentmoor-sandbox
+value: 0
+globalDefault: false
+preemptionPolicy: Never
+description: Fixed non-preempting class for AgentMoor sandbox Pods.
+---
+# The trusted control-plane namespace must already exist.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: agentmoor-sandbox-controller
+  namespace: agentmoor
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: agentmoor-sandbox-controller
+  namespace: agentmoor-sandboxes
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "create", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agentmoor-sandbox-controller
+  namespace: agentmoor-sandboxes
+subjects:
+  - kind: ServiceAccount
+    name: agentmoor-sandbox-controller
+    namespace: agentmoor
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: agentmoor-sandbox-controller
