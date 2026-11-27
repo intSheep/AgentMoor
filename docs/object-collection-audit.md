@@ -42,8 +42,8 @@
 | 实际 guest 输出归属 | 原 run 的输出已删但 ACK 丢失后，新同 Session turn 使用真正的新 output capability 写入同 SHA，退休旧意图；事件保留新 Run/attempt 绑定，错误/缺失绑定拒绝且审计不变。 |
 | 四 CLI 回归 | Codex、Gemini、OpenCode、Claude 各完成首轮、两次自动新 Pod 追问和两种取消；原生取消约 4.6/3.0/3.0/3.8 秒。专属 kind 节点、本次四份镜像标签及三个独立存储验证项目的容器/网络/卷均独立确认已清理。 |
 
-初始 `089b834` 的旧测试通过，不能当作后来发现的租约时间窗已通过。新增真实回归的 `ffcf97262a81a89d9e760355363f1cc7bbddb1ee` 保持旧 Go，实际复现 backend 已死亡后仍转发 1 次 Remove、对象消失；测试失败，`make` 退出 2（Go test 退出 1）。[原始失败日志](evidence/object-collection-lease_negative-test-services-2026-11-27.log)保留。随后独立修复提交 `2d4a798` 在 Remove 前检查 leased writer，再合主分支并运行上述完整验证；没有将旧通过或失败改写为新来源。
+初始 `089b834` 的旧测试通过，不能当作后来发现的租约时间窗已通过。新增真实回归的 `ffcf97262a81a89d9e760355363f1cc7bbddb1ee` 保持旧 Go，实际复现 backend 已死亡后仍转发 1 次 Remove、对象消失；测试失败，`make` 退出 2（Go test 退出 1）。[原始失败日志](evidence/object-collection-lease_negative-test-services-2026-11-27.log.gz)保留。随后独立修复提交 `2d4a798` 在 Remove 前检查 leased writer，再合主分支并运行上述完整验证；没有将旧通过或失败改写为新来源。
 
-证据包含从真实运维 `AuditReader` 读取的八条有界事件。原计划已提交的恢复会保留原 initiator，并将后续步骤记为实际恢复者；如果计划插入本身被拒绝，恢复者会新建计划和确认，两条都属于它。事件与原日志已扫描，无能力值、私钥 PEM 或原始凭据赋值。
+证据包含从真实运维 `AuditReader` 读取的八条有界事件。原计划已提交的恢复会保留原 initiator，并将后续步骤记为实际恢复者；如果计划插入本身被拒绝，恢复者会新建计划和确认，两条都属于它。原日志以无损 gzip 保存，解压后的原字节和 SHA 保持，未清理终端空白或回车。事件与解压后的原日志已扫描，无能力值、私钥 PEM 或原始凭据赋值。
 
 本片的四 CLI 只是默认受信文本回归；不新增真实模型、生产 HA、沙箱逃逸或所有原生格式的验收承诺。
