@@ -368,7 +368,8 @@ class ProviderSmoke:
             native = [json.loads(line) for line in rollouts[0].splitlines()]
             require(native[0]["type"] == "session_meta" and native[0]["payload"]["id"] == session,
                     "text continuation changed the original native Session ID")
-            rounds.append({"operation": operation, "assets": row["assets"], "answer": answer,
+            rounds.append({"operation": operation, "task_id": row["id"], "turn_id": row.get("turn_id", ""),
+                           "execution_policy": row.get("execution_policy"), "assets": row["assets"], "answer": answer,
                            "native_session_sha256": sha(session.encode()), **self.deleted(counter)})
             frozen.extend((ref, assets.download(ref)) for ref in row["assets"])
             cp = json.loads(client.request("GET", client.route + "/checkpoint"))
@@ -573,18 +574,18 @@ class ProviderSmoke:
             self.result["dependency_cache"]["retained"] = True
 
 
-def main():
+def main(smoke_factory=ProviderSmoke, scenario_choices=("file", "skill", "both", "text"), default_scenario="file"):
     os.chdir(ROOT)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bundle", type=Path)
     parser.add_argument("--calico-manifest", type=Path)
     parser.add_argument("--containerd-cache", type=Path, default=os.environ.get("GVISOR_SECURITY_CONTAINERD_CACHE"))
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--scenario", choices=("file", "skill", "both", "text"), default="file")
+    parser.add_argument("--scenario", choices=scenario_choices, default=default_scenario)
     options = parser.parse_args()
     with tempfile.TemporaryDirectory(prefix="agentmoor-provider-") as directory:
         probe = SecurityProbe(Path(directory), options.bundle, options.calico_manifest, containerd_cache=options.containerd_cache)
-        smoke = ProviderSmoke(probe)
+        smoke = smoke_factory(probe)
         code = 1
         try:
             probe.prepare()
