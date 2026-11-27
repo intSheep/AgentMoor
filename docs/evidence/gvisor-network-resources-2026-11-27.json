@@ -1,0 +1,1867 @@
+{
+  "kind": "gvisor_network_resources_component_evidence",
+  "linear_issues": [
+    "INT-80",
+    "INT-82"
+  ],
+  "scope": "Synthetic fixtures and reusable network/process-limit library helpers; no vendor CLI, model key, production Gateway/SaaS publication, hardware VM or concurrent-Pod quota acceptance. Production provider wiring of the process limiter is owned by INT-81.",
+  "gate": "untrusted-isolated.v1 remains closed until the separate INT-81 provider/native/Skill end-to-end acceptance.",
+  "formal_source": {
+    "commit": "38a7a39b9a78b35a62877159a9a1f859762b967f",
+    "status": "",
+    "script_sha256": "7551848e78836c1ab8f1a9d8abf14da951865e2a8c6f660b51da17a25388f90e",
+    "containerd_installer_sha256": "eccdbf44e534f826875ca0acae4e7f4addc82fa7823cdcb702fa4f97a768fc8b",
+    "fixture_sha256": "ac4b0414ec1e9b1902debfc59a48ff832d2fb650a4544fcb46803bb175cb1ea6"
+  },
+  "formal_run": {
+    "filename": "agentmoor-gvisor-security-containerd242-nproc64-pids256-all-2026-11-27-r20.json",
+    "sha256": "4c41fb71fadecbaf7e6a273a55798ab5a742a3c86ed8667b17598a0ed1927b11",
+    "log_filename": "agentmoor-gvisor-security-containerd242-nproc64-pids256-all-2026-11-27-r20.log",
+    "log_sha256": "6ac8cfcd6d1a860bee900d1623a77e516a07d86efa392e361264b51a6382203d",
+    "status": "all_passed",
+    "started_at_utc": "2026-11-27T07:20:20.071234+00:00",
+    "finished_at_utc": "2026-11-27T07:23:06.259780+00:00"
+  },
+  "exact_combination": {
+    "architecture": "aarch64",
+    "node_uname": "Linux agentmoor-921993ad8033-control-plane 7.2.12-orbstack-00394-gbecdd6130068 #1 SMP PREEMPT Thu Oct 22 22:17:17 UTC 2026 aarch64 GNU/Linux\n",
+    "kind_node_image": "kindest/node:v1.35.0",
+    "kind_node_image_id": "sha256:4613778f3cfcd10e615029370f5786704559103cf27bef934597ba562b269661",
+    "gvisor_release": "release-20261123.1",
+    "gvisor_commit": "81f68cb7d4661a9313d891a1758a765abe8eb27e",
+    "gvisor_bundle_sha512": "930967c01eaa8c91a90903ba866070dd165c580d3197287747bb1444ee11dab7350db11d8f90bf00efb2cdcfb2318602d3f329c522c9e9436a86fe6a93c7b7fc",
+    "installed_core_binary_sha512": "25665aeaae3d99ecf7b3dced10d35ba63ab04a2b71721f22d232cbd7109b4f45f928bcecaf48574a691420bdf322c212743b68321c07308a835049958b833c4b  /usr/local/bin/runsc\n481b1c1ff18fdd361f0dbfb0a47e034173f1da4f7ce64c0eb3d7315fdad60b6e9ad60fb39df704c94fa17b0e421cb58ab28812acbae2c963e5cdefc5e3b4e728  /usr/local/bin/containerd-shim-runsc-v1\n09a8a663a6286cffa78f0bf23164f83c5ed5b9045e9c16be6505d07e7697a46f54b63bbfa276336932d9819de81d51dfaff0f856187d77bd746d8a9ed37d122f  /usr/local/bin/gvisor-bin/gvisor_sentry\n",
+    "runsc_version": "runsc version release-20261123.1\nspec: 1.2.1\n",
+    "runsc_config": "[runsc_config]\n  platform = \"systrap\"\n  debug = \"true\"\n  debug-log = \"/run/runsc-probe/\"\n  overlay2 = \"all:memory,size=512m\"\n",
+    "actual_sentry_example": "   4996 gvisor_sentry   runsc-sandbox --debug=true --log=/run/containerd/io.containerd.runtime.v2.task/k8s.io/74ee6e918e4d0c6a138f8003b01c6fada1358645e022337f456f7debd659d55d/log.json --log-format=json --debug-log=/run/runsc-probe/ --panic-log=/var/log/pods/agentmoor-guests-fixture_selected-guest_2f17a629-904b-41d1-b4b6-f82cfe9120ab/gvisor_panic.log --overlay2=all:memory,size=512m --platform=systrap --root=/run/containerd/runsc/k8s.io --log-fd=4 --debug-log-fd=5 --panic-log-fd=6 boot --bundle=/run/containerd/io.containerd.runtime.v2.task/k8s.io/74ee6e918e4d0c6a138f8003b01c6fada1358645e022337f456f7debd659d55d --gofer-mount-confs=lisafs:none,lisafs:none --apply-caps=true --setup-root --total-host-memory 16816517120 --cpu-num 2 --cpu-quota 20000 --cpu-period 100000 --total-memory 268435456 --io-fds=7 --io-fds=8 --dev-io-fd=-1 --mounts-fd=9 --pin-ring-fd=10 --user-log-fd=11 --controller-fd=12 --spec-fd=13 --proc-umounter-fd=14 --stdio-fds=15 --stdio-fds=16 --stdio-fds=17 74ee6e918e4d0c6a138f8003b01c6fada1358645e022337f456f7debd659d55d",
+    "cri_runtime_handler": "runsc",
+    "cri_runtime_type": "io.containerd.runsc.v1",
+    "containerd_kubernetes_support_claim": "Only this exact combination was executed; the official Kubernetes 1.35 table does not list containerd 2.4 as a supported combination."
+  },
+  "runtime_installation": {
+    "official_sequential_minor_upgrades": [
+      {
+        "version": "2.3.7",
+        "architecture": "arm64",
+        "url": "https://github.com/containerd/containerd/releases/download/v2.3.7/containerd-2.3.7-linux-arm64.tar.gz",
+        "bundle_sha256": "e08530c6c8a23c612606da5d2832aed9bed8fc7f8c1b41df0f148a701b931d69",
+        "binaries": {
+          "containerd": "2b25d56bbc04889434987dbff07aaf4ff9f5d7e6a1af429bf007469a3bee2898",
+          "containerd-shim-runc-v2": "da0459eb4a18d01aa3a29b73d6294dfa2ba11c73b25cc5445a7f149d85868e0b",
+          "ctr": "529d04f58f025fbf53f523af963acbc456d76f7eaf1d4adc262e39c8f3525d72"
+        },
+        "version_observed": "containerd github.com/containerd/containerd/v2 v2.3.7 6f589cf13dc01a5b493911355427e05b2ff005d7\n",
+        "installed_binary_sha256": "2b25d56bbc04889434987dbff07aaf4ff9f5d7e6a1af429bf007469a3bee2898  /usr/local/bin/containerd\nda0459eb4a18d01aa3a29b73d6294dfa2ba11c73b25cc5445a7f149d85868e0b  /usr/local/bin/containerd-shim-runc-v2\n529d04f58f025fbf53f523af963acbc456d76f7eaf1d4adc262e39c8f3525d72  /usr/local/bin/ctr\n",
+        "api_ready_observation": {
+          "returncode": 0,
+          "stdout": "ok",
+          "stderr": ""
+        },
+        "saved_config_version": 2,
+        "saved_config_unchanged": true,
+        "loaded_config_version": 4,
+        "cri_runtime_ready": true,
+        "pre_upgrade_sandbox_count": 4,
+        "post_upgrade_sandbox_count": 4
+      },
+      {
+        "version": "2.4.2",
+        "architecture": "arm64",
+        "url": "https://github.com/containerd/containerd/releases/download/v2.4.2/containerd-2.4.2-linux-arm64.tar.gz",
+        "bundle_sha256": "fdfab81a86192ddb8165d72f116ec985485c9e12505e323c4f4579c48020f276",
+        "binaries": {
+          "containerd": "274e7455ee0df001d13c22e11516da7ba247a65c643e017ab4cc8a1b53b57206",
+          "containerd-shim-runc-v2": "221667de1c9b08018385660b9b4b58cb63bce0f82c56cf2858631da5f95bdc23",
+          "ctr": "57dc4b9d3fa3f7e4be345824710b3577f9df11ae270bdd9a2f9cf6baa0bae486"
+        },
+        "version_observed": "containerd github.com/containerd/containerd/v2 v2.4.2 b7a25261e029d68978bbf290df0a62fc819b3c51\n",
+        "installed_binary_sha256": "274e7455ee0df001d13c22e11516da7ba247a65c643e017ab4cc8a1b53b57206  /usr/local/bin/containerd\n221667de1c9b08018385660b9b4b58cb63bce0f82c56cf2858631da5f95bdc23  /usr/local/bin/containerd-shim-runc-v2\n57dc4b9d3fa3f7e4be345824710b3577f9df11ae270bdd9a2f9cf6baa0bae486  /usr/local/bin/ctr\n",
+        "api_ready_observation": {
+          "returncode": 0,
+          "stdout": "ok",
+          "stderr": ""
+        },
+        "saved_config_version": 2,
+        "saved_config_unchanged": true,
+        "loaded_config_version": 4,
+        "cri_runtime_ready": true,
+        "pre_upgrade_sandbox_count": 4,
+        "post_upgrade_sandbox_count": 4
+      }
+    ],
+    "actual_execstart": "{ path=/usr/local/bin/containerd ; argv[]=/usr/local/bin/containerd ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }\n",
+    "baseline_version": "containerd github.com/containerd/containerd/v2 v2.2.0 1c4457e00facac03ce1d75f7b6777a7a851e5c41\n",
+    "baseline_binary_sha256": "65972948b2fbc35533a199c585d742f32aa964b59ecf393d31f800fdb52d73b3  /usr/local/bin/containerd\nd430e9746129e01708066ae24d631c9eac650290ecd2120b239f25bce6ea8356  /usr/local/bin/containerd-shim-runc-v2\ndaaa988068ab3fa633fd2e2256cc320001b3d45393f6de70ba0210183f174f70  /usr/local/bin/ctr\n",
+    "official_artifacts_checksums_and_release_api_digest_agree": [
+      {
+        "name": "containerd-2.3.7-linux-amd64.tar.gz",
+        "url": "https://github.com/containerd/containerd/releases/download/v2.3.7/containerd-2.3.7-linux-amd64.tar.gz",
+        "digest": "sha256:09a1b669ac6d21e7e24c3c33a9805b48987ba5845e8d88f039c47013a0c0025c",
+        "official_sha256sum": "09a1b669ac6d21e7e24c3c33a9805b48987ba5845e8d88f039c47013a0c0025c"
+      },
+      {
+        "name": "containerd-2.3.7-linux-arm64.tar.gz",
+        "url": "https://github.com/containerd/containerd/releases/download/v2.3.7/containerd-2.3.7-linux-arm64.tar.gz",
+        "digest": "sha256:e08530c6c8a23c612606da5d2832aed9bed8fc7f8c1b41df0f148a701b931d69",
+        "official_sha256sum": "e08530c6c8a23c612606da5d2832aed9bed8fc7f8c1b41df0f148a701b931d69"
+      },
+      {
+        "name": "containerd-2.4.2-linux-amd64.tar.gz",
+        "url": "https://github.com/containerd/containerd/releases/download/v2.4.2/containerd-2.4.2-linux-amd64.tar.gz",
+        "digest": "sha256:35880c1dd4627e8ce56526bfabb39c144e83458ffdb197ce6f05d17d94d7d91e",
+        "official_sha256sum": "35880c1dd4627e8ce56526bfabb39c144e83458ffdb197ce6f05d17d94d7d91e"
+      },
+      {
+        "name": "containerd-2.4.2-linux-arm64.tar.gz",
+        "url": "https://github.com/containerd/containerd/releases/download/v2.4.2/containerd-2.4.2-linux-arm64.tar.gz",
+        "digest": "sha256:fdfab81a86192ddb8165d72f116ec985485c9e12505e323c4f4579c48020f276",
+        "official_sha256sum": "fdfab81a86192ddb8165d72f116ec985485c9e12505e323c4f4579c48020f276"
+      }
+    ],
+    "scope": "Only newly created owned kind nodes; no host install, existing cluster modification, custom shim or privileged production reaper."
+  },
+  "node_memory": {
+    "before": {
+      "docker_memory": 0,
+      "docker_memory_swap": 0,
+      "memory.max": "max",
+      "memory.swap.max": "max"
+    },
+    "scope": "owned kind Docker node parent cgroup only; host swap untouched",
+    "after": {
+      "memory.max": "2147483648",
+      "memory.swap.max": "0",
+      "memory.swap.current": "0"
+    }
+  },
+  "host_pod_pids_limit": 256,
+  "guest_virtual_task_limit": 64,
+  "cni": {
+    "version": "v3.33.0",
+    "url": "https://raw.githubusercontent.com/projectcalico/calico/v3.33.0/manifests/calico.yaml",
+    "original_sha256": "2de8f47595fb9c41b3f47d7b767a1f8e72ecf84057af834738ff12689a234da5",
+    "applied_sha256": "6927c2d2c7a6de627a8df06c3097883121225d32c8bcec3f52d2ecf921dcdd1b",
+    "transform": "resolved immutable image digests; IPIP Never / VXLAN Always; explicit nonoverlapping Pod CIDR 10.244.0.0/16",
+    "privileges": "official Calico DaemonSet root/privileged plus cluster RBAC, only in owned disposable cluster",
+    "images": [
+      {
+        "version_reference": "quay.io/calico/calico:v3.33.0",
+        "frozen_reference": "quay.io/calico/calico@sha256:4ebc20730127bc9e8bf1db5f5a2d8b58cf37fe0e891b3c7b5471992221d213e5",
+        "image_id": "sha256:4ebc20730127bc9e8bf1db5f5a2d8b58cf37fe0e891b3c7b5471992221d213e5",
+        "architecture": "arm64",
+        "loaded_archive_sha256": "d8bcdfc4c9f2b7684b8f15938463d957e3347f5f100e12d74f3657fe3480171f"
+      },
+      {
+        "version_reference": "quay.io/calico/third-party-cni-plugins:v3.33.0",
+        "frozen_reference": "quay.io/calico/third-party-cni-plugins@sha256:0f32f48279484c0d6f0e0d0e767b2d0e1a6c6ca34cb3421a61b989d992f3df41",
+        "image_id": "sha256:0f32f48279484c0d6f0e0d0e767b2d0e1a6c6ca34cb3421a61b989d992f3df41",
+        "architecture": "arm64",
+        "loaded_archive_sha256": "9128e516de7343f02a75c3298726ae7569983b5f8dd93c8da548b7edd1b35466"
+      },
+      {
+        "version_reference": "quay.io/calico/node:v3.33.0",
+        "frozen_reference": "quay.io/calico/node@sha256:565d8db3200e443955557f8f28ff44ab8a4a456754bc74a19c4f2f3444af9b1c",
+        "image_id": "sha256:565d8db3200e443955557f8f28ff44ab8a4a456754bc74a19c4f2f3444af9b1c",
+        "architecture": "arm64",
+        "loaded_archive_sha256": "bebaa48dd8c844bafb44260fa90e55141a5b1f901e4e7436a4dc732ae6d49800"
+      }
+    ]
+  },
+  "actual_cni_pods": [
+    {
+      "name": "calico-node-2s9f4",
+      "uid": "a7651da1-aeb6-40bf-8b59-55b3fa86b371",
+      "phase": "Running",
+      "spec_images": [
+        "quay.io/calico/node@sha256:565d8db3200e443955557f8f28ff44ab8a4a456754bc74a19c4f2f3444af9b1c"
+      ],
+      "container_statuses": [
+        {
+          "name": "calico-node",
+          "imageID": "docker.io/library/import-2026-11-27@sha256:fb7e77071d4da61adc7e8d0d83b5f02c1d56a3eb68ab9c1608c5d4206f926707",
+          "ready": true,
+          "state": {
+            "running": {
+              "startedAt": "2026-11-27T07:20:53Z"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "network": {
+    "all_eight_no_policy_baseline_reachable": true,
+    "gateway_same_process": {
+      "fixture": "agentmoor-921993ad8033-synthetic",
+      "process_id": 1,
+      "server_ports": [
+        7443,
+        7401
+      ]
+    },
+    "gateway_service": {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{},\"name\":\"gateway\",\"namespace\":\"agentmoor-control-fixture\"},\"spec\":{\"ports\":[{\"name\":\"gateway\",\"port\":7443},{\"name\":\"main-api\",\"port\":7401}],\"selector\":{\"app.kubernetes.io/name\":\"agentmoor-platform-fixture\"}}}\n"
+        },
+        "creationTimestamp": "2026-11-27T07:21:58Z",
+        "name": "gateway",
+        "namespace": "agentmoor-control-fixture",
+        "resourceVersion": "760",
+        "uid": "f62d1d7c-5eb3-46b2-9d8d-dac8a836b2e2"
+      },
+      "spec": {
+        "clusterIP": "10.96.78.218",
+        "clusterIPs": [
+          "10.96.78.218"
+        ],
+        "internalTrafficPolicy": "Cluster",
+        "ipFamilies": [
+          "IPv4"
+        ],
+        "ipFamilyPolicy": "SingleStack",
+        "ports": [
+          {
+            "name": "gateway",
+            "port": 7443,
+            "protocol": "TCP",
+            "targetPort": 7443
+          },
+          {
+            "name": "main-api",
+            "port": 7401,
+            "protocol": "TCP",
+            "targetPort": 7401
+          }
+        ],
+        "selector": {
+          "app.kubernetes.io/name": "agentmoor-platform-fixture"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+      },
+      "status": {
+        "loadBalancer": {}
+      }
+    },
+    "gateway_pod_uid": "c2f6eacf-859a-4da8-95ab-0afa242ac51d",
+    "selected_and_unselected_actual_gvisor_pod_uids": {
+      "selected-guest": "2f17a629-904b-41d1-b4b6-f82cfe9120ab",
+      "unselected-control": "cfd8f96c-fabb-451c-8783-691e92289f8a"
+    },
+    "enforced_rows": [
+      {
+        "name": "gateway-tls",
+        "guest": {
+          "error": null,
+          "ip": "10.96.78.218",
+          "name": "gateway-tls",
+          "port": 7443,
+          "protocol": "TCP",
+          "reachable": true,
+          "response": {
+            "fixture": "agentmoor-921993ad8033-synthetic",
+            "port": 7443,
+            "process_id": 1
+          },
+          "seconds": 0.09400983699999976,
+          "tls_verified": true
+        },
+        "control": {
+          "error": null,
+          "ip": "10.96.78.218",
+          "name": "gateway-tls",
+          "port": 7443,
+          "protocol": "TCP",
+          "reachable": true,
+          "response": {
+            "fixture": "agentmoor-921993ad8033-synthetic",
+            "port": 7443,
+            "process_id": 1
+          },
+          "seconds": 0.09654871699999923,
+          "tls_verified": true
+        }
+      },
+      {
+        "name": "main-api",
+        "guest": {
+          "errno": null,
+          "error": "TimeoutError",
+          "ip": "10.96.78.218",
+          "name": "main-api",
+          "port": 7401,
+          "protocol": "TCP",
+          "reachable": false,
+          "seconds": 0.8055266379999999,
+          "timeout": true
+        },
+        "control": {
+          "error": null,
+          "ip": "10.96.78.218",
+          "name": "main-api",
+          "port": 7401,
+          "protocol": "TCP",
+          "reachable": true,
+          "response": {
+            "fixture": "agentmoor-921993ad8033-synthetic",
+            "port": 7401,
+            "process_id": 1
+          },
+          "seconds": 0.0012954369999995663
+        }
+      },
+      {
+        "name": "kubernetes-api",
+        "guest": {
+          "errno": null,
+          "error": "TimeoutError",
+          "ip": "10.96.0.1",
+          "name": "kubernetes-api",
+          "port": 443,
+          "protocol": "TCP",
+          "reachable": false,
+          "seconds": 0.8037637740000001,
+          "timeout": true
+        },
+        "control": {
+          "error": null,
+          "ip": "10.96.0.1",
+          "name": "kubernetes-api",
+          "port": 443,
+          "protocol": "TCP",
+          "reachable": true,
+          "seconds": 0.0005391759999984203
+        }
+      },
+      {
+        "name": "other-tenant",
+        "guest": {
+          "errno": null,
+          "error": "TimeoutError",
+          "ip": "10.244.162.135",
+          "name": "other-tenant",
+          "port": 8123,
+          "protocol": "TCP",
+          "reachable": false,
+          "seconds": 0.8011338029999999,
+          "timeout": true
+        },
+        "control": {
+          "error": null,
+          "ip": "10.244.162.135",
+          "name": "other-tenant",
+          "port": 8123,
+          "protocol": "TCP",
+          "reachable": true,
+          "response": {
+            "fixture": "agentmoor-921993ad8033-synthetic",
+            "port": 8123,
+            "process_id": 1
+          },
+          "seconds": 0.0013978970000003699
+        }
+      },
+      {
+        "name": "metadata-fixture",
+        "guest": {
+          "errno": null,
+          "error": "TimeoutError",
+          "ip": "169.254.169.254",
+          "name": "metadata-fixture",
+          "port": 80,
+          "protocol": "TCP",
+          "reachable": false,
+          "seconds": 0.8016118340000009,
+          "timeout": true
+        },
+        "control": {
+          "error": null,
+          "ip": "169.254.169.254",
+          "name": "metadata-fixture",
+          "port": 80,
+          "protocol": "TCP",
+          "reachable": true,
+          "response": {
+            "fixture": "agentmoor-921993ad8033-synthetic",
+            "port": 8123,
+            "process_id": 1
+          },
+          "seconds": 0.0013589380000009754
+        }
+      },
+      {
+        "name": "outside-cidr",
+        "guest": {
+          "errno": null,
+          "error": "TimeoutError",
+          "ip": "192.168.117.5",
+          "name": "outside-cidr",
+          "port": 8123,
+          "protocol": "TCP",
+          "reachable": false,
+          "seconds": 0.8011072329999998,
+          "timeout": true
+        },
+        "control": {
+          "error": null,
+          "ip": "192.168.117.5",
+          "name": "outside-cidr",
+          "port": 8123,
+          "protocol": "TCP",
+          "reachable": true,
+          "response": {
+            "fixture": "agentmoor-921993ad8033-synthetic",
+            "port": 8123,
+            "process_id": 1
+          },
+          "seconds": 0.0012995619999998098
+        }
+      },
+      {
+        "name": "dns-tcp",
+        "guest": {
+          "errno": null,
+          "error": "TimeoutError",
+          "ip": "10.96.0.10",
+          "name": "dns-tcp",
+          "port": 53,
+          "protocol": "TCP",
+          "reachable": false,
+          "seconds": 0.8013359839999996,
+          "timeout": true
+        },
+        "control": {
+          "error": null,
+          "ip": "10.96.0.10",
+          "name": "dns-tcp",
+          "port": 53,
+          "protocol": "TCP",
+          "reachable": true,
+          "seconds": 0.0007247199999991238
+        }
+      },
+      {
+        "name": "dns-udp",
+        "guest": {
+          "errno": null,
+          "error": "TimeoutError",
+          "ip": "10.96.0.10",
+          "name": "dns-udp",
+          "port": 53,
+          "protocol": "UDP",
+          "reachable": false,
+          "seconds": 0.8021675079999984,
+          "timeout": true
+        },
+        "control": {
+          "error": null,
+          "ip": "10.96.0.10",
+          "name": "dns-udp",
+          "port": 53,
+          "protocol": "UDP",
+          "reachable": true,
+          "seconds": 0.0007543870000006336
+        }
+      }
+    ],
+    "production_guard_allowed": {
+      "returncode": 0,
+      "result": {
+        "allowed": true,
+        "fixture_executions": 1,
+        "production_check": true,
+        "vendor_cli_executions": 0
+      },
+      "stderr": ""
+    },
+    "policy_removal_all_canaries_reachable": true,
+    "policy_removal_production_guard_refused": {
+      "returncode": 1,
+      "result": {
+        "allowed": false,
+        "error": "network preflight rejected",
+        "production_check": true,
+        "vendor_cli_executions": 0
+      },
+      "stderr": "command terminated with exit code 1\n"
+    },
+    "denied_additional_fixture_launches": 0,
+    "vendor_cli_executions": 0,
+    "metadata_simulation": {
+      "request": "169.254.169.254:80",
+      "target": "192.168.117.5:8123",
+      "network_namespace": "agentmoor-921993ad8033-control-plane",
+      "real_cloud_metadata_contacted": false
+    },
+    "limited_claim": "Finite canaries catch common absent/ineffective policy errors; they do not prove arbitrary Internet isolation."
+  },
+  "production_helpers": {
+    "network": {
+      "source_sha256": "0cbab998c17a99c3af7923c93502b3e8071691369abfb667a7352265dc5a7490",
+      "binary_sha256": "2cb6734dd94bd19734b10a6fcef96e93625d20675b6a46cd85e82b88dfe9f709",
+      "original_commit": "3707e25"
+    },
+    "process_limit": {
+      "source_sha256": "d6ac3936d528f01379bdb12c809879d26d71b1f806a5b818b56f2a52c7c4ad1e",
+      "linux_sha256": "5c0076222c35ff801185875842911332f90da25ccfb86f732b941e7a004d42eb",
+      "binary_sha256": "b3d8e556b7baa1553231b509d7e33b9c402cffc46ca3d110eeb8a351efc84b06"
+    }
+  },
+  "resource_results": {
+    "cpu": {
+      "runtime_verified": true,
+      "pod_creation": "2026-11-27T07:22:16Z",
+      "pod_start_time": "2026-11-27T07:22:16Z",
+      "original_active_deadline_seconds": 30,
+      "node_swap_max": "0",
+      "terminated": false,
+      "pod_reason": null,
+      "cancelled": null,
+      "fixture": {
+        "iterations_value": 611303,
+        "mode": "cpu",
+        "stage": "finished"
+      },
+      "cpu_throttled_delta": 64,
+      "cpu_usage_usec_delta": 1264460,
+      "oom_kill_delta": 0,
+      "host_pids_max_events_delta": 0,
+      "physical_cleanup": true,
+      "pod_uid": "8c59e7bb-56fa-438c-b00f-5c2b3b688b42",
+      "sandbox_id": "e0fe45cae66d14661e856d297acea53a01b7ef1d1d096f435389b287f9b033e8",
+      "actual_parent_cgroup": {
+        "path": "/sys/fs/cgroup/kubelet.slice/kubelet-kubepods.slice/kubelet-kubepods-pod8c59e7bb_56fa_438c_b00f_5c2b3b688b42.slice",
+        "cpu.max": "20000 100000",
+        "cpu.stat": "usage_usec 171354\nuser_usec 136468\nsystem_usec 34886\nnice_usec 97000\nnr_periods 10\nnr_throttled 8\nthrottled_usec 694602\nnr_bursts 0\nburst_usec 0",
+        "memory.max": "134217728",
+        "memory.current": "29286400",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.swap.max": "max",
+        "memory.swap.current": "0",
+        "memory.swap.events": "high 0\nmax 0\nfail 0",
+        "pids.max": "256",
+        "pids.current": "46",
+        "pids.events": "max 0"
+      },
+      "final_processes_and_cri": {
+        "live_processes": [],
+        "cri_sandboxes": []
+      },
+      "stopped_cri_metadata_records_removed_after_no_live_processes": 1,
+      "diagnostic_signals_or_active_recovery_used": false,
+      "observed_metadata_gc_precondition": {
+        "elapsed_seconds": 0.3819227919448167,
+        "processes": [],
+        "cri_states": [
+          {
+            "id": "e0fe45cae66d14661e856d297acea53a01b7ef1d1d096f435389b287f9b033e8",
+            "state": "SANDBOX_NOTREADY"
+          }
+        ]
+      },
+      "cleanup_elapsed_seconds": 0.7693832089425996
+    },
+    "memory": {
+      "runtime_verified": true,
+      "pod_creation": "2026-11-27T07:22:25Z",
+      "pod_start_time": "2026-11-27T07:22:25Z",
+      "original_active_deadline_seconds": 30,
+      "node_swap_max": "0",
+      "terminated": true,
+      "pod_reason": null,
+      "cancelled": null,
+      "fixture": null,
+      "cpu_throttled_delta": 1,
+      "cpu_usage_usec_delta": 82763,
+      "oom_kill_delta": 2,
+      "host_pids_max_events_delta": 0,
+      "physical_cleanup": true,
+      "pod_uid": "d7b9428d-5450-494d-bba3-dfb12f3cd982",
+      "sandbox_id": "abb918ec73d6ebe9dabc34c1f0d7be782b13797f7928fb5c25f7bf743f31a2e9",
+      "actual_parent_cgroup": {
+        "path": "/sys/fs/cgroup/kubelet.slice/kubelet-kubepods.slice/kubelet-kubepods-podd7b9428d_5450_494d_bba3_dfb12f3cd982.slice",
+        "cpu.max": "20000 100000",
+        "cpu.stat": "usage_usec 248156\nuser_usec 212992\nsystem_usec 35163\nnice_usec 155000\nnr_periods 14\nnr_throttled 12\nthrottled_usec 1139985\nnr_bursts 0\nburst_usec 0",
+        "memory.max": "134217728",
+        "memory.current": "50708480",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.swap.max": "max",
+        "memory.swap.current": "0",
+        "memory.swap.events": "high 0\nmax 0\nfail 0",
+        "pids.max": "256",
+        "pids.current": "46",
+        "pids.events": "max 0"
+      },
+      "final_processes_and_cri": {
+        "live_processes": [],
+        "cri_sandboxes": []
+      },
+      "stopped_cri_metadata_records_removed_after_no_live_processes": 1,
+      "diagnostic_signals_or_active_recovery_used": false,
+      "observed_metadata_gc_precondition": {
+        "elapsed_seconds": 0.11162750003859401,
+        "processes": [],
+        "cri_states": [
+          {
+            "id": "abb918ec73d6ebe9dabc34c1f0d7be782b13797f7928fb5c25f7bf743f31a2e9",
+            "state": "SANDBOX_NOTREADY"
+          }
+        ]
+      },
+      "cleanup_elapsed_seconds": 0.544065042049624
+    },
+    "tmpfs": {
+      "runtime_verified": true,
+      "pod_creation": "2026-11-27T07:22:29Z",
+      "pod_start_time": "2026-11-27T07:22:29Z",
+      "original_active_deadline_seconds": 30,
+      "node_swap_max": "0",
+      "terminated": false,
+      "pod_reason": null,
+      "cancelled": null,
+      "fixture": {
+        "filesystem_capacity_bytes": 67108864,
+        "mode": "tmpfs",
+        "stage": "finished",
+        "write_errno": 28,
+        "written_bytes": 67108864
+      },
+      "cpu_throttled_delta": 3,
+      "cpu_usage_usec_delta": 57960,
+      "oom_kill_delta": 0,
+      "host_pids_max_events_delta": 0,
+      "physical_cleanup": true,
+      "pod_uid": "237f6f34-884f-4838-8a4f-c2c6e4b1fdb6",
+      "sandbox_id": "9f79dd908e047221f5e488d79520b9edb8c30af5c16017e48ef8ad8418f6bef0",
+      "actual_parent_cgroup": {
+        "path": "/sys/fs/cgroup/kubelet.slice/kubelet-kubepods.slice/kubelet-kubepods-pod237f6f34_884f_4838_8a4f_c2c6e4b1fdb6.slice",
+        "cpu.max": "20000 100000",
+        "cpu.stat": "usage_usec 232825\nuser_usec 196063\nsystem_usec 36761\nnice_usec 148000\nnr_periods 13\nnr_throttled 11\nthrottled_usec 1046826\nnr_bursts 0\nburst_usec 0",
+        "memory.max": "268435456",
+        "memory.current": "47714304",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.swap.max": "max",
+        "memory.swap.current": "0",
+        "memory.swap.events": "high 0\nmax 0\nfail 0",
+        "pids.max": "256",
+        "pids.current": "47",
+        "pids.events": "max 0"
+      },
+      "final_processes_and_cri": {
+        "live_processes": [],
+        "cri_sandboxes": []
+      },
+      "stopped_cri_metadata_records_removed_after_no_live_processes": 1,
+      "diagnostic_signals_or_active_recovery_used": false,
+      "observed_metadata_gc_precondition": {
+        "elapsed_seconds": 1.56654804199934,
+        "processes": [],
+        "cri_states": [
+          {
+            "id": "9f79dd908e047221f5e488d79520b9edb8c30af5c16017e48ef8ad8418f6bef0",
+            "state": "SANDBOX_NOTREADY"
+          }
+        ]
+      },
+      "cleanup_elapsed_seconds": 1.9648611670127138
+    },
+    "file-memory": {
+      "runtime_verified": true,
+      "pod_creation": "2026-11-27T07:22:33Z",
+      "pod_start_time": "2026-11-27T07:22:33Z",
+      "original_active_deadline_seconds": 30,
+      "node_swap_max": "0",
+      "terminated": true,
+      "pod_reason": null,
+      "cancelled": null,
+      "fixture": null,
+      "cpu_throttled_delta": 4,
+      "cpu_usage_usec_delta": 72453,
+      "oom_kill_delta": 1,
+      "host_pids_max_events_delta": 0,
+      "physical_cleanup": true,
+      "pod_uid": "9f8d261d-c2f7-491d-a520-b35dd4950bef",
+      "sandbox_id": "ac79d3bf2d722bb7119172d3d829e2ee1724290909c5cc60adcc51c6609acb3e",
+      "actual_parent_cgroup": {
+        "path": "/sys/fs/cgroup/kubelet.slice/kubelet-kubepods.slice/kubelet-kubepods-pod9f8d261d_c2f7_491d_a520_b35dd4950bef.slice",
+        "cpu.max": "20000 100000",
+        "cpu.stat": "usage_usec 215577\nuser_usec 183904\nsystem_usec 31672\nnice_usec 139000\nnr_periods 12\nnr_throttled 10\nthrottled_usec 765456\nnr_bursts 0\nburst_usec 0",
+        "memory.max": "134217728",
+        "memory.current": "32043008",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.swap.max": "max",
+        "memory.swap.current": "0",
+        "memory.swap.events": "high 0\nmax 0\nfail 0",
+        "pids.max": "256",
+        "pids.current": "46",
+        "pids.events": "max 0"
+      },
+      "final_processes_and_cri": {
+        "live_processes": [],
+        "cri_sandboxes": []
+      },
+      "stopped_cri_metadata_records_removed_after_no_live_processes": 1,
+      "diagnostic_signals_or_active_recovery_used": false,
+      "observed_metadata_gc_precondition": {
+        "elapsed_seconds": 0.10438329097814858,
+        "processes": [],
+        "cri_states": [
+          {
+            "id": "ac79d3bf2d722bb7119172d3d829e2ee1724290909c5cc60adcc51c6609acb3e",
+            "state": "SANDBOX_NOTREADY"
+          }
+        ]
+      },
+      "cleanup_elapsed_seconds": 0.5303921659942716
+    },
+    "pids": {
+      "runtime_verified": true,
+      "pod_creation": "2026-11-27T07:22:36Z",
+      "pod_start_time": "2026-11-27T07:22:36Z",
+      "original_active_deadline_seconds": 30,
+      "node_swap_max": "0",
+      "terminated": false,
+      "pod_reason": null,
+      "cancelled": null,
+      "fixture": {
+        "children": 62,
+        "fork_errno": 11,
+        "guest_rlimit_nproc": [
+          64,
+          64
+        ],
+        "hard_raise_denied": true,
+        "mode": "pids",
+        "stage": "finished"
+      },
+      "cpu_throttled_delta": 44,
+      "cpu_usage_usec_delta": 862853,
+      "oom_kill_delta": 0,
+      "host_pids_max_events_delta": 0,
+      "physical_cleanup": true,
+      "pod_uid": "e19a4539-e2c7-4a03-8b1f-247534668905",
+      "sandbox_id": "0d520dcf66db49a95444104e556f0fd5bd48e5b804627d34c28c57cd717f3555",
+      "actual_parent_cgroup": {
+        "path": "/sys/fs/cgroup/kubelet.slice/kubelet-kubepods.slice/kubelet-kubepods-pode19a4539_e2c7_4a03_8b1f_247534668905.slice",
+        "cpu.max": "20000 100000",
+        "cpu.stat": "usage_usec 192256\nuser_usec 155441\nsystem_usec 36814\nnice_usec 113000\nnr_periods 11\nnr_throttled 9\nthrottled_usec 849113\nnr_bursts 0\nburst_usec 0",
+        "memory.max": "1073741824",
+        "memory.current": "29478912",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.swap.max": "max",
+        "memory.swap.current": "0",
+        "memory.swap.events": "high 0\nmax 0\nfail 0",
+        "pids.max": "256",
+        "pids.current": "47",
+        "pids.events": "max 0"
+      },
+      "final_processes_and_cri": {
+        "live_processes": [],
+        "cri_sandboxes": []
+      },
+      "stopped_cri_metadata_records_removed_after_no_live_processes": 1,
+      "diagnostic_signals_or_active_recovery_used": false,
+      "observed_metadata_gc_precondition": {
+        "elapsed_seconds": 0.38678933307528496,
+        "processes": [],
+        "cri_states": [
+          {
+            "id": "0d520dcf66db49a95444104e556f0fd5bd48e5b804627d34c28c57cd717f3555",
+            "state": "SANDBOX_NOTREADY"
+          }
+        ]
+      },
+      "cleanup_elapsed_seconds": 0.7687421250157058
+    },
+    "wall": {
+      "runtime_verified": true,
+      "pod_creation": "2026-11-27T07:22:43Z",
+      "pod_start_time": "2026-11-27T07:22:43Z",
+      "original_active_deadline_seconds": 8,
+      "node_swap_max": "0",
+      "terminated": true,
+      "pod_reason": "DeadlineExceeded",
+      "cancelled": null,
+      "fixture": null,
+      "cpu_throttled_delta": 1,
+      "cpu_usage_usec_delta": 29692,
+      "oom_kill_delta": 0,
+      "host_pids_max_events_delta": 0,
+      "physical_cleanup": true,
+      "pod_uid": "33523ce5-2fec-4819-99cf-82a0a2b1c793",
+      "sandbox_id": "18628adb0744bf7f0ce98c886f9e8de0d1f3b1932399b7ad8209be3d23043e3c",
+      "actual_parent_cgroup": {
+        "path": "/sys/fs/cgroup/kubelet.slice/kubelet-kubepods.slice/kubelet-kubepods-pod33523ce5_2fec_4819_99cf_82a0a2b1c793.slice",
+        "cpu.max": "20000 100000",
+        "cpu.stat": "usage_usec 251201\nuser_usec 210685\nsystem_usec 40516\nnice_usec 153000\nnr_periods 14\nnr_throttled 12\nthrottled_usec 960638\nnr_bursts 0\nburst_usec 0",
+        "memory.max": "134217728",
+        "memory.current": "49082368",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.swap.max": "max",
+        "memory.swap.current": "0",
+        "memory.swap.events": "high 0\nmax 0\nfail 0",
+        "pids.max": "256",
+        "pids.current": "46",
+        "pids.events": "max 0"
+      },
+      "final_processes_and_cri": {
+        "live_processes": [],
+        "cri_sandboxes": []
+      },
+      "stopped_cri_metadata_records_removed_after_no_live_processes": 1,
+      "diagnostic_signals_or_active_recovery_used": false,
+      "observed_metadata_gc_precondition": {
+        "elapsed_seconds": 0.09693008393514901,
+        "processes": [],
+        "cri_states": [
+          {
+            "id": "18628adb0744bf7f0ce98c886f9e8de0d1f3b1932399b7ad8209be3d23043e3c",
+            "state": "SANDBOX_NOTREADY"
+          }
+        ]
+      },
+      "cleanup_elapsed_seconds": 0.47331229189876467
+    },
+    "cancel": {
+      "runtime_verified": true,
+      "pod_creation": "2026-11-27T07:22:52Z",
+      "pod_start_time": "2026-11-27T07:22:52Z",
+      "original_active_deadline_seconds": 30,
+      "node_swap_max": "0",
+      "terminated": false,
+      "pod_reason": null,
+      "cancelled": true,
+      "fixture": null,
+      "cpu_throttled_delta": 2,
+      "cpu_usage_usec_delta": 57218,
+      "oom_kill_delta": 0,
+      "host_pids_max_events_delta": 0,
+      "physical_cleanup": true,
+      "pod_uid": "33a37720-4f45-4c63-9ee7-7ac67d85b6ca",
+      "sandbox_id": "5a36dd39aeb8028348295fe621fe95294448f94a561190837bde71e6d35bd266",
+      "actual_parent_cgroup": {
+        "path": "/sys/fs/cgroup/kubelet.slice/kubelet-kubepods.slice/kubelet-kubepods-pod33a37720_4f45_4c63_9ee7_7ac67d85b6ca.slice",
+        "cpu.max": "20000 100000",
+        "cpu.stat": "usage_usec 191196\nuser_usec 164346\nsystem_usec 26849\nnice_usec 111000\nnr_periods 12\nnr_throttled 10\nthrottled_usec 777504\nnr_bursts 0\nburst_usec 0",
+        "memory.max": "134217728",
+        "memory.current": "28934144",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.swap.max": "max",
+        "memory.swap.current": "0",
+        "memory.swap.events": "high 0\nmax 0\nfail 0",
+        "pids.max": "256",
+        "pids.current": "46",
+        "pids.events": "max 0"
+      },
+      "final_processes_and_cri": {
+        "live_processes": [],
+        "cri_sandboxes": []
+      },
+      "stopped_cri_metadata_records_removed_after_no_live_processes": 1,
+      "diagnostic_signals_or_active_recovery_used": false,
+      "observed_metadata_gc_precondition": {
+        "elapsed_seconds": 1.8907481250353158,
+        "processes": [],
+        "cri_states": [
+          {
+            "id": "5a36dd39aeb8028348295fe621fe95294448f94a561190837bde71e6d35bd266",
+            "state": "SANDBOX_NOTREADY"
+          }
+        ]
+      },
+      "cleanup_elapsed_seconds": 2.289933667052537
+    }
+  },
+  "three_additional_natural_oom_repetitions": [
+    {
+      "runtime_verified": true,
+      "pod_creation": "2026-11-27T07:22:56Z",
+      "pod_start_time": "2026-11-27T07:22:56Z",
+      "original_active_deadline_seconds": 30,
+      "node_swap_max": "0",
+      "terminated": true,
+      "pod_reason": null,
+      "cancelled": null,
+      "fixture": null,
+      "cpu_throttled_delta": 7,
+      "cpu_usage_usec_delta": 127721,
+      "oom_kill_delta": 1,
+      "host_pids_max_events_delta": 0,
+      "physical_cleanup": true,
+      "pod_uid": "fb03110f-7746-463a-8ef1-85521809012d",
+      "sandbox_id": "b5aa41b9373bf0d75791084b18967b982287e6c5e6e266e07fd28b70fab62aec",
+      "actual_parent_cgroup": {
+        "path": "/sys/fs/cgroup/kubelet.slice/kubelet-kubepods.slice/kubelet-kubepods-podfb03110f_7746_463a_8ef1_85521809012d.slice",
+        "cpu.max": "20000 100000",
+        "cpu.stat": "usage_usec 145727\nuser_usec 117420\nsystem_usec 28306\nnice_usec 88000\nnr_periods 9\nnr_throttled 7\nthrottled_usec 445170\nnr_bursts 0\nburst_usec 0",
+        "memory.max": "134217728",
+        "memory.current": "29282304",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.swap.max": "max",
+        "memory.swap.current": "0",
+        "memory.swap.events": "high 0\nmax 0\nfail 0",
+        "pids.max": "256",
+        "pids.current": "46",
+        "pids.events": "max 0"
+      },
+      "final_processes_and_cri": {
+        "live_processes": [],
+        "cri_sandboxes": []
+      },
+      "stopped_cri_metadata_records_removed_after_no_live_processes": 1,
+      "diagnostic_signals_or_active_recovery_used": false,
+      "observed_metadata_gc_precondition": {
+        "elapsed_seconds": 0.1040590830380097,
+        "processes": [],
+        "cri_states": [
+          {
+            "id": "b5aa41b9373bf0d75791084b18967b982287e6c5e6e266e07fd28b70fab62aec",
+            "state": "SANDBOX_NOTREADY"
+          }
+        ]
+      },
+      "cleanup_elapsed_seconds": 0.5495855830376968
+    },
+    {
+      "runtime_verified": true,
+      "pod_creation": "2026-11-27T07:22:59Z",
+      "pod_start_time": "2026-11-27T07:22:59Z",
+      "original_active_deadline_seconds": 30,
+      "node_swap_max": "0",
+      "terminated": true,
+      "pod_reason": null,
+      "cancelled": null,
+      "fixture": null,
+      "cpu_throttled_delta": 4,
+      "cpu_usage_usec_delta": 87044,
+      "oom_kill_delta": 1,
+      "host_pids_max_events_delta": 0,
+      "physical_cleanup": true,
+      "pod_uid": "de7c948a-6fd4-4cbe-a311-6e99e26c3faa",
+      "sandbox_id": "4a5bab614c8fda2a686eea2472c96a8eb8c02828b31a270e2fed61d291e41aa7",
+      "actual_parent_cgroup": {
+        "path": "/sys/fs/cgroup/kubelet.slice/kubelet-kubepods.slice/kubelet-kubepods-podde7c948a_6fd4_4cbe_a311_6e99e26c3faa.slice",
+        "cpu.max": "20000 100000",
+        "cpu.stat": "usage_usec 203815\nuser_usec 168847\nsystem_usec 34968\nnice_usec 112000\nnr_periods 12\nnr_throttled 10\nthrottled_usec 827316\nnr_bursts 0\nburst_usec 0",
+        "memory.max": "134217728",
+        "memory.current": "30781440",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.swap.max": "max",
+        "memory.swap.current": "0",
+        "memory.swap.events": "high 0\nmax 0\nfail 0",
+        "pids.max": "256",
+        "pids.current": "46",
+        "pids.events": "max 0"
+      },
+      "final_processes_and_cri": {
+        "live_processes": [],
+        "cri_sandboxes": []
+      },
+      "stopped_cri_metadata_records_removed_after_no_live_processes": 1,
+      "diagnostic_signals_or_active_recovery_used": false,
+      "observed_metadata_gc_precondition": {
+        "elapsed_seconds": 0.10505941696465015,
+        "processes": [],
+        "cri_states": [
+          {
+            "id": "4a5bab614c8fda2a686eea2472c96a8eb8c02828b31a270e2fed61d291e41aa7",
+            "state": "SANDBOX_NOTREADY"
+          }
+        ]
+      },
+      "cleanup_elapsed_seconds": 0.5237942499807104
+    },
+    {
+      "runtime_verified": true,
+      "pod_creation": "2026-11-27T07:23:02Z",
+      "pod_start_time": "2026-11-27T07:23:02Z",
+      "original_active_deadline_seconds": 30,
+      "node_swap_max": "0",
+      "terminated": true,
+      "pod_reason": null,
+      "cancelled": null,
+      "fixture": null,
+      "cpu_throttled_delta": 1,
+      "cpu_usage_usec_delta": 39790,
+      "oom_kill_delta": 1,
+      "host_pids_max_events_delta": 0,
+      "physical_cleanup": true,
+      "pod_uid": "f41ad244-e117-40e5-8822-a7f881c40e3d",
+      "sandbox_id": "87ca644fac08f638bf270c80f12d429681f35e5a1a890a4a937396580242a38f",
+      "actual_parent_cgroup": {
+        "path": "/sys/fs/cgroup/kubelet.slice/kubelet-kubepods.slice/kubelet-kubepods-podf41ad244_e117_40e5_8822_a7f881c40e3d.slice",
+        "cpu.max": "20000 100000",
+        "cpu.stat": "usage_usec 255651\nuser_usec 223942\nsystem_usec 31708\nnice_usec 173000\nnr_periods 15\nnr_throttled 13\nthrottled_usec 1172495\nnr_bursts 0\nburst_usec 0",
+        "memory.max": "134217728",
+        "memory.current": "33673216",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.swap.max": "max",
+        "memory.swap.current": "0",
+        "memory.swap.events": "high 0\nmax 0\nfail 0",
+        "pids.max": "256",
+        "pids.current": "47",
+        "pids.events": "max 0"
+      },
+      "final_processes_and_cri": {
+        "live_processes": [],
+        "cri_sandboxes": []
+      },
+      "stopped_cri_metadata_records_removed_after_no_live_processes": 1,
+      "diagnostic_signals_or_active_recovery_used": false,
+      "observed_metadata_gc_precondition": {
+        "elapsed_seconds": 0.11047108401544392,
+        "processes": [],
+        "cri_states": [
+          {
+            "id": "87ca644fac08f638bf270c80f12d429681f35e5a1a890a4a937396580242a38f",
+            "state": "SANDBOX_NOTREADY"
+          }
+        ]
+      },
+      "cleanup_elapsed_seconds": 0.5404007090255618
+    }
+  ],
+  "cleanup_semantics": "Every resource Pod first has no live Sentry/gofer/shim. Only then the harness removes its already-SANDBOX_NOTREADY CRI metadata. It never uses stopp/kill/USR1/QUIT to make an acceptance run pass.",
+  "cleanup": {
+    "owned_node_removed": true,
+    "owned_outside_fixture_removed": true,
+    "owned_image_tag_removed": true
+  },
+  "default_cni_negative": {
+    "filename": "agentmoor-gvisor-security-containerd242-pids256-kindnet-2026-11-27-r21.json",
+    "sha256": "9465e9b04628134b0e111885fe55cc48ffbb5f8a2717c6a98c15854e57df9c55",
+    "log_filename": "agentmoor-gvisor-security-containerd242-pids256-kindnet-2026-11-27-r21.log",
+    "log_sha256": "9bb3ddf5abf3fdf2449c6846b53ef0267811e483abf952a73506b4971f7883aa",
+    "status": "kindnet-negative_passed",
+    "source": {
+      "commit": "38a7a39b9a78b35a62877159a9a1f859762b967f",
+      "status": "",
+      "script_sha256": "7551848e78836c1ab8f1a9d8abf14da951865e2a8c6f660b51da17a25388f90e",
+      "containerd_installer_sha256": "eccdbf44e534f826875ca0acae4e7f4addc82fa7823cdcb702fa4f97a768fc8b",
+      "fixture_sha256": "ac4b0414ec1e9b1902debfc59a48ff832d2fb650a4544fcb46803bb175cb1ea6"
+    },
+    "kindnet_pod_images": [
+      "docker.io/kindest/kindnetd:v20251212-v0.29.0-alpha-105-g20ccfc88"
+    ],
+    "all_no_policy_canaries_reachable": true,
+    "after_policy_rows": [
+      {
+        "error": null,
+        "ip": "10.96.220.227",
+        "name": "gateway-tls",
+        "port": 7443,
+        "protocol": "TCP",
+        "reachable": true,
+        "response": {
+          "fixture": "agentmoor-9e415e7246b2-synthetic",
+          "port": 7443,
+          "process_id": 1
+        },
+        "seconds": 0.009622594999999734,
+        "tls_verified": true
+      },
+      {
+        "errno": null,
+        "error": "TimeoutError",
+        "ip": "10.96.220.227",
+        "name": "main-api",
+        "port": 7401,
+        "protocol": "TCP",
+        "reachable": false,
+        "seconds": 0.8010457090000003,
+        "timeout": true
+      },
+      {
+        "error": null,
+        "ip": "10.96.0.1",
+        "name": "kubernetes-api",
+        "port": 443,
+        "protocol": "TCP",
+        "reachable": true,
+        "seconds": 0.00032037799999962147
+      },
+      {
+        "errno": null,
+        "error": "TimeoutError",
+        "ip": "10.244.0.7",
+        "name": "other-tenant",
+        "port": 8123,
+        "protocol": "TCP",
+        "reachable": false,
+        "seconds": 0.8055308119999998,
+        "timeout": true
+      },
+      {
+        "errno": null,
+        "error": "TimeoutError",
+        "ip": "169.254.169.254",
+        "name": "metadata-fixture",
+        "port": 80,
+        "protocol": "TCP",
+        "reachable": false,
+        "seconds": 0.801230479,
+        "timeout": true
+      },
+      {
+        "errno": null,
+        "error": "TimeoutError",
+        "ip": "192.168.117.6",
+        "name": "outside-cidr",
+        "port": 8123,
+        "protocol": "TCP",
+        "reachable": false,
+        "seconds": 0.8007673149999999,
+        "timeout": true
+      },
+      {
+        "errno": null,
+        "error": "TimeoutError",
+        "ip": "10.96.0.10",
+        "name": "dns-tcp",
+        "port": 53,
+        "protocol": "TCP",
+        "reachable": false,
+        "seconds": 0.801058952,
+        "timeout": true
+      },
+      {
+        "errno": null,
+        "error": "TimeoutError",
+        "ip": "10.96.0.10",
+        "name": "dns-udp",
+        "port": 53,
+        "protocol": "UDP",
+        "reachable": false,
+        "seconds": 0.801572706,
+        "timeout": true
+      }
+    ],
+    "actual_production_guard_refused": {
+      "returncode": 1,
+      "result": {
+        "allowed": false,
+        "error": "network preflight rejected",
+        "production_check": true,
+        "vendor_cli_executions": 0
+      },
+      "stderr": "command terminated with exit code 1\n"
+    },
+    "fixture_executions": 0,
+    "vendor_cli_executions": 0,
+    "claim": "Modern kindnet enforces some NetworkPolicy flows; this exact default-CNI setup still allowed the denied Kubernetes API canary, so production preflight refused.",
+    "cleanup": {
+      "owned_node_removed": true,
+      "owned_outside_fixture_removed": true,
+      "owned_image_tag_removed": true
+    }
+  },
+  "runtime_lifecycle_regression": {
+    "raw": {
+      "filename": "agentmoor-gvisor-security-oom-diagnostic-2026-11-27-r17.json",
+      "sha256": "71122dda3065af58e5d0dcdae970def3115f95daf2c3117c53eb74ee8a2f1127",
+      "log_filename": "agentmoor-gvisor-security-oom-diagnostic-2026-11-27-r17.log",
+      "log_sha256": "513eab9f655e8ee27dd16b4a18cbf2442bf3005c5883bb98fdfad39cf3cb1cb3"
+    },
+    "status": "failed; diagnostic-only; signals make this ineligible for natural-cleanup acceptance",
+    "containerd_version": "containerd github.com/containerd/containerd/v2 v2.2.0 1c4457e00facac03ce1d75f7b6777a7a851e5c41\n",
+    "shim_version": "containerd-shim-runsc-v1:\n  Version:  2.1.5+unknown\n  Revision: \n  Go version: go1.27.3\n\n",
+    "pause_and_workload_before_oom": {
+      "90d4fe534f85121c771669c6d35d9e67c1727f36774b25ce88793b33ac88c574": {
+        "ID": "90d4fe534f85121c771669c6d35d9e67c1727f36774b25ce88793b33ac88c574",
+        "SandboxID": "",
+        "bootstrap": {
+          "version": 3,
+          "address": "unix:///run/containerd/s/2e28d2bec8e981847f57686969244bc40effcd85ad5493d2ed53b0398821ee21",
+          "protocol": "ttrpc"
+        },
+        "container_info_raw_sha256": "f364c136e70ff61767866aac702dc0db189a7a32d27f75198d013b5438899d52"
+      },
+      "3908b549e592d5c0b17fc50bacbab285e800a44d9fa8323255622b2f38012e56": {
+        "ID": "3908b549e592d5c0b17fc50bacbab285e800a44d9fa8323255622b2f38012e56",
+        "SandboxID": "90d4fe534f85121c771669c6d35d9e67c1727f36774b25ce88793b33ac88c574",
+        "bootstrap": {
+          "version": 3,
+          "address": "unix:///run/containerd/s/2e28d2bec8e981847f57686969244bc40effcd85ad5493d2ed53b0398821ee21",
+          "protocol": "ttrpc"
+        },
+        "container_info_raw_sha256": "d6b7f6ec47331a1f4cd2605d4bd5671f173e21b59298deeb15d4900d6d3a107b"
+      }
+    },
+    "observed_delete_shutdown_messages": [
+      "2026-11-27T07:08:12+0000 agentmoor-148db53e87de-control-plane containerd[3890]: time=\"2026-11-27T07:08:12.566602202Z\" level=debug msg=\"Delete, id: 3908b549e592d5c0b17fc50bacbab285e800a44d9fa8323255622b2f38012e56, execID: 2b90476aa8647ab5916b67cb556af1720f396c434080e8ee85bb419e8fa49c20\"",
+      "2026-11-27T07:08:12+0000 agentmoor-148db53e87de-control-plane containerd[3890]: time=\"2026-11-27T07:08:12.666536387Z\" level=debug msg=\"Delete, id: 3908b549e592d5c0b17fc50bacbab285e800a44d9fa8323255622b2f38012e56, execID: \"",
+      "2026-11-27T07:08:12+0000 agentmoor-148db53e87de-control-plane containerd[3890]: time=\"2026-11-27T07:08:12.666656888Z\" level=debug msg=\"Delete, id: 90d4fe534f85121c771669c6d35d9e67c1727f36774b25ce88793b33ac88c574, execID: \"",
+      "2026-11-27T07:08:12+0000 agentmoor-148db53e87de-control-plane containerd[3890]: time=\"2026-11-27T07:08:12.674873385Z\" level=debug msg=\"Shutdown, id: 90d4fe534f85121c771669c6d35d9e67c1727f36774b25ce88793b33ac88c574\"",
+      "2026-11-27T07:08:12+0000 agentmoor-148db53e87de-control-plane containerd[3890]: time=\"2026-11-27T07:08:12.675319639Z\" level=debug msg=\"Shutdown, shim did not shutdown due to: shim still servicing 1 containers\""
+    ],
+    "after_60_seconds": {
+      "live_processes": [
+        "   4165 Sl   containerd-shim /usr/local/bin/containerd-shim-runsc-v1 -namespace k8s.io -address /run/containerd/containerd.sock -id 90d4fe534f85121c771669c6d35d9e67c1727f36774b25ce88793b33ac88c574 -debug"
+      ],
+      "cri_sandboxes": []
+    },
+    "actual_orphan_cgroup": {
+      "4165": [
+        {
+          "path": "/sys/fs/cgroup/system.slice/containerd.service",
+          "cpu.max": "max 100000",
+          "cpu.stat": "usage_usec 8820410\nuser_usec 5771105\nsystem_usec 3049305\nnice_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+          "memory.max": "max",
+          "memory.current": "317612032",
+          "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+          "memory.swap.max": "max",
+          "memory.swap.current": "0",
+          "memory.swap.events": "high 0\nmax 0\nfail 0",
+          "pids.max": "max",
+          "pids.current": "165",
+          "pids.events": "max 0"
+        }
+      ]
+    },
+    "signals_requested": [
+      "SIGUSR1",
+      "SIGQUIT"
+    ],
+    "signal_log_sha256": "e0acf3ec299b975321feec488aa5e639a288aeb83c97d17b93983290abe5b416",
+    "signal_log_bytes": 30666,
+    "selected_usr1_stack_blocks": [
+      "goroutine 1 [select, 1 minutes]:\ngithub.com/containerd/containerd/v2/pkg/shim.reap({0xe4f8b0, 0x422a32cbeb10}, 0x422a32d80a10, 0x422a32ce4d90)\n\texternal/gazelle++go_deps+com_github_containerd_containerd_v2/pkg/shim/shim_unix.go:77 +0xa0\ngithub.com/containerd/containerd/v2/pkg/shim.serve({0xe4f8b0, 0x422a32cbeb10}, 0x422a32cbf260, 0x422a32ce4d90, 0x422a32d92330, {0x0, 0x0})\n\texternal/gazelle++go_deps+com_github_containerd_containerd_v2/pkg/shim/shim.go:481 +0x400\ngithub.com/containerd/containerd/v2/pkg/shim.run({0xe4f8b0, 0x422a32cbe990}, {0xe4f878, 0x422a32b63230}, {0x40?, 0x32?, 0xb6?})\n\texternal/gazelle++go_deps+com_github_containerd_containerd_v2/pkg/shim/shim.go:422 +0x1870\ngithub.com/containerd/containerd/v2/pkg/shim.Run({0xe4f840, 0xf0aec0}, {0xe4f878, 0x422a32b63230}, {0x0, 0x0, 0xe61268?})\n\texternal/gazelle++go_deps+com_github_containerd_containerd_v2/pkg/shim/shim.go:198 +0xf4\ngvisor.dev/gvisor/shim/v1/cli.Main(...)\n\tshim/v1/cli/cli.go:29\nmain.main()\n\tshim/main.go:23 +0x6c",
+      "goroutine 14 [chan receive, 1 minutes]:\ngvisor.dev/gvisor/pkg/shim/v1/runsc.(*runscService).processExits(...)\n\tpkg/shim/v1/runsc/service.go:671\ncreated by gvisor.dev/gvisor/pkg/shim/v1/runsc.NewTaskService in goroutine 1\n\tpkg/shim/v1/runsc/service.go:190 +0x270",
+      "goroutine 16 [chan receive, 1 minutes]:\ngvisor.dev/gvisor/pkg/shim/v1/runsc.(*runscService).forward(0x422a32bb5560, {0xe4f8b0?, 0x422a32cbeb10?}, {0xffff400c6f00, 0x422a32cbecc0})\n\tpkg/shim/v1/runsc/service.go:792 +0x88\ncreated by gvisor.dev/gvisor/pkg/shim/v1/runsc.NewTaskService in goroutine 1\n\tpkg/shim/v1/runsc/service.go:195 +0x3c8"
+    ],
+    "observed": "Both bootstrap records used task API v3 and one UDS. Pause Shutdown returned while the shim still served one container. After tasks/CRI/Sentry/gofer were gone the shim stayed idle in the unbounded containerd service cgroup. SIGUSR1 captured idle reaper/processExits/forward stacks; SIGQUIT was diagnostic only.",
+    "source_interpretation": "The guest container had SandboxID=pauseID. In containerd 2.2.0 that sandboxed v3 child deletion skipped a subsequent Shutdown. The fixed gVisor shim only exits when Shutdown observes an empty container map; deleting the last child without another Shutdown leaves the idle shim.",
+    "official_fix": "https://github.com/containerd/containerd/commit/402eb3166e088938090c759965f2ea7a3bbf22d4",
+    "official_fix_test": "TestShutdownShimWhenPauseExitsBeforeWorkload",
+    "fix_validation": "Official containerd 2.4.2 contains the fix. R18 changes the runtime with the historical guest32 budget and passes all plus three fresh OOMs. R20 validates the final guest64/host256 combination; no acceptance signals or custom reaper.",
+    "independent_source_audit": {
+      "report_filename": "agentmoor-gvisor-shim-oom-source-audit-20261127.md",
+      "report_sha256": "7dd3fa7fe936d4ee3dcdf4f259dba9359016c834e031ddde1cbc9c700083b021",
+      "evidence_filename": "agentmoor-gvisor-shim-oom-official-fix-evidence-20261127.json",
+      "evidence_sha256": "97474930196489dcc49d959b922f2f96ee532457affd696baa6ef944b93925a9",
+      "audit_time_scope": "Read-only official-source/artifact audit predates candidate execution; candidate-pending wording in that retained report is superseded by R18/R20 actual acceptance here.",
+      "fixed_gvisor_sources": [
+        "https://github.com/gvisor/gvisor/blob/81f68cb7d4661a9313d891a1758a765abe8eb27e/pkg/shim/v1/runsc/service.go#L606-L614",
+        "https://github.com/gvisor/gvisor/blob/81f68cb7d4661a9313d891a1758a765abe8eb27e/pkg/shim/v1/service.go#L347-L367",
+        "https://github.com/gvisor/gvisor/blob/81f68cb7d4661a9313d891a1758a765abe8eb27e/pkg/shim/v1/manager.go",
+        "https://github.com/gvisor/gvisor/blob/81f68cb7d4661a9313d891a1758a765abe8eb27e/go.mod"
+      ],
+      "fixed_containerd_old_sources": [
+        "https://github.com/containerd/containerd/blob/v2.2.0/core/runtime/v2/shim.go#L525-L592",
+        "https://github.com/containerd/containerd/blob/v2.2.0/core/runtime/v2/task_manager.go#L290-L308"
+      ],
+      "official_fix_version_check": {
+        "v2.2.0": "skip sandboxed task Shutdown",
+        "v2.2.10": "skip sandboxed task Shutdown",
+        "v2.3.7": "skip sandboxed task Shutdown",
+        "v2.4.2": "Shutdown after every task Delete; failed Shutdown retains retry state"
+      },
+      "shim_framework_version": "The official gVisor source depends on containerd/v2 2.1.5; shim -v 2.1.5+unknown alone is not a wrong-binary finding. Archive and installed binary hashes establish provenance.",
+      "configuration_alternative": "grouping=false does not undo task-v3 forced pod grouping; longer generic timeouts cannot replace a missing final Shutdown.",
+      "signature_verification": {
+        "tag": "v2.4.2",
+        "tag_object_sha": "49c2af6b7b0785ff636bed8b70a86f073ce8bd6e",
+        "commit": "b7a25261e029d68978bbf290df0a62fc819b3c51",
+        "github_signature_verification": {
+          "verified": true,
+          "reason": "valid"
+        },
+        "locally_validated_signature": false,
+        "source": "https://api.github.com/repos/containerd/containerd/git/tags/49c2af6b7b0785ff636bed8b70a86f073ce8bd6e"
+      }
+    }
+  },
+  "historical_32_task_mechanism_control": {
+    "filename": "agentmoor-gvisor-security-containerd242-all-2026-11-27-r18.json",
+    "sha256": "073d6fc330afe3b5743e7591da20e27c9efcd0081e07250ded5d4e0af1138028",
+    "log_filename": "agentmoor-gvisor-security-containerd242-all-2026-11-27-r18.log",
+    "log_sha256": "8fdc38af6681e28907c8ebfefef8d8fbf4986c50b431c3ea457a10045f066574",
+    "status": "all_passed",
+    "guest_rlimit_nproc": [
+      32,
+      32
+    ],
+    "is_final_64_task_acceptance": false,
+    "extra_natural_oom_repeats": 3
+  },
+  "retained_failed_runs": [
+    {
+      "filename": "agentmoor-gvisor-security-all-2026-11-27-r11.json",
+      "sha256": "05816d9f5982dfb94e57f14246f7b0efe00e551c1f5b719f643cb55b91edffcb",
+      "log_filename": "agentmoor-gvisor-security-all-2026-11-27-r11.log",
+      "log_sha256": "9ffebd39b29a282ee0c247a9c2f9546fbff46e81f1a4fd0cc5810071b5096e2c",
+      "status": "failed",
+      "failure": {
+        "type": "RuntimeError",
+        "message": "deleted Pod left a live Sentry/CRI sandbox"
+      },
+      "source": {
+        "commit": "74ee3b6ce42f0da01b16bdb63e435a48f49e5ef2",
+        "status": "?? tests/kubernetes/gvisor_network_check/\n?? tests/kubernetes/gvisor_process_limit/\n?? tests/kubernetes/gvisor_security_fixture.py\n?? tests/kubernetes/gvisor_security_probe.py\n?? tests/kubernetes/gvisor_security_probe_test.py\n",
+        "script_sha256": "64ebfe512cd5aa13e7b2856d6664faf65a07214d802942436dfcf1643c9828e5",
+        "fixture_sha256": "bdae26c73f36ef284e7192c2f2f4923f154e2641bdb197c1e606975c77ac0047"
+      },
+      "cleanup": {
+        "owned_node_removed": true,
+        "owned_outside_fixture_removed": true,
+        "owned_image_tag_removed": true
+      },
+      "diagnostic_only": false,
+      "pid_boundary": {
+        "fixture": null,
+        "oom_kill_delta": null,
+        "host_pids_max_events_delta": null,
+        "failure": null
+      }
+    },
+    {
+      "filename": "agentmoor-gvisor-security-all-2026-11-27-r13.json",
+      "sha256": "07e042bca6c23611e408565c77f547a6b786518ea82990631211cf55ed80f0f2",
+      "log_filename": "agentmoor-gvisor-security-all-2026-11-27-r13.log",
+      "log_sha256": "849be28eb1d68a74b9985b4f541e98dcc3664fd0e0de5cba70725cd1150e8ad6",
+      "status": "failed",
+      "failure": {
+        "type": "RuntimeError",
+        "message": "resource proofs failed: pids"
+      },
+      "source": {
+        "commit": "021336fe99993b48b4daed8807dde46cd34b220c",
+        "status": " M Makefile\n M tests/kubernetes/gvisor_security_probe.py\n M tests/kubernetes/gvisor_security_probe_test.py\n",
+        "script_sha256": "60981416585994296c8622c8c6b66dfbcc27d0e159343694ad4694e1ccd72d04",
+        "fixture_sha256": "bdae26c73f36ef284e7192c2f2f4923f154e2641bdb197c1e606975c77ac0047"
+      },
+      "cleanup": {
+        "owned_node_removed": true,
+        "owned_outside_fixture_removed": true,
+        "owned_image_tag_removed": true
+      },
+      "diagnostic_only": false,
+      "pid_boundary": {
+        "fixture": null,
+        "oom_kill_delta": 1,
+        "host_pids_max_events_delta": 0,
+        "failure": {
+          "type": "RuntimeError",
+          "message": "deleted Pod left a live Sentry/gofer/shim or CRI sandbox"
+        }
+      }
+    },
+    {
+      "filename": "agentmoor-gvisor-security-all-2026-11-27-r14.json",
+      "sha256": "23fe5d715012cdc316fef5a1cff5d5cd2648c4df2316cbeb11fb96ee7a3a3f4b",
+      "log_filename": "agentmoor-gvisor-security-all-2026-11-27-r14.log",
+      "log_sha256": "cf06a6b3c57e1d9825171e1f229aaff215fef23dcff4f190bebdf8edb2fb905e",
+      "status": "failed",
+      "failure": {
+        "type": "RuntimeError",
+        "message": "resource proofs failed: file-memory"
+      },
+      "source": {
+        "commit": "f1d5018dd0e57d4ce042cf8c187485fd2810940b",
+        "status": " M tests/kubernetes/gvisor_security_probe.py\n",
+        "script_sha256": "5642f378f223b9c8f5226823b8b6c07fea536682fbe6cacc561ee1f6dd0f97b5",
+        "fixture_sha256": "bdae26c73f36ef284e7192c2f2f4923f154e2641bdb197c1e606975c77ac0047"
+      },
+      "cleanup": {
+        "owned_node_removed": true,
+        "owned_outside_fixture_removed": true,
+        "owned_image_tag_removed": true
+      },
+      "diagnostic_only": false,
+      "pid_boundary": {
+        "fixture": {
+          "children": 30,
+          "fork_errno": 11,
+          "guest_rlimit_nproc": [
+            32,
+            32
+          ],
+          "hard_raise_denied": true,
+          "mode": "pids",
+          "stage": "finished"
+        },
+        "oom_kill_delta": 0,
+        "host_pids_max_events_delta": 0,
+        "failure": null
+      }
+    },
+    {
+      "filename": "agentmoor-gvisor-security-all-2026-11-27-r5.json",
+      "sha256": "7a67649df3210ec6adf30b18f802adf111087ad41234ced665c00219d1fc284a",
+      "log_filename": "agentmoor-gvisor-security-all-2026-11-27-r5.log",
+      "log_sha256": "e9db41aad9ad30f4767b1ef727706f4a68200a5bb57cc16e746bc59bfba0d2d5",
+      "status": "failed",
+      "failure": {
+        "type": "RuntimeError",
+        "message": "deleted Pod left a live Sentry/CRI sandbox"
+      },
+      "source": {
+        "commit": "74ee3b6ce42f0da01b16bdb63e435a48f49e5ef2",
+        "status": "?? tests/kubernetes/gvisor_network_check/\n?? tests/kubernetes/gvisor_process_limit/\n?? tests/kubernetes/gvisor_security_fixture.py\n?? tests/kubernetes/gvisor_security_probe.py\n",
+        "script_sha256": "cd1d5bebfaeb2ca464fa6416b73a12f7164b7e77887f92afb3ce0ddd2d1319fd",
+        "fixture_sha256": "2039834c9ccf8369360748e9fdaf5be96b5744bcb1ad003e85b0a5816ea8b2b8"
+      },
+      "cleanup": {
+        "owned_node_removed": true,
+        "owned_outside_fixture_removed": true,
+        "owned_image_tag_removed": true
+      },
+      "diagnostic_only": false,
+      "pid_boundary": {
+        "fixture": null,
+        "oom_kill_delta": null,
+        "host_pids_max_events_delta": null,
+        "failure": null
+      }
+    },
+    {
+      "filename": "agentmoor-gvisor-security-all-2026-11-27-r8.json",
+      "sha256": "fa4b1f83426cc51b54aae6b28bab2d42c29d55596bbca3cbedc7a3da10ebb6e1",
+      "log_filename": "agentmoor-gvisor-security-all-2026-11-27-r8.log",
+      "log_sha256": "56e49135569263ed1ad2a005ed32a8c7f843db65385e83e2da8d1a4929ecb43d",
+      "status": "failed",
+      "failure": {
+        "type": "TimeoutError",
+        "message": "real gVisor Pod did not run within 120 seconds"
+      },
+      "source": {
+        "commit": "74ee3b6ce42f0da01b16bdb63e435a48f49e5ef2",
+        "status": "?? tests/kubernetes/gvisor_network_check/\n?? tests/kubernetes/gvisor_process_limit/\n?? tests/kubernetes/gvisor_security_fixture.py\n?? tests/kubernetes/gvisor_security_probe.py\n?? tests/kubernetes/gvisor_security_probe_test.py\n",
+        "script_sha256": "1bde1073b791c669aa606fc9f354509f31491243c62c2bbad54d227e36b2febd",
+        "fixture_sha256": "bdae26c73f36ef284e7192c2f2f4923f154e2641bdb197c1e606975c77ac0047"
+      },
+      "cleanup": {
+        "owned_node_removed": true,
+        "owned_outside_fixture_removed": true,
+        "owned_image_tag_removed": true
+      },
+      "diagnostic_only": false,
+      "pid_boundary": {
+        "fixture": null,
+        "oom_kill_delta": null,
+        "host_pids_max_events_delta": null,
+        "failure": null
+      }
+    },
+    {
+      "filename": "agentmoor-gvisor-security-containerd242-nproc64-all-2026-11-27-r19.json",
+      "sha256": "bd3953b45648685ccad8ca20b352d20ab27a3dfb4ccc95bd5019f2a9e1ad44c2",
+      "log_filename": "agentmoor-gvisor-security-containerd242-nproc64-all-2026-11-27-r19.log",
+      "log_sha256": "1c1d5438a79e543d7c4ac0841900f0965a2edd033aaabafabb452881e70b02fc",
+      "status": "failed",
+      "failure": {
+        "type": "RuntimeError",
+        "message": "resource proofs failed: pids"
+      },
+      "source": {
+        "commit": "f11021f02a2eb420ffee43f19dea656982c7f683",
+        "status": "",
+        "script_sha256": "5b127a5e2eb757b8ad7cd19bfbba9f6f6f6cdf1c7ab7992c6c75d90d3d3d1b08",
+        "containerd_installer_sha256": "eccdbf44e534f826875ca0acae4e7f4addc82fa7823cdcb702fa4f97a768fc8b",
+        "fixture_sha256": "ac4b0414ec1e9b1902debfc59a48ff832d2fb650a4544fcb46803bb175cb1ea6"
+      },
+      "cleanup": {
+        "owned_node_removed": true,
+        "owned_outside_fixture_removed": true,
+        "owned_image_tag_removed": true
+      },
+      "diagnostic_only": false,
+      "pid_boundary": {
+        "fixture": null,
+        "oom_kill_delta": 0,
+        "host_pids_max_events_delta": 1,
+        "failure": {
+          "type": "KeyError",
+          "message": "'fixture'"
+        }
+      }
+    },
+    {
+      "filename": "agentmoor-gvisor-security-kindnet-2026-11-27-r10.json",
+      "sha256": "ad5b70700bc42c4469ea992af6fa1aff97dd2c274fb6f55c818d4759a14a7b5a",
+      "log_filename": "agentmoor-gvisor-security-kindnet-2026-11-27-r10.log",
+      "log_sha256": "4ba45fe2fe9c691e8915ede7c127ec8ac0f9d825deb082ef80fa9b33012656dc",
+      "status": "failed",
+      "failure": {
+        "type": "RuntimeError",
+        "message": "missing handler has no repeated explicit rejection"
+      },
+      "source": {
+        "commit": "74ee3b6ce42f0da01b16bdb63e435a48f49e5ef2",
+        "status": "?? tests/kubernetes/gvisor_network_check/\n?? tests/kubernetes/gvisor_process_limit/\n?? tests/kubernetes/gvisor_security_fixture.py\n?? tests/kubernetes/gvisor_security_probe.py\n?? tests/kubernetes/gvisor_security_probe_test.py\n",
+        "script_sha256": "64ebfe512cd5aa13e7b2856d6664faf65a07214d802942436dfcf1643c9828e5",
+        "fixture_sha256": "bdae26c73f36ef284e7192c2f2f4923f154e2641bdb197c1e606975c77ac0047"
+      },
+      "cleanup": {
+        "owned_node_removed": true,
+        "owned_outside_fixture_removed": true,
+        "owned_image_tag_removed": true
+      },
+      "diagnostic_only": false,
+      "pid_boundary": {
+        "fixture": null,
+        "oom_kill_delta": null,
+        "host_pids_max_events_delta": null,
+        "failure": null
+      }
+    },
+    {
+      "filename": "agentmoor-gvisor-security-kindnet-2026-11-27-r7.json",
+      "sha256": "e110d5aeaa96da59ca31512cf901b5089e97c41af98f2350d323fa10f1c3b110",
+      "log_filename": "agentmoor-gvisor-security-kindnet-2026-11-27-r7.log",
+      "log_sha256": "18de609f80a27219e9cc2e87ea23f2fd6f6f07c5a5da4991862699a60ebead79",
+      "status": "failed",
+      "failure": {
+        "type": "TimeoutError",
+        "message": "real gVisor Pod did not run within 120 seconds"
+      },
+      "source": {
+        "commit": "74ee3b6ce42f0da01b16bdb63e435a48f49e5ef2",
+        "status": "?? tests/kubernetes/gvisor_network_check/\n?? tests/kubernetes/gvisor_process_limit/\n?? tests/kubernetes/gvisor_security_fixture.py\n?? tests/kubernetes/gvisor_security_probe.py\n?? tests/kubernetes/gvisor_security_probe_test.py\n",
+        "script_sha256": "5e55a46ce87305dd1575e6a97fb7f4b50170c2b4e5d00a99b040fee3964ee8b5",
+        "fixture_sha256": "93de47368e81384fbbab9ad17611317a33047dc8754763a63f1bb111c78f7988"
+      },
+      "cleanup": {
+        "owned_node_removed": true,
+        "owned_outside_fixture_removed": true,
+        "owned_image_tag_removed": true
+      },
+      "diagnostic_only": false,
+      "pid_boundary": {
+        "fixture": null,
+        "oom_kill_delta": null,
+        "host_pids_max_events_delta": null,
+        "failure": null
+      }
+    },
+    {
+      "filename": "agentmoor-gvisor-security-kindnet-2026-11-27-r9.json",
+      "sha256": "c8b02ca6348fc3b1d7cdbc4d58913a3e6d31b1209706ca91168665d41bee644f",
+      "log_filename": "agentmoor-gvisor-security-kindnet-2026-11-27-r9.log",
+      "log_sha256": "4cdb1ae834446ea291828fffad9eeabbab10b91d50c69567dfcde3282ffc3a51",
+      "status": "failed",
+      "failure": {
+        "type": "RuntimeError",
+        "message": "kindnet negative control did not keep canaries reachable"
+      },
+      "source": {
+        "commit": "74ee3b6ce42f0da01b16bdb63e435a48f49e5ef2",
+        "status": "?? tests/kubernetes/gvisor_network_check/\n?? tests/kubernetes/gvisor_process_limit/\n?? tests/kubernetes/gvisor_security_fixture.py\n?? tests/kubernetes/gvisor_security_probe.py\n?? tests/kubernetes/gvisor_security_probe_test.py\n",
+        "script_sha256": "a27d1b8ba7e5c877dc1cb9c1e6b31e02c82b62a26e97a0ee021347aa4fe79af8",
+        "fixture_sha256": "bdae26c73f36ef284e7192c2f2f4923f154e2641bdb197c1e606975c77ac0047"
+      },
+      "cleanup": {
+        "owned_node_removed": true,
+        "owned_outside_fixture_removed": true,
+        "owned_image_tag_removed": true
+      },
+      "diagnostic_only": false,
+      "pid_boundary": {
+        "fixture": null,
+        "oom_kill_delta": null,
+        "host_pids_max_events_delta": null,
+        "failure": null
+      }
+    },
+    {
+      "filename": "agentmoor-gvisor-security-network-2026-11-27-r1.json",
+      "sha256": "34a013ab92fb135db67928bd49e2f5784566f1fec2b88ee97960103665901246",
+      "log_filename": "agentmoor-gvisor-security-network-2026-11-27-r1.log",
+      "log_sha256": "5dea270f6c49c88d0a6f0bee63e03a9eaf3b23a07a57d2a5e155a0305bd3f51d",
+      "status": "failed",
+      "failure": {
+        "type": "RuntimeError",
+        "message": "command failed: kind load docker-image quay.io/calico/calico:v3.33.0 --name agentmoor-38fd96a711a2\nImage: \"quay.io/calico/calico:v3.33.0\" with ID \"sha256:4ebc20730127bc9e8bf1db5f5a2d8b58cf37fe0e891b3c7b5471992221d213e5\" not yet present on node \"agentmoor-38fd96a711a2-control-plane\", loading...\nERROR: failed to load image: command \"docker exec --privileged -i agentmoor-38fd96a711a2-control-plane ctr --namespace=k8s.io images import --all-platforms --digests --snapshotter=overlayfs -\" failed with error: exit status 1\n\nCommand Output: ctr: content digest sha256:3eba6eb95b51b337bf255ecaf5c669b4b2ba04f9f813aa89785aa6853ecf9817: not found\n"
+      },
+      "source": {
+        "commit": "a558506b865f0424f32e21ccc8cb0190744ae09d",
+        "status": "?? tests/kubernetes/gvisor_network_check/\n?? tests/kubernetes/gvisor_security_fixture.py\n?? tests/kubernetes/gvisor_security_probe.py\n",
+        "script_sha256": "8c7c729802524fe0e176cc0ef050161851237a6115e67108ac002a95494d09f5",
+        "fixture_sha256": "04cdd38d0895e84b81622a24b645cb5d97fa183e8030ac1f7b008b619ba304e7"
+      },
+      "cleanup": {
+        "owned_node_removed": true,
+        "owned_outside_fixture_removed": true,
+        "owned_image_tag_removed": true
+      },
+      "diagnostic_only": false,
+      "pid_boundary": {
+        "fixture": null,
+        "oom_kill_delta": null,
+        "host_pids_max_events_delta": null,
+        "failure": null
+      }
+    },
+    {
+      "filename": "agentmoor-gvisor-security-network-2026-11-27-r2.json",
+      "sha256": "630f04442831f921aa0b2e245ec9121cf1b748f129207748ae00dd8ef1310ff1",
+      "log_filename": "agentmoor-gvisor-security-network-2026-11-27-r2.log",
+      "log_sha256": "0aa5a6b139fe4839f94b126ffe9ef6bab04c31379f36ddaf7c5a9b4b6da441c8",
+      "status": "failed",
+      "failure": {
+        "type": "RuntimeError",
+        "message": "command failed: docker exec agentmoor-9aee764516e9-control-plane ctr --namespace=k8s.io images import --digests --platform linux/arm64 --snapshotter=overlayfs /run/agentmoor-cni.tar\nctr: open /run/agentmoor-cni.tar: no such file or directory\n"
+      },
+      "source": {
+        "commit": "a558506b865f0424f32e21ccc8cb0190744ae09d",
+        "status": "?? tests/kubernetes/gvisor_network_check/\n?? tests/kubernetes/gvisor_security_fixture.py\n?? tests/kubernetes/gvisor_security_probe.py\n",
+        "script_sha256": "6c9dd0ca6d6f7dadf1af1aae88da58bd179c5ed3f76035f0c1d62e01937559c4",
+        "fixture_sha256": "04cdd38d0895e84b81622a24b645cb5d97fa183e8030ac1f7b008b619ba304e7"
+      },
+      "cleanup": {
+        "owned_node_removed": true,
+        "owned_outside_fixture_removed": true,
+        "owned_image_tag_removed": true
+      },
+      "diagnostic_only": false,
+      "pid_boundary": {
+        "fixture": null,
+        "oom_kill_delta": null,
+        "host_pids_max_events_delta": null,
+        "failure": null
+      }
+    },
+    {
+      "filename": "agentmoor-gvisor-security-network-2026-11-27-r3.json",
+      "sha256": "6066ed2039ebf6b670f990429ec395f9dd2e1d4d7dc75a5949fd754eb9765d13",
+      "log_filename": "agentmoor-gvisor-security-network-2026-11-27-r3.log",
+      "log_sha256": "0800118dc34e066f2c5aa5b77c031892ba9723901df3c5cf42c017f997966422",
+      "status": "failed",
+      "failure": {
+        "type": "RuntimeError",
+        "message": "no-policy network baseline is not actually reachable"
+      },
+      "source": {
+        "commit": "a558506b865f0424f32e21ccc8cb0190744ae09d",
+        "status": "?? tests/kubernetes/gvisor_network_check/\n?? tests/kubernetes/gvisor_security_fixture.py\n?? tests/kubernetes/gvisor_security_probe.py\n",
+        "script_sha256": "a79b6b5b693efd993bdc0291503bb8d601019bf32a4b4727dd84cea5ea7511ce",
+        "fixture_sha256": "04cdd38d0895e84b81622a24b645cb5d97fa183e8030ac1f7b008b619ba304e7"
+      },
+      "cleanup": {
+        "owned_node_removed": true,
+        "owned_outside_fixture_removed": true,
+        "owned_image_tag_removed": true
+      },
+      "diagnostic_only": false,
+      "pid_boundary": {
+        "fixture": null,
+        "oom_kill_delta": null,
+        "host_pids_max_events_delta": null,
+        "failure": null
+      }
+    },
+    {
+      "filename": "agentmoor-gvisor-security-network-2026-11-27-r4.json",
+      "sha256": "2c2fc443b20639009ca76a5e2e8ac459f234b7f5cea91d3fda4dcf72ed99fb97",
+      "log_filename": "agentmoor-gvisor-security-network-2026-11-27-r4.log",
+      "log_sha256": "9700f14dbfb7ae4c1d7232326055263723575b384e5c5ed99723611d024459a8",
+      "status": "failed",
+      "failure": {
+        "type": "RuntimeError",
+        "message": "no-policy network baseline is not actually reachable"
+      },
+      "source": {
+        "commit": "a558506b865f0424f32e21ccc8cb0190744ae09d",
+        "status": "?? tests/kubernetes/gvisor_network_check/\n?? tests/kubernetes/gvisor_security_fixture.py\n?? tests/kubernetes/gvisor_security_probe.py\n",
+        "script_sha256": "628368fdbdd64d3e863d2072ce54aa9eefdc0c5f0b6979f814f9f046cf996e74",
+        "fixture_sha256": "04cdd38d0895e84b81622a24b645cb5d97fa183e8030ac1f7b008b619ba304e7"
+      },
+      "cleanup": {
+        "owned_node_removed": true,
+        "owned_outside_fixture_removed": true,
+        "owned_image_tag_removed": true
+      },
+      "diagnostic_only": false,
+      "pid_boundary": {
+        "fixture": null,
+        "oom_kill_delta": null,
+        "host_pids_max_events_delta": null,
+        "failure": null
+      }
+    },
+    {
+      "filename": "agentmoor-gvisor-security-oom-diagnostic-2026-11-27-r15.json",
+      "sha256": "ea9bfd782730415b06c3551cbc494e980583a13382d618bc8c7a3e2d17bc2f0a",
+      "log_filename": "agentmoor-gvisor-security-oom-diagnostic-2026-11-27-r15.log",
+      "log_sha256": "37f9b9bb1baafe6dcc6ac3024827c7e6e1cad194071bc03c6478ca33788ab0e1",
+      "status": "failed",
+      "failure": {
+        "type": "RuntimeError",
+        "message": "deleted Pod left a live Sentry/gofer/shim or CRI sandbox"
+      },
+      "source": {
+        "commit": "f1d5018dd0e57d4ce042cf8c187485fd2810940b",
+        "status": " M tests/kubernetes/gvisor_security_probe.py\n",
+        "script_sha256": "0227a8f4e9fcee0325636fde79aae98a5e760657fc0f052e4055ca4207f21f04",
+        "fixture_sha256": "bdae26c73f36ef284e7192c2f2f4923f154e2641bdb197c1e606975c77ac0047"
+      },
+      "cleanup": {
+        "owned_node_removed": true,
+        "owned_outside_fixture_removed": true,
+        "owned_image_tag_removed": true
+      },
+      "diagnostic_only": true,
+      "pid_boundary": {
+        "fixture": null,
+        "oom_kill_delta": null,
+        "host_pids_max_events_delta": null,
+        "failure": null
+      }
+    },
+    {
+      "filename": "agentmoor-gvisor-security-oom-diagnostic-2026-11-27-r16.json",
+      "sha256": "88473c3d8cab232a45cad4d529cac9748509b3f44283e9f059c2eab3dc47aed5",
+      "log_filename": "agentmoor-gvisor-security-oom-diagnostic-2026-11-27-r16.log",
+      "log_sha256": "6fb43fcfbbfa252b53286232f29584e7c21be8170b3c465c308e43bf39b22bf6",
+      "status": "failed",
+      "failure": {
+        "type": "RuntimeError",
+        "message": "diagnostic-only run; no acceptance"
+      },
+      "source": {
+        "commit": "f1d5018dd0e57d4ce042cf8c187485fd2810940b",
+        "status": " M tests/kubernetes/gvisor_security_probe.py\n",
+        "script_sha256": "41e2c93acccc8cf2ac5f7f9698774728f81e036a66af39a7dd9a4d3d66be2a0d",
+        "fixture_sha256": "bdae26c73f36ef284e7192c2f2f4923f154e2641bdb197c1e606975c77ac0047"
+      },
+      "cleanup": {
+        "owned_node_removed": true,
+        "owned_outside_fixture_removed": true,
+        "owned_image_tag_removed": true
+      },
+      "diagnostic_only": true,
+      "pid_boundary": {
+        "fixture": null,
+        "oom_kill_delta": null,
+        "host_pids_max_events_delta": null,
+        "failure": null
+      }
+    },
+    {
+      "filename": "agentmoor-gvisor-security-oom-diagnostic-2026-11-27-r17.json",
+      "sha256": "71122dda3065af58e5d0dcdae970def3115f95daf2c3117c53eb74ee8a2f1127",
+      "log_filename": "agentmoor-gvisor-security-oom-diagnostic-2026-11-27-r17.log",
+      "log_sha256": "513eab9f655e8ee27dd16b4a18cbf2442bf3005c5883bb98fdfad39cf3cb1cb3",
+      "status": "failed",
+      "failure": {
+        "type": "RuntimeError",
+        "message": "deleted Pod left a live Sentry/gofer/shim or CRI sandbox"
+      },
+      "source": {
+        "commit": "f1d5018dd0e57d4ce042cf8c187485fd2810940b",
+        "status": " M tests/kubernetes/gvisor_security_probe.py\n M tests/kubernetes/gvisor_security_probe_test.py\n",
+        "script_sha256": "498fc1fb5290bdf3d021d552f8b98a7c93516260d02bde2661697cb54ffd172b",
+        "fixture_sha256": "bdae26c73f36ef284e7192c2f2f4923f154e2641bdb197c1e606975c77ac0047"
+      },
+      "cleanup": {
+        "owned_node_removed": true,
+        "owned_outside_fixture_removed": true,
+        "owned_image_tag_removed": true
+      },
+      "diagnostic_only": true,
+      "pid_boundary": {
+        "fixture": null,
+        "oom_kill_delta": null,
+        "host_pids_max_events_delta": null,
+        "failure": null
+      }
+    },
+    {
+      "filename": "agentmoor-gvisor-security-resources-2026-11-27-r6.json",
+      "sha256": "1149bd7f428343474d17c8e36ea68ca3f7db05c1274766edfadf1dd099575b07",
+      "log_filename": "agentmoor-gvisor-security-resources-2026-11-27-r6.log",
+      "log_sha256": "9c583d863d04348b87722a88b1bb23c8a0801063882abbb4563424ec75ff1925",
+      "status": "failed",
+      "failure": {
+        "type": "RuntimeError",
+        "message": "memory workload was not killed by its hard memory cgroup"
+      },
+      "source": {
+        "commit": "74ee3b6ce42f0da01b16bdb63e435a48f49e5ef2",
+        "status": "?? tests/kubernetes/gvisor_network_check/\n?? tests/kubernetes/gvisor_process_limit/\n?? tests/kubernetes/gvisor_security_fixture.py\n?? tests/kubernetes/gvisor_security_probe.py\n?? tests/kubernetes/gvisor_security_probe_test.py\n",
+        "script_sha256": "5a0efb1f0fd93160e121061aa7fb52f2295117dd6db91c95e14469c6646fe07d",
+        "fixture_sha256": "93de47368e81384fbbab9ad17611317a33047dc8754763a63f1bb111c78f7988"
+      },
+      "cleanup": {
+        "owned_node_removed": true,
+        "owned_outside_fixture_removed": true,
+        "owned_image_tag_removed": true
+      },
+      "diagnostic_only": false,
+      "pid_boundary": {
+        "fixture": null,
+        "oom_kill_delta": null,
+        "host_pids_max_events_delta": null,
+        "failure": null
+      }
+    }
+  ],
+  "merged_source_regression": {
+    "source_commit": "2b2538d73532a89998c6f83ee0bd4233a5f11beb",
+    "merged_main": "d307e7e",
+    "command": "make fmt && make check && make demo && make test-k8s",
+    "status": "passed",
+    "scope": "Existing trusted-development four-agent Kubernetes contract, separate from actual gVisor synthetic component and INT-81 native isolated provider.",
+    "exit_code": 0,
+    "log_filename": "agentmoor-gvisor-security-merged-checks-fourcli-2026-11-27-r7.log",
+    "log_sha256": "9e1b3fda0b5388f8403d71eac3ffdf2430c67c6c5768b7f03bd40681e148660a",
+    "source_status_at_start": "clean before documentation edits",
+    "source_code_changed_during_run": false,
+    "agents": {
+      "codex": {
+        "reported_phase_groups": 4,
+        "image_id": "sha256:03d77c548e343cec2b43a7c95ffaaa400b12b795408cda640e5b5db5534d8c9c",
+        "native_cancellation_seconds": 3.8
+      },
+      "gemini-cli": {
+        "reported_phase_groups": 4,
+        "image_id": "sha256:126657e5868d3c14012be0fb78c7e59b2f234db860c4f6d102fdd6b8a51142d4",
+        "native_cancellation_seconds": 3.0
+      },
+      "opencode": {
+        "reported_phase_groups": 4,
+        "image_id": "sha256:4b53d9751d4aa5792da94a693c55a46b85f2243e0d9bdfb16f478276c28b2265",
+        "native_cancellation_seconds": 3.7
+      },
+      "claude-code": {
+        "reported_phase_groups": 4,
+        "image_id": "sha256:39df5100561325b11615f065e4ce58accd429cdf25afc9f719d1b8b1ff3dd801",
+        "native_cancellation_seconds": 2.3
+      }
+    },
+    "total_reported_contract_phase_groups": 16,
+    "consecutive_followup_turns": 8,
+    "checksum_pinned_package_versions": {
+      "codex": "0.171.0-alpha.13",
+      "gemini-cli": "0.70.0",
+      "opencode": "1.19.6",
+      "claude-code": "2.1.330"
+    },
+    "version_evidence": "Checksum-pinned installer packages exercised by the contract; no separate --version collector is claimed.",
+    "fixture_models": "Local scripted model fixtures; no real provider key or real-model acceptance.",
+    "cleanup": {
+      "cluster": "agentmoor-22947880fd65",
+      "node_containers_remaining": [],
+      "task_image_tags_remaining": {
+        "agentmoor-contract:agentmoor-22947880fd65-codex": "",
+        "agentmoor-contract:agentmoor-22947880fd65-gemini-cli": "",
+        "agentmoor-contract:agentmoor-22947880fd65-opencode": "",
+        "agentmoor-contract:agentmoor-22947880fd65-claude-code": ""
+      },
+      "scope": "Only this full four-agent regression cluster and its unique tags inspected; no other resources modified."
+    },
+    "offline_proof_regressions": 15,
+    "source_installer_sha256": "701fa7f7f3c14fd1852cdf359cccb7938aaa4626e37ba57fa82ff2ea9ee0c10b"
+  },
+  "limitations": [
+    "Linux ARM64 systrap only; no hardware VM/KVM or AMD64 execution proof.",
+    "Single owned kind node, no production multi-node HA/upgrades/failover acceptance.",
+    "No real model/API key or production SaaS/native/Skill full chain in this component.",
+    "No concurrent Pod ResourceQuota admission test in this component; separate provider integration owns it.",
+    "512MiB overlay size is per filesystem and not additional RAM; Sentry, anonymous pages and tmpfs share effective memory cgroups with parent swap disabled.",
+    "emptyDir sizeLimit and ephemeral-storage YAML are not asserted to be synchronous hard disk quotas. Actual ENOSPC comes from measured /dev/shm capacity; /tmp writes are stopped by the combined memory cgroup."
+  ]
+}

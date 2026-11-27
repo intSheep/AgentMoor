@@ -41,7 +41,7 @@ Kubernetes 的 RuntimeClass、Pod 限制、RBAC、网络策略与资源额度共
 | [INT-68](https://linear.app/intsheep/issue/INT-68) | 已合并：原有 22 条 HTTP 路由的角色及四维作用域矩阵。没有由此宣称代码隔离。 |
 | [INT-69](https://linear.app/intsheep/issue/INT-69) | 已实现：可信控制面的密钥轮换、单凭据撤销与受信管理入口；[实际验证](authentication-policy.md#2026-11-27-实际验证)。 |
 | [INT-70](https://linear.app/intsheep/issue/INT-70) | 已实现任务首轮/追问的显式策略与拒绝门禁；[运行手册](operations.md#任务执行的信任策略)。普通原生维护入口和真正 provider 仍待后续，门禁不是沙箱。 |
-| [INT-71](https://linear.app/intsheep/issue/INT-71) | 已取得[生产提供方的真实 Codex 文件/Skill、取消、精确 guest 丢失证据](sandbox-provider.md#2026-11-27-实际验收)；无模型密钥、限定 Linux/gVisor 组合。隔离文本回合及其他 CLI 另验，未宣称整个 P2 或生产 HA 完成。 |
+| [INT-71](https://linear.app/intsheep/issue/INT-71) | 已通过[网络/资源与官方运行时回收验证](gvisor-network-resources.md)，并取得[生产提供方的真实 Codex 文件/Skill、取消、精确 guest 丢失证据](sandbox-provider.md#2026-11-27-实际验收)；无模型密钥、限定 Linux/gVisor 组合。隔离文本回合及其他 CLI 另验，未宣称整个 P2 或生产 HA 完成。 |
 | [INT-73](https://linear.app/intsheep/issue/INT-73) | 已实现[私有输入/输出与执行围栏的持久存储](sandbox-execution-intents.md)，真实 PostgreSQL/S3 故障测试通过；尚未连接控制器或开放不可信执行。 |
 | [INT-72](https://linear.app/intsheep/issue/INT-72) | 已实现[有界原生 Guest 核心](native-guest.md)，真实 Codex 在三个新 gVisor Pod 中沿同会话完成文件生成、修改与核验；仍未接入生产控制器/网关或开放不可信任务。 |
 | [INT-76](https://linear.app/intsheep/issue/INT-76) | 已实现[模型调用前的持久次数/字节预留](sandbox-model-budget.md)，并发、重启与真实 PostgreSQL 租约丢失测试通过；模型代理及计费/并发流控制另验。 |
@@ -49,5 +49,8 @@ Kubernetes 的 RuntimeClass、Pod 限制、RBAC、网络策略与资源额度共
 | [INT-74](https://linear.app/intsheep/issue/INT-74) | 已实现[固定模板 Pod 控制器](sandbox-pod-controller.md)，真实 gVisor 集群中的正常/取消/缺运行时及最小权限验证通过；使用明确合成 guest，未接入真实模型网关或 SaaS 执行入口。 |
 | [INT-77](https://linear.app/intsheep/issue/INT-77) | 已实现[专用能力/模型 TLS 网关](sandbox-capability-gateway.md)，真实 TLS 完整性、预算、撤销和故障回归通过；尚未连接完整生产执行链路。 |
 | [INT-78](https://linear.app/intsheep/issue/INT-78) | 已实现[任务与沙箱的 typed API、原字节输入准备及完整外包校验 SDK](sandbox-task-handoff.md)，八条执行方路由与真实 PostgreSQL/S3 输入准备通过；Worker/`serve` 未接线，不可信任务门禁继续关闭，未由此宣称真实隔离 SaaS 已通过。 |
+| [INT-79](https://linear.app/intsheep/issue/INT-79) | 已实现[隔离结果的可信发布组件](isolated-result-publication.md)：整包与交付预检、原始 Session/Workspace、冻结重试及失败清理均通过；新增 host 解码入口同时限制 JSON 深度/节点与归档隐式目录。仅数据发布，未接 `serve`/Worker 执行入口，门禁继续关闭。 |
+| [INT-80](https://linear.app/intsheep/issue/INT-80) | [参考集群网络/资源组件](gvisor-network-resources.md)已通过真实 Calico/gVisor 正反例、guest 64/host 256 两层任务数与三次额外 OOM 回收；并发 Pod 配额与整链路另由 INT-81 验证，不据此开放门禁。 |
+| [INT-82](https://linear.app/intsheep/issue/INT-82) | OOM 后 idle shim 残留已保留旧失败、真实 Delete/Shutdown 时序与栈；固定含官方修复的 containerd 2.4.2 后完整组件和三次额外 OOM 通过，无自建 shim 或生产特权回收器。 |
 
 各项完成时更新对应实际源码、命令、镜像和结果。真实模型按用户安排后补；不以本机沙箱成功宣称生产 HA、所有系统调用兼容或硬件侧信道防护。

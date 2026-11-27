@@ -118,6 +118,26 @@ PG/S3 集群复验的前两次 HTTP 500 保留为失败记录。补充诊断及 
 
 新增 HTTP/controller 测试使用明确合成 fixture；四 CLI 回归仍是受信开发路径。Worker 与 `serve` 尚未连接本组件，不可信执行门禁保持关闭。真实隔离 SaaS/native Skill、私有 CA 模型链路、CNI、资源耗尽、真实模型和生产 HA 均未由本次验证。
 
+## 2026-11-27：隔离结果的可信发布组件
+
+`e79066b` 增加 Worker 私有数据发布入口：先核对当前分配、固定版本及 Ready/正常退出/Pod 删除证明，再完整验证独立整包摘要、原始 Workspace/Session 和全部交付文件，最后复用 journal 的冻结发布及重试。真实 HTTP 合成适配器的所有宿主原生方法均为零调用；初次/追问的新 Workspace 沿用同一 Session，原始 tar 与会话字节、多 Artifact 和完整 Skill 均校验通过。503/TCP 应答丢失、耗尽、取消、期限及 pending 恢复保持旧成功 checkpoint。
+
+同一实现补齐 JSON 深度/节点、tar 隐式父目录/路径限制，以及 `000` 目录权限导致的失败暂存清理；三个旧实现负例保留实际失败日志。`make fmt/check/demo` 与完整四 CLI 默认文本 `make test-k8s` 通过，16 组断言、8 次追问全部通过，原生取消约 3.0/3.1/3.7/3.0 秒，专属集群与任务镜像标签已清理。合入 main `c18e3bd` 后的干净 `1698547` 再次通过 fmt/check/demo，四 CLI 来源仍如实记为 `e79066b`。[复验与边界](isolated-result-publication.md) · [结构化证据](evidence/isolated-result-publication-2026-11-27.json)
+
+本次只交付数据发布组件，`serve`/`run-task` 尚未接线，不可信执行门禁继续关闭。合成发布测试和受信四 CLI 回归不代表真实隔离 SaaS、native Skill、私有 CA 模型全链路、CNI、资源耗尽或真实模型已通过。
+
+
+## 2026-11-27：gVisor 网络、资源与运行时回收
+
+干净来源 `38a7a39` 的 R20/R21 在官方 containerd `2.4.2`、固定 gVisor systrap/512 MiB overlay、Calico `3.33.0` 和禁 swap 的 ARM64 参考节点中，通过真实网络正反例及 CPU、内存、ENOSPC、进程数、原始截止和整 Pod 取消。生产网络 helper 在策略移除和默认 CNI 的 Kubernetes API canary 可达时拒绝；合成启动/原生执行计数有独立记录。
+
+资源实测区分 guest 的不可提升 hard NPROC 64 与宿主 Pod 的 pids.max 256：62 个新子进程后 EAGAIN、升到 65 拒绝、无 OOM/宿主 PID 事件。旧 128 宿主预算确实先触顶，保留为失败。三个额外新 Pod 的文件内存 OOM 均先确认 Sentry/gofer/shim 消失，再清理已停止 CRI 历史，没有用信号回收促成验收。
+
+旧 containerd 2.2.0 的 task v3 删除顺序曾留下 idle shim。R17 的真实时序与非致命栈匹配官方 `402eb316` 修复；参考安装按 2.2.0→2.3.7→2.4.2 逐 minor 验证，旧 32 预算的 R18 仅作为机制对照。完整来源、固定摘要、失败索引及整合后四 CLI 回归见[复验与边界](gvisor-network-resources.md)和[精选证据](evidence/gvisor-network-resources-2026-11-27.json)。本组件仅运行合成程序；实际生产提供方、真实 CLI/Skill/SaaS、并发配额及真实模型另有验收，`untrusted-isolated.v1` 门禁仍待 INT-81。
+
+合并 main `d307e7e` 后的整合源码 `2b2538d` 已通过 fmt/check/demo、15 项离线证明负例和完整四 CLI 默认文本契约，16 组检查与 8 次追问通过；取消耗时为 3.8/3.0/3.7/2.3 秒，专属节点与四个镜像标签已清理。此回归仍是受信开发路径，R20/R21 的来源仍分别保留为 `38a7a39`。
+
+
 
 ## 2026-11-27：生产隔离提供方的 Codex 文件与 Skill 验收
 

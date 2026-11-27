@@ -1,0 +1,342 @@
+{
+  "kind": "isolated_result_publication_component_evidence",
+  "linear_issue": "INT-79",
+  "implementation_source_commit": "e79066bfbd217dd4aa64654fe537dad408991139",
+  "implementation_commits": {
+    "data_only_publication": "e79066bfbd217dd4aa64654fe537dad408991139",
+    "metadata_bounds": "db35f76f41ea2cac8ede0d30cb9e65cbb8b9d461",
+    "tree_expansion_bounds": "eab135f61438503c290fd1c24749f0f89f850f63",
+    "permission_safe_cleanup": "28dad0f5daf2045cdaa5ca985751e3776e483fe4"
+  },
+  "component_tests": {
+    "transport": "actual HTTP server and SQLite/local-object Catalog",
+    "adapter": "explicit synthetic publication fixture; every native method fails and increments a counter",
+    "native_calls_on_host": 0,
+    "session_and_workspace_bytes": "original bytes compared exactly across initial and follow-up fresh workspaces with the same Session ID",
+    "validated_scope": "RWExecute and live isolated allocation, sealed Ready/terminal/deleted exit-0 proof, exact Spec/Parent/Skill pins/deadline and pinned adapter/runtime",
+    "invalid_input_effects": "Allocation/envelope/tree/delivery prevalidation failures create zero asset-change writes and leave no restored workspace; invalid new results cannot flush old pending bytes.",
+    "retry_matrix": {
+      "faults": [
+        "503",
+        "real TCP acknowledgement drop"
+      ],
+      "stages": [
+        "Begin before",
+        "Begin after",
+        "Upload before",
+        "Upload after",
+        "Commit before",
+        "Commit after"
+      ],
+      "variants": 12,
+      "assertions": [
+        "same immutable operation and original bytes despite live-file mutation",
+        "at most one committed version",
+        "old successful checkpoint unchanged until explicit Finish",
+        "no native method or executable invocation"
+      ]
+    },
+    "failure_recovery": [
+      "three-attempt exhaustion retains pending original bytes",
+      "task cancellation interrupts publication and preserves old checkpoint",
+      "caller deadline interrupts publication and preserves old checkpoint",
+      "later fresh-workspace retry resumes durable pending bytes",
+      "permission-000 root/out/nested/private invalid trees leave no restored workspace",
+      "cleanup does not follow symlinks or alter external directories or a colliding existing target"
+    ],
+    "command": "go test -race -v ./internal/worker ./internal/nativeguest ./internal/snapshot -run '^Test(Sandbox|Metadata|NativeGuestTree|RemoveDirectory|RestoreFailure)' -count=1",
+    "exit_code": 0,
+    "log_path": "/private/tmp/agentmoor-isolated-publication-e79066b-20261127-security.log",
+    "log_sha256": "f932221f79ce5dddfebb470bca2898ae0d338f327d320e7f372a95ad0302c478",
+    "source_stream_contract": "Caller uses the same deadline/task-cancellable runCtx for Client.SandboxOutput and closes it; arbitrary blocking io.Reader implementations are not independently cancellable."
+  },
+  "limits": {
+    "envelope_bytes_max": 67108864,
+    "request_json_bytes_max": 131072,
+    "result_json_bytes_max": 16777216,
+    "result_text_bytes_max": 2097152,
+    "json_depth_max": 64,
+    "json_key_value_container_node_max": 65536,
+    "distinct_filesystem_nodes_including_root_and_implicit_parents_max": 65536,
+    "path_and_link_target_bytes_max": 4096,
+    "artifacts_max": 128
+  },
+  "small_wire_expansion_control": {
+    "tar_headers": 1100,
+    "wire_bytes": 564224,
+    "would_materialize_distinct_nodes": 70401,
+    "only_validated_not_expanded": true
+  },
+  "old_implementation_negative_controls": {
+    "tested_source_commit": "e79066bfbd217dd4aa64654fe537dad408991139",
+    "kind": "bounded_security_negative_controls",
+    "controls": [
+      {
+        "name": "metadata",
+        "old_implementation_commit": "eab135f61438503c290fd1c24749f0f89f850f63",
+        "old_implementation_path": "internal/nativeguest/bundle.go",
+        "old_implementation_sha256": "91209aa4675e8949b1b539b4a167e2a69335f306a49774e72b84b51c9237cdde",
+        "command": [
+          "go",
+          "test",
+          "-race",
+          "-v",
+          "-overlay",
+          "/private/tmp/agentmoor-int79-negative-controls-e79066b/metadata-overlay.json",
+          "./internal/nativeguest",
+          "-run",
+          "^TestMetadataTokenWalkHasIndependentResourceBounds$",
+          "-count=1"
+        ],
+        "started_at_utc": "2026-11-27T06:37:51.212204+00:00",
+        "finished_at_utc": "2026-11-27T06:37:52.310213+00:00",
+        "exit_code": 1,
+        "expected_test_failure_observed": true,
+        "log_path": "/private/tmp/agentmoor-int79-negative-controls-e79066b/metadata.log",
+        "log_sha256": "9f3a08829f22e60af569e47833902536d6e268065dc13001b2fcaccb4e28fb87",
+        "test_overlay_note": "Only new bound constant references are replaced with the same numeric literals so tests compile against the old implementation; production implementation bytes exactly match the stated old commit."
+      },
+      {
+        "name": "implicit-tree",
+        "old_implementation_commit": "06cf2a15cfb66c7e5695ef3115316f65c3f2836a",
+        "old_implementation_path": "internal/nativeguest/tree.go",
+        "old_implementation_sha256": "2b9da1d31fc54242a8e6f00cbf69315048b7fefcdccdb78bf80193f804c6761d",
+        "command": [
+          "go",
+          "test",
+          "-race",
+          "-v",
+          "-overlay",
+          "/private/tmp/agentmoor-int79-negative-controls-e79066b/implicit-tree-overlay.json",
+          "./internal/nativeguest",
+          "-run",
+          "^TestNativeGuestTreeCountsImplicitParentDirectories$",
+          "-count=1"
+        ],
+        "started_at_utc": "2026-11-27T06:37:52.333413+00:00",
+        "finished_at_utc": "2026-11-27T06:37:53.897270+00:00",
+        "exit_code": 1,
+        "expected_test_failure_observed": true,
+        "log_path": "/private/tmp/agentmoor-int79-negative-controls-e79066b/implicit-tree.log",
+        "log_sha256": "64b8d109566d64d1eb5635f61f6f1019b52097e5bbc84fd3b6ba9b11243b5686",
+        "test_overlay_note": "Only new bound constant references are replaced with the same numeric literals so tests compile against the old implementation; production implementation bytes exactly match the stated old commit."
+      },
+      {
+        "name": "permissions",
+        "old_implementation_commit": "db35f76f41ea2cac8ede0d30cb9e65cbb8b9d461",
+        "old_implementation_path": "internal/snapshot/restore.go",
+        "old_implementation_sha256": "ff35b9e285d7400eb2f4892978152584fe392077272af7437f979641438ae9ff",
+        "command": [
+          "go",
+          "test",
+          "-race",
+          "-v",
+          "-overlay",
+          "/private/tmp/agentmoor-int79-negative-controls-e79066b/permissions-overlay.json",
+          "./internal/snapshot",
+          "-run",
+          "^TestRestoreFailureCleansUnreadableStageAndPreservesCollidingTarget$",
+          "-count=1"
+        ],
+        "started_at_utc": "2026-11-27T06:37:53.922187+00:00",
+        "finished_at_utc": "2026-11-27T06:37:57.185307+00:00",
+        "exit_code": 1,
+        "expected_test_failure_observed": true,
+        "log_path": "/private/tmp/agentmoor-int79-negative-controls-e79066b/permissions.log",
+        "log_sha256": "cecaa27af6f7ade3eb648f9e0ceab8ae750a3a67fd3db6aff7bb42b9838ca5fb"
+      }
+    ]
+  },
+  "implementation_source_checks": {
+    "source_commit": "e79066bfbd217dd4aa64654fe537dad408991139",
+    "started_at": "2026-11-27T06:34:26.789886+00:00",
+    "commands": [
+      {
+        "command": "make fmt",
+        "exit_code": 0,
+        "started_at": "2026-11-27T06:34:26.790056+00:00",
+        "finished_at": "2026-11-27T06:34:26.824664+00:00",
+        "log": "/private/tmp/agentmoor-isolated-publication-e79066b-20261127-fmt.log",
+        "log_sha256": "9ba9a3ce39410b82cffdcafff24a52faa1612e3a34b2a29885a7007b1bbfbc33"
+      },
+      {
+        "command": "make check",
+        "exit_code": 0,
+        "started_at": "2026-11-27T06:34:26.824922+00:00",
+        "finished_at": "2026-11-27T06:35:22.113746+00:00",
+        "log": "/private/tmp/agentmoor-isolated-publication-e79066b-20261127-check.log",
+        "log_sha256": "96f30477f9b106f144b4085e97af78f96f1bdcdf5e5e962320a66908824f3a59"
+      },
+      {
+        "command": "make demo",
+        "exit_code": 0,
+        "started_at": "2026-11-27T06:35:22.114032+00:00",
+        "finished_at": "2026-11-27T06:35:24.151931+00:00",
+        "log": "/private/tmp/agentmoor-isolated-publication-e79066b-20261127-demo.log",
+        "log_sha256": "c2608aad4d5d93514020328683f79bd3d9511b34837e3c27a1a6dbb960ffb38d"
+      }
+    ],
+    "git_status_after": ""
+  },
+  "production_wiring": {
+    "worker_run_task_connected": false,
+    "serve_connected": false,
+    "untrusted_gate": "closed; no untrusted task execution enabled by this component",
+    "status_at_integrated_source": "16985473d4a7c6053ba63b220f854d087cce8571"
+  },
+  "services": {
+    "extra_test_services_run": false,
+    "reason": "No database or object protocol changes in this delivery; PR CI runs service regression."
+  },
+  "limitations": [
+    "Component tests use an explicit synthetic adapter, not a vendor native CLI or Kubernetes runtime.",
+    "The separate four-CLI matrix is the default trusted development text contract with scripted model responses, not isolated provider acceptance.",
+    "This delivery does not prove real-model, gVisor full application, real isolated native Skill, CNI/egress, resource-exhaustion, or production HA acceptance.",
+    "Capture and validation bounds are not a whole-Pod or host disk quota.",
+    "Partial asset revisions can exist after a publication failure; the successful conversation checkpoint advances only after a complete explicit Finish."
+  ],
+  "status": "component_and_trusted_regression_passed",
+  "integrated_source_checks": {
+    "source_commit": "16985473d4a7c6053ba63b220f854d087cce8571",
+    "started_at": "2026-11-27T06:51:23.666968+00:00",
+    "commands": [
+      {
+        "command": "make fmt",
+        "exit_code": 0,
+        "started_at": "2026-11-27T06:51:23.667164+00:00",
+        "finished_at": "2026-11-27T06:51:23.696816+00:00",
+        "log": "/private/tmp/agentmoor-isolated-publication-1698547-20261127-fmt.log",
+        "log_sha256": "9ba9a3ce39410b82cffdcafff24a52faa1612e3a34b2a29885a7007b1bbfbc33"
+      },
+      {
+        "command": "make check",
+        "exit_code": 0,
+        "started_at": "2026-11-27T06:51:23.697107+00:00",
+        "finished_at": "2026-11-27T06:51:32.064581+00:00",
+        "log": "/private/tmp/agentmoor-isolated-publication-1698547-20261127-check.log",
+        "log_sha256": "af52f93542e8bbff2d02ce135ea893bcd734387374b102249a9d6d3d6df91ae8"
+      },
+      {
+        "command": "make demo",
+        "exit_code": 0,
+        "started_at": "2026-11-27T06:51:32.064776+00:00",
+        "finished_at": "2026-11-27T06:51:34.097667+00:00",
+        "log": "/private/tmp/agentmoor-isolated-publication-1698547-20261127-demo.log",
+        "log_sha256": "c2608aad4d5d93514020328683f79bd3d9511b34837e3c27a1a6dbb960ffb38d"
+      }
+    ],
+    "git_status_after": "",
+    "merged_main_commit": "c18e3bd7cbf48e2cde06ec234e0af45b73ab41c7",
+    "merge_log": "/private/tmp/agentmoor-isolated-publication-merge-main-20261127.log",
+    "merge_log_sha256": "f61f70b9cae7ffaba9256fb47797851274fbacf5924b59b0ecc75a7d39e2ac4a",
+    "component_files_unchanged_from_implementation_source": {
+      "internal/worker/sandbox_publication.go": "9faf673bd17a47246796c641b143a9eb5499f85c4015b26e5c16cacb7129d7df",
+      "internal/worker/sync.go": "0cb0df435854a3da7c8b2f2ab3b8f5769d2b66b174b48ad59ba754d79e56b03c",
+      "internal/nativeguest/bundle.go": "8f79427d14ea20c3d8bb4cf1701b89e383ab04ff871b0771f2e9f769b4137fd4",
+      "internal/nativeguest/tree.go": "92f0257276cc28b13735803e318badebd476775201f4e8ddd9dbf5ad14f369b4",
+      "internal/snapshot/restore.go": "627cf67a2b2969d079a207cfff6e691323d55448c0e61498587c0a6be6bec752",
+      "internal/snapshot/cleanup.go": "eecacbb5acf3d0712b32f24a320aef1711a89e9f784ce57faf379454224862f2"
+    }
+  },
+  "trusted_four_cli_regression": {
+    "source_commit": "e79066bfbd217dd4aa64654fe537dad408991139",
+    "source_commit_after": "e79066bfbd217dd4aa64654fe537dad408991139",
+    "source_worktree_clean_at_start": true,
+    "command": "PATH=/Applications/OrbStack.app/Contents/MacOS/xbin:$PATH make test-k8s",
+    "started_at_utc": "2026-11-27T06:36:42.366458+00:00",
+    "finished_at_utc": "2026-11-27T06:50:04.706756+00:00",
+    "exit_code": 0,
+    "phase_counts": {
+      "versioned_report": 4,
+      "two_new_turns": 4,
+      "followup_cancel": 4,
+      "native_cancel": 4
+    },
+    "phase_count_derivation_literals": {
+      "versioned_report": "SaaS verified the versioned report",
+      "two_new_turns": "SaaS recovered two consecutive turns",
+      "followup_cancel": "SaaS cancelled an active follow-up",
+      "native_cancel": "SaaS cancelled an active native turn"
+    },
+    "native_cancel_seconds_in_adapter_order": [
+      "3.0",
+      "3.1",
+      "3.7",
+      "3.0"
+    ],
+    "owned_cluster": "agentmoor-b801488f1cbc",
+    "owned_node_container_absent": true,
+    "log_path": "/private/tmp/agentmoor-isolated-publication-e79066b-20261127-four-cli.log",
+    "log_sha256": "7df47b3867e3e4479a9951b0c0910f0ec1775a730427d546763dff3e1357edc4",
+    "verified_phase_groups": 16,
+    "new_followup_turns": 8,
+    "workflow": "Default trusted legacy text turns with actual fixed Linux CLI binaries and scripted model responses; not the isolated provider.",
+    "actual_versions": {
+      "codex": {
+        "image_id": "sha256:ee298125fb42a2bf8a7abedebe3987931de1cafb56f55400cbeb38cf87639c3f",
+        "exit_code": 0,
+        "version": "codex-cli 0.171.0-alpha.13",
+        "stderr": "WARNING: proceeding, even though we could not create PATH aliases: CODEX_HOME points to \"/tmp/version-home/.codex\", but that path does not exist"
+      },
+      "gemini-cli": {
+        "image_id": "sha256:69ed2ae602181bc4d99e38db92df37436e01f618282fb2faf2ced6765a317b3d",
+        "exit_code": 0,
+        "version": "0.70.0",
+        "stderr": ""
+      },
+      "opencode": {
+        "image_id": "sha256:28b458f331a4f931c7a6041531e84878cf8ea1f2fcd236d3e8509137a3fa3734",
+        "exit_code": 0,
+        "version": "1.19.6",
+        "stderr": ""
+      },
+      "claude-code": {
+        "image_id": "sha256:c43f095dbf6c1172005b2b5ede1e72bf53a0c8b47c61f5cf181d47102c1472f7",
+        "exit_code": 0,
+        "version": "2.1.330 (Claude Code)",
+        "stderr": ""
+      }
+    },
+    "version_probe": {
+      "log_path": "/private/tmp/agentmoor-isolated-publication-e79066b-20261127-native-versions.json",
+      "log_sha256": "e1577b524f048dd3a333ef0a5f053753dd22b3c85524cfc41879f182acb41879",
+      "network": "none",
+      "private_home": "fresh container tmpfs /tmp/version-home for each CLI; no host paths mounted",
+      "finished_at_utc": "2026-11-27T06:51:27.834760+00:00"
+    },
+    "initial_collection_diagnostic": {
+      "stage": "Independent Docker --version observation, outside make test-k8s contract",
+      "adapter": "opencode",
+      "exit_code": 1,
+      "error": "EACCES: permission denied, mkdir '/.local'\n    path: \"/.local\",\n syscall: \"mkdir\",\n   errno: -13,\n    code: \"EACCES\"\n\n\nBun v1.4.4 (Linux arm64)",
+      "cause": "The extra collector omitted a writable private HOME; the actual K8s contract already configured independent native paths and passed. All four image versions were then rechecked with fresh private homes, without changing source, images or the contract.",
+      "log_path": "/private/tmp/agentmoor-isolated-publication-e79066b-20261127-initial-version-probes.json",
+      "log_sha256": "c4f8f2ff9c98e6e3d187475eecf2cbadf7e832c46da351e544b44a50746685e8"
+    },
+    "retained_dependency_caches": {
+      "codex": {
+        "source": "agentmoor-contract:agentmoor-b801488f1cbc-codex",
+        "retained_dependency_cache_tag": "agentmoor-validation-cache:int79-e79066b-codex",
+        "image_id": "sha256:ee298125fb42a2bf8a7abedebe3987931de1cafb56f55400cbeb38cf87639c3f"
+      },
+      "gemini-cli": {
+        "source": "agentmoor-contract:agentmoor-b801488f1cbc-gemini-cli",
+        "retained_dependency_cache_tag": "agentmoor-validation-cache:int79-e79066b-gemini-cli",
+        "image_id": "sha256:69ed2ae602181bc4d99e38db92df37436e01f618282fb2faf2ced6765a317b3d"
+      },
+      "opencode": {
+        "source": "agentmoor-contract:agentmoor-b801488f1cbc-opencode",
+        "retained_dependency_cache_tag": "agentmoor-validation-cache:int79-e79066b-opencode",
+        "image_id": "sha256:28b458f331a4f931c7a6041531e84878cf8ea1f2fcd236d3e8509137a3fa3734"
+      },
+      "claude-code": {
+        "source": "agentmoor-contract:agentmoor-b801488f1cbc-claude-code",
+        "retained_dependency_cache_tag": "agentmoor-validation-cache:int79-e79066b-claude-code",
+        "image_id": "sha256:c43f095dbf6c1172005b2b5ede1e72bf53a0c8b47c61f5cf181d47102c1472f7"
+      }
+    },
+    "temporary_native_reports": "Default target deletes task report directories; this is a derived summary of retained stdout assertions, not retained native report bytes.",
+    "owned_contract_image_tags_absent": true,
+    "collection_summary_note": "The scratch collector initially counted an outdated two-turn message literal. Final derived counts use the four exact stdout assertion phrases recorded here; the raw log and original collector JSON are retained. This affected observation only, not the make test-k8s command or its exit status."
+  }
+}
