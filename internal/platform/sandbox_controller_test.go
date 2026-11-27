@@ -69,6 +69,9 @@ func TestSandboxControllerTemplateSeal(t *testing.T) {
 	if _, err := c.BindSandboxPod(t.Context(), a, uid); err != nil {
 		t.Fatal(err)
 	}
+	if _, err := c.SealSandboxPodTemplate(t.Context(), a, "sandbox", digest); err != nil {
+		t.Fatal("already-sealed template could not be checked after binding", err)
+	}
 	if _, err := c.CancelSandbox(t.Context(), a); err != nil {
 		t.Fatal(err)
 	}
@@ -85,6 +88,23 @@ func TestSandboxControllerTemplateSeal(t *testing.T) {
 	r, err = c.SandboxRun(t.Context(), a)
 	if err != nil || !r.Collected || r.PodUID != uid || r.PodNamespace != "sandbox" || r.PodTemplateSHA != digest {
 		t.Fatal("cancel or collection erased the sealed template", r, err)
+	}
+}
+
+func TestSandboxControllerRejectsLateFirstTemplateSeal(t *testing.T) {
+	c := sandboxControllerCatalog(t)
+	a := sandboxTestClaim(t, c, scope("controller-late-template"))
+	sandboxTestFence(t, c, a, "fixed input")
+	uid := uuid.NewString()
+	if _, err := c.BindSandboxPod(t.Context(), a, uid); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := c.SealSandboxPodTemplate(t.Context(), a, "sandbox", sandboxTestBlob("late template").SHA256); !errors.Is(err, ErrConflict) {
+		t.Fatal("first template seal was allowed after binding a Pod", err)
+	}
+	r, err := c.SandboxRun(t.Context(), a)
+	if err != nil || r.PodTemplateSHA != "" || r.PodNamespace != "" || r.PodUID != uid || !r.CreateStarted {
+		t.Fatal("rejected late seal changed persisted ownership", r, err)
 	}
 }
 
