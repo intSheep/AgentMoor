@@ -199,5 +199,12 @@
     "Scripted models with actual fixed CLIs; no live model API or production deployment.",
     "Four-CLI regression uses the ordinary task provider, not all four runtimes in gVisor.",
     "Pre-handler HTTP parsing and TLS handshakes excluded."
-  ]
+  ],
+  "integration": {
+    "main_merge": "43e454cb58d3d92f7f2c39df80db029000505949",
+    "integration_commit": "cd3a2ffc255b01ed0f757bd86988bf85917cc210",
+    "code_diff_from_verified_source": "empty for cmd internal go.mod go.sum",
+    "reviewed_commit": "90f396a",
+    "independent_code_review": "No blocker; verified identity timing, fixed templates, no raw capability/hash/content, ResponseController unwrap and abort semantics; no extra runtime tests claimed."
+  }
 }
