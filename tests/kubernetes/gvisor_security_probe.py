@@ -18,6 +18,8 @@ import tempfile
 import time
 import tomllib
 
+import gvisor_security_containerd as containerd_candidate
+
 from gvisor_probe import Probe, NAMESPACE, require, HANDLER, RUNTIME_TYPE, IMAGE
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -130,8 +132,9 @@ def verify_resource(mode, record):
         require(record["oom_kill_delta"] == 0, "ENOSPC test was actually an OOM")
     elif mode == "pids":
         fixture = record["fixture"]
-        require(fixture.get("guest_rlimit_nproc") == [32, 32] and fixture.get("hard_raise_denied") is True and
-                fixture.get("fork_errno") == 11 and 0 < fixture["children"] <= 31, "guest PID hard limit did not deny fork")
+        require(fixture.get("guest_rlimit_nproc") == [64, 64] and fixture.get("hard_raise_denied") is True and
+                fixture.get("fork_errno") == 11 and 0 < fixture["children"] <= 63 and
+                record["host_pids_max_events_delta"] == 0 and record["oom_kill_delta"] == 0, "guest PID hard limit did not deny fork")
     elif mode == "wall":
         require(record["pod_reason"] == "DeadlineExceeded" and record["terminated"] is True,
                 "original Pod wall deadline did not terminate fixture")
@@ -143,11 +146,14 @@ def verify_resource(mode, record):
 
 
 class SecurityProbe(Probe):
-    def __init__(self, directory, bundle, manifest, enforcing=True):
+    def __init__(self, directory, bundle, manifest, enforcing=True, candidate=True, containerd_cache=None):
         super().__init__(directory, bundle)
         self.manifest_source = manifest
         self.enforcing = enforcing
         self.debug_orphans = False
+        self.candidate = candidate
+        self.containerd_cache = containerd_cache
+        self.containerd_artifacts = []
         self.image = "agentmoor-security-fixture:" + self.cluster
         self.outside = self.cluster + "-outside-fixture"
         self.security = {"status": "in_progress", "limitations": LIMITATIONS, "resources": {}, "network": {}, "cleanup": {}}
@@ -155,6 +161,9 @@ class SecurityProbe(Probe):
         self.nonce = self.cluster + "-synthetic"
 
     def prepare(self):
+        if self.candidate:
+            self.stage("freeze_official_containerd_candidate")
+            self.containerd_artifacts = containerd_candidate.prepare(self, self.containerd_cache)
         observed = subprocess.run(["docker", "image", "inspect", IMAGE], capture_output=True, text=True)
         if observed.returncode:
             super().run("docker", "pull", IMAGE, timeout=240)
@@ -263,6 +272,8 @@ class SecurityProbe(Probe):
             nodes = json.loads(super().run(*self.base, "get", "nodes", "-o", "json"))
             require([row["metadata"]["name"] for row in nodes["items"]] == [self.node], "unexpected nodes in CNI install target")
             self.security["kind_config"] = config
+            if self.candidate:
+                containerd_candidate.install(self, self.containerd_artifacts)
             if not self.enforcing:
                 super().run(*self.base, "wait", "nodes", "--all", "--for=condition=Ready", "--timeout=120s", timeout=130)
                 super().run(*self.base, "-n", "kube-system", "rollout", "status", "deployment/coredns", "--timeout=120s", timeout=130)
@@ -749,6 +760,21 @@ class SecurityProbe(Probe):
                 failures.append(mode)
         require(not failures, "resource proofs failed: " + ", ".join(failures))
 
+    def repeat_natural_oom(self):
+        original = self.security["resources"].get("file-memory")
+        repeats = self.security["oom_natural_repeats"] = []
+        for attempt in range(3):
+            self.stage("natural_oom_repeat_" + str(attempt + 1))
+            try:
+                self.resource("file-memory")
+            finally:
+                record = self.security["resources"].get("file-memory", {})
+                repeats.append(record)
+                if original is not None:
+                    self.security["resources"]["file-memory"] = original
+        require(len({row["runtime"]["pod_uid"] for row in repeats}) == 3 and
+                len({row["runtime"]["sandbox_id"] for row in repeats}) == 3, "OOM repeats reused a Pod or sandbox")
+
     def resource(self, mode):
         name = "resource-" + mode
         memory = "1Gi" if mode == "pids" else ("256Mi" if mode == "tmpfs" else "128Mi")
@@ -830,21 +856,25 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bundle", type=Path, default=os.environ.get("GVISOR_SECURITY_BUNDLE"))
     parser.add_argument("--calico-manifest", type=Path, default=os.environ.get("GVISOR_SECURITY_CALICO_MANIFEST"))
-    parser.add_argument("--stage", choices=("bootstrap", "network", "resources", "kindnet-negative", "pids", "oom-diagnostic", "all"), default="all")
+    parser.add_argument("--stage", choices=("bootstrap", "network", "resources", "kindnet-negative", "pids", "oom-diagnostic", "oom-natural", "all"), default="all")
+    parser.add_argument("--containerd-cache", type=Path, default=os.environ.get("GVISOR_SECURITY_CONTAINERD_CACHE"))
+    parser.add_argument("--baseline-containerd", action="store_true", help="retain kind 2.2.0 only for diagnostic reproduction")
     parser.add_argument("--output", type=Path, default=os.environ.get("GVISOR_SECURITY_OUTPUT"))
     options = parser.parse_args()
+    require(not options.baseline_containerd or options.stage == "oom-diagnostic", "old containerd baseline is diagnostic-only")
     if options.output:
         require(not os.path.lexists(options.output) and options.output.parent.is_dir(), "evidence path must be new")
     signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt()))
     failure = None
     with tempfile.TemporaryDirectory(prefix="agentmoor-gvisor-security-") as directory:
-        probe = SecurityProbe(directory, options.bundle, options.calico_manifest, enforcing=options.stage != "kindnet-negative")
+        probe = SecurityProbe(directory, options.bundle, options.calico_manifest, enforcing=options.stage != "kindnet-negative",
+                              candidate=not options.baseline_containerd, containerd_cache=options.containerd_cache)
         probe.debug_orphans = options.stage == "oom-diagnostic"
         probe.security["diagnostic_only"] = probe.debug_orphans
         probe.security["started_at_utc"] = datetime.now(timezone.utc).isoformat()
         probe.security["source"] = {"commit": probe.run("git", "-C", ROOT, "rev-parse", "HEAD").strip(),
                                     "status": probe.run("git", "-C", ROOT, "status", "--short"),
-                                    "script_sha256": sha(__file__), "fixture_sha256": sha(Path(__file__).with_name("gvisor_security_fixture.py"))}
+                                    "script_sha256": sha(__file__), "containerd_installer_sha256": sha(Path(__file__).with_name("gvisor_security_containerd.py")), "fixture_sha256": sha(Path(__file__).with_name("gvisor_security_fixture.py"))}
         try:
             probe.prepare()
             probe.setup()
@@ -852,6 +882,8 @@ def main():
                 probe.network()
             if options.stage in ("resources", "all"):
                 probe.resources()
+            if options.stage in ("oom-natural", "all"):
+                probe.repeat_natural_oom()
             if options.stage == "pids":
                 probe.resource("pids")
             if options.stage == "oom-diagnostic":
