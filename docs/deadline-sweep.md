@@ -39,3 +39,10 @@ SQLite 状态表、分页、额度、坏键/坏 JSON、审计拒绝、CAS 拒绝
 四 CLI 共完成 16 个报告/恢复/取消阶段及八次连续追问，原生取消为 Codex 2.3、Gemini CLI 3.1、OpenCode 3.0、Claude Code 3.8 秒。退出后独立查询确认专属节点 `agentmoor-2ada1452f4f1`、存储项目 `agentmoor-test-57090` 的容器/网络/卷和四个本轮镜像标签均已清理；共享依赖缓存和构建层没有被描述为删除。
 
 本轮四 CLI 使用真实二进制及脚本模型，只证明默认受信任务路径的兼容性。没有重新验证真实模型、生产 HA、其他 CLI 隔离能力或完整 gVisor 资源边界。
+
+
+## PR27 的 CI 夹具修复
+
+首轮 GitHub Actions `45983333225`（PR head `4c2462d`）在既有 `TestControllerCreateTimeoutRecoversWithGETOnly` 的恢复 GET 超时：测试把首次故意超时使用的 20ms HTTP 预算留给了恢复请求。原失败步骤日志已无损保留；它不是期限巡检或生产控制器行为失败的证据。
+
+测试修复源码 `ee1dea2670ff8cefb4e8e671d699c60221332c82` 只改该测试：用 accepted/release 同步确证 POST 已收到，首阶段给两秒 HTTP 预算并真实等待 `DeadlineExceeded`，该 Start 退出后恢复原默认五秒，再释放夹具并验证 GET 返回同一 UID、POST 总数仍为一。去掉固定 sleep，清理时取消、释放并 join；没有修改生产超时或任务期限。该干净源码的 fmt、五次非缓存 focused race 和 make check 通过，原日志与来源追加在同一[证据](evidence/deadline-sweep-2026-11-27.json)。原 PG/S3 和完整四 CLI 仍归属于 `3c90161`，没有改写成此次测试提交的新验收。
