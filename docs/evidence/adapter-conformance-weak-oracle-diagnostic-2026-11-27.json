@@ -1,0 +1,20 @@
+{
+  "status": "failed",
+  "controls": [
+    {
+      "control": "checksum",
+      "exit_code": 1,
+      "expected_assertion_observed": true,
+      "seconds": 2.674,
+      "log_sha256": "4e51e0ffde47d4d1a1179238f6888c22f50eb0844c11087106870ca678654b18"
+    },
+    {
+      "control": "native-version",
+      "exit_code": 0,
+      "expected_assertion_observed": false,
+      "seconds": 3.669,
+      "log_sha256": "023041f838556e806fe58a09898ab1781f7290408894bf8df358450fbf88902a"
+    }
+  ],
+  "boundary": "Temporary Go overlays only; tracked production files unchanged. These are intentionally weakened implementations and expected test failures, not product failures."
+}

@@ -178,3 +178,7 @@ INT-90 保留旧实现 R2/R3 的真实失败：只停止自有节点 kubelet，A
 ## 2026-11-27：隔离提供方与 PostgreSQL/S3 组合
 
 干净 `1afa1ea` 的真实 Codex 同一 Session 三轮，各自新 gVisor Pod 且原生计数为 1；第一、二轮后各重建 API Pod，23/48 条已有审计和当前检查点精确保持。最终 73 条运维事件、11 个精确资产链接及旧字节复读、三次原公开 UUID 重放零新增事件通过。实际 PostgreSQL 18.7 和 S3 保留九个唯一 revision 对象（共 15 键），无 SQLite/本地对象回退；六个明确检查的存储环境变量均未进入原生执行。独立只读核对与实际专属资源清理均通过。[完整验收与准确边界](sandbox-persistent-acceptance.md) · [原始记录及来源索引](evidence/isolated-persistent-provider-2026-11-27.json)
+
+## 2026-11-27：P3 共用 Adapter 契约验收首片
+
+`be35146` 将 Codex 文件 Session 与 OpenCode 实际 NativeSessions 方法接入同一公开 HTTP 资产断言，CLI 使用有界合成程序。四类资产、原 Session/Skill 完整文件集合与字节、历史版本、新路径、实际 post-commit 503 重试及不兼容版本拒绝通过；后者在空的新分配验证导出、已有合法 Session 验证导入，避免无关错误掩盖门槛。四个临时 overlay 反例均准确失败；聚焦 race/check/demo 全通过，生产文件未改。[工具、版本与实际范围](adapter-contract.md) · [来源、诊断与无损日志](evidence/adapter-conformance-2026-11-27.json)。这仍是内部工具，未宣称稳定外部 SDK、真实厂商 CLI 或第三方工程师已验收。
