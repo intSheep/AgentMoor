@@ -79,6 +79,20 @@ func (a *API) taskRoutes(handle func(string, string, apiHandler)) {
 			if !decodeInput(w, r, &claim, 1<<20) {
 				return task.Record{}, errBadRequest
 			}
+			isolated := false
+			if a.SandboxProfiles != nil {
+				_, isolated = a.SandboxProfiles(s.Scope)
+			}
+			if isolated {
+				if !sandboxUUID(claim.Attempt) {
+					return task.Record{}, errBadRequest
+				}
+				if a.SandboxControl == nil || claim.ExecutionPolicy != task.ExecutionUntrustedIsolated {
+					return task.Record{}, errUnsupported
+				}
+			} else if claim.ExecutionPolicy != "" && claim.ExecutionPolicy != task.ExecutionTrustedLocal {
+				return task.Record{}, errUnsupported
+			}
 			return a.Catalog.claimTask(r.Context(), s, claim)
 		})
 		bind("POST "+route+"/finish", "execute", func(w http.ResponseWriter, r *http.Request, s taskAddress) (task.Record, error) {
