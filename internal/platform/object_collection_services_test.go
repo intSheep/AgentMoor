@@ -3,6 +3,7 @@
 package platform
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -59,6 +60,18 @@ func collectionServiceEvents(t *testing.T, reader *AuditReader, s asset.Scope) [
 		}
 	}
 	return events
+}
+
+func logCollectionServiceEvents(t *testing.T, scenario string, events []AuditEvent) {
+	t.Helper()
+	raw, err := json.Marshal(struct {
+		Scenario string       `json:"scenario"`
+		Events   []AuditEvent `json:"events"`
+	}{scenario, events})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("COLLECTION_EVENT_SAMPLE %s", raw)
 }
 
 func checkObjectCollectionAuditServices(t *testing.T, c *Catalog, objects *S3, dir, dsn string) *Catalog {
@@ -134,6 +147,7 @@ func checkObjectCollectionAuditServices(t *testing.T, c *Catalog, objects *S3, d
 			t.Fatal("repeated S3 collection duplicated an event", n, err)
 		}
 		t.Logf("COLLECTION_S3 mode=%s sdk_delete_attempts=%d forwarded=%d discarded_http_204=%d recovery_proof=%s stable_operation=true", mode, fault.attempts.Load(), fault.forwarded.Load(), fault.discardedACK.Load(), proof)
+		logCollectionServiceEvents(t, "s3-"+mode, events)
 	}
 	for _, action := range []string{"object.collection_planned", "object.collection_confirmed"} {
 		suffix := strings.TrimPrefix(action, "object.collection_")
@@ -175,6 +189,7 @@ func checkObjectCollectionAuditServices(t *testing.T, c *Catalog, objects *S3, d
 			t.Fatal("rejected PostgreSQL audit lost the durable collection", events)
 		}
 		t.Logf("COLLECTION_PG rejected=%s object_remained=%t recovery_proof=%s stable_operation=true", action, exists, proof)
+		logCollectionServiceEvents(t, "pg-reject-"+suffix, events)
 	}
-	return c
+	return checkObjectCollectionLeaseFailure(t, c, objects, dir, dsn)
 }
