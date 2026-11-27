@@ -45,5 +45,6 @@ Kubernetes 的 RuntimeClass、Pod 限制、RBAC、网络策略与资源额度共
 | [INT-76](https://linear.app/intsheep/issue/INT-76) | 已实现[模型调用前的持久次数/字节预留](sandbox-model-budget.md)，并发、重启与真实 PostgreSQL 租约丢失测试通过；模型代理及计费/并发流控制另验。 |
 | [INT-75](https://linear.app/intsheep/issue/INT-75) | 已实现[Guest 的单回合能力 TLS 传输](guest-capability-transport.md)，真实 TLS/子进程/丢应答测试通过；模型网关与整条沙箱应用链路仍待接入。 |
 | [INT-74](https://linear.app/intsheep/issue/INT-74) | 已实现[固定模板 Pod 控制器](sandbox-pod-controller.md)，真实 gVisor 集群中的正常/取消/缺运行时及最小权限验证通过；使用明确合成 guest，未接入真实模型网关或 SaaS 执行入口。 |
+| [INT-77](https://linear.app/intsheep/issue/INT-77) | 已实现[专用能力/模型 TLS 网关](sandbox-capability-gateway.md)，真实 TLS 完整性、预算、撤销和故障回归通过；尚未连接完整生产执行链路。 |
 
 各项完成时更新对应实际源码、命令、镜像和结果。真实模型按用户安排后补；不以本机沙箱成功宣称生产 HA、所有系统调用兼容或硬件侧信道防护。
