@@ -82,6 +82,7 @@ func TestPostgresAndS3(t *testing.T) {
 	checkSandboxPreparedInput(t, c, scope("sandbox-input-integration"))
 	checkSandboxModelBudget(t, c, scope("model-budget-integration"))
 	checkPostgresAudit(t, c, dir, dsn)
+	checkSandboxProvenancePostgres(t, c, dir, dsn)
 	checkPostgresAuditAssetLinks(t, c, dir, dsn)
 	checkModelRestart := prepareSandboxModelRestart(t, c, scope("model-budget-integration-restart"))
 	// Exercise actual PostgreSQL persistence and S3 bytes across service restart.
@@ -104,6 +105,7 @@ func TestPostgresAndS3(t *testing.T) {
 	checkPostgresTaskReaderIsolation(t, c)
 	checkSandboxLostLease := prepareSandboxLeaseFailure(t, c)
 	checkModelLostLease := prepareSandboxModelLeaseFailure(t, c)
+	checkProvenanceLostLease := prepareSandboxProvenanceLeaseFailure(t, c, dir, dsn)
 	var auditBeforeLeaseLoss int64
 	checkSandboxFinalSealFailure(t, c, func() {
 		if err := c.db.QueryRowContext(t.Context(), "SELECT count(*) FROM audit_events").Scan(&auditBeforeLeaseLoss); err != nil {
@@ -114,6 +116,7 @@ func TestPostgresAndS3(t *testing.T) {
 	checkPostgresMutationDeniedAfterLeaseLoss(t, c)
 	checkSandboxLostLease()
 	checkModelLostLease()
+	checkProvenanceLostLease()
 	var auditAfterLeaseLoss int64
 	if err := c.db.QueryRowContext(t.Context(), "SELECT count(*) FROM audit_events").Scan(&auditAfterLeaseLoss); err != nil || auditAfterLeaseLoss != auditBeforeLeaseLoss {
 		t.Fatal("lost writer lease changed committed audit", auditBeforeLeaseLoss, auditAfterLeaseLoss, err)

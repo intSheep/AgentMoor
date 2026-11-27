@@ -227,6 +227,9 @@ func (e AuditEvent) valid() bool {
 		return e.Component == "task-store" && e.AttemptSHA256 != "" && e.AssetIDSHA256 != "" && e.SessionIDSHA256 != "" && e.Digest != "" && e.Version > 0 &&
 			(e.AssetKind == "artifact" || e.AssetKind == "workspace" || e.AssetKind == "session") && e.State == task.Succeeded && e.PreviousState == "" &&
 			e.RunID == "" && e.PodUID == "" && e.ModelRequests == 0 && e.ModelInputBytes == 0 && e.ModelOutputBytes == 0
+	case "sandbox.result_accepted":
+		return e.Component == "task-store" && e.AttemptSHA256 != "" && e.RunID != "" && e.PodUID != "" && e.Digest != "" &&
+			e.State == task.Succeeded && e.PreviousState == task.Running && e.AssetKind == "" && e.AssetIDSHA256 == "" && e.SessionIDSHA256 == "" && e.Version == 0 && e.ModelRequests == 0 && e.ModelInputBytes == 0 && e.ModelOutputBytes == 0
 	case "sandbox.begun", "sandbox.collected", "sandbox.create_fenced", "sandbox.template_sealed", "sandbox.pod_bound", "sandbox.terminated", "sandbox.deleted", "sandbox.output_sealed", "sandbox.output_declared", "sandbox.input_sealed", "sandbox.cancelled", "sandbox.failed", "sandbox.expired", "sandbox.ready":
 		return e.Component == "sandbox-controller" && e.RunID != "" && e.AttemptSHA256 != "" && e.State != "" && e.AssetKind == "" && e.AssetIDSHA256 == "" && e.Version == 0 && e.ModelRequests == 0 && e.ModelInputBytes == 0 && e.ModelOutputBytes == 0
 	case "model.reserved":
@@ -248,7 +251,7 @@ func appendAudit(ctx context.Context, tx *sql.Tx, event AuditEvent) error {
 	event.Cursor, event.TimeUnixNano = last+1, time.Now().UTC().UnixNano()
 	event.Schema = AuditSchema
 	switch {
-	case strings.HasPrefix(event.Action, "task."), strings.HasPrefix(event.Action, "turn."), event.Action == "asset.linked":
+	case strings.HasPrefix(event.Action, "task."), strings.HasPrefix(event.Action, "turn."), event.Action == "asset.linked", event.Action == "sandbox.result_accepted":
 		event.Component = "task-store"
 	case event.Action == "revision.committed":
 		event.Component = "revision-store"
