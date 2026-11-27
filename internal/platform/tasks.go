@@ -24,6 +24,9 @@ type taskAddress struct {
 type taskSlot struct {
 	task.Record
 	attempt string
+	// Present only after finishTask validates the successful receipt. Never
+	// persisted in the task or inferred from an arbitrary asset ID/path.
+	linkedSessionID string
 }
 
 // Each logical runtime is one allocation. A claim token is never exposed by
@@ -101,6 +104,11 @@ func (c *Catalog) changeTask(ctx context.Context, s taskAddress, create bool, ch
 	if before.State != slot.State {
 		if err = appendAudit(ctx, tx, auditTaskEvent(ctx, s, before, slot)); err != nil {
 			return task.Record{}, err
+		}
+		if slot.State == task.Succeeded {
+			if err = appendAssetLinks(ctx, tx, s, slot); err != nil {
+				return task.Record{}, err
+			}
 		}
 	}
 	return slot.Record, tx.Commit()
@@ -229,6 +237,7 @@ func (c *Catalog) finishTask(ctx context.Context, s taskAddress, finish task.Fin
 			return err
 		}
 		slot.Assets = refs
+		slot.linkedSessionID = finish.SessionID
 		slot.State = task.Succeeded
 		return nil
 	})
