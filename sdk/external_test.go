@@ -78,7 +78,7 @@ func externalEnvironment() []string {
 			env = append(env, name+"="+value)
 		}
 	}
-	return append(env, "GOWORK=off", "GOTOOLCHAIN=local", "GOPROXY=off", "GOSUMDB=off", "GO111MODULE=on", "GOFLAGS=-mod=mod -buildvcs=false")
+	return append(env, "GOENV=off", "GOWORK=off", "GOTOOLCHAIN=local", "GOPROXY=off", "GOSUMDB=off", "GO111MODULE=on", "GOFLAGS=-mod=mod -buildvcs=false")
 }
 
 type boundedGoOutput struct {
@@ -214,6 +214,46 @@ func copyConsumer(t *testing.T, checkout, target string) {
 	writeConsumerFile(t, filepath.Join(target, "go.sum"), sums)
 }
 
+type sdkRequirement struct{ Path, Version string }
+
+func sdkRequirements(ctx context.Context, t *testing.T, checkout, consumer string) []sdkRequirement {
+	t.Helper()
+	// edit -json reads this exact manifest without loading its dependency graph.
+	// Do not inherit replace/exclude/toolchain/workspace directives from it.
+	raw, err := runExternalGo(ctx, t, consumer, "mod", "edit", "-json", filepath.Join(checkout, "go.mod"))
+	if err != nil {
+		t.Fatalf("could not read SDK dependency roots: %v\n%s", err, tailOutput(raw))
+	}
+	var manifest struct {
+		Module  struct{ Path string }
+		Require []sdkRequirement
+	}
+	if json.Unmarshal(raw, &manifest) != nil || manifest.Module.Path != sdkModule || len(manifest.Require) == 0 || len(manifest.Require) > 256 {
+		t.Fatal("invalid bounded SDK dependency manifest")
+	}
+	return manifest.Require
+}
+
+func pinOfflineRequirements(ctx context.Context, t *testing.T, dir string, requirements []sdkRequirement) {
+	t.Helper()
+	args := []string{"mod", "edit"}
+	for _, requirement := range requirements {
+		if requirement.Path == "" || requirement.Path == sdkModule || requirement.Version == "" || strings.ContainsAny(requirement.Path+requirement.Version, "@\r\n") {
+			t.Fatal("invalid SDK dependency root")
+		}
+		args = append(args, "-require="+requirement.Path+"@"+requirement.Version)
+	}
+	// A minimal main module otherwise may request older, unselected go.mod
+	// metadata while loading a legacy transitive dependency. Make the SDK's
+	// already-pinned roots explicit in this offline test module, using exactly
+	// the dependency versions prepared by the checkout's normal build. This is
+	// test bootstrap, not an extra requirement for ordinary online consumers.
+	raw, err := runExternalGo(ctx, t, dir, args...)
+	if err != nil {
+		t.Fatalf("could not prepare offline consumer dependency roots: %v\n%s", err, tailOutput(raw))
+	}
+}
+
 func assertConsumerTestsRan(t *testing.T, raw []byte) {
 	t.Helper()
 	wanted := map[string]bool{"TestExternalRegistryAndInspect": false, "TestExternalNativeConformance": false,
@@ -265,6 +305,8 @@ func TestExternalSDKConsumer(t *testing.T) {
 	copyConsumer(t, checkout, consumer)
 	ctx, cancel := context.WithTimeout(t.Context(), 4*time.Minute)
 	defer cancel()
+	requirements := sdkRequirements(ctx, t, checkout, consumer)
+	pinOfflineRequirements(ctx, t, consumer, requirements)
 	moduleJSON, err := runExternalGo(ctx, t, consumer, "list", "-m", "-json", sdkModule)
 	if err != nil {
 		t.Fatalf("external module could not resolve the local SDK: %v\n%s", err, tailOutput(moduleJSON))
@@ -310,9 +352,10 @@ func TestExternalSDKConsumer(t *testing.T) {
 		t.Fatal(err)
 	}
 	writeConsumerFile(t, filepath.Join(forbidden, "go.sum"), sums)
+	pinOfflineRequirements(ctx, t, forbidden, requirements)
 	denial, err := runExternalGo(ctx, t, forbidden, "test", "-run=^$", ".")
 	if err == nil || !bytes.Contains(denial, []byte("use of internal package "+sdkModule+"/internal/adapter not allowed")) {
 		t.Fatalf("unrelated consumer was not rejected specifically by the internal boundary: %v\n%s", err, tailOutput(denial))
 	}
-	t.Logf("EXTERNAL_SDK module=%s gowork=off proxy=off toolchain=local checkout_replace=true public_imports_only=true core_deps_clean=true internal_import_denied=true synthetic_consumer_only=true", consumerModule)
+	t.Logf("EXTERNAL_SDK module=%s goenv=off gowork=off proxy=off toolchain=local checkout_replace=true public_imports_only=true core_deps_clean=true internal_import_denied=true offline_require_roots=%d synthetic_consumer_only=true", consumerModule, len(requirements))
 }
