@@ -243,11 +243,21 @@ func TestSandboxPublicationFailureRetainsPendingAndOldCheckpoint(t *testing.T) {
 			ctx := t.Context()
 			if mode == "deadline" {
 				var cancel context.CancelFunc
-				ctx, cancel = context.WithTimeout(ctx, 150*time.Millisecond)
+				// Reach the frozen artifact's HTTP fault before testing expiry.
+				// Setup includes authenticated reads, restore and durable SQL
+				// commits; a 150ms budget can expire before that boundary under
+				// the full race suite and thus test an unrelated early exit.
+				ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
 				defer cancel()
 			}
 			if _, _, err := e.publishSandboxResult(ctx, record, status, bytes.NewReader(raw)); err == nil {
 				t.Fatal("owned publication fault was hidden")
+			}
+			fault.mu.Lock()
+			entered := fault.failures > 0
+			fault.mu.Unlock()
+			if !entered {
+				t.Fatal("publication stopped before the selected frozen-artifact HTTP boundary")
 			}
 			if !reflect.DeepEqual(sandboxCheckpoint(t, h), cp) {
 				t.Fatal("failed publication moved checkpoint")

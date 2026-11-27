@@ -69,8 +69,18 @@ func (c *Catalog) submitTurn(ctx context.Context, a taskAddress, q task.Question
 	if err != nil {
 		return task.Record{}, err
 	}
-	_, err = c.writer.ExecContext(ctx, "INSERT INTO turns(scope,id,seq,state,record,attempt) VALUES ($1,$2,$3,$4,$5,'')", a.Prefix(), a.turn, seq+1, rec.State, string(raw))
-	return rec, err
+	tx, err := c.writer.BeginTx(ctx, nil)
+	if err != nil {
+		return task.Record{}, err
+	}
+	defer tx.Rollback()
+	if _, err = tx.ExecContext(ctx, "INSERT INTO turns(scope,id,seq,state,record,attempt) VALUES ($1,$2,$3,$4,$5,'')", a.Prefix(), a.turn, seq+1, rec.State, string(raw)); err != nil {
+		return task.Record{}, err
+	}
+	if err = appendAudit(ctx, tx, auditTaskEvent(ctx, a, taskSlot{}, taskSlot{Record: rec})); err != nil {
+		return task.Record{}, err
+	}
+	return rec, tx.Commit()
 }
 
 // Ensure must identify the Job by (scope, turn), even after an ambiguous create.

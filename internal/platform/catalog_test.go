@@ -1,6 +1,7 @@
 package platform
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -8,12 +9,127 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"agentmoor/internal/asset"
+	"agentmoor/internal/task"
 )
+
+func TestCatalogSQLitePathUsesEncodedFileURI(t *testing.T) {
+	for _, part := range []string{"private ? readonly # store", "private # store with spaces"} {
+		t.Run(part, func(t *testing.T) {
+			dir := filepath.Join(t.TempDir(), part)
+			c, err := OpenCatalog(t.Context(), dir, "", DiskObjects{Dir: filepath.Join(dir, "objects")})
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer c.Close()
+			s := scope("encoded-catalog")
+			if _, err = c.submitTask(t.Context(), taskAddress{Scope: s}, task.Spec{Instruction: "synthetic", Output: "report.txt"}); err != nil {
+				t.Fatal(err)
+			}
+			if _, err = os.Stat(filepath.Join(dir, "catalog.sqlite")); err != nil {
+				t.Fatal("catalog was created outside its literal directory", err)
+			}
+			r, err := OpenAuditReader(t.Context(), dir, "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer r.Close()
+			page, err := r.Page(t.Context(), s, 0, 0)
+			if err != nil || page.Total != 1 {
+				t.Fatal("literal-path read did not see same catalog", page, err)
+			}
+		})
+	}
+}
+
+func TestCatalogRefusesLegacyQuestionMarkFilename(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "legacy ? private # store")
+	legacy, _, _ := strings.Cut(filepath.Join(dir, "catalog.sqlite"), "?")
+	value := []byte("synthetic old store bytes; must never be moved or replaced")
+	if err := os.WriteFile(legacy, value, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if c, err := OpenCatalog(t.Context(), dir, "", DiskObjects{Dir: filepath.Join(dir, "objects")}); err == nil {
+		c.Close()
+		t.Fatal("silently created a new catalog beside possible old data")
+	}
+	got, err := os.ReadFile(legacy)
+	if err != nil || !bytes.Equal(got, value) {
+		t.Fatal("legacy bytes changed", string(got), err)
+	}
+	if _, err = os.Lstat(filepath.Join(dir, "catalog.sqlite")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatal("new catalog was created", err)
+	}
+	if _, err = os.Lstat(filepath.Join(dir, "catalog.lock")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatal("writer lease was acquired before migration refusal", err)
+	}
+}
+
+func TestCatalogRefusesRelativeLegacyFileURI(t *testing.T) {
+	base := t.TempDir()
+	t.Chdir(base)
+	legacy := filepath.Join(base, "legacy")
+	c, err := OpenCatalog(t.Context(), legacy, "", DiskObjects{Dir: filepath.Join(legacy, "objects")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = c.submitTask(t.Context(), taskAddress{Scope: scope("legacy-uri")}, task.Spec{Instruction: "old synthetic data", Output: "report.txt"}); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Close(); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(legacy, "catalog.sqlite")
+	original, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, dir := range []string{"file:legacy", "./file:legacy", "child/../file:legacy"} {
+		if c, err = OpenCatalog(t.Context(), dir, "", DiskObjects{Dir: filepath.Join(base, "unused-objects")}); err == nil {
+			c.Close()
+			t.Fatal("legacy URI was silently interpreted as a new literal directory", dir)
+		}
+	}
+	got, err := os.ReadFile(path)
+	if err != nil || !bytes.Equal(got, original) {
+		t.Fatal("legacy URI database bytes changed", err)
+	}
+	if _, err = os.Lstat(filepath.Join(base, "file:legacy")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatal("a second literal store was created", err)
+	}
+	// An explicit absolute filesystem path has no old URI interpretation.
+	literal := filepath.Join(base, "file:literal")
+	c, err = OpenCatalog(t.Context(), literal, "", DiskObjects{Dir: filepath.Join(literal, "objects")})
+	if err != nil {
+		t.Fatal("absolute literal directory was rejected", err)
+	}
+	if err = c.Close(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestAuditReaderRejectsNULDirectoryInsteadOfOpeningPrefix(t *testing.T) {
+	dir := t.TempDir()
+	c, err := OpenCatalog(t.Context(), dir, "", DiskObjects{Dir: filepath.Join(dir, "objects")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+	prefix := filepath.Join(dir, "catalog.sqlite") + "\x00ignored"
+	if reader, err := OpenAuditReader(t.Context(), prefix, ""); err == nil {
+		reader.Close()
+		t.Fatal("NUL-truncated prefix database was opened")
+	}
+	if other, err := OpenCatalog(t.Context(), prefix, "", DiskObjects{Dir: filepath.Join(dir, "unused")}); err == nil {
+		other.Close()
+		t.Fatal("NUL-truncated writer was opened")
+	}
+}
 
 func scope(tenant string) asset.Scope {
 	return asset.Scope{Tenant: tenant, Project: "demo", Runtime: "logical-1", Adapter: "codex"}

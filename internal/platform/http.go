@@ -54,6 +54,7 @@ func (a *API) Handler() http.Handler {
 				http.Error(w, "forbidden", http.StatusForbidden)
 				return
 			}
+			r = r.WithContext(auditHTTPContext(r.Context(), token, perm))
 			if err = f(w, r, g); err != nil {
 				status := 500
 				message := "platform operation failed"

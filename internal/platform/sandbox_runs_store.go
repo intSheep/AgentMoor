@@ -85,6 +85,10 @@ func (c *Catalog) ListSandboxRuns(ctx context.Context, scope asset.Scope) ([]San
 // saveSandbox is called under c.mu; all reads use the pool and the transaction
 // only mutates on the connection owning the service lease.
 func (c *Catalog) saveSandbox(ctx context.Context, r *SandboxRun, revoke string, caps []sandboxCap) error {
+	before, err := c.loadSandbox(ctx, r.Address())
+	if err != nil {
+		return err
+	}
 	r.UpdatedAt = time.Now().UTC()
 	raw, err := json.Marshal(r)
 	if err != nil {
@@ -125,6 +129,11 @@ func (c *Catalog) saveSandbox(ctx context.Context, r *SandboxRun, revoke string,
 	for _, cap := range caps {
 		if _, err = tx.ExecContext(ctx, `INSERT INTO sandbox_caps(token_hash,scope,run_id,purpose,expires,revoked)
  VALUES($1,$2,$3,$4,$5,0)`, cap.hash, r.Scope.Prefix(), r.ID, string(cap.purpose), cap.expires.UnixNano()); err != nil {
+			return err
+		}
+	}
+	if event, changed := auditSandboxEvent(ctx, &before, *r); changed {
+		if err = appendAudit(ctx, tx, event); err != nil {
 			return err
 		}
 	}
