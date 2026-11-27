@@ -597,5 +597,41 @@
     "No change to retention policy, remote asset deletion or storage-version/secure-erasure semantics.",
     "No live-model, production HA or new native format/isolation acceptance in this audit slice."
   ],
-  "raw_log_storage": "Lossless gzip with fixed compression timestamp. Original byte counts and SHA-256 remain recorded; terminal spaces and carriage returns are preserved after decompression."
+  "raw_log_storage": "Lossless gzip with fixed compression timestamp. Original byte counts and SHA-256 remain recorded; terminal spaces and carriage returns are preserved after decompression.",
+  "asset_links_telemetry_main_integration": {
+    "main_commit": "90fbb16ceb04b9eefa1e9e7861a4c40d2c9663e4",
+    "source_commit": "c1274e8f7b435f0055f6c874df31cef9301bbf06",
+    "checks": [
+      {
+        "command": "make fmt",
+        "exit_code": 0,
+        "log_path": "/private/tmp/agentmoor-object-collection-main-integration-fmt-20261127.log",
+        "sha256": "9ba9a3ce39410b82cffdcafff24a52faa1612e3a34b2a29885a7007b1bbfbc33",
+        "bytes": 22
+      },
+      {
+        "command": "make check",
+        "exit_code": 0,
+        "log_path": "/private/tmp/agentmoor-object-collection-main-integration-check-20261127.log",
+        "sha256": "80a652fbae770085f8377d66c6a011102465b50985ef2cc1e2227d48ba599916",
+        "bytes": 9327
+      },
+      {
+        "command": "make demo",
+        "exit_code": 0,
+        "log_path": "/private/tmp/agentmoor-object-collection-main-integration-demo-20261127.log",
+        "sha256": "1f1b10c788b50103501b5cc4c6c68f3d622731b36d4ed5e3f03d9cd54f3c2d09",
+        "bytes": 10160
+      },
+      {
+        "command": "make test-services",
+        "exit_code": 0,
+        "log_path": "/private/tmp/agentmoor-object-collection-main-integration-services-20261127.log",
+        "sha256": "a31785b080b3f3d32995d67490301fc1a7ad24f6027fcdef57ea9a3fb53dbe3b",
+        "bytes": 1335
+      }
+    ],
+    "merge_resolution": "Preserved both Session/object digest validation, all per-action field guards, asset.linked and object-collector routing, and both actual PostgreSQL/S3 test matrices.",
+    "native_matrix_note": "Prior full matrix retains source b7b9357; no new combined native matrix claimed."
+  }
 }
