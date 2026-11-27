@@ -546,9 +546,9 @@ class SecurityProbe(Probe):
 
     def remove_pod(self, namespace, name, runtime, record):
         self.run(*self.base, "-n", namespace, "delete", "pod", name, "--wait=true", "--timeout=60s", timeout=70)
-        for until in [time.monotonic() + 30]:
+        for until in [time.monotonic() + 60]:
             while time.monotonic() < until:
-                processes = self.node_run("ps", "-eo", "pid,comm,args")
+                processes = self.node_run("ps", "-eo", "pid,stat,comm,args")
                 live = [line for line in processes.splitlines() if runtime["sandbox_id"] in line and any(value in line for value in ("runsc-sandbox", "runsc-gofer", "containerd-shim-runsc"))]
                 cri = json.loads(self.node_run("crictl", "pods", "--namespace", namespace, "-o", "json"))
                 retained = [row for row in cri["items"] if row["metadata"]["uid"] == runtime["pod_uid"]]
@@ -565,67 +565,87 @@ class SecurityProbe(Probe):
                     if not retained:
                         return {"sentry_processes": [], "cri_sandboxes": [], "pod_uid": runtime["pod_uid"]}
                 time.sleep(.2)
-        raise RuntimeError("deleted Pod left a live Sentry/CRI sandbox")
+        diagnostics = {}
+        for line in record.get("cleanup_last_observation", {}).get("live_processes", []):
+            pid = line.split()[0]
+            if pid.isdigit():
+                for file in ("status", "wchan", "stack"):
+                    try:
+                        diagnostics[pid + "/" + file] = self.node_run("cat", "/proc/" + pid + "/" + file)
+                    except Exception as error:
+                        diagnostics[pid + "/" + file] = str(error)
+        record["cleanup_process_diagnostics"] = diagnostics
+        raise RuntimeError("deleted Pod left a live Sentry/gofer/shim or CRI sandbox")
 
     def resources(self):
         self.stage("run_bounded_resource_fixtures")
+        failures = []
         for mode in ("cpu", "memory", "tmpfs", "file-memory", "pids", "wall", "cancel"):
             self.stage("resource_" + mode)
-            name = "resource-" + mode
-            memory = "256Mi" if mode in ("tmpfs", "pids") else "128Mi"
-            deadline = 8 if mode == "wall" else 30
-            manifest = self.pod(GUEST_NS, name, ["/opt/process-limit", "python3", "/opt/fixture.py", "workload", "--mode", mode], GUEST_LABEL,
-                                memory=memory, deadline=deadline)
-            self.apply(manifest)
-            self.wait_ready(GUEST_NS, name)
-            runtime = self.runtime(GUEST_NS, name)
-            paths = self.cgroup_paths(runtime)
-            before = self.cgroups(paths)
-            pod = json.loads(self.run(*self.base, "-n", GUEST_NS, "get", "pod", name, "-o", "json"))
-            record = {"runtime_verified": True, "node_swap_max": self.security["node_memory"]["after"]["memory.swap.max"], "runtime": runtime, "manifest": manifest, "before": before,
-                      "pod_creation": pod["metadata"]["creationTimestamp"], "pod_start_time": pod["status"]["startTime"], "original_active_deadline_seconds": deadline,
-                      "observations": [], "terminated": False}
-            self.security["resources"][mode] = record
-            require(any(row.get("pids.max") == "128" for row in before), "resource Pod lacks actual host PID bound before load")
-            self.run(*self.base, "-n", GUEST_NS, "exec", name, "--", "touch", "/run/work/start")
-            for until in [time.monotonic() + 35]:
-                while time.monotonic() < until:
-                    snapshot = self.cgroups(paths)
-                    record["observations"].append(snapshot)
-                    log = self.run(*self.base, "-n", GUEST_NS, "logs", name)
-                    events = [json.loads(line) for line in log.splitlines() if line.startswith("{")]
-                    finished = next((row for row in events if row.get("stage") == "finished"), None)
-                    current = json.loads(self.run(*self.base, "-n", GUEST_NS, "get", "pod", name, "-o", "json"))
-                    require(current["metadata"]["uid"] == runtime["pod_uid"] and current["metadata"]["creationTimestamp"] == record["pod_creation"] and current["spec"]["activeDeadlineSeconds"] == deadline and current["status"]["startTime"] == record["pod_start_time"],
-                            "poll/retry replaced the Pod or refreshed its original deadline")
-                    statuses = current.get("status", {}).get("containerStatuses", [])
-                    record["terminated"] = bool(statuses) and all("terminated" in row["state"] for row in statuses)
-                    record["pod_reason"] = current.get("status", {}).get("reason")
-                    record["pod_status"] = current.get("status")
-                    record["log"] = log
-                    if mode == "cancel" and any(row.get("stage") == "started" for row in events):
-                        record["cancelled"] = True
-                        break
-                    if finished or record["terminated"]:
-                        if finished:
-                            record["fixture"] = finished
-                        break
-                    time.sleep(.15)
-                else:
-                    raise TimeoutError("bounded resource fixture did not reach its expected state")
-            record["after"] = self.cgroups(paths)
-            all_samples = record["observations"] + [record["after"]]
-            def delta(file, key):
-                baseline = {row["path"]: parse_counter(row.get(file, "")).get(key, 0) for row in before}
-                return max([0] + [parse_counter(row.get(file, "")).get(key, 0) - baseline.get(row["path"], 0)
-                                  for sample in all_samples for row in sample])
-            record["cpu_throttled_delta"] = delta("cpu.stat", "nr_throttled")
-            record["cpu_usage_usec_delta"] = delta("cpu.stat", "usage_usec")
-            record["oom_kill_delta"] = delta("memory.events", "oom_kill")
-            record["host_pids_max_events_delta"] = delta("pids.events", "max")
-            record["cleanup"] = self.remove_pod(GUEST_NS, name, runtime, record)
-            record["physical_cleanup"] = True
-            verify_resource(mode, record)
+            try:
+                self.resource(mode)
+            except Exception as error:
+                record = self.security["resources"].setdefault(mode, {})
+                record["failure"] = {"type": type(error).__name__, "message": str(error)}
+                failures.append(mode)
+        require(not failures, "resource proofs failed: " + ", ".join(failures))
+
+    def resource(self, mode):
+        name = "resource-" + mode
+        memory = "256Mi" if mode in ("tmpfs", "pids") else "128Mi"
+        deadline = 8 if mode == "wall" else 30
+        manifest = self.pod(GUEST_NS, name, ["/opt/process-limit", "python3", "/opt/fixture.py", "workload", "--mode", mode], GUEST_LABEL,
+                            memory=memory, deadline=deadline)
+        self.apply(manifest)
+        self.wait_ready(GUEST_NS, name)
+        runtime = self.runtime(GUEST_NS, name)
+        paths = self.cgroup_paths(runtime)
+        before = self.cgroups(paths)
+        pod = json.loads(self.run(*self.base, "-n", GUEST_NS, "get", "pod", name, "-o", "json"))
+        record = {"runtime_verified": True, "node_swap_max": self.security["node_memory"]["after"]["memory.swap.max"], "runtime": runtime, "manifest": manifest, "before": before,
+                  "pod_creation": pod["metadata"]["creationTimestamp"], "pod_start_time": pod["status"]["startTime"], "original_active_deadline_seconds": deadline,
+                  "observations": [], "terminated": False}
+        self.security["resources"][mode] = record
+        require(any(row.get("pids.max") == "128" for row in before), "resource Pod lacks actual host PID bound before load")
+        self.run(*self.base, "-n", GUEST_NS, "exec", name, "--", "touch", "/run/work/start")
+        for until in [time.monotonic() + 35]:
+            while time.monotonic() < until:
+                snapshot = self.cgroups(paths)
+                record["observations"].append(snapshot)
+                log = self.run(*self.base, "-n", GUEST_NS, "logs", name)
+                events = [json.loads(line) for line in log.splitlines() if line.startswith("{")]
+                finished = next((row for row in events if row.get("stage") == "finished"), None)
+                current = json.loads(self.run(*self.base, "-n", GUEST_NS, "get", "pod", name, "-o", "json"))
+                require(current["metadata"]["uid"] == runtime["pod_uid"] and current["metadata"]["creationTimestamp"] == record["pod_creation"] and current["spec"]["activeDeadlineSeconds"] == deadline and current["status"]["startTime"] == record["pod_start_time"],
+                        "poll/retry replaced the Pod or refreshed its original deadline")
+                statuses = current.get("status", {}).get("containerStatuses", [])
+                record["terminated"] = bool(statuses) and all("terminated" in row["state"] for row in statuses)
+                record["pod_reason"] = current.get("status", {}).get("reason")
+                record["pod_status"] = current.get("status")
+                record["log"] = log
+                if mode == "cancel" and any(row.get("stage") == "started" for row in events):
+                    record["cancelled"] = True
+                    break
+                if finished or record["terminated"]:
+                    if finished:
+                        record["fixture"] = finished
+                    break
+                time.sleep(.15)
+            else:
+                raise TimeoutError("bounded resource fixture did not reach its expected state")
+        record["after"] = self.cgroups(paths)
+        all_samples = record["observations"] + [record["after"]]
+        def delta(file, key):
+            baseline = {row["path"]: parse_counter(row.get(file, "")).get(key, 0) for row in before}
+            return max([0] + [parse_counter(row.get(file, "")).get(key, 0) - baseline.get(row["path"], 0)
+                              for sample in all_samples for row in sample])
+        record["cpu_throttled_delta"] = delta("cpu.stat", "nr_throttled")
+        record["cpu_usage_usec_delta"] = delta("cpu.stat", "usage_usec")
+        record["oom_kill_delta"] = delta("memory.events", "oom_kill")
+        record["host_pids_max_events_delta"] = delta("pids.events", "max")
+        record["cleanup"] = self.remove_pod(GUEST_NS, name, runtime, record)
+        record["physical_cleanup"] = True
+        verify_resource(mode, record)
 
     def clean_security(self):
         observed = subprocess.run(["docker", "inspect", self.outside], capture_output=True, text=True)
@@ -647,8 +667,8 @@ class SecurityProbe(Probe):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--bundle", type=Path)
-    parser.add_argument("--calico-manifest", type=Path)
+    parser.add_argument("--bundle", type=Path, default=os.environ.get("GVISOR_SECURITY_BUNDLE"))
+    parser.add_argument("--calico-manifest", type=Path, default=os.environ.get("GVISOR_SECURITY_CALICO_MANIFEST"))
     parser.add_argument("--stage", choices=("bootstrap", "network", "resources", "kindnet-negative", "all"), default="all")
     parser.add_argument("--output", type=Path, default=os.environ.get("GVISOR_SECURITY_OUTPUT"))
     options = parser.parse_args()
