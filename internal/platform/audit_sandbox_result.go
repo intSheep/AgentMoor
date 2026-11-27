@@ -47,6 +47,7 @@ func checkSandboxSuccessRun(a taskAddress, slot taskSlot, r SandboxRun, p Sandbo
 		r.State != SandboxReady || r.Collected || r.ErrorCode != "" || r.ProfileFingerprint != p.Fingerprint ||
 		!r.Input.valid() || !r.Input.Sealed || r.Input.Size < 1 || !r.Output.valid() || !r.Output.Sealed || r.Output.Size < 1 ||
 		!r.CreateStarted || !r.PodTerminal || !r.PodDeleted || r.ExitCode != 0 || !sandboxUUID(r.PodUID) ||
+		!r.GuestStopped() || r.GuestStopProof.Kind != SandboxGuestTerminated || r.GuestStopProof.ExitCode == nil || *r.GuestStopProof.ExitCode != 0 ||
 		!sandboxDigest(r.PodTemplateSHA) || r.PodNamespace == "" || r.PodName != "sandbox-"+r.ID[:32] {
 		return ErrConflict
 	}

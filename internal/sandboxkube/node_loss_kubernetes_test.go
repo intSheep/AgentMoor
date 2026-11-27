@@ -36,23 +36,27 @@ import (
 // Kubernetes API, with a synthetic guest and host-only TLS input fixture.
 // Python injects the node fault and observes the runtime independently.
 type nodeLossMetric struct {
-	Mode                      string               `json:"mode"`
-	RunID                     string               `json:"run_id"`
-	PodName                   string               `json:"pod_name"`
-	PodUID                    string               `json:"pod_uid"`
-	Namespace                 string               `json:"namespace"`
-	TurnID                    string               `json:"turn_id"`
-	AttemptSHA256             string               `json:"attempt_sha256"`
-	OriginalDeadline          time.Time            `json:"original_deadline"`
-	State                     string               `json:"state"`
-	PodTerminal               bool                 `json:"pod_terminal"`
-	PodDeleted                bool                 `json:"pod_deleted"`
-	APINotFound               bool                 `json:"api_not_found"`
-	CapabilitiesDenied        bool                 `json:"capabilities_denied"`
-	CheckpointUnchanged       bool                 `json:"checkpoint_unchanged"`
-	IdentityDeadlineUnchanged bool                 `json:"identity_deadline_unchanged"`
-	Requests                  controllerKubeCounts `json:"requests"`
-	StatusHistory             []nodeLossPodStatus  `json:"status_history"`
+	Mode                      string                          `json:"mode"`
+	RunID                     string                          `json:"run_id"`
+	PodName                   string                          `json:"pod_name"`
+	PodUID                    string                          `json:"pod_uid"`
+	Namespace                 string                          `json:"namespace"`
+	TurnID                    string                          `json:"turn_id"`
+	AttemptSHA256             string                          `json:"attempt_sha256"`
+	OriginalDeadline          time.Time                       `json:"original_deadline"`
+	State                     string                          `json:"state"`
+	PodTerminal               bool                            `json:"pod_terminal"`
+	PodDeleted                bool                            `json:"pod_deleted"`
+	GuestStopped              bool                            `json:"guest_stopped"`
+	CleanupUnknown            bool                            `json:"cleanup_unknown"`
+	StopProof                 *platform.SandboxGuestStopProof `json:"stop_proof,omitempty"`
+	FixtureInputPort          int                             `json:"fixture_input_port,omitempty"`
+	APINotFound               bool                            `json:"api_not_found"`
+	CapabilitiesDenied        bool                            `json:"capabilities_denied"`
+	CheckpointUnchanged       bool                            `json:"checkpoint_unchanged"`
+	IdentityDeadlineUnchanged bool                            `json:"identity_deadline_unchanged"`
+	Requests                  controllerKubeCounts            `json:"requests"`
+	StatusHistory             []nodeLossPodStatus             `json:"status_history"`
 }
 
 // Keep only status/identity fields, never Pod annotations, environment,
@@ -218,7 +222,7 @@ func TestSandboxNodeLossKubernetes(t *testing.T) {
 	if !filepath.IsAbs(dir) || err != nil || !info.IsDir() || info.Mode().Perm()&0077 != 0 {
 		t.Fatal("node-loss directory is not private")
 	}
-	ctx, cancel := context.WithTimeout(t.Context(), 6*time.Minute)
+	ctx, cancel := context.WithTimeout(t.Context(), 9*time.Minute)
 	defer cancel()
 	catalog, err := platform.OpenCatalog(ctx, t.TempDir(), "", platform.DiskObjects{Dir: t.TempDir()})
 	if err != nil {
@@ -253,6 +257,12 @@ func TestSandboxNodeLossKubernetes(t *testing.T) {
 	trace := &nodeLossStatusTrace{base: counter, rows: map[string][]nodeLossPodStatus{}}
 	client.http.Transport = trace
 	t.Cleanup(client.http.CloseIdleConnections)
+	canaries := json.RawMessage(os.Getenv("AGENTMOOR_NODE_LOSS_CANARIES"))
+	if !json.Valid(canaries) || len(canaries) > 2048 || len(canaries) < 2 {
+		t.Fatal("bounded controlled canary matrix missing")
+	}
+	nodeLossEvent("configure-network", nodeLossMetric{FixtureInputPort: listener.Addr().(*net.TCPAddr).Port})
+	nodeLossWaitFile(t, ctx, dir, "network.configured")
 	var metrics []nodeLossMetric
 	t.Cleanup(func() {
 		raw, err := json.MarshalIndent(struct {
@@ -268,7 +278,7 @@ func TestSandboxNodeLossKubernetes(t *testing.T) {
 			t.Error(err)
 		}
 	})
-	for _, mode := range []string{"pending", "normal", "lost"} {
+	for _, mode := range []string{"pending", "normal", "lost", "admin-missing"} {
 		t.Run(mode, func(t *testing.T) {
 			scope := asset.Scope{Tenant: "node-loss-fixture", Project: "actual-kubernetes", Runtime: mode + "-" + uuid.NewString(), Adapter: "codex"}
 			business, oldCP, session := nodeLossBaseline(t, ctx, api, secret, scope)
@@ -288,7 +298,14 @@ func TestSandboxNodeLossKubernetes(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			input := "synthetic-controller:heartbeat"
+			inputBytes, err := json.Marshal(struct {
+				Mode     string          `json:"mode"`
+				Canaries json.RawMessage `json:"canaries"`
+			}{"synthetic-controller:heartbeat", canaries})
+			if err != nil {
+				t.Fatal(err)
+			}
+			input := string(inputBytes)
 			r, err := catalog.BeginSandbox(ctx, a, fingerprint, controllerKubeBlob(input))
 			if err != nil {
 				t.Fatal(err)
@@ -303,7 +320,9 @@ func TestSandboxNodeLossKubernetes(t *testing.T) {
 			}
 			controller.client.http.CloseIdleConnections()
 			controller.client = client
-			defer controllerKubeCleanup(t, controller, a)
+			if mode != "admin-missing" {
+				defer controllerKubeCleanup(t, controller, a)
+			}
 			before := counter.snapshot()
 			if mode == "pending" {
 				nodeLossEvent("cordon-node", nodeLossMetric{Mode: mode})
@@ -351,65 +370,131 @@ func TestSandboxNodeLossKubernetes(t *testing.T) {
 			}()
 			nodeLossEvent("observe", metric)
 			nodeLossWaitFile(t, ctx, dir, mode+".observation-ready")
-			if mode != "lost" {
-				if err = business.JSON(ctx, "POST", route+"/cancel", nil, &record); err != nil {
-					t.Fatal(err)
+			// These snapshots inspect only public business state and delegated caps.
+			// Runtime liveness is independently sampled by the Python observer.
+			refresh := func() {
+				metric.State, metric.PodDeleted, metric.PodTerminal = r.State, r.PodDeleted, r.PodTerminal
+				metric.GuestStopped, metric.CleanupUnknown, metric.StopProof = r.GuestStopped(), r.CleanupUnknown, r.GuestStopProof
+				metric.IdentityDeadlineUnchanged = r.Address() == a && r.Deadline.Equal(originalDeadline)
+				metric.CapabilitiesDenied = true
+				for token, purpose := range map[string]platform.SandboxPurpose{caps.Input: platform.SandboxInput, caps.Output: platform.SandboxOutput, caps.Model: platform.SandboxModel} {
+					if _, e := catalog.AuthenticateSandboxCapability(ctx, token, purpose); !errors.Is(e, platform.ErrSandboxDenied) {
+						metric.CapabilitiesDenied = false
+					}
 				}
-				if _, err = controller.Cancel(ctx, a); err != nil {
-					t.Fatal(err)
+				var cp task.Checkpoint
+				if e := business.JSON(ctx, "GET", "/v1/tasks/"+scope.Runtime+"/checkpoint", nil, &cp); e != nil {
+					t.Fatal(e)
 				}
-				if err = controllerWait(ctx, 30*time.Second, func() (bool, error) { var e error; r, e = controller.Reconcile(ctx, a); return r.PodDeleted, e }); err != nil {
-					t.Fatal(err)
+				metric.CheckpointUnchanged = reflect.DeepEqual(oldCP, cp)
+				metric.Requests = counter.snapshot().since(before)
+				metric.StatusHistory = trace.history(metric.PodUID)
+				if !metric.CapabilitiesDenied || !metric.IdentityDeadlineUnchanged || !metric.CheckpointUnchanged || metric.Requests.Posts != 1 {
+					t.Fatal("node loss changed authority, identity, deadline, checkpoint or the one-POST fence")
 				}
-			} else {
-				nodeLossEvent("stop-kubelet", metric)
-				nodeLossWaitFile(t, ctx, dir, "lost.kubelet-stopped")
-				// Freeze the actual last status after kubelet stop, before API deletion.
-				if _, exists, e := client.Get(ctx, r.PodNamespace, r.PodName); e != nil || !exists {
-					t.Fatal("lost Pod disappeared before the UID force-delete")
-				}
+			}
+			forceDelete := func() {
 				path, _ := podRoute(r.PodNamespace, r.PodName)
 				body, _ := json.Marshal(map[string]any{"apiVersion": "v1", "kind": "DeleteOptions", "gracePeriodSeconds": 0, "preconditions": map[string]string{"uid": r.PodUID}})
 				status, _, e := client.request(ctx, "delete", "DELETE", path, body)
 				if e != nil || (status != http.StatusOK && status != http.StatusAccepted) {
 					t.Fatal("owned UID force-delete failed")
 				}
+			}
+			switch mode {
+			case "pending", "normal":
+				if err = business.JSON(ctx, "POST", route+"/cancel", nil, &record); err != nil {
+					t.Fatal(err)
+				}
+				if mode == "pending" {
+					forceDelete()
+					nodeLossEvent("pending-deleting", metric)
+					nodeLossWaitFile(t, ctx, dir, "pending.binding-rejected")
+				}
+				if _, err = controller.Cancel(ctx, a); err != nil {
+					t.Fatal(err)
+				}
+				if err = controllerWait(ctx, 45*time.Second, func() (bool, error) {
+					var e error
+					r, e = controller.Reconcile(ctx, a)
+					return r.PodDeleted && r.GuestStopped(), e
+				}); err != nil {
+					t.Fatal(err)
+				}
+			case "lost":
+				nodeLossEvent("stop-kubelet", metric)
+				nodeLossWaitFile(t, ctx, dir, mode+".kubelet-stopped")
+				forceDelete()
+				raw, exists, e := client.Get(ctx, r.PodNamespace, r.PodName)
+				if e != nil || !exists {
+					t.Fatal("platform finalizer did not retain the deleting Pod")
+				}
+				p, _, e := inspectPod(r, raw)
+				if e != nil || !p.deleting || !p.ownFinalizer || p.stopProof != nil {
+					t.Fatal("retained deleting Pod supplied an invalid stop claim")
+				}
+				r, err = controller.Reconcile(ctx, a)
+				if err != nil {
+					t.Fatal("retained guest reconciliation failed", err)
+				}
+				refresh()
+				if r.PodDeleted || r.GuestStopped() {
+					t.Fatal("live deleting guest was declared stopped")
+				}
+				nodeLossEvent("held", metric)
+				nodeLossWaitFile(t, ctx, dir, "lost.phase-failed")
+				r, err = controller.Reconcile(ctx, a)
+				if err != nil {
+					t.Fatal("PhaseFailed live-guest reconciliation failed", err)
+				}
+				refresh()
+				if !r.PodTerminal || r.PodDeleted || r.GuestStopped() {
+					t.Fatal("PhaseFailed classification was confused with guest stop proof")
+				}
+				nodeLossEvent("phase-failed", metric)
+				nodeLossWaitFile(t, ctx, dir, "lost.kubelet-restored")
+				if err = controllerWait(ctx, 90*time.Second, func() (bool, error) {
+					var e error
+					r, e = controller.Reconcile(ctx, a)
+					return r.PodDeleted && r.GuestStopped(), e
+				}); err != nil {
+					t.Fatal("recovered kubelet did not provide stop proof", err)
+				}
+			case "admin-missing":
+				nodeLossEvent("stop-kubelet", metric)
+				nodeLossWaitFile(t, ctx, dir, mode+".kubelet-stopped")
+				nodeLossEvent("admin-remove", metric)
+				nodeLossWaitFile(t, ctx, dir, "admin-missing.api-removed")
 				if _, exists, e := client.Get(ctx, r.PodNamespace, r.PodName); e != nil || exists {
-					t.Fatal("force-deleted API object still exists")
+					t.Fatal("admin-deleted API object still exists")
 				}
 				metric.APINotFound = true
 				r, err = controller.Reconcile(ctx, a)
-				if err != nil {
-					t.Fatal("production reconcile failed", err)
+				if !errors.Is(err, ErrGuestStopUnknown) {
+					t.Fatal("missing API without stop proof was accepted", err)
 				}
 				afterReplay, e := controller.Start(ctx, a)
-				if e != nil || afterReplay.ID != r.ID || counter.snapshot().since(before).Posts != 1 {
-					t.Fatal("lost Pod was re-created or adopted")
+				if !errors.Is(e, ErrGuestStopUnknown) || afterReplay.ID != r.ID {
+					t.Fatal("unknown guest was re-created or adopted")
+				}
+				refresh()
+				if r.PodDeleted || r.GuestStopped() || !r.CleanupUnknown {
+					t.Fatal("API404 supplied a false guest stop proof")
+				}
+				nodeLossEvent("unknown", metric)
+				nodeLossWaitFile(t, ctx, dir, "admin-missing.recovery-complete")
+				r, err = controller.Reconcile(ctx, a)
+				if !errors.Is(err, ErrGuestStopUnknown) || r.PodDeleted || r.GuestStopped() || !r.CleanupUnknown {
+					t.Fatal("NodeReady/physical observation retroactively blessed missing API metadata")
 				}
 			}
-			metric.State, metric.PodDeleted, metric.PodTerminal = r.State, r.PodDeleted, r.PodTerminal
-			metric.IdentityDeadlineUnchanged = r.Address() == a && r.Deadline.Equal(originalDeadline)
-			metric.CapabilitiesDenied = true
-			for token, purpose := range map[string]platform.SandboxPurpose{caps.Input: platform.SandboxInput, caps.Output: platform.SandboxOutput, caps.Model: platform.SandboxModel} {
-				if _, e := catalog.AuthenticateSandboxCapability(ctx, token, purpose); !errors.Is(e, platform.ErrSandboxDenied) {
-					metric.CapabilitiesDenied = false
-				}
+			refresh()
+			if _, exists, e := client.Get(ctx, r.PodNamespace, r.PodName); e != nil || exists {
+				t.Fatal("cleanup claimed completion while API object remains")
 			}
-			var cp task.Checkpoint
-			if err = business.JSON(ctx, "GET", "/v1/tasks/"+scope.Runtime+"/checkpoint", nil, &cp); err != nil {
-				t.Fatal(err)
-			}
-			metric.CheckpointUnchanged = reflect.DeepEqual(oldCP, cp)
-			if !metric.CapabilitiesDenied || !metric.IdentityDeadlineUnchanged || !metric.CheckpointUnchanged {
-				t.Fatal("node loss changed authority, identity, deadline or previous checkpoint")
-			}
-			metric.Requests = counter.snapshot().since(before)
-			metric.StatusHistory = trace.history(metric.PodUID)
+			metric.APINotFound = true
 			nodeLossEvent("reconciled", metric)
 			nodeLossWaitFile(t, ctx, dir, mode+".physically-cleaned")
-			if mode == "lost" && r.PodDeleted && !r.PodTerminal {
-				t.Error("PHYSICAL_CLEANUP_INVARIANT: missing API object was declared deleted without terminal proof")
-			}
 		})
 	}
 }

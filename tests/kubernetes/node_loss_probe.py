@@ -1,4 +1,4 @@
-"""Negative lifecycle probe: API deletion is not physical sandbox termination.
+"""Guest-stop proof and finalizer lifecycle probe on one owned real gVisor node.
 
 Only a bounded synthetic heartbeat child runs; native_vendor is always false.
 The real production Catalog/Controller execute in the trusted host test driver.
@@ -19,6 +19,7 @@ import time
 from gvisor_probe import IMAGE, NAMESPACE, require
 from gvisor_security_probe import SecurityProbe
 from sandbox_controller_smoke import ControllerSmoke, ROOT, redact_pod, safe_evidence
+from node_loss_network import NodeLossNetwork, OwnedAdmin, verify_canaries
 
 EVENT = "SANDBOX_NODE_LOSS_EVENT "
 HEARTBEAT = "AGENTMOOR_NODE_LOSS_HEARTBEAT "
@@ -62,18 +63,63 @@ def verify_physical_cleanup_claim(row):
     return True
 
 
+def verify_live_samples(window, targets):
+    a, b = window["samples"]
+    fresh = [item for item in b["recent_heartbeats"] if item["sequence"] > a["heartbeat"]["sequence"] and item["wall_unix_nano"] > a["node_unix_nano"]]
+    require(len(fresh) >= 3 and all(item["nonce"] == a["heartbeat"]["nonce"] and item["pid"] == a["heartbeat"]["pid"] for item in fresh), "live window lacks three new same-child emissions")
+    require(all(item["same_sentry"] and item["sandbox_ready"] and item["container_running"] for item in (a, b)), "live window lacks the same CRI/Sentry")
+    for item in fresh:
+        verify_canaries(item["canaries"], targets)
+    control = window["same_target_control"]
+    require(control["wall_unix_nano"] > a["node_unix_nano"], "control baseline is stale")
+    verify_canaries(control["canaries"], targets, control=True)
+    return True
+
+
+def verify_guest_stop_matrix(result):
+    rows = result["scenarios"]
+    require(set(rows) == {"pending", "normal", "lost", "admin-missing"}, "guest stop matrix incomplete")
+    for mode, row in rows.items():
+        metric = row["metric"]
+        require(metric["requests"]["posts"] == 1 and metric["api_not_found"] and metric["capabilities_denied"] and metric["checkpoint_unchanged"] and metric["identity_deadline_unchanged"], "fence or business invariants failed")
+        require(row.get("physical_cleanup"), "independent runtime cleanup not observed")
+        if mode == "admin-missing":
+            verify_physical_cleanup_claim(row)
+            require(metric["cleanup_unknown"] and not metric["guest_stopped"], "API404 was retroactively blessed")
+            continue
+        proof = metric.get("stop_proof", {})
+        require(metric["guest_stopped"] and metric["pod_deleted"] and not metric["cleanup_unknown"] and proof.get("pod_uid") == metric["pod_uid"], "released object lacks its original guest stop proof")
+        if mode == "pending":
+            require(proof.get("kind") == "never-scheduled-cas.v1" and not proof.get("node_name") and not proof.get("container_id") and row["binding_after_delete"]["status"] == 409, "Pending CAS or authorized-binding rejection missing")
+        else:
+            require(proof.get("kind") == "terminated.v1" and proof.get("node_name") and proof.get("container_id") and proof.get("container_name") == "guest" and proof.get("restart_count") == 0 and isinstance(proof.get("exit_code"), int), "terminated proof lacks bound runtime evidence")
+    lost = rows["lost"]
+    for name in ("deleting_live_window", "phase_failed_live_window"):
+        window = lost[name]
+        require(not window["metric"]["guest_stopped"] and not window["metric"]["pod_deleted"], "live guest was released")
+        verify_live_samples(window, result["network"]["targets"])
+    quota = lost["object_quota"]
+    require(quota["count_pods_named_in_rejection"] and quota["new_pod_status"] == 403 and quota["after_delete_admission_status"] == 201 and quota["new_witness_no_cri"], "terminal held object budget did not refuse then release")
+    return True
+
+
 class NodeLossSmoke(ControllerSmoke):
     def __init__(self, probe):
         super().__init__(probe)
         self.stopped = False
         self.cordoned = False
         self.active_runtime = None
-        self.result.update(scope="node-loss physical cleanup invariant, component only", native_vendor=False,
+        self.active_mode = None
+        self.network = NodeLossNetwork(self)
+        self.admin = None
+        self.quota = None
+        self.result.update(scope="node-loss guest stop-proof and API object deletion, component only", native_vendor=False,
             scenarios={}, expected_negative_reproduced=False,
             limitations=["Synthetic Go child only; no vendor CLI/model/SaaS acceptance.",
                 "Single owned kind node; stopping kubelet is a partition surrogate, not cloud power fencing or HA acceptance.",
                 "Host driver uses the production Catalog/Controller and a synthetic input TLS handler, not the production gateway.",
-                "Calico is installed, but this probe does not claim the complete egress/resource matrix."])
+                "Finite direct TCP fault-window canaries and count/pods object quota only; no complete Internet, aggregate physical quota or HA guarantee.",
+                "Terminated guest status proves runtime-reported guest stop; exact runtime process cleanup is observed separately."])
 
     def configure(self):
         actual = self.probe.node_run("cat", "/etc/containerd/runsc.toml")
@@ -82,10 +128,10 @@ class NodeLossSmoke(ControllerSmoke):
         self.result["runtime_config"] = actual
 
     def prepare(self):
-        relevant = ["cmd", "internal", "tests/kubernetes/controllerfixture", "tests/kubernetes/node_loss_probe.py", "tests/kubernetes/node_loss_probe_test.py"]
+        relevant = ["cmd", "internal", "tests/kubernetes/controllerfixture", "tests/kubernetes/node_loss_probe.py", "tests/kubernetes/node_loss_probe_test.py", "tests/kubernetes/node_loss_network.py"]
         require(not self.probe.run("git", "-C", ROOT, "status", "--short", "--", *relevant).strip(), "commit all node-loss source before acceptance")
         super().prepare()
-        files = [Path(__file__), ROOT / "internal/sandboxkube/node_loss_kubernetes_test.go", ROOT / "tests/kubernetes/controllerfixture/main.go"]
+        files = [Path(__file__), Path(__file__).with_name("node_loss_network.py"), ROOT / "internal/sandboxkube/node_loss_kubernetes_test.go", ROOT / "tests/kubernetes/controllerfixture/main.go"]
         self.result["fixture_source_sha256"] = {str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest() for path in files}
 
     def signal_file(self, name):
@@ -107,7 +153,7 @@ class NodeLossSmoke(ControllerSmoke):
         for line in raw.splitlines():
             if HEARTBEAT in line:
                 row = json.loads(line.split(HEARTBEAT, 1)[1])
-                require(set(row) == {"nonce", "pid", "sequence", "elapsed_nano", "wall_unix_nano", "uid"} and re.fullmatch(r"[a-f0-9]{32}", row["nonce"]) and row["pid"] >= 2 and row["sequence"] > 0, "invalid bounded heartbeat record")
+                require(set(row) == {"nonce", "pid", "sequence", "elapsed_nano", "wall_unix_nano", "uid", "canaries"} and re.fullmatch(r"[a-f0-9]{32}", row["nonce"]) and row["pid"] >= 2 and row["sequence"] > 0, "invalid bounded heartbeat record")
                 rows.append(row)
         return rows
 
@@ -174,10 +220,13 @@ class NodeLossSmoke(ControllerSmoke):
         safe["log_path"] = path
         row = self.result["scenarios"][mode] = {"pod": redact_pod(pod), "runtime": safe}
         self.active_runtime = safe
+        self.active_mode = mode
         self.signal_file(mode + ".release")
         row["initial_heartbeat"] = self.wait_heartbeat(safe)
         row["before_fault"] = self.snapshot(safe)
         require(row["before_fault"]["same_sentry"] and row["before_fault"]["sandbox_ready"] and row["before_fault"]["container_running"], "baseline runtime is not actually live")
+        verify_canaries(row["before_fault"]["heartbeat"]["canaries"], self.network.targets, require_allowed=True)
+        row["before_fault"]["same_target_control"] = self.network.wait_control(row["before_fault"]["node_unix_nano"])
         self.signal_file(mode + ".observation-ready")
 
     def cordon_node(self):
@@ -208,9 +257,10 @@ class NodeLossSmoke(ControllerSmoke):
             self.probe.run(*self.probe.base, "uncordon", self.probe.node)
             self.cordoned = False
 
-    def stop_kubelet(self):
+    def stop_kubelet(self, metric):
         self.owned()
-        row = self.result["scenarios"]["lost"]
+        mode = metric["mode"]
+        row = self.result["scenarios"][mode]
         before, containerd = self.service("kubelet"), self.service("containerd")
         require(before["ActiveState"] == "active" and containerd["ActiveState"] == "active", "services not initially active")
         self.stopped = True  # finally must recover even if systemctl fails halfway.
@@ -222,7 +272,7 @@ class NodeLossSmoke(ControllerSmoke):
         require(after["ActiveState"] == "inactive" and after["MainPID"] == "0" and containerd_after == containerd and ready == "ok", "kubelet-only failure did not preserve runtime/API")
         before_hb = self.heartbeat(self.active_runtime)
         row["heartbeat_after_stop"] = self.wait_heartbeat(self.active_runtime, baseline=before_hb)
-        self.signal_file("lost.kubelet-stopped")
+        self.signal_file(mode + ".kubelet-stopped")
 
     def restore_kubelet(self):
         if not self.stopped:
@@ -250,49 +300,174 @@ class NodeLossSmoke(ControllerSmoke):
                 time.sleep(.25)
         raise TimeoutError("owned sandbox did not naturally stop after kubelet recovery")
 
+    def pod_admin(self, metric):
+        path = "/api/v1/namespaces/"+NAMESPACE+"/pods/"+metric["pod_name"]
+        status, pod = self.admin.request("GET", path)
+        require(status == 200 and pod["metadata"]["uid"] == metric["pod_uid"], "admin observation changed the owned Pod UID")
+        return path, pod
+
+    def pending_deleting(self, metric):
+        path, pod = self.pod_admin(metric)
+        require(pod["metadata"].get("deletionTimestamp") and "agentmoor.io/guest-stop" in pod["metadata"].get("finalizers", []) and not pod["spec"].get("nodeName"), "Pending cancellation is not retained and unbound")
+        require(self.probe.run(*self.probe.base, "auth", "can-i", "create", "pods", "--subresource", "binding", "-n", NAMESPACE).strip() == "yes", "binding counterexample lacks admin authority")
+        status, body = self.admin.request("POST", path+"/binding", {"apiVersion": "v1", "kind": "Binding", "metadata": {"name": metric["pod_name"], "namespace": NAMESPACE, "uid": metric["pod_uid"]}, "target": {"apiVersion": "v1", "kind": "Node", "name": self.probe.node}})
+        require(status == 409 and body.get("reason") == "Conflict", "deleting Pending Pod did not reject an otherwise authorized binding")
+        self.result["scenarios"]["pending"]["binding_after_delete"] = {"authorized_admin": True, "status": status, "reason": body.get("reason"), "pod_uid": metric["pod_uid"], "requested_node": self.probe.node}
+        self.signal_file("pending.binding-rejected")
+
+    def live_window(self, metric, name):
+        row = self.result["scenarios"][metric["mode"]]
+        samples = [self.snapshot(self.active_runtime)]
+        window = row[name] = {"metric": metric, "samples": samples}
+        require(samples[0]["heartbeat"] is not None, "missing live-window baseline")
+        self.wait_heartbeat(self.active_runtime, baseline=samples[0]["heartbeat"], not_before_unix_nano=samples[0]["node_unix_nano"])
+        samples.append(self.snapshot(self.active_runtime))
+        window["same_target_control"] = self.network.wait_control(samples[0]["node_unix_nano"])
+        verify_live_samples(window, self.network.targets)
+        return window
+
+    def held(self, metric):
+        path, pod = self.pod_admin(metric)
+        require(pod["metadata"].get("deletionTimestamp") and "agentmoor.io/guest-stop" in pod["metadata"].get("finalizers", []) and pod["status"]["phase"] == "Running", "live deleting Pod was not retained")
+        require(not metric["guest_stopped"] and not metric["pod_deleted"] and not metric["cleanup_unknown"], "retained guest was falsely stopped")
+        self.live_window(metric, "deleting_live_window")
+        # Model the exact PodGC danger: a trusted control-plane status writer
+        # may mark PhaseFailed without any kubelet-reported terminated state.
+        patch = [{"op": "test", "path": "/metadata/uid", "value": pod["metadata"]["uid"]},
+                 {"op": "test", "path": "/metadata/resourceVersion", "value": pod["metadata"]["resourceVersion"]},
+                 {"op": "replace", "path": "/status/phase", "value": "Failed"}]
+        status, after = self.admin.request("PATCH", path+"/status", patch, "application/json-patch+json")
+        require(status == 200 and after["status"]["phase"] == "Failed" and after["status"]["containerStatuses"] == pod["status"]["containerStatuses"], "PhaseFailed surrogate changed container evidence")
+        self.result["scenarios"]["lost"]["phase_failed_patch"] = {"status": status, "uid": pod["metadata"]["uid"], "container_status_unchanged": True, "source": "admin status-only PodGC surrogate; not a kubelet termination"}
+        self.signal_file("lost.phase-failed")
+
+    def quota_refusal(self, metric):
+        prefix = "/api/v1/namespaces/"+NAMESPACE
+        status, pods = self.admin.request("GET", prefix+"/pods")
+        require(status == 200, "cannot count owned namespace objects")
+        count = len(pods["items"])
+        require(any(pod["metadata"]["uid"] == metric["pod_uid"] and pod["status"]["phase"] == "Failed" and "agentmoor.io/guest-stop" in pod["metadata"].get("finalizers", []) for pod in pods["items"]), "terminal held object not counted")
+        quota = {"apiVersion": "v1", "kind": "ResourceQuota", "metadata": {"name": "node-loss-object-budget", "namespace": NAMESPACE}, "spec": {"hard": {"pods": str(count), "count/pods": str(count)}}}
+        status, _ = self.admin.request("POST", prefix+"/resourcequotas", quota)
+        require(status == 201, "owned object budget was not created")
+        self.quota = {"name": quota["metadata"]["name"], "hard_count": count}
+        until = time.monotonic()+25
+        while time.monotonic() < until:
+            status, observed = self.admin.request("GET", prefix+"/resourcequotas/"+self.quota["name"])
+            if status == 200 and observed.get("status", {}).get("used", {}).get("count/pods") == str(count):
+                break
+            time.sleep(.25)
+        else:
+            raise TimeoutError("object quota did not account for the held terminal Pod")
+        dummy = self.quota_dummy()
+        status, body = self.admin.request("POST", prefix+"/pods", dummy)
+        require(status == 403 and body.get("reason") == "Forbidden" and "count/pods" in body.get("message", ""), "held terminal object did not refuse an additional Pod")
+        self.result["scenarios"]["lost"]["object_quota"] = {"hard": quota["spec"]["hard"], "used_while_phase_failed": observed["status"]["used"], "new_pod_status": status, "reason": body.get("reason"), "count_pods_named_in_rejection": True}
+
+    def quota_dummy(self):
+        return {"apiVersion": "v1", "kind": "Pod", "metadata": {"namespace": NAMESPACE, "name": "node-loss-quota-admission"},
+            "spec": {"restartPolicy": "Never", "nodeName": "agentmoor-fixture-never-exists", "automountServiceAccountToken": False,
+                "containers": [{"name": "fixture", "image": self.probe.image, "imagePullPolicy": "Never", "command": ["sleep", "30"]}]}}
+
+    def quota_released(self):
+        if self.quota is None:
+            return
+        prefix = "/api/v1/namespaces/"+NAMESPACE
+        until = time.monotonic()+25
+        while time.monotonic() < until:
+            status, observed = self.admin.request("GET", prefix+"/resourcequotas/"+self.quota["name"])
+            if status == 200 and int(observed["status"]["used"]["count/pods"]) < self.quota["hard_count"]:
+                break
+            time.sleep(.25)
+        else:
+            raise TimeoutError("deleted object did not release the object quota")
+        status, pod = self.admin.request("POST", prefix+"/pods", self.quota_dummy())
+        require(status == 201 and pod["spec"]["nodeName"] == "agentmoor-fixture-never-exists", "same quota did not allow one new unscheduled object after deletion")
+        uid = pod["metadata"]["uid"]
+        sandboxes = json.loads(self.probe.node_run("crictl", "pods", "--namespace", NAMESPACE, "-o", "json"))["items"]
+        require(not any(row["metadata"]["uid"] == uid for row in sandboxes), "quota witness executed unexpectedly")
+        self.result["scenarios"]["lost"]["object_quota"].update(used_after_api_deletion=observed["status"]["used"], after_delete_admission_status=status, new_witness_no_cri=True)
+        self.admin.request("DELETE", prefix+"/pods/"+pod["metadata"]["name"], {"apiVersion": "v1", "kind": "DeleteOptions", "gracePeriodSeconds": 0, "preconditions": {"uid": uid}})
+        status, _ = self.admin.request("DELETE", prefix+"/resourcequotas/"+self.quota["name"], {"apiVersion": "v1", "kind": "DeleteOptions"})
+        require(status == 200, "owned quota cleanup failed")
+        self.quota = None
+
+    def phase_failed(self, metric):
+        _, pod = self.pod_admin(metric)
+        require(pod["status"]["phase"] == "Failed" and "running" in pod["status"]["containerStatuses"][0]["state"], "PhaseFailed does not retain Running guest status")
+        require(metric["pod_terminal"] and not metric["guest_stopped"] and not metric["pod_deleted"], "PhaseFailed fabricated a stop proof")
+        self.live_window(metric, "phase_failed_live_window")
+        self.quota_refusal(metric)
+        self.restore_kubelet()
+        self.signal_file("lost.kubelet-restored")
+
+    def admin_remove(self, metric):
+        path, pod = self.pod_admin(metric)
+        finalizers = pod["metadata"].get("finalizers", [])
+        require(finalizers == ["agentmoor.io/guest-stop"], "unexpected fixture finalizers")
+        patch = [{"op": "test", "path": "/metadata/uid", "value": metric["pod_uid"]}, {"op": "test", "path": "/metadata/resourceVersion", "value": pod["metadata"]["resourceVersion"]}, {"op": "remove", "path": "/metadata/finalizers/0"}]
+        status, _ = self.admin.request("PATCH", path, patch, "application/json-patch+json")
+        require(status == 200, "admin-only finalizer removal failed")
+        status, _ = self.admin.request("DELETE", path, {"apiVersion": "v1", "kind": "DeleteOptions", "gracePeriodSeconds": 0, "preconditions": {"uid": metric["pod_uid"]}})
+        require(status in (200, 202), "admin UID force-delete failed")
+        status, _ = self.admin.request("GET", path)
+        require(status == 404, "admin-deleted object still exists")
+        self.result["scenarios"][metric["mode"]]["admin_override"] = {"finalizer_removed_by_test_admin": True, "uid_precondition": metric["pod_uid"], "api_status_after_delete": status}
+        self.signal_file("admin-missing.api-removed")
+
+    def unknown(self, metric):
+        row = self.result["scenarios"][metric["mode"]]
+        row["metric"] = metric
+        window = self.live_window(metric, "post_api404_window")
+        row["post_api404_samples"] = window["samples"]
+        verify_orphan_window(row)
+        verify_physical_cleanup_claim(row)
+        require(metric["cleanup_unknown"] and not metric["guest_stopped"], "missing API was not held unknown")
+        self.restore_kubelet()
+        row["physical_cleanup"] = self.physical_cleanup(self.active_runtime)
+        self.signal_file("admin-missing.recovery-complete")
+
     def reconciled(self, metric):
         mode = metric["mode"]
         row = self.result["scenarios"][mode]
         row["metric"] = metric
+        require(metric["requests"]["posts"] == 1 and metric["api_not_found"], "original controller fence was re-POSTed or API deletion not observed")
         if mode == "pending":
-            require(not self.probe.kube("get", "pod", metric["pod_name"], "--ignore-not-found", "-o", "json").strip(), "cancelled Pending API object remains")
+            require(metric["guest_stopped"] and metric["pod_deleted"] and metric["stop_proof"]["kind"] == "never-scheduled-cas.v1", "Pending cancellation lacks its exact-CAS stop proof")
             sandboxes = json.loads(self.probe.node_run("crictl", "pods", "--namespace", NAMESPACE, "-o", "json"))["items"]
             require(not any(item["metadata"]["uid"] == metric["pod_uid"] for item in sandboxes), "cancelled Pending control created a sandbox")
             row["physical_cleanup"] = {"never_assigned": True, "no_cri_sandbox": True, "api_object_gone": True}
             self.uncordon_node()
-            self.signal_file(mode + ".physically-cleaned")
-            return
-        if mode == "lost":
-            # Baseline is read only AFTER API404 and production reconciliation.
-            # Three further records cannot be buffered pre-deletion heartbeats.
-            samples = row["post_api404_samples"] = [self.snapshot(self.active_runtime)]
-            require(samples[0]["heartbeat"] is not None, "missing post-404 heartbeat baseline")
-            self.wait_heartbeat(self.active_runtime, baseline=samples[0]["heartbeat"], not_before_unix_nano=samples[0]["node_unix_nano"])
-            samples.append(self.snapshot(self.active_runtime))
-            verify_orphan_window(row)
-            self.result["expected_negative_reproduced"] = metric["pod_deleted"] is True
-            self.restore_kubelet()
-        row["physical_cleanup"] = self.physical_cleanup(self.active_runtime)
-        self.signal_file(mode + ".physically-cleaned")
+        elif mode != "admin-missing":
+            require(metric["guest_stopped"] and metric["pod_deleted"] and metric["stop_proof"]["kind"] == "terminated.v1", "real guest termination was not persisted before API deletion")
+            row["physical_cleanup"] = self.physical_cleanup(self.active_runtime)
+            if mode == "lost":
+                self.quota_released()
+        else:
+            require(metric["cleanup_unknown"] and not metric["guest_stopped"] and not metric["pod_deleted"], "missing metadata was retroactively blessed")
+        self.signal_file(mode+".physically-cleaned")
 
     def execute(self):
         self.configure()
         self.prepare()
         self.rbac()
-        self.stage("run_real_controller_node_loss_negative")
+        self.admin = OwnedAdmin(self)
+        self.network.prepare()
+        self.stage("run_real_controller_guest_stop_matrix")
         env = dict(os.environ, AGENTMOOR_NODE_LOSS="1", AGENTMOOR_CONTROLLER_API=self.api,
             AGENTMOOR_CONTROLLER_KUBE_CA=str(self.kube_ca), AGENTMOOR_CONTROLLER_TOKEN_FILE=str(self.token),
             AGENTMOOR_CONTROLLER_NAMESPACE=NAMESPACE, AGENTMOOR_CONTROLLER_IMAGE=self.manifest_image,
             AGENTMOOR_CONTROLLER_GATEWAY_IP=self.gateway_ip, AGENTMOOR_CONTROLLER_GATEWAY_CA=str(self.certificate),
-            AGENTMOOR_CONTROLLER_GATEWAY_KEY=str(self.key), AGENTMOOR_CONTROLLER_DIRECTORY=str(self.probe.directory))
-        self.driver = subprocess.Popen(["go", "test", "-tags", "integration", "-run", "^TestSandboxNodeLossKubernetes$", "-count=1", "-v", "-timeout", "8m", "./internal/sandboxkube"],
+            AGENTMOOR_CONTROLLER_GATEWAY_KEY=str(self.key), AGENTMOOR_CONTROLLER_DIRECTORY=str(self.probe.directory),
+            AGENTMOOR_NODE_LOSS_CANARIES=json.dumps(self.network.targets))
+        self.driver = subprocess.Popen(["go", "test", "-tags", "integration", "-run", "^TestSandboxNodeLossKubernetes$", "-count=1", "-v", "-timeout", "10m", "./internal/sandboxkube"],
             cwd=ROOT, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, start_new_session=True)
         selector = selectors.DefaultSelector()
         selector.register(self.driver.stdout, selectors.EVENT_READ)
         os.set_blocking(self.driver.stdout.fileno(), False)
         pending = b""
         log = self.probe.directory / "node-loss-driver.log"
-        until = time.monotonic() + 500
+        until = time.monotonic() + 650
         try:
             with log.open("w") as stream:
                 while self.driver.poll() is None or selector.get_map():
@@ -313,10 +488,23 @@ class NodeLossSmoke(ControllerSmoke):
                                 event = json.loads(line[len(EVENT):])
                                 if event["stage"] == "observe":
                                     self.observe_guest(event["metric"])
+                                elif event["stage"] == "configure-network":
+                                    self.network.configure(event["metric"]["fixture_input_port"])
+                                    self.signal_file("network.configured")
                                 elif event["stage"] == "cordon-node":
                                     self.cordon_node()
                                 elif event["stage"] == "stop-kubelet":
-                                    self.stop_kubelet()
+                                    self.stop_kubelet(event["metric"])
+                                elif event["stage"] == "pending-deleting":
+                                    self.pending_deleting(event["metric"])
+                                elif event["stage"] == "held":
+                                    self.held(event["metric"])
+                                elif event["stage"] == "phase-failed":
+                                    self.phase_failed(event["metric"])
+                                elif event["stage"] == "admin-remove":
+                                    self.admin_remove(event["metric"])
+                                elif event["stage"] == "unknown":
+                                    self.unknown(event["metric"])
                                 elif event["stage"] == "reconciled":
                                     self.reconciled(event["metric"])
                 code = self.driver.wait(timeout=5)
@@ -337,9 +525,11 @@ class NodeLossSmoke(ControllerSmoke):
         result = self.probe.directory / "node-loss-driver-result.json"
         if result.exists():
             self.result["driver_result"] = json.loads(result.read_text())
-        require(set(self.result["scenarios"]) == {"pending", "normal", "lost"}, "actual scenario matrix incomplete")
+        require(set(self.result["scenarios"]) == {"pending", "normal", "lost", "admin-missing"}, "actual scenario matrix incomplete")
         require(self.result["scenarios"]["normal"].get("physical_cleanup"), "normal cancellation control did not physically stop")
-        verify_physical_cleanup_claim(self.result["scenarios"]["lost"])
+        verify_physical_cleanup_claim(self.result["scenarios"]["admin-missing"])
+        verify_guest_stop_matrix(self.result)
+        self.result["fixed_guest_stop_matrix_passed"] = True
         require(code == 0, "node-loss driver failed independently of the cleanup invariant")
 
     def cleanup(self):
@@ -368,10 +558,11 @@ def main():
     parser.add_argument("--bundle", type=Path)
     parser.add_argument("--calico-manifest", type=Path)
     parser.add_argument("--containerd-cache", type=Path)
-    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--output", type=Path, default=os.environ.get("NODE_LOSS_OUTPUT"))
     options = parser.parse_args()
-    output = options.output.resolve()
-    require(not os.path.lexists(output) and output.parent.is_dir(), "new evidence output path required")
+    output = options.output.resolve() if options.output else None
+    if output:
+        require(not os.path.lexists(output) and output.parent.is_dir(), "new evidence output path required")
     directory = Path(tempfile.mkdtemp(prefix="agentmoor-node-loss-"))
     probe = NodeLossSecurityProbe(directory, options.bundle, options.calico_manifest, containerd_cache=options.containerd_cache)
     smoke = NodeLossSmoke(probe)
@@ -388,7 +579,7 @@ def main():
     finally:
         try:
             smoke.restore_kubelet()
-            if smoke.active_runtime and "physical_cleanup" not in smoke.result["scenarios"].get("lost", {}):
+            if smoke.active_runtime and "physical_cleanup" not in smoke.result["scenarios"].get(smoke.active_mode, {}):
                 smoke.result["final_recovery_observation"] = smoke.physical_cleanup(smoke.active_runtime)
         except BaseException as error:
             smoke.result["recovery_error"] = str(error)
@@ -402,9 +593,10 @@ def main():
             runtime_feasibility=probe.result, runtime_security_bootstrap=probe.security)
         safe, redactions = safe_evidence(smoke.result)
         failure = failure or (RuntimeError("unexpected capability redaction") if redactions else None)
-        with output.open("x") as stream:
-            json.dump(safe, stream, indent=2)
-            stream.write("\n")
+        if output:
+            with output.open("x") as stream:
+                json.dump(safe, stream, indent=2)
+                stream.write("\n")
         print("NODE_LOSS_PROBE_RESULT " + json.dumps({"status": safe["status"], "expected_negative_reproduced": safe.get("expected_negative_reproduced"),
             "failure": safe.get("failure"), "evidence": str(output), "cleanup": safe.get("cleanup")}), flush=True)
     return 1 if failure else 0
