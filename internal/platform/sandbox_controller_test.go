@@ -1,6 +1,7 @@
 package platform
 
 import (
+	"encoding/json"
 	"errors"
 	"reflect"
 	"strings"
@@ -78,6 +79,7 @@ func TestSandboxControllerTemplateSeal(t *testing.T) {
 	if _, err := c.SealSandboxPodTemplate(t.Context(), a, "sandbox", digest); !errors.Is(err, ErrConflict) {
 		t.Fatal("cancelled run resealed its template", err)
 	}
+	sandboxTestStoppedAndDeletedGuest(t, c, a, uid, 143)
 	sandboxTestFinish(t, c, a, true)
 	if n, err := c.Collect(t.Context(), a.Scope, time.Now().Add(time.Second)); err != nil || n != 1 {
 		t.Fatal("GC positive control did not collect the private input", n, err)
@@ -143,6 +145,7 @@ func TestSandboxControllerHistoricalCapabilities(t *testing.T) {
 					t.Fatal(err)
 				}
 			case "collected":
+				sandboxTestStoppedAndDeletedGuest(t, c, a, uuid.NewString(), 143)
 				sandboxTestFinish(t, c, a, true)
 				if n, err := c.Collect(t.Context(), a.Scope, time.Now().Add(time.Second)); err != nil || n != 1 {
 					t.Fatal("GC did not create a tombstone", n, err)
@@ -207,8 +210,30 @@ func TestSandboxControllerCollectedCleanupIsNotExecution(t *testing.T) {
 		t.Fatal(err)
 	}
 	sandboxTestFinish(t, c, a, true)
-	if n, err := c.Collect(t.Context(), a.Scope, time.Now().Add(time.Second)); err != nil || n != 2 {
-		t.Fatal("GC did not really delete both private objects", n, err)
+	if n, err := c.Collect(t.Context(), a.Scope, time.Now().Add(time.Second)); err != nil || n != 0 {
+		t.Fatal("unknown created guest was collected without a stop proof", n, err)
+	}
+	// Seed a real pre-upgrade tombstone shape. New GC must not manufacture
+	// one for this unknown guest, nor may migration bless it with a proof.
+	old, err := c.SandboxRun(t.Context(), a)
+	if err != nil {
+		t.Fatal(err)
+	}
+	old.Collected = true
+	raw, err := json.Marshal(old)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := c.writer.ExecContext(t.Context(), "UPDATE sandbox_runs SET record=$1,collected=1 WHERE scope=$2 AND id=$3", string(raw), a.Scope.Prefix(), old.ID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := c.writer.ExecContext(t.Context(), "UPDATE sandbox_caps SET revoked=1 WHERE scope=$1 AND run_id=$2", a.Scope.Prefix(), old.ID); err != nil {
+		t.Fatal(err)
+	}
+	for purpose, blob := range map[SandboxPurpose]SandboxBlob{SandboxInput: old.Input, SandboxOutput: old.Output} {
+		if err := c.objects.Remove(t.Context(), sandboxObjectKey(a.Scope, purpose, blob.SHA256)); err != nil {
+			t.Fatal(err)
+		}
 	}
 	before, err := c.SandboxRun(t.Context(), a)
 	if err != nil || !before.Collected || before.PodUID != "" || !before.Input.Sealed || !before.Output.Sealed {
@@ -244,9 +269,13 @@ func TestSandboxControllerCollectedCleanupIsNotExecution(t *testing.T) {
 		t.Fatal("foreign UID confirmed deletion", err)
 	}
 	for range 2 {
-		if _, err := c.ConfirmSandboxDeleted(t.Context(), a, uid); err != nil {
-			t.Fatal("late deletion evidence was denied", err)
+		if _, err := c.ConfirmSandboxDeleted(t.Context(), a, uid); !errors.Is(err, ErrNotReady) {
+			t.Fatal("legacy tombstone was blessed without a guest stop proof", err)
 		}
+	}
+	code := 255
+	if _, err := c.RecordSandboxGuestStopped(t.Context(), a, SandboxGuestStopProof{Kind: SandboxGuestTerminated, PodUID: uid, ResourceVersion: "legacy-late", NodeName: "fixture-node", ContainerID: "containerd://" + digest, ContainerName: "guest", ExitCode: &code}); !errors.Is(err, ErrConflict) {
+		t.Fatal("legacy collected execution accepted retroactive stop authority", err)
 	}
 	if _, err := c.BeginSandbox(t.Context(), a, before.ProfileFingerprint, sandboxTestBlob("frozen input")); err == nil {
 		t.Fatal("collected attempt began again")
@@ -277,11 +306,11 @@ func TestSandboxControllerCollectedCleanupIsNotExecution(t *testing.T) {
 	}
 	sandboxControllerCheckCaps(t, c, a, p.Capabilities, false)
 	after, err := c.SandboxRun(t.Context(), a)
-	if err != nil || !after.Collected || !after.PodTerminal || !after.PodDeleted || after.ExitCode != 255 || after.PodUID != uid || after.State == SandboxReady {
+	if err != nil || !after.Collected || !after.PodTerminal || after.PodDeleted || after.GuestStopProof != nil || after.ExitCode != 255 || after.PodUID != uid || after.State == SandboxReady {
 		t.Fatal("late cleanup did not remain a tombstone", after, err)
 	}
 	want := before
-	want.PodUID, want.PodTerminal, want.PodDeleted, want.ExitCode, want.UpdatedAt = uid, true, true, 255, after.UpdatedAt
+	want.PodUID, want.PodTerminal, want.ExitCode, want.UpdatedAt = uid, true, 255, after.UpdatedAt
 	if !reflect.DeepEqual(after, want) {
 		t.Fatal("cleanup altered frozen execution identity or assets", after, want)
 	}

@@ -187,7 +187,7 @@ func matchSandboxPublication(c Config, record task.Record, status platform.Sandb
 	r, q := status.Run, status.Request
 	if r.Scope != c.Scope || r.TurnID != record.TurnID || !sameAllocation(record, r.Source) || r.Source.State != task.Running ||
 		!r.Deadline.Equal(record.Deadline) || r.State != platform.SandboxReady || r.Collected || r.ErrorCode != "" ||
-		!r.CreateStarted || !r.PodTerminal || !r.PodDeleted || r.ExitCode != 0 || !publicationUUID(r.PodUID) ||
+		!r.CreateStarted || !r.PodTerminal || !r.PodDeleted || !r.GuestStopped() || r.GuestStopProof.Kind != platform.SandboxGuestTerminated || r.GuestStopProof.ExitCode == nil || *r.GuestStopProof.ExitCode != 0 || r.ExitCode != 0 || !publicationUUID(r.PodUID) ||
 		!sealedDigest.MatchString(r.ID) || !sealedDigest.MatchString(r.ProfileFingerprint) || !sealedDigest.MatchString(r.RecordFingerprint) ||
 		!sealedDigest.MatchString(r.PodTemplateSHA) || !sandboxNamespace.MatchString(r.PodNamespace) || r.PodName != "sandbox-"+r.ID[:32] ||
 		!sealedEnvelope(r.Input) || !sealedEnvelope(r.Output) || q.Validate() != nil ||

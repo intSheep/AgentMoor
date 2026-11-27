@@ -38,6 +38,7 @@ type controllerKubeCounts struct {
 	Posts   int `json:"posts"`
 	Gets    int `json:"gets"`
 	Deletes int `json:"deletes"`
+	Patches int `json:"patches"`
 }
 
 type controllerKubeCounter struct {
@@ -60,6 +61,8 @@ func (c *controllerKubeCounter) RoundTrip(r *http.Request) (*http.Response, erro
 		c.counts.Gets++
 	case http.MethodDelete:
 		c.counts.Deletes++
+	case http.MethodPatch:
+		c.counts.Patches++
 	default:
 		c.mu.Unlock()
 		return nil, errors.New("controller fixture rejected an unexpected API method")
@@ -81,7 +84,7 @@ func (c *controllerKubeCounter) CloseIdleConnections() {
 }
 
 func (c controllerKubeCounts) since(before controllerKubeCounts) controllerKubeCounts {
-	return controllerKubeCounts{c.Posts - before.Posts, c.Gets - before.Gets, c.Deletes - before.Deletes}
+	return controllerKubeCounts{c.Posts - before.Posts, c.Gets - before.Gets, c.Deletes - before.Deletes, c.Patches - before.Patches}
 }
 
 type controllerGatewayRun struct {

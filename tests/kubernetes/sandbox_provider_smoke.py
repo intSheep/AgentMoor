@@ -158,7 +158,7 @@ class ProviderSmoke:
             network_policy(),
             {"apiVersion": "scheduling.k8s.io/v1", "kind": "PriorityClass", "metadata": {"name": "agentmoor-sandbox"}, "value": 0, "globalDefault": False, "preemptionPolicy": "Never"},
             {"apiVersion": "v1", "kind": "ServiceAccount", "metadata": {"name": "sandbox-controller", "namespace": CONTROL_NS}},
-            {"apiVersion": "rbac.authorization.k8s.io/v1", "kind": "Role", "metadata": {"name": "sandbox-controller", "namespace": GUEST_NS}, "rules": [{"apiGroups": [""], "resources": ["pods"], "verbs": ["get", "create", "delete"]}]},
+            {"apiVersion": "rbac.authorization.k8s.io/v1", "kind": "Role", "metadata": {"name": "sandbox-controller", "namespace": GUEST_NS}, "rules": [{"apiGroups": [""], "resources": ["pods"], "verbs": ["get", "create", "delete", "patch"]}]},
             {"apiVersion": "rbac.authorization.k8s.io/v1", "kind": "RoleBinding", "metadata": {"name": "sandbox-controller", "namespace": GUEST_NS}, "roleRef": {"apiGroup": "rbac.authorization.k8s.io", "kind": "Role", "name": "sandbox-controller"}, "subjects": [{"kind": "ServiceAccount", "name": "sandbox-controller", "namespace": CONTROL_NS}]},
             {"apiVersion": "rbac.authorization.k8s.io/v1", "kind": "Role", "metadata": {"name": "turn-jobs", "namespace": CONTROL_NS}, "rules": [{"apiGroups": ["batch"], "resources": ["jobs"], "verbs": ["get", "create"]}]},
             {"apiVersion": "rbac.authorization.k8s.io/v1", "kind": "RoleBinding", "metadata": {"name": "turn-jobs", "namespace": CONTROL_NS}, "roleRef": {"apiGroup": "rbac.authorization.k8s.io", "kind": "Role", "name": "turn-jobs"}, "subjects": [{"kind": "ServiceAccount", "name": "sandbox-controller", "namespace": CONTROL_NS}]})

@@ -127,7 +127,7 @@ class ControllerSmoke:
             {"apiVersion": "v1", "kind": "ServiceAccount", "metadata": {"name": "sandbox-controller", "namespace": NAMESPACE},
              "automountServiceAccountToken": False},
             {"apiVersion": "rbac.authorization.k8s.io/v1", "kind": "Role", "metadata": {"name": "sandbox-controller", "namespace": NAMESPACE},
-             "rules": [{"apiGroups": [""], "resources": ["pods"], "verbs": ["get", "create", "delete"]}]},
+             "rules": [{"apiGroups": [""], "resources": ["pods"], "verbs": ["get", "create", "delete", "patch"]}]},
             {"apiVersion": "rbac.authorization.k8s.io/v1", "kind": "RoleBinding", "metadata": {"name": "sandbox-controller", "namespace": NAMESPACE},
              "roleRef": {"apiGroup": "rbac.authorization.k8s.io", "kind": "Role", "name": "sandbox-controller"},
              "subjects": [{"kind": "ServiceAccount", "name": "sandbox-controller", "namespace": NAMESPACE}]},
@@ -151,7 +151,7 @@ class ControllerSmoke:
         actor.chmod(0o600)
         self.private.append(actor)
         observed = []
-        for verb, resource, allowed in [("get", "pods", True), ("create", "pods", True), ("delete", "pods", True),
+        for verb, resource, allowed in [("get", "pods", True), ("create", "pods", True), ("delete", "pods", True), ("patch", "pods", True),
                 ("list", "pods", False), ("watch", "pods", False), ("get", "pods/log", False), ("create", "pods/exec", False),
                 ("get", "secrets", False), ("list", "secrets", False), ("get", "serviceaccounts", False),
                 ("create", "serviceaccounts/token", False), ("create", "roles", False)]:
