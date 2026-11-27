@@ -90,3 +90,5 @@ QUOTA_OUTPUT=/absolute/new/quota.json make test-k8s-sandbox-quota
 前次 `24cf983` 的真实运行完成首轮和第一次追问后，夹具误选旧 `report.json`，本地验算失败；文本追问的主文件实际为 `row.spec.output` 指向的 `reply.txt`。该[原始夹具失败](evidence/sandbox-provider-text-fixture-failed-2026-11-27.json)保留，没有写成生产失败或通过。修正选择后才运行上述新节点复验。为避免每次重下 CLI，保留明确的 `agentmoor-validation-cache:provider-codex-0.171-alpha.13` 依赖缓存：位于加入本次公开 CA 前，不含本轮 CA/私钥/运行密钥；`docker build --cache-from` 仍按当前 Dockerfile/COPY 构建 AgentMoor，再生成新 CA child。清理声明只覆盖专属节点及本轮标签，不包括这个公开依赖缓存。
 
 上述验收使用真实原生 CLI、脚本模型和合成业务/Skill，不证明真实模型质量、任意恶意程序不会逃逸、生产 HA 或全部系统调用兼容。其他 CLI 隔离路径、真实模型及 PostgreSQL/S3 与完整隔离提供方的组合分别验收；早期组件页所写“未接线”描述该页当时的独立组件范围，当前接线状态以本页为准。
+
+最终合入主分支后的 `f1ec8c8` 再次通过 `make fmt/check/demo`，包含模型、Skill 证明与配额离线检查。已逐项确认 `cmd`、`internal`、`go.mod` 和 `go.sum` 与两份实际集群来源完全相同；没有把原集群测试改写成新的提交来源。[最终整合检查](evidence/sandbox-provider-integration-2026-11-27.json)
