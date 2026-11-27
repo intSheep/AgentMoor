@@ -74,6 +74,9 @@ func guestRunCommand(ctx context.Context, args []string, registry *adapter.Regis
 	}
 	return guesttransport.Run(ctx, config, filepath.Dir(*root), func(runCtx context.Context, input io.Reader, output io.Writer) error {
 		if *apiCanary != "" {
+			if err := guesttransport.LimitGuestProcesses(); err != nil {
+				return err
+			}
 			if err := guesttransport.CheckNetwork(runCtx, *gateway, *ca, *apiCanary, *kubeCanary); err != nil {
 				return err
 			}

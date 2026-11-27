@@ -78,6 +78,7 @@ func (c *Catalog) ReserveSandboxModel(ctx context.Context, token string, policy 
 	if err != nil {
 		return SandboxModelReservation{}, err
 	}
+	ctx = auditCapabilityContext(ctx, SandboxModel)
 	reservation, err := c.readSandboxModelBudget(ctx, run)
 	fresh := errors.Is(err, ErrMissing)
 	if err != nil && !fresh {

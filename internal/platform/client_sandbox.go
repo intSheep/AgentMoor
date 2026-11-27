@@ -34,8 +34,11 @@ func (c *Client) SandboxTask(ctx context.Context, path, operation, attempt strin
 	defer response.Body.Close()
 	var status SandboxTaskStatus
 	raw, err = io.ReadAll(io.LimitReader(response.Body, 2<<20+1))
-	if err != nil || len(raw) > 2<<20 {
-		return status, fmt.Errorf("sandbox status exceeds its bound or was interrupted")
+	if err != nil {
+		return status, fmt.Errorf("sandbox status was interrupted: %w", err)
+	}
+	if len(raw) > 2<<20 {
+		return status, fmt.Errorf("sandbox status exceeds its bound")
 	}
 	d := json.NewDecoder(bytes.NewReader(raw))
 	if err = d.Decode(&status); err != nil {

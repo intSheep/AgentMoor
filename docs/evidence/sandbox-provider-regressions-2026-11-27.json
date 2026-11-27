@@ -1,0 +1,40 @@
+{
+  "source_commit": "19d0d5b40a48226402768f49d49228f9845901a3",
+  "started_at_utc": "2026-11-27T07:28:45.983224+00:00",
+  "checks": [
+    {
+      "command": "make fmt",
+      "start": "2026-11-27T07:28:45.983518+00:00",
+      "finish": "2026-11-27T07:28:46.020724+00:00",
+      "exit_code": 0,
+      "log": "/private/tmp/agentmoor-provider-final-19d0d5b-20261127-fmt.log",
+      "log_sha256": "9ba9a3ce39410b82cffdcafff24a52faa1612e3a34b2a29885a7007b1bbfbc33"
+    },
+    {
+      "command": "make check",
+      "start": "2026-11-27T07:28:46.021060+00:00",
+      "finish": "2026-11-27T07:29:54.745766+00:00",
+      "exit_code": 0,
+      "log": "/private/tmp/agentmoor-provider-final-19d0d5b-20261127-check.log",
+      "log_sha256": "0811afef05aee44e97eae5334555029ec0589904c4fdb7a17b5acf6c378ce751"
+    },
+    {
+      "command": "make demo",
+      "start": "2026-11-27T07:29:54.746213+00:00",
+      "finish": "2026-11-27T07:29:56.789122+00:00",
+      "exit_code": 0,
+      "log": "/private/tmp/agentmoor-provider-final-19d0d5b-20261127-demo.log",
+      "log_sha256": "c2608aad4d5d93514020328683f79bd3d9511b34837e3c27a1a6dbb960ffb38d"
+    },
+    {
+      "command": "make test-k8s",
+      "start": "2026-11-27T07:29:56.789386+00:00",
+      "finish": "2026-11-27T07:32:58.450071+00:00",
+      "exit_code": 0,
+      "log": "/private/tmp/agentmoor-provider-final-19d0d5b-20261127-test-k8s.log",
+      "log_sha256": "a22173a58619562d9a36baa054f2255abf69c6d4d73c9dabaa9ae8d15d0eb07e"
+    }
+  ],
+  "source_commit_after": "19d0d5b40a48226402768f49d49228f9845901a3",
+  "git_status_after": ""
+}

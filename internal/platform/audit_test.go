@@ -365,7 +365,7 @@ func TestAuditHTTPActorsContainHashesAndNoSensitivePayloads(t *testing.T) {
 		}
 	}
 	for _, event := range events {
-		if event.Action == "model.reserved" && (event.Actor.Source != "model-gateway" || event.Actor.CredentialSHA256 != "") {
+		if event.Action == "model.reserved" && (event.Actor.Source != "guest-capability" || event.Actor.Role != "model" || event.Actor.CredentialSHA256 != "") {
 			t.Fatal("model capability was recorded as an HTTP credential")
 		}
 	}

@@ -46,6 +46,10 @@ make test-k8s-v2
 
 两条命令各自独立运行，按需选择。前者在同一命名空间、数据库与 S3 桶中组合文件块发布前后故障、queued 追问控制面重启，以及 SIGKILL 后等待生产 900 秒 deadline。后者先跑文件和固定 Skill，再跑该组合；三个场景使用隔离命名空间和各自 PG/S3，同时验证 API 重启后合法外租户凭据无法读取旧固定版本。普通短入口保持原行为。双 TLS 故障代理、固定内容和单次原生执行的检查，以及各次实际结果和边界，见[组合验收说明](persistent-faults-acceptance.md)。
 
+## 运维审计查询
+
+首版审计仅平台运维可读，使用本地 `agentmoor audit` 查询现有 SQLite/PostgreSQL，不新增租户 HTTP 入口，不需要签名密钥或 SaaS token。关键状态与审计同事务提交，运行中的平台仍可同时提供服务。[命令、字段与当前范围](audit.md)
+
 ## 2. 给 Worker 分配身份和目录
 
 在平台侧签发短期凭据，并通过挂载文件或密钥管理系统把它交给对应 Worker。以下命令的凭据文件父目录应已存在，且仅平台和获授权的 Worker 可访问。
@@ -103,14 +107,14 @@ HTTP 按以下能力分别授权；同一凭据可以组合多种能力。
 | 配置值 | 当前行为 |
 | --- | --- |
 | 未填写或 `trusted-local.v1` | 兼容已有受信开发/批准工具的本地子进程流程，尚无代码隔离保证。 |
-| `untrusted-isolated.v1` | 要求独立隔离提供方；当前尚未接入提供方，在读取执行凭据、授权/claim 和原生命令前返回 `ErrIsolationUnavailable`。 |
+| `untrusted-isolated.v1` | 要求 `isolated_provider: "kubernetes-gvisor.v1"` 和已配置的 HTTPS 控制面分配；Worker 不启动宿主原生 CLI。缺提供方、错版本或不可用分配拒绝，不能回退。 |
 | 其他值 | 配置校验失败。 |
 
-客户代码和第三方 Skill 必须按不可信执行处理，不能因提供方尚未完成就改成 `trusted-local.v1`。当前显式选择不可信策略会拒绝执行，首轮或追问的 queued 记录、已有成功 checkpoint、固定内容和游标保持不变，不产生成功资产或新执行目录。
+客户代码和第三方 Skill 必须按不可信执行处理，不能改成 `trusted-local.v1`。按[隔离提供方部署契约](sandbox-provider.md)配置双 TLS listener、公开 CA、最小 RBAC、NetworkPolicy、固定镜像和实际节点边界；Worker 省略 `runtime_cli`、原生会话与宿主导入配置。`19d0d5b` 已通过真实 Codex 文件/Skill、取消和 guest 丢失验收；`4ce08cf` 另通过独立隔离文本三轮。缺配置的拒绝检查仍保留，不会改写旧成功 checkpoint 或静默执行。
 
-这个门禁覆盖任务首轮和追问，不覆盖普通 `sync` 或 `restore-native` 等受信维护入口。原生导入/导出的完整隔离属于后续提供方工作。[执行边界](security-boundary.md)
+这个策略覆盖任务首轮和追问，不覆盖普通 `sync` 或 `restore-native` 等受信维护入口。隔离任务的原生导入/导出发生在 guest；独立维护命令仍要求受信输入。[执行边界](security-boundary.md)
 
-`make test-k8s-gvisor-feasibility` 可独立检验本机 gVisor 运行时和缺 handler 拒绝；探针通过后，应用提供方仍须完成 Worker/guest 分离、模型网关、网络与资源验收。[命令、实际结果与限制](gvisor-feasibility.md)
+`make test-k8s-gvisor-feasibility` 仅检验运行时和缺 handler 拒绝。完整应用探针使用 `python3 tests/kubernetes/sandbox_provider_smoke.py --scenario both`，文本三轮另用 `--scenario text`，独立合成配额用 `python3 tests/kubernetes/sandbox_provider_quota.py`；两者支持 `--bundle`、`--calico-manifest`、`--containerd-cache` 和 `--output`，缓存仍按固定 SHA 验证。它们各建专属临时 kind 节点并在退出时清理；提供方探针明确保留不含本轮 CA/密钥的 `agentmoor-validation-cache:provider-codex-0.171-alpha.13` 依赖缓存，本轮镜像标签仍删除。需 OrbStack/Docker、kind、kubectl 和联网构建；不在已有生产节点上运行安装步骤。[固定源码、实际结果与限制](sandbox-provider.md#2026-11-27-实际验收)
 
 ### 可选：固定任务 Skill
 

@@ -9,6 +9,9 @@ const (
 	// ExecutionUntrustedIsolated requires an execution boundary that does not
 	// expose the trusted Worker's credentials or state to customer code.
 	ExecutionUntrustedIsolated = "untrusted-isolated.v1"
+	// KubernetesGVisorProvider delegates native work to the fixed control-plane
+	// Pod controller; the trusted Worker only validates and publishes bytes.
+	KubernetesGVisorProvider = "kubernetes-gvisor.v1"
 )
 
 // ErrIsolationUnavailable prevents task execution from falling back to a local
