@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 	"strings"
 	"testing"
@@ -349,7 +350,7 @@ func TestDeadlineSweepAuditRejectionRollsBackTheWholeBatch(t *testing.T) {
 }
 
 func TestDeadlineSweepMalformedRowRollsBackEarlierTask(t *testing.T) {
-	for _, mode := range []string{"scope", "record-id", "turn-id", "turn-state", "duplicate-key", "case-folded-state", "escaped-duplicate-state", "unicode-state-alias", "nested-duplicate", "invalid-utf8", "deep", "many-nodes", "tail", "oversized"} {
+	for _, mode := range []string{"scope", "nul-scope", "record-id", "turn-id", "nul-turn-id", "turn-state", "duplicate-key", "case-folded-state", "escaped-duplicate-state", "unicode-state-alias", "nested-duplicate", "invalid-utf8", "deep", "many-nodes", "tail", "oversized"} {
 		t.Run(mode, func(t *testing.T) {
 			f := newAuditFixture(t)
 			good := deadlineSweepFixtureRow(t, scope("a-deadline-good"), "", task.Running, time.Now().UTC().Add(-time.Hour))
@@ -357,12 +358,16 @@ func TestDeadlineSweepMalformedRowRollsBackEarlierTask(t *testing.T) {
 			switch mode {
 			case "scope":
 				bad.address.Scope.Tenant = "bad/tenant"
+			case "nul-scope":
+				bad.address.Scope.Adapter += "\x00suffix"
 			case "record-id":
 				bad.raw = strings.Replace(bad.raw, `"id":"logical-1"`, `"id":"another-runtime"`, 1)
-			case "turn-id", "turn-state":
+			case "turn-id", "nul-turn-id", "turn-state":
 				bad = deadlineSweepFixtureRow(t, bad.address.Scope, uuid.NewString(), task.Running, time.Now().UTC().Add(-time.Hour))
 				if mode == "turn-id" {
 					bad.address.turn = uuid.NewString()
+				} else if mode == "nul-turn-id" {
+					bad.address.turn += "\x00suffix"
 				} else {
 					bad.state = task.Queued
 				}
@@ -536,4 +541,59 @@ func TestDeadlineSweepNoExpiredRowsNeverStartsAWriteTransaction(t *testing.T) {
 	if len(deadlineSweepRawAudit(t, f.c)) != 0 {
 		t.Fatal("failed write transaction left audit evidence")
 	}
+}
+
+func TestDeadlineSweepCurrentMaximumFieldEnvelopeFitsRecordLimit(t *testing.T) {
+	f := newAuditFixture(t)
+	s := asset.Scope{Tenant: strings.Repeat("t", 128), Project: strings.Repeat("p", 128), Runtime: strings.Repeat("r", 128), Adapter: strings.Repeat("a", 128)}
+	// U+0001 is legal SafePath content, costs six JSON bytes and three URL
+	// bytes. Real ContentPath values therefore contribute to the bound too.
+	ref := func(kind, prefix string) task.Ref {
+		key := asset.Key{Kind: kind, ID: prefix + strings.Repeat("\x01", 4096-len(prefix))}
+		if !key.Valid() || len(key.ID) != 4096 {
+			t.Fatal("maximum reference fixture is not a legal Key")
+		}
+		return task.Ref{Key: key, Version: math.MaxInt64, SHA256: strings.Repeat("f", 64), ContentPath: key.ContentPath(math.MaxInt64)}
+	}
+	pins := make([]task.SkillPin, task.MaxSkills)
+	for i := range pins {
+		prefix := fmt.Sprintf("original-rules-%02d-", i)
+		pins[i] = task.SkillPin{Name: prefix + strings.Repeat("x", 64-len(prefix)), Source: ref("skill", fmt.Sprintf("catalog/skills/%02d/", i))}
+	}
+	assets := make([]task.Ref, task.MaxArtifacts+2)
+	for i := range task.MaxArtifacts {
+		assets[i] = ref("artifact", fmt.Sprintf("out/%03d-", i))
+	}
+	assets[task.MaxArtifacts] = ref("workspace", "root/")
+	assets[task.MaxArtifacts+1] = ref("session", "original-session/")
+	parent := &task.Checkpoint{SessionID: strings.Repeat("\x01", 128), Session: assets[task.MaxArtifacts+1], Workspace: assets[task.MaxArtifacts], Skills: pins}
+	record := task.Record{ID: s.Runtime, State: task.Failed, ExecutionPolicy: task.ExecutionUntrustedIsolated,
+		Deadline: time.Date(9999, time.December, 31, 23, 59, 59, 999999999, time.FixedZone("maximum-encoded-offset", 23*60*60+59*60)),
+		Spec:     task.Spec{Mode: task.FileTurn, Instruction: strings.Repeat("\x01", 8192), Input: strings.Repeat("\x01", 65536), Output: strings.Repeat("\x01", 128)},
+		Parent:   parent, Assets: assets, Skills: pins, Error: strings.Repeat("\x01", 256)}
+	// This uses every current per-field maximum simultaneously, including
+	// Key-level bounds for workspace/session refs that real Finish narrows.
+	// It is a conservative envelope, not a claim that one receipt can create
+	// every independent maximum. No arbitrary unknown padding is added.
+	if !s.Valid() || !record.Spec.Valid() || !asset.SafePath(parent.SessionID) || len(record.Assets) != task.MaxArtifacts+2 ||
+		task.ValidSkillPins(record.Skills) != nil || task.ValidSkillPins(parent.Skills) != nil {
+		t.Fatal("maximum field envelope violates the current task schema")
+	}
+	raw, err := json.Marshal(record)
+	if err != nil || len(raw) >= deadlineSweepRecordBytes {
+		t.Fatal("current legal field envelope no longer fits the sweep record limit", len(raw), deadlineSweepRecordBytes, err)
+	}
+	row := deadlineSweepRow{address: taskAddress{Scope: s}, raw: string(raw), attempt: uuid.NewString(), state: record.State}
+	deadlineSweepInsert(t, f.c, row)
+	trap := &deadlineSweepBeginTrap{DB: f.c.db}
+	f.c.writer = trap
+	result, err := f.c.SweepExpired(t.Context(), DeadlineSweepCursor{})
+	if err != nil || result.Scanned != 1 || result.RecordBytes != int64(len(raw)) || result.Interrupted != 0 || trap.begins != 0 {
+		t.Fatal("current maximum field envelope was rejected or rewritten", result, trap.begins, err)
+	}
+	deadlineSweepRequireStored(t, f.c, row, false)
+	if len(deadlineSweepRawAudit(t, f.c)) != 0 {
+		t.Fatal("terminal maximum record acquired an expiry event")
+	}
+	t.Logf("DEADLINE_SWEEP_MAX_RECORD assets=%d record_pins=%d parent_pins=%d json_bytes=%d limit_bytes=%d scanned=1 write_transactions=0 original_bytes=true", len(assets), len(record.Skills), len(parent.Skills), len(raw), deadlineSweepRecordBytes)
 }

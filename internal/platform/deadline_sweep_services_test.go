@@ -4,6 +4,8 @@ package platform
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"reflect"
 	"sync"
@@ -22,6 +24,147 @@ func checkPostgresDeadlineSweep(t *testing.T, objects Objects, dsn string) {
 	checkPostgresDeadlineSweepLeaseRollback(t, objects, dsn)
 	checkPostgresDeadlineSweepFinishBarrier(t, objects, dsn, false)
 	checkPostgresDeadlineSweepFinishBarrier(t, objects, dsn, true)
+	checkPostgresDeadlineSweepAvailability(t, objects, dsn)
+}
+
+// A slow read must not spend the leased writer's I/O cancellation allowance.
+// Both delays are ordinary server work: an observed table-lock wait, followed
+// by 200ms inside the interruption audit. No backend is explicitly killed.
+func checkPostgresDeadlineSweepAvailability(t *testing.T, objects Objects, dsn string) {
+	t.Helper()
+	c, reader, _ := openOwnedAuditLinksPostgres(t, objects, dsn)
+	row := deadlineSweepFixtureRow(t, scope("deadline-pg-availability"), "", task.Running, time.Now().UTC().Add(-time.Hour))
+	deadlineSweepInsert(t, c, row)
+	var originalPID int
+	if err := c.writer.QueryRowContext(t.Context(), "SELECT pg_backend_pid()").Scan(&originalPID); err != nil {
+		t.Fatal(err)
+	}
+	query := fmt.Sprintf(`CREATE FUNCTION delay_owned_deadline_availability() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
+ IF NEW.scope='%s' AND NEW.event::jsonb->>'action'='task.interrupted' THEN PERFORM pg_sleep(0.2); END IF; RETURN NEW; END $$;
+ CREATE TRIGGER delay_owned_deadline_availability BEFORE INSERT ON audit_events FOR EACH ROW EXECUTE FUNCTION delay_owned_deadline_availability()`, row.address.Prefix())
+	if _, err := c.writer.ExecContext(t.Context(), query); err != nil {
+		t.Fatal(err)
+	}
+	blocker, err := c.db.BeginTx(t.Context(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := blocker.ExecContext(t.Context(), "LOCK TABLE tasks IN ACCESS EXCLUSIVE MODE"); err != nil {
+		blocker.Rollback()
+		t.Fatal(err)
+	}
+	var unlocked sync.Once
+	unblock := func() {
+		unlocked.Do(func() {
+			if err := blocker.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
+				t.Error("cannot release owned availability table lock", err)
+			}
+		})
+	}
+	defer unblock()
+	type outcome struct {
+		result DeadlineSweepResult
+		err    error
+	}
+	done := make(chan outcome, 1)
+	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
+	start := time.Now()
+	received := false
+	t.Cleanup(func() {
+		unblock()
+		cancel()
+		if received {
+			return
+		}
+		select {
+		case <-done:
+		case <-time.After(5 * time.Second):
+			t.Error("owned availability sweep did not stop during bounded cleanup")
+		}
+	})
+	go func() {
+		result, err := c.SweepExpired(ctx, DeadlineSweepCursor{})
+		done <- outcome{result, err}
+	}()
+	// Confirm that this exact keyset read is really blocked on PostgreSQL,
+	// rather than sleeping in the test while no production statement runs.
+	for until := time.Now().Add(time.Second); ; {
+		var waiting bool
+		if err := c.db.QueryRowContext(t.Context(), "SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid() AND wait_event_type='Lock' AND query LIKE $1)", "%FROM tasks WHERE scope%").Scan(&waiting); err != nil {
+			t.Fatal(err)
+		}
+		if waiting {
+			break
+		}
+		select {
+		case value := <-done:
+			received = true
+			t.Fatal("sweep ended before the real PostgreSQL keyset lock wait", value.result, value.err)
+		default:
+		}
+		if time.Now().After(until) {
+			t.Fatal("sweep never entered its real PostgreSQL keyset lock wait")
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	releaseAt := start.Add(deadlineSweepBudget - 100*time.Millisecond)
+	if !time.Now().Before(releaseAt) {
+		t.Fatal("availability fixture did not observe the read before its release boundary")
+	}
+	<-time.After(time.Until(releaseAt))
+	unblock()
+	releasedAfter := time.Since(start)
+	var value outcome
+	select {
+	case value = <-done:
+		received = true
+	case <-time.After(5 * time.Second):
+		t.Fatal("availability sweep did not return after releasing the table")
+	}
+	cancel()
+	observe, stopObserve := context.WithTimeout(t.Context(), 5*time.Second)
+	defer stopObserve()
+	var currentPID int
+	writerErr := c.writer.QueryRowContext(observe, "SELECT pg_backend_pid()").Scan(&currentPID)
+	var backendAlive, leaseHeld bool
+	for until := time.Now().Add(time.Second); ; {
+		if err := c.db.QueryRowContext(observe, `SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE pid=$1),
+ EXISTS(SELECT 1 FROM pg_locks WHERE pid=$1 AND locktype='advisory' AND granted AND classid=193674738 AND objid=1)`, originalPID).Scan(&backendAlive, &leaseHeld); err != nil {
+			t.Fatal(err)
+		}
+		if writerErr == nil || !backendAlive || time.Now().After(until) {
+			break
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	probeScope := scope("deadline-pg-availability-probe")
+	_, submitErr := c.submitTask(observe, taskAddress{Scope: probeScope}, task.Spec{Instruction: "ordinary legal task after a delayed sweep", Output: "reply.txt"})
+	// Log all actual liveness evidence before the expected baseline failure.
+	// In the old shared-2s implementation the table read spends ~1.9s, then
+	// client cancellation inside pg_sleep closes the original leased writer.
+	t.Logf("DEADLINE_SWEEP_AVAILABILITY keyset_lock_observed=true read_release_ms=%d sweep_error=%t interrupted=%d writer_query_ok=%t same_writer_pid=%t original_backend_alive=%t original_advisory_lease=%t subsequent_submit_ok=%t", releasedAfter.Milliseconds(), value.err != nil, value.result.Interrupted, writerErr == nil, currentPID == originalPID, backendAlive, leaseHeld, submitErr == nil)
+	if writerErr != nil || currentPID != originalPID || !backendAlive || !leaseHeld || submitErr != nil {
+		t.Fatal("ordinary deadline sweep delay destroyed the platform's leased writer availability")
+	}
+	// A successful sweep or a safe whole-batch rollback is acceptable. A
+	// fresh pass on the same healthy owner must complete the original expiry.
+	want := 1
+	if value.err == nil && value.result.Interrupted == 1 {
+		want = 0
+	} else if value.result.Interrupted != 0 {
+		t.Fatal("availability delay exposed a partial expiry result", value.result)
+	}
+	retry, err := c.SweepExpired(t.Context(), DeadlineSweepCursor{})
+	if err != nil || retry.Interrupted != want {
+		t.Fatal("healthy writer could not complete a fresh expiry pass", retry, want, err)
+	}
+	deadlineSweepRequireStored(t, c, row, true)
+	events := auditEvents(t, reader, row.address.Scope)
+	if len(events) != 1 {
+		t.Fatal("availability recovery did not retain one atomic expiry", len(events))
+	}
+	deadlineSweepRequireEvent(t, events[0], row)
+	t.Logf("DEADLINE_SWEEP_AVAILABILITY fresh_retry_interrupted=%d final_expiry_events=1 same_owner_usable=true", retry.Interrupted)
 }
 
 func checkPostgresDeadlineSweepAuditRollback(t *testing.T, objects Objects, dsn string) {
