@@ -294,5 +294,40 @@
       "git_ls_tree_sha256": "145db914f0303654f84b2a057b78fac52e100bab809af394ae54c1b61fb4a708",
       "note": "The frozen full-matrix run remains attributed to its actual source commit; this later merge changes docs/evidence only."
     }
+  },
+  "telemetry_main_integration": {
+    "main_commit": "bcfb2758a5b67cd5a40190d1b0c7bf7c8fdc9dc1",
+    "source_commit": "d1e8511959076645da5ddc0e91f551c964b5bb78",
+    "checks": [
+      {
+        "command": "make fmt",
+        "exit_code": 0,
+        "log_path": "/private/tmp/agentmoor-audit-links-integration-fmt-20261127.log",
+        "sha256": "9ba9a3ce39410b82cffdcafff24a52faa1612e3a34b2a29885a7007b1bbfbc33",
+        "bytes": 22
+      },
+      {
+        "command": "make check",
+        "exit_code": 0,
+        "log_path": "/private/tmp/agentmoor-audit-links-integration-check-20261127.log",
+        "sha256": "cde77568c475ffcf68fca65f27b42b3ef46a48747c3c81c03770739705c9b0d1",
+        "bytes": 9327
+      },
+      {
+        "command": "make demo",
+        "exit_code": 0,
+        "log_path": "/private/tmp/agentmoor-audit-links-integration-demo-20261127.log",
+        "sha256": "f49eb3bec2f3428688c14423397c74d0f47262045726bc435588a061d98bb909",
+        "bytes": 10159
+      },
+      {
+        "command": "make test-services",
+        "exit_code": 0,
+        "log_path": "/private/tmp/agentmoor-audit-links-integration-services-20261127.log",
+        "sha256": "c9101eedc716ef30a32b1b2a6ef3ea4cab35ec2a282dfb3dcb642c77acda88ff",
+        "bytes": 1334
+      }
+    ],
+    "native_matrix_note": "Existing 56fee1d four-CLI matrix retains its actual source; integration adds already independently verified HTTP telemetry, so no identical-code assertion is made."
   }
 }
