@@ -1,0 +1,39 @@
+{
+  "source_commit": "be351461f600774eae438e116452819a1383a9f8",
+  "initial_git_status": "clean",
+  "checks": [
+    {
+      "command": [
+        "go",
+        "test",
+        "-race",
+        "./internal/worker",
+        "./internal/worker/contracttest/...",
+        "-run",
+        "TestAdapterAssetContract|TestValidateDescriptor",
+        "-count=1",
+        "-v"
+      ],
+      "exit_code": 0,
+      "seconds": 4.444
+    },
+    {
+      "command": [
+        "make",
+        "check"
+      ],
+      "exit_code": 0,
+      "seconds": 70.837
+    },
+    {
+      "command": [
+        "make",
+        "demo"
+      ],
+      "exit_code": 0,
+      "seconds": 1.743
+    }
+  ],
+  "status": "passed",
+  "final_git_status": ""
+}

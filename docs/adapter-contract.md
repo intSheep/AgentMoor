@@ -50,6 +50,8 @@
 
 普通文件同步可以只捕获可观察的原始文件；不要把它等同于原生导入或执行已经通过版本门槛。需要原生导入/执行的路径会拒绝未验证或配置不符的版本，允许必要的版本探测，不应继续 import/export/execute 或产生成功发布。鉴权、读取上下文或 claim 可能已发生，不能把这个约定泛化成所有路径都在任何 HTTP 之前拒绝。
 
+普通 `sync` 先重放已有合法的冻结 pending 操作，再探测新捕获所需的版本。历史操作的发布与本次新捕获的拒绝分别记录；版本反例使用空的新分配，避免已有 head 冲突提前挡住操作、掩盖版本检查本身。
+
 ## 复用合成验收
 
 测试用途的入口在 `internal/worker/contracttest`。适配器自己的 case 只准备合成数据和专属 CLI 夹具，共享 runner 负责授权、HTTP、Scope、Worker state 和共同断言。调用方使用外部测试包 `worker_test`，避免 helper 导入 Worker 时产生循环。
@@ -82,6 +84,14 @@ make demo
 ```
 
 真实厂商 CLI 的原生往返命令仍为 `python3 tests/native_roundtrip.py <adapter> <绝对可执行路径>`；版本与已有证据见[验收矩阵](mvp.md)、[运行手册](operations.md)和[固定版本引用](verification-matrix.md)。四 CLI 任务矩阵、gVisor 隔离和持久服务各有独立验收范围，合成 suite 不继承它们的新来源通过结论。
+
+## 2026-11-27 实际验证
+
+干净源码 `be351461f600774eae438e116452819a1383a9f8` 的聚焦 race、完整 `make check` 和 `make demo` 均退出 0；此前 `make fmt` 无改动。Codex 文件与 OpenCode 原生接口两套 case 使用相同断言，后者实际记录 version/list/export/import 为 9/3/3/1，未调用厂商二进制。四种现有 Adapter 的声明正例及虚假接口声明反例也通过。
+
+同一干净源码使用四份临时 Go overlay：关闭摘要、关闭原生导出版本门槛、关闭导入版本门槛，以及给会话增加未声明文件，均在对应断言准确失败。overlay 不修改受版本控制的生产文件。初版工具曾误要求可选 SessionID 关联字段、只校验会话文件子集，以及被已有 head 冲突掩盖版本门槛；开发期诊断分别保留，不写成生产缺陷或最终干净来源。
+
+[命令结果、源码摘要及无损原始日志](evidence/adapter-conformance-2026-11-27.json)。本片没有重跑真实 PG/S3、四 CLI 集群矩阵或 gVisor，不将旧来源改标为本片结果。
 
 ## 尚未承诺的外部接入
 

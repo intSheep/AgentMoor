@@ -1,0 +1,270 @@
+{
+  "schema": "adapter-conformance-evidence.v1",
+  "issue": "INT-94",
+  "source_commit": "be351461f600774eae438e116452819a1383a9f8",
+  "base_main": "78c27050d259cd9545cd42cd2db6f5cad198c13b",
+  "synthetic_data_only": true,
+  "scope": "Repository-internal reusable asset acceptance tooling; no production SDK or execution/registry/storage changes.",
+  "positive_checks": {
+    "source_commit": "be351461f600774eae438e116452819a1383a9f8",
+    "initial_git_status": "clean",
+    "checks": [
+      {
+        "command": [
+          "go",
+          "test",
+          "-race",
+          "./internal/worker",
+          "./internal/worker/contracttest/...",
+          "-run",
+          "TestAdapterAssetContract|TestValidateDescriptor",
+          "-count=1",
+          "-v"
+        ],
+        "exit_code": 0,
+        "seconds": 4.444
+      },
+      {
+        "command": [
+          "make",
+          "check"
+        ],
+        "exit_code": 0,
+        "seconds": 70.837
+      },
+      {
+        "command": [
+          "make",
+          "demo"
+        ],
+        "exit_code": 0,
+        "seconds": 1.743
+      }
+    ],
+    "status": "passed",
+    "final_git_status": ""
+  },
+  "format_check": {
+    "command": [
+      "make",
+      "fmt"
+    ],
+    "exit_code": 0,
+    "observed_git_status_after": "clean",
+    "record": "tool execution before the archived final verification; make check independently requires no unformatted Go files"
+  },
+  "mechanisms": [
+    {
+      "adapter": "codex",
+      "mechanism": "filesystem",
+      "native_cli_executed": false,
+      "identity": "Session key/header, not optional associated-asset Metadata.SessionID",
+      "format": "codex-rollout-jsonl.v1"
+    },
+    {
+      "adapter": "opencode",
+      "mechanism": "NativeSessions methods with synthetic CLI",
+      "format": "opencode-export-json.v1",
+      "actual_calls": {
+        "Version": 9,
+        "List": 3,
+        "Export": 3,
+        "Import": 1
+      },
+      "native_vendor_binary_or_database_certified": false
+    }
+  ],
+  "assertions": [
+    "four asset kinds and immutable v1/v2 bytes",
+    "post-commit successful API followed by injected HTTP503 and journal retry without duplicate revision",
+    "native Session key/format plus exact original regular-file-set and bytes; Skill exact set/bytes; Workspace subset",
+    "existing destination unchanged, missing version rejected, corrupt body consumed with real revision header and same size",
+    "pre-cancelled context rejected; no claim of running CLI cancellation",
+    "fresh empty allocation for unverified native export; valid existing session for unverified import; explicit no CLI commands beyond version probes and no new heads",
+    "seven explicit synthetic environment canaries absent in native CLI",
+    "deleting source then restoring Workspace at its original fresh path and importing native history into another fresh path"
+  ],
+  "expected_failure_controls": {
+    "source_commit": "be351461f600774eae438e116452819a1383a9f8",
+    "initial_git_status": "clean",
+    "production_files_modified": false,
+    "status": "passed",
+    "controls": [
+      {
+        "control": "checksum",
+        "exit_code": 1,
+        "expected_assertion_observed": true,
+        "seconds": 2.513,
+        "log_sha256": "c1586ab30b7cdf126b6870310f1e3e0269ab91e3278b2f696d82219bb0692e3d"
+      },
+      {
+        "control": "native-export-version",
+        "exit_code": 1,
+        "expected_assertion_observed": true,
+        "seconds": 2.687,
+        "log_sha256": "35de810d12fa5ff42af16c97bcc4279326b5cbd306c03a279f9d58bd5e52819b"
+      },
+      {
+        "control": "native-import-version",
+        "exit_code": 1,
+        "expected_assertion_observed": true,
+        "seconds": 3.278,
+        "log_sha256": "3ce1ceed88fb5ca2a55236bf3b01d898ed6dc1a92f1ea64f96b7adc879830f4a"
+      },
+      {
+        "control": "extra-session",
+        "exit_code": 1,
+        "expected_assertion_observed": true,
+        "seconds": 2.57,
+        "log_sha256": "2060284401758417bd4699b86213078f1de620dbfe2e9ea9942d67d7751b2e8a"
+      }
+    ],
+    "final_git_status": "",
+    "boundary": "Expected failures with temporary overlays. Production tracked files unchanged; same clean source positive suite recorded separately."
+  },
+  "diagnostic_boundary": "Earlier diagnostics are uncommitted development observations, not relabelled as clean source be35146. Final four controls independently reproduce all rejection assertions on be35146; tracked production files remain unchanged.",
+  "file_sha256": {
+    "internal/worker/adapter_contract_test.go": "cbec6c01f97a7a305ef6776ef9f679d9e1d73847c48c26d0795d21c6fb51549b",
+    "internal/worker/contracttest/case.go": "a335d49dc8ff5548577df0c66e7aabf06fd771f5f2368c96a7c956b377ea4c32",
+    "internal/worker/contracttest/codexcase/fixture.go": "ab95fa2c52a853f885fb1b3034b258f730bd3cf3bd66d5e77f86398445001634",
+    "internal/worker/contracttest/descriptor.go": "1c21ad47c9bc6bf905bbc4dcae6e5b1516458ca27cf2d19fd69d4dd30a901afa",
+    "internal/worker/contracttest/descriptor_test.go": "59defe22c790f4cde810605a866874316a37219d16ad9dccef3add46cd5df4db",
+    "internal/worker/contracttest/opencodecase/fixture.go": "2fc74e5e6e1e4be51b68a38fcf03e527d3a9e7401cf42c59be4efbb43eceec3a",
+    "internal/worker/contracttest/run.go": "6fd5fcfbf0cca004e390c513783c641102903207206e07c791c6514dd516f2a0"
+  },
+  "limitations": [
+    "All fixture payloads, API tokens and CLI subprocesses are synthetic; no real model keys.",
+    "No new vendor binary/native database or third-party engineer acceptance. Existing full4/PG/gVisor evidence retains its original sources.",
+    "Helpers remain internal; external stable SDK, compatibility maintenance and native external protocol remain P3 follow-ups.",
+    "Runner uses t.Setenv and must not run beneath t.Parallel.",
+    "Testing cleanup closes the owned HTTP server/catalog and temporary directories; no extra cluster or external storage is deployed."
+  ],
+  "artifacts": [
+    {
+      "path": "adapter-conformance-checks-2026-11-27.json",
+      "purpose": "clean source positive verification",
+      "bytes": 717,
+      "sha256": "d6f31ee868a3bfe67014e8825e4402543730fa7641e0663325e568ed39022fb4"
+    },
+    {
+      "path": "adapter-conformance-checks-2026-11-27.log.gz",
+      "purpose": "clean source focused/full check/demo raw log",
+      "bytes": 10074,
+      "sha256": "d9e45486e441602735e67805916ac284e459638d9b56601db8657234906aaae7",
+      "encoding": "lossless gzip",
+      "raw_bytes": 82811,
+      "raw_sha256": "7ac34276982a7a59e83cb7031fcdaa1bb97bae47eddd0fa1fbdfea2510bfe58c"
+    },
+    {
+      "path": "adapter-conformance-controls-2026-11-27.json",
+      "purpose": "four expected failures from temporary overlays on clean source",
+      "bytes": 1257,
+      "sha256": "5843a92f8e3cec77b16b6c7e1d9671295389f764931f2f8b6fe06167ffa4449f"
+    },
+    {
+      "path": "adapter-conformance-control-checksum-2026-11-27.log.gz",
+      "purpose": "expected failure: checksum",
+      "bytes": 4315,
+      "sha256": "a1c0bf6c8bc9661286658ca53153dae4d54550fbe9e468b23fffd428a8cbd11f",
+      "encoding": "lossless gzip",
+      "raw_bytes": 45884,
+      "raw_sha256": "c1586ab30b7cdf126b6870310f1e3e0269ab91e3278b2f696d82219bb0692e3d"
+    },
+    {
+      "path": "adapter-conformance-control-checksum-2026-11-27.go.gz",
+      "purpose": "temporary overlay bytes, never a tracked production modification",
+      "bytes": 2208,
+      "sha256": "49b923c76ce77188528ccc5103b1db8c4d6d0a342b1eeec52817234539fa5d55",
+      "encoding": "lossless gzip",
+      "raw_bytes": 6228,
+      "raw_sha256": "940676d2a679f24ddfce4be11651638a25272689c0643fff22f33cce091f8c06"
+    },
+    {
+      "path": "adapter-conformance-control-native-export-version-2026-11-27.log.gz",
+      "purpose": "expected failure: native-export-version",
+      "bytes": 3161,
+      "sha256": "973260df60f6f10a1cc920e10ab3b95792354f3f774cdb157f6a71855e9de61d",
+      "encoding": "lossless gzip",
+      "raw_bytes": 31683,
+      "raw_sha256": "35de810d12fa5ff42af16c97bcc4279326b5cbd306c03a279f9d58bd5e52819b"
+    },
+    {
+      "path": "adapter-conformance-control-native-export-version-2026-11-27.go.gz",
+      "purpose": "temporary overlay bytes, never a tracked production modification",
+      "bytes": 3966,
+      "sha256": "e1ea45b8a0d26c1c1d37a399b3355d84d9341949dc1eabcf40bd3bb387176cd1",
+      "encoding": "lossless gzip",
+      "raw_bytes": 11884,
+      "raw_sha256": "0d3e7dc409985f6f21fbb26dee0132cbb804203c31d8bc7c099d5b24168eb899"
+    },
+    {
+      "path": "adapter-conformance-control-native-import-version-2026-11-27.log.gz",
+      "purpose": "expected failure: native-import-version",
+      "bytes": 2780,
+      "sha256": "24ec325fedd281e97ea60a2865381c95205ac7ec0d09875dd62d15bd473e4a6e",
+      "encoding": "lossless gzip",
+      "raw_bytes": 27032,
+      "raw_sha256": "3ce1ceed88fb5ca2a55236bf3b01d898ed6dc1a92f1ea64f96b7adc879830f4a"
+    },
+    {
+      "path": "adapter-conformance-control-native-import-version-2026-11-27.go.gz",
+      "purpose": "temporary overlay bytes, never a tracked production modification",
+      "bytes": 1175,
+      "sha256": "0e2ae640c273ec71d07a36a7cfff1e5bc48a91c58fd18a35403f3cf56bc9f99d",
+      "encoding": "lossless gzip",
+      "raw_bytes": 3516,
+      "raw_sha256": "6e00d2ee928f34ac9e0bbf2ea3fed6449b5940b80efd7bf6e6173a7baf241f80"
+    },
+    {
+      "path": "adapter-conformance-control-extra-session-2026-11-27.log.gz",
+      "purpose": "expected failure: extra-session",
+      "bytes": 2292,
+      "sha256": "852b49028eda1c1b116dd01707db904a69e7fb5508c69273e8b10a6c37b71167",
+      "encoding": "lossless gzip",
+      "raw_bytes": 21050,
+      "raw_sha256": "2060284401758417bd4699b86213078f1de620dbfe2e9ea9942d67d7751b2e8a"
+    },
+    {
+      "path": "adapter-conformance-control-extra-session-2026-11-27.go.gz",
+      "purpose": "temporary overlay bytes, never a tracked production modification",
+      "bytes": 554,
+      "sha256": "085a09d33c0c246d12577901e349defd76ce804b17cb70ffee9aa7ad69a5d006",
+      "encoding": "lossless gzip",
+      "raw_bytes": 1119,
+      "raw_sha256": "12ee82dbb05602e3465699e7cd157d880fcad4b871730f8a7da4ec56bda75c3e"
+    },
+    {
+      "path": "adapter-conformance-initial-diagnostic-2026-11-27.log.gz",
+      "purpose": "pre-commit development diagnostic: initial harness incorrectly required optional SessionID metadata; not a product failure or final clean acceptance",
+      "bytes": 2094,
+      "sha256": "187ef16eef7cbe7bc5d46e658d48ef97200f94e073fe792e774b137d458f5196",
+      "encoding": "lossless gzip",
+      "raw_bytes": 18254,
+      "raw_sha256": "ec00e28af0dbaf79e70cf51d470b9019450461a26f3d199869b742cdd29424f8"
+    },
+    {
+      "path": "adapter-conformance-weak-oracle-diagnostic-2026-11-27.json",
+      "purpose": "pre-commit development diagnostic: old version oracle masked by existing-head conflict",
+      "bytes": 668,
+      "sha256": "0ba2a8420a61780f4ecd6226adf891bbee2a315671e05db19b4ef53cfd566542"
+    },
+    {
+      "path": "adapter-conformance-weak-oracle-diagnostic-2026-11-27.log.gz",
+      "purpose": "pre-commit development diagnostic false-negative; no clean source claimed",
+      "bytes": 58,
+      "sha256": "911fbd5538283fb9be519e5c9a2503f29bb7220a0a24b5d15a0ea17a2253603c",
+      "encoding": "lossless gzip",
+      "raw_bytes": 38,
+      "raw_sha256": "023041f838556e806fe58a09898ab1781f7290408894bf8df358450fbf88902a"
+    },
+    {
+      "path": "adapter-conformance-extra-file-diagnostic-2026-11-27.log.gz",
+      "purpose": "independent pre-commit diagnostic: old subset-only session assertion missed extra member",
+      "bytes": 2773,
+      "sha256": "8370669f340ed3b74240398c020e97ef7886e5dd8a9833dc76f66dd6963aae58",
+      "encoding": "lossless gzip",
+      "raw_bytes": 26634,
+      "raw_sha256": "21b8a0765e0fb1463819d91dbace620fa3cb1828a0d9da826fcb53cc00b4c91c"
+    }
+  ]
+}
