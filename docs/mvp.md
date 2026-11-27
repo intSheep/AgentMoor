@@ -109,3 +109,11 @@ PG/S3 集群复验的前两次 HTTP 500 保留为失败记录。补充诊断及 
 默认 Gofer 工作挂载的原子目录发布先失败，原始来源与诊断保留；仅换宿主 Memory 卷仍不够。受信运行时设置固定大小 Sentry 内存覆盖层后通过，并实测无覆盖碰撞、镜像根和 DownwardAPI 只读拒写。没有放宽公共快照的原子发布规则。[命令、实际来源、失败记录与边界](native-guest.md)
 
 同一核心源码的四 CLI 默认文本 `make test-k8s` 全部通过；合入存储组件后的 `4aef8c8` 的 fmt/check/demo 通过。生产 Pod 控制器、能力与模型网关、SaaS 发布、真实 Skill 的沙箱验证、取消及网络/资源对抗仍继续推进，`untrusted-isolated.v1` 保持关闭，真实模型后补。
+
+## 2026-11-27：任务与沙箱的类型化交接
+
+`628d849` 提供首轮/追问共八条 execute 权限的 POST 接口、固定 claim/policy/profile 的输入准备和独立完整外包 SHA-256/大小下载校验。平台按固定版本封装 Workspace、原生 Session 与 Skill 原字节，输入总包最多 64 MiB，不在可信宿主导入会话或运行 CLI。缺 profile/controller 明确拒绝，同一 attempt 不能切换本地与隔离策略，旧记录和围栏指纹保持兼容。
+
+该源码的 fmt/check/demo、真实 PostgreSQL/S3 输入准备及完整四 CLI 默认文本矩阵通过；四 CLI 原生取消约 2.3/3.1/3.1/3.1 秒，集群和本次镜像标签已清理。合入能力网关后的 `bb6cd7c` 再次通过 fmt/check/demo，没有把前述存储/集群结果改写为合并后重跑。[实际来源与证据](sandbox-task-handoff.md#2026-11-27-实际验证)
+
+新增 HTTP/controller 测试使用明确合成 fixture；四 CLI 回归仍是受信开发路径。Worker 与 `serve` 尚未连接本组件，不可信执行门禁保持关闭。真实隔离 SaaS/native Skill、私有 CA 模型链路、CNI、资源耗尽、真实模型和生产 HA 均未由本次验证。

@@ -1,0 +1,27 @@
+{
+  "issue": "INT-77",
+  "implementation_commit": "b35d721c8795e3906b2eccfddafe503cd4c56ca7",
+  "integrated_commit": "38faae999388b1725f547514716a344a5640ae83",
+  "scope": "dedicated TLS capability/model gateway component",
+  "make_fmt_check_demo": "passed at implementation and integrated commits",
+  "real_model_key_used": false,
+  "fixed_codex_wire": {"version": "codex-cli 0.171.0-alpha.13", "actual_requests_captured": 6, "rounds": ["produce", "revise", "audit"], "original_capture_sha256": "8f020dbd5e929fb3c6f2b872c015949108fcbada02a9abf3f922d9609454bb4f", "repository_fixture": "internal/sandboxgateway/testdata/codex-wire.json", "repository_fixture_sanitized": true, "actual_codex_through_this_tls_gateway": false},
+  "verified": [
+    "three exact TLS routes, purpose/scope/profile/current authority binding, no platform API surface",
+    "fixed upstream HTTPS model and freshly read private key, no guest auth/header/proxy override",
+    "strict stateless text/function schema and rejected hosted tools/provider object references",
+    "persistent allowance before each single upstream forward and no replay/refund on failure",
+    "bounded tokens, bytes, JSON depth, request headers and process-local concurrency",
+    "real 2 MiB completed upload with lost TCP acknowledgement retries identical frozen bytes without reexecution",
+    "real 64 MiB blocked TLS download interrupted after capability revocation",
+    "slow upload socket deadline/revocation and model SSE deadline/cancellation",
+    "output seal interrupts an active model request",
+    "near-deadline successful 204 never resets socket beyond original deadline",
+    "same-size damaged backing object fails complete guest input validation before execution",
+    "SSE comments/secret JSON property names/errors are not reflected"
+  ],
+  "independent_review": {"blockers_remaining": 0, "old_mixed_sse_comment_actual_tls_negative": "failed as expected", "same_overlay_after_fix": "passed", "gateway_race_seconds": 10.030},
+  "implementation_check_log_sha256": "f16490ca3affddb1308934a6e8e42ae710fa72ac1a8d9670c15759a012c5ce82",
+  "limits": ["upstream API service is trusted; no general covert-channel DLP claim", "concurrency is per Gateway instance, not cross-instance fairness or handshake admission", "actual native Codex private-CA/model gateway integration remains unverified", "serve/Worker provider not enabled", "network policy/resource exhaustion/production HA not verified here"],
+  "untrusted_execution_gate": "closed"
+}
