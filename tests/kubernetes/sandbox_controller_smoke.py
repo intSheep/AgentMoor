@@ -144,7 +144,14 @@ class ControllerSmoke:
                 ("list", "pods", False), ("watch", "pods", False), ("get", "pods/log", False), ("create", "pods/exec", False),
                 ("get", "secrets", False), ("list", "secrets", False), ("get", "serviceaccounts", False),
                 ("create", "serviceaccounts/token", False), ("create", "roles", False)]:
-            process = subprocess.run(["kubectl", "--kubeconfig", str(actor), "-n", NAMESPACE, "auth", "can-i", verb, resource],
+            # kubectl parses TYPE/NAME as a named resource, not a subresource.
+            # Use the explicit flag or 'pods/log' would accidentally test get
+            # of the Pod named 'log', which this role correctly permits.
+            base, separator, subresource = resource.partition("/")
+            arguments = ["kubectl", "--kubeconfig", str(actor), "-n", NAMESPACE, "auth", "can-i", verb, base]
+            if separator:
+                arguments.extend(["--subresource", subresource])
+            process = subprocess.run(arguments,
                                      text=True, capture_output=True, timeout=15)
             actual = process.stdout.strip() == "yes"
             require(actual == allowed and process.returncode == (0 if allowed else 1), "controller RBAC differs for " + verb + " " + resource)
