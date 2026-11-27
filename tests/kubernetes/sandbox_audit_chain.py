@@ -53,7 +53,7 @@ def validate_chain(events, scenario, scope):
             require(lifecycle[action]["pod_uid"] == public["pod_uid"], "lifecycle adopted a different Pod UID")
         require(lifecycle["terminated"]["cursor"] < lifecycle["deleted"]["cursor"] < receipt["cursor"] and
                 lifecycle["output_sealed"]["cursor"] < lifecycle["deleted"]["cursor"] and
-                lifecycle["deleted"]["state"] == "ready", "success preceded its recorded terminal/delete/ready conditions")
+                lifecycle["deleted"]["state"] == "ready-to-publish", "success preceded its recorded terminal/delete/ready conditions")
         for action in ("output_declared", "output_sealed"):
             require(lifecycle[action]["actor"] == {"source": "guest-capability", "role": "output"},
                     "guest output was attributed to a controller or credential")
@@ -121,6 +121,9 @@ class AuditSmoke(ProviderSmoke):
         self.stage("operator_only_audit_chain_and_public_uuid_replay")
         scope, scenario = self.scopes["text"], self.result["scenarios"][0]
         events, pages = self.operator_pages(scope)
+        # Preserve the actual bounded operator snapshot even when a later
+        # identity assertion fails; diagnostics must not depend on a live DB.
+        self.result["audit_observation"] = {"scope": scope, "pages": pages, "events": events}
         joins = validate_chain(events, scenario, scope)
         require(len(pages) > 2, "audit pagination was not exercised")
         raw = json.dumps(events, sort_keys=True).encode()
