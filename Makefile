@@ -4,11 +4,12 @@
 .PHONY: test-k8s-persistent-faults
 .PHONY: test-k8s-v2
 .PHONY: test-k8s-gvisor-feasibility
-.PHONY: test-k8s-native-guest
+.PHONY: test-k8s-native-guest test-k8s-gvisor-security
 
 check: test-file-report
 	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p test_forward.py -v
 	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p gvisor_probe_test.py -v
+	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p gvisor_security_probe_test.py -v
 	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p sandbox_controller_smoke_test.py -v
 	sh tests/check-kind-prereqs.sh
 	@unformatted=$$(gofmt -l cmd internal) && test -z "$$unformatted" || { echo "Run make fmt"; exit 1; }
@@ -82,3 +83,8 @@ test-k8s-native-guest:
 test-k8s-pod-loss: check-kind-prereqs
 	$(MAKE) build
 	AGENT=codex sh tests/kubernetes/run.sh --pod-loss
+
+# Synthetic actual CNI/resource boundaries; no vendor/provider gate acceptance.
+STAGE ?= all
+test-k8s-gvisor-security:
+	python3 tests/kubernetes/gvisor_security_probe.py --stage $(STAGE)
