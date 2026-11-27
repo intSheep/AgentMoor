@@ -1,0 +1,175 @@
+{
+  "issue": "INT-78",
+  "implementation_commit": "628d849cca0c551e96c20e47989c97a098272513",
+  "integrated_commit": "bb6cd7c6125520541cdb27d212ba941db89d62eb",
+  "scope": "typed execution-role task/sandbox HTTP handoff, frozen raw input preparation, and whole-envelope verification SDK",
+  "untrusted_execution_gate": "closed; existing Worker provider and serve remain unwired",
+  "new_routes": {
+    "method": "POST",
+    "permission": "execute",
+    "bases": [
+      "/v1/tasks/{id}/sandbox",
+      "/v1/tasks/{id}/turns/{uuid}/sandbox"
+    ],
+    "suffixes": [
+      "",
+      "/status",
+      "/output",
+      "/cancel"
+    ],
+    "count": 8,
+    "request_body": "one exact attempt UUID field; 128-byte maximum",
+    "authorization_regression": "existing 22-route matrix plus independently table-driven new 8-route role/scope matrix; not a single expanded Cartesian test"
+  },
+  "input_envelope_limit_bytes": 67108864,
+  "verified": [
+    "initial task and continuation HTTP role matrix and four-dimensional scope denial with explicit synthetic controller only",
+    "exact attempt-only body, no duplicate/case alias/extra field/tail overrides, no alternate destination in SDK",
+    "execution policy frozen with claim; legacy-local compatibility and unchanged old persistent fence fingerprint",
+    "configured isolation with absent profile/controller refuses claim rather than falling back to local execution",
+    "raw pinned Skill v1 and parent Workspace/Session bytes preserved after source heads advance",
+    "input outer SHA/size sealed; wrong authority and corrupt source rejected; owned preparation spools cleaned on restart",
+    "output reader checks independent sealed outer SHA/size through EOF, detects equal-size corruption, and does not append API error text to binary stream",
+    "PostgreSQL/S3 runs the same checkSandboxPreparedInput fixture assertions"
+  ],
+  "checks": [
+    {
+      "commit": "628d849cca0c551e96c20e47989c97a098272513",
+      "commands": [
+        "make fmt",
+        "make check",
+        "make demo"
+      ],
+      "result": "passed",
+      "execution_session": 89091
+    },
+    {
+      "commit": "bb6cd7c6125520541cdb27d212ba941db89d62eb",
+      "commands": [
+        "make fmt",
+        "make check",
+        "make demo"
+      ],
+      "result": "passed",
+      "execution_session": 65182,
+      "storage_or_kind_repeated_at_this_commit": false
+    }
+  ],
+  "real_services": {
+    "commit": "628d849cca0c551e96c20e47989c97a098272513",
+    "command": "make test-services",
+    "execution_session": 67356,
+    "result": "passed",
+    "platform_package_seconds": 14.376,
+    "test_fixture": "checkSandboxPreparedInput; no native CLI or Pod starts in this fixture",
+    "log": {
+      "local_log": "/private/tmp/agentmoor-sandbox-handoff-final-services-2026-11-27.log",
+      "sha256": "f9a4479c823277c0b65f2a6c1e9f7da6477de83149b196506165efd37dd30177",
+      "bytes": 1335
+    },
+    "compose_project": "agentmoor-test-20801",
+    "configured_images": {
+      "postgres": "postgres:18-alpine",
+      "s3": "pgsty/minio:RELEASE.2026-04-17T00-00-00Z"
+    },
+    "cleanup_log": "containers and compose network removed"
+  },
+  "post_run_service_image_observation": {
+    "observed_at_utc": "2026-11-27T06:29:19Z",
+    "is_not_run_time_image_evidence": true,
+    "postgres": {
+      "version": "postgres (PostgreSQL) 18.7",
+      "image_id": "sha256:0115267ab5a509022df9319c77be365cef335adb71556c75f60f5360ee247e71"
+    },
+    "s3": {
+      "version": "minio version RELEASE.2026-04-17T00-00-00Z (commit-id=f48dbe777d0e066d2e74d5e671a8ca21c2ec1664)",
+      "image_id": "sha256:83885c27b3b5b673049e33ddf4029afe2c134fd51ce4309e65e4f39d3b9ca282"
+    },
+    "method": "read current installed image IDs and execute --version in disposable network-disabled containers"
+  },
+  "four_cli_regression": {
+    "commit": "628d849cca0c551e96c20e47989c97a098272513",
+    "command": "make test-k8s",
+    "execution_session": 81731,
+    "result": "passed",
+    "execution_path": "default trusted-local text workflow; not the new sandbox HTTP routes",
+    "backends": "SQLite and local immutable objects",
+    "model": "scripted synthetic model; no real model key",
+    "runtime_version_evidence": "successful Worker tasks require adapter.Inspect --version to match the fixed tested runtime; installer checks package SHA-512",
+    "cluster": "agentmoor-80a0863193a4",
+    "cli": [
+      {
+        "adapter": "codex",
+        "successful_checks": [
+          "SaaS verified the versioned report after deletion of the original Pod and emptyDir.",
+          "SaaS recovered two consecutive turns from automatically created Jobs and read both replies after Pod deletion.",
+          "SaaS cancelled an active follow-up and retained the last committed conversation.",
+          "SaaS cancelled an active native turn; worker acknowledged and Job exited in 2.3s."
+        ],
+        "image": "agentmoor-contract:agentmoor-80a0863193a4-codex",
+        "image_id": "sha256:7d9f696a93fc1e59354147dc6442c51776b72b3970d204601f6fdde96a57dba9",
+        "native_cancel_seconds": 2.3,
+        "runtime_version": "codex-cli 0.171.0-alpha.13"
+      },
+      {
+        "adapter": "gemini-cli",
+        "successful_checks": [
+          "SaaS verified the versioned report after deletion of the original Pod and emptyDir.",
+          "SaaS recovered two consecutive turns from automatically created Jobs and read both replies after Pod deletion.",
+          "SaaS cancelled an active follow-up and retained the last committed conversation.",
+          "SaaS cancelled an active native turn; worker acknowledged and Job exited in 3.1s."
+        ],
+        "image": "agentmoor-contract:agentmoor-80a0863193a4-gemini-cli",
+        "image_id": "sha256:0772fca4648ee60c27f72ba789fda1adb9c47d9874479ce814738da9d3f120b5",
+        "native_cancel_seconds": 3.1,
+        "runtime_version": "0.70.0"
+      },
+      {
+        "adapter": "opencode",
+        "successful_checks": [
+          "SaaS verified the versioned report after deletion of the original Pod and emptyDir.",
+          "SaaS recovered two consecutive turns from automatically created Jobs and read both replies after Pod deletion.",
+          "SaaS cancelled an active follow-up and retained the last committed conversation.",
+          "SaaS cancelled an active native turn; worker acknowledged and Job exited in 3.1s."
+        ],
+        "image": "agentmoor-contract:agentmoor-80a0863193a4-opencode",
+        "image_id": "sha256:cdea9d1cd3ac3ea19219950c1840b1c66ce263c7dc288f00511e7fe9637f7d0a",
+        "native_cancel_seconds": 3.1,
+        "runtime_version": "1.19.6"
+      },
+      {
+        "adapter": "claude-code",
+        "successful_checks": [
+          "SaaS verified the versioned report after deletion of the original Pod and emptyDir.",
+          "SaaS recovered two consecutive turns from automatically created Jobs and read both replies after Pod deletion.",
+          "SaaS cancelled an active follow-up and retained the last committed conversation.",
+          "SaaS cancelled an active native turn; worker acknowledged and Job exited in 3.1s."
+        ],
+        "image": "agentmoor-contract:agentmoor-80a0863193a4-claude-code",
+        "image_id": "sha256:94cc9c1dc018543a3dcd9c1634665b753f32b63193b7022602ab0bec7a59e9c1",
+        "native_cancel_seconds": 3.1,
+        "runtime_version": "2.1.330 (Claude Code)"
+      }
+    ],
+    "log": {
+      "local_log": "/private/tmp/agentmoor-sandbox-handoff-full-k8s-2026-11-27.log",
+      "sha256": "7a6a11d05ba4b6d1102fa73536e9299fdd3c9c0ca64c1c33d78dadb5a9b4b3a1",
+      "bytes": 14133
+    }
+  },
+  "cleanup": {
+    "kind_node_deleted_in_log": true,
+    "post_run_docker_name_filter_empty": true,
+    "post_run_run_specific_image_tag_filter_empty": true,
+    "post_run_compose_container_filter_empty": true,
+    "scope": "only agentmoor-80a0863193a4 node/tags and agentmoor-test-20801 containers were inspected"
+  },
+  "limits": [
+    "serve and existing Worker isolation-provider wiring not implemented here; untrusted execution gate stays closed",
+    "HTTP controller and native session data tests are explicit synthetic metadata fixtures, not vendor CLI execution",
+    "four-CLI regression does not exercise these new routes, gVisor or the native guest/capability gateway chain",
+    "no isolated SaaS file/Skill/cancellation/continuation workflow acceptance in this change",
+    "no real Codex private-CA model gateway, CNI flow denial, resource-exhaustion, live-model or production-HA acceptance here",
+    "service and kind results belong to implementation commit; only fmt/check/demo was repeated after gateway merge"
+  ]
+}
