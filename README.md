@@ -10,6 +10,8 @@ Codex CLI, Gemini CLI, OpenCode, and Claude Code share one HTTPS API for submitt
 
 For a consumer-side example, see [Import a verified report](examples/report-consumer/README.md).
 
+To implement an adapter in your own Go module, use the [Go Adapter SDK preview](docs/adapter-sdk.md). Pin `github.com/intSheep/AgentMoor/sdk@v0.1.0-alpha.2`; 0.x APIs may change as independent integrations provide feedback. The older `alpha.1` release does not contain the SDK.
+
 ## Quick start
 
 On macOS or Linux, install Go 1.27.4, a C compiler, Make, and Python 3. Run the local asset recovery demo from the repository root.
@@ -87,6 +89,7 @@ The linked guides are in Chinese.
 | [gVisor runtime feasibility](docs/gvisor-feasibility.md) | Reproduce a pinned real runsc/systrap Pod and a missing-handler denial in a disposable kind cluster; separate from application isolation acceptance. |
 | [v0.1 acceptance results](docs/mvp.md) | Tested CLI versions, product requirements, test coverage, and known limits. |
 | [Adapter research](docs/research.md) | Design references from Magpie, CC Switch, and the four supported agents. |
+| [Go Adapter SDK](docs/adapter-sdk.md) | Install a fixed 0.x preview, implement public interfaces, and reuse the asset contract suite outside this repository. |
 | [Repository guide](AGENTS.md) | Code layout, adapter conventions, and checks to run before submitting a change. |
 | [Workspace upload baseline](docs/workspace-upload-baseline.md) | Measure actual upload bytes for large synthetic workspaces and check fixed-version recovery. |
 | [Incremental workspace uploads](docs/workspace-incremental.md) | Enable content reuse while preserving complete tar downloads, and measure transfer and storage costs. |

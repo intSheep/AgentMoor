@@ -19,7 +19,7 @@
 | P0 | V1c：失败可解释且不会丢掉上次成功 | 对活跃工具回合分别做取消和进程丢失；终态、最近成功引用及旧版本下载都被外部客户端验证。公布可重试条件和未归档内容的丢失边界。[例 3](verification-matrix.md#例-3取消失联与重试) |
 | P1 | V2：持久化组合下的完整 SaaS 契约 | 用 PostgreSQL + S3 兼容存储跑同一组端到端场景。验证 Job/Worker 和控制面重启、稳定调度标识、明确的重试与失败状态；报告写出确切后端版本和注入点。单独跑通过 `make test-services` 不能关闭本项。[矩阵](verification-matrix.md#v2-退出门槛) |
 | P2 | 多租户隔离、凭据治理与审计 | [Linear INT-59](https://linear.app/intsheep/issue/INT-59) 已在首版自主管 Linux/gVisor 边界内完成：授权/轮换、独立不可信执行、网络资源、停止证明与仅运维审计；PR29 完成实际 PG/S3 隔离提供方与两次 API 重建组合。真实模型按用户安排后补，HA/任意逃逸/全部 CLI 隔离仍不属本次结论。[边界与分项](security-boundary.md) · [持久组合](sandbox-persistent-acceptance.md) |
-| P3 | 适配器扩展契约 | [Linear INT-60](https://linear.app/intsheep/issue/INT-60) 进行中；INT94 已交付[共用契约工具](adapter-contract.md)，INT95 补齐[对外 Go SDK 预览](adapter-sdk.md)与仓库外独立模块的正反例。稳定发布/兼容维护承诺、实际第三方接入仍继续分项验收。文档站如有需要从仓库 Markdown 生成，展示版本和证据。 |
+| P3 | 适配器扩展契约 | [Linear INT-60](https://linear.app/intsheep/issue/INT-60) 进行中；INT94 已交付[共用契约工具](adapter-contract.md)，INT95 补齐[对外 Go SDK 预览](adapter-sdk.md)与仓库外独立模块的正反例。2026-11-28 用户决定先发布 0.x，积累独立接入后再冻结 1.0；INT97 准备 `v0.1.0-alpha.2` 与实际远程版本验收。真实第三方接入、1.0 兼容维护规则仍继续分项验收。文档站如有需要从仓库 Markdown 生成，展示版本和证据。 |
 
 **给贡献者的第一批切入点：** 先实现无模型密钥的文件工具契约与外部验算脚本；其次补齐 Quick Start 和失败排查；随后为后端组合增加可切换的集群 fixture。每个 PR 说明变更影响的适配器/后端、可重放命令、以及还没验证的组合。真实模型运行留给可控环境，不让外部贡献者因缺少密钥无法完成基本验收。
 

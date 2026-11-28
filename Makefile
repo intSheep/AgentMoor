@@ -9,6 +9,7 @@
 .PHONY: test-k8s-sandbox-audit
 .PHONY: test-k8s-sandbox-persistent
 .PHONY: test-k8s-node-loss
+.PHONY: test-sdk-release
 
 check: test-file-report
 	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p test_forward.py -v
@@ -21,6 +22,7 @@ check: test-file-report
 	PYTHONDONTWRITEBYTECODE=1 python3 tests/kubernetes/sandbox_provider_quota.py --check
 	PYTHONDONTWRITEBYTECODE=1 python3 tests/kubernetes/sandbox_audit_chain.py --help > /dev/null
 	PYTHONDONTWRITEBYTECODE=1 python3 tests/kubernetes/sandbox_persistent_chain.py --help > /dev/null
+	PYTHONDONTWRITEBYTECODE=1 python3 scripts/check-sdk-release.py --help > /dev/null
 	sh tests/check-kind-prereqs.sh
 	@unformatted=$$(gofmt -l cmd internal sdk testdata/sdkconsumer) && test -z "$$unformatted" || { echo "Run make fmt"; exit 1; }
 	go vet ./...
@@ -48,6 +50,11 @@ test-k8s: check-kind-prereqs
 
 test-report-consumer:
 	python3 examples/report-consumer/test_ingest.py -v
+
+# Online, cold-cache acceptance of an exact published 0.x module, no local replace.
+test-sdk-release:
+	@test -n "$(VERSION)" -a -n "$(SDK_RELEASE_OUTPUT)" || { echo "Set VERSION and a new SDK_RELEASE_OUTPUT directory"; exit 2; }
+	python3 scripts/check-sdk-release.py "$(VERSION)" --output "$(SDK_RELEASE_OUTPUT)"
 
 test-file-report:
 	python3 tests/codex_file_report.py -v
