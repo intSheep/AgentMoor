@@ -18,6 +18,7 @@ jobs:
           cache: true
       - run: make check
       - run: make demo
+      - run: make test-sdk-example
       - run: make test-report-consumer
       - run: make test-services
       - if: github.event_name == 'workflow_dispatch'

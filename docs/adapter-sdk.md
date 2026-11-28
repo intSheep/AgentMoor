@@ -32,6 +32,12 @@ python3 scripts/check-sdk-release.py v0.1.0-alpha.2 --output /absolute/new/sdk-r
 
 冻结 1.0 前，需要真实外部接入者仅凭公开文档和已发布模块完成接入，处理其中的阻碍，并明确公开 API、升级方法及兼容维护规则。声明原生任务能力的接入还须通过对应固定 CLI 版本和规定的集群验收。维护者测试与独立 agent 演练用于提前发现问题，不能替代真实第三方接入；当前不预设参与者数量或冻结日期。
 
+## 从可运行示例开始
+
+[独立接入起步包](../examples/sdk-adapter/README.md)提供完整的文件机制 Adapter 和公共资产测试，固定已发布 `v0.1.0-alpha.2`，没有本地 `replace`。可将整个示例目录复制到仓库外运行，然后替换为自己的格式。它只声明资产能力，不调用原生 CLI 或模型；任务能力按下方接口和相应验收另行增加。
+
+试用后用 [Adapter SDK 接入反馈模板](../.github/ISSUE_TEMPLATE/adapter-integration.md)记录确切版本、实际命令、来源与失败；GitHub New issue 中也可以选择同名模板。公开 SDK 和示例的工程测试均不等于已经获得真实第三方接入证据。
+
 ## 两个包各管什么
 
 | 包 | 用途与边界 |
@@ -312,3 +318,11 @@ go test -race ./sdk ./sdk/contracttest -count=1 -v
 另一个未参与实现的 agent 仅依据公开文档、公开 SDK 与反射信息，新写文件机制适配器 `aurora-notes` 并实际通过公共资产 suite。初次文档未完整展开别名字段/签名，离线 tidy 也触发未缓存的依赖测试；这些诊断与反射辅助均如实保留。本页已据此补全速查及 `-mod=mod` 离线步骤，Go 源码未因此改变。该演练不是真人第三方认证。
 
 [冻结来源、迁移核验、真实拒绝、独立演练及无损日志](evidence/public-go-sdk-2026-11-27.json)。以上 2026-11-27 记录没有发布新 tag；新版本发布按本页开头的流程单独验收，不重标这些历史结果或既有真实 CLI、数据库、集群验收。
+
+## 2026-11-28 预览发布与真实远程验证
+
+PR32 的两套 CI 通过后合并，`v0.1.0-alpha.2` 已作为 [GitHub prerelease](https://github.com/intSheep/AgentMoor/releases/tag/v0.1.0-alpha.2) 发布，固定到 `c6ffc92e3ecc3b641b0843d4e0a17c64064251f6`。旧 `alpha.1` 仍指向原提交。发布准备源码 `62ffe93` 的 `make fmt/check/demo` 均通过。
+
+发布后，真实公共 Go 代理在专属空缓存中下载了确切 `alpha.2`；模块校验和、标签来源、无 `Replace`、无工作区、无 CGO 核心构建通过。仓库外合成消费者在 race 下实际通过注册与版本观测、原生资产 suite 的具名子 case，观察到 list/dump/load 的 3/3/1 次调用；直接导入内部包得到特定编译拒绝。私有模块缓存清理成功。
+
+发前另用远程 main 的 Go 伪版本跑通脚本；它与发后 `alpha.2` 证据分开。旧 `alpha.1` 的真实拒绝发生在旧 module 名与 canonical 路径不符时，不冒称为 SDK 包缺失诊断。脚本聚焦检查保留了两次 harness 诊断及修正后结果，并记录了 Go telemetry 临时 Home 后台重建与后续清理的观察边界。[发布、校验和、实际输出与完整来源](evidence/sdk-preview-release-2026-11-28.json)。这些仍是维护者的合成验收，真实第三方接入门槛保持开放。

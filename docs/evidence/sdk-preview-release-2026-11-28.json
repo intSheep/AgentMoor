@@ -1,0 +1,716 @@
+{
+  "schema": "agentmoor.sdk-preview-release-evidence.v1",
+  "date": "2026-11-28",
+  "linear": [
+    "INT-97",
+    "INT-98",
+    "INT-60"
+  ],
+  "decision": "Publish SDK as 0.x preview; collect independent integrations before freezing 1.0.",
+  "source": {
+    "prepared_and_locally_checked": "62ffe9340b4c5ef171c5c24cd1eba08b4dc41bd8",
+    "merged_and_tagged": "c6ffc92e3ecc3b641b0843d4e0a17c64064251f6",
+    "script_sha256": "23796f89e7ce27c277c24b17142eb8a413d5219500db476dc3678a708b13d34b"
+  },
+  "release": {
+    "isPrerelease": true,
+    "name": "AgentMoor v0.1.0-alpha.2 · Go Adapter SDK preview",
+    "publishedAt": "2026-11-28T04:49:35Z",
+    "tagName": "v0.1.0-alpha.2",
+    "targetCommitish": "c6ffc92e3ecc3b641b0843d4e0a17c64064251f6",
+    "url": "https://github.com/intSheep/AgentMoor/releases/tag/v0.1.0-alpha.2"
+  },
+  "old_tag": {
+    "name": "v0.1.0-alpha.1",
+    "commit": "bab04e90595b77c89148c1eccdb63c1d6d28f83d",
+    "preserved": true
+  },
+  "pr": {
+    "url": "https://github.com/intSheep/AgentMoor/pull/32",
+    "final_snapshot": "release/agentmoor-pr32-final-20261128.json",
+    "both_push_and_pr_checks": "SUCCESS",
+    "unresolved_reviews_or_threads": 0
+  },
+  "local_checks": {
+    "source_commit": "62ffe9340b4c5ef171c5c24cd1eba08b4dc41bd8",
+    "started_at": "2026-11-28T04:43:34.864954+00:00",
+    "steps": [
+      {
+        "command": [
+          "make",
+          "fmt"
+        ],
+        "exit_code": 0,
+        "duration_seconds": 0.059
+      },
+      {
+        "command": [
+          "make",
+          "check"
+        ],
+        "exit_code": 0,
+        "duration_seconds": 76.22
+      },
+      {
+        "command": [
+          "make",
+          "demo"
+        ],
+        "exit_code": 0,
+        "duration_seconds": 1.698
+      }
+    ]
+  },
+  "published_acceptance": {
+    "report": "sdk-alpha2-remote-2026-11-28.json",
+    "status": "passed",
+    "exact_version": "v0.1.0-alpha.2",
+    "sum": "h1:9uVyH931f56YjZ8mmZPl/TBhcCG73atBDaLdZHq91cU=",
+    "go_mod_sum": "h1:DK/7dHc/nEtZBTrERUIkJr8u7RLUMmpt+KDgMcZ/VDg=",
+    "checks": [
+      "initially empty private module/build caches; public proxy and sumdb",
+      "canonical module and SDK package, exact version, no Replace or workspace",
+      "CGO-disabled core build",
+      "race-enabled required registry, native conformance and nested case plus package PASS",
+      "observed native List 3, Export 3, Import 1",
+      "specific compiler rejection of internal package import",
+      "owned module cache emptied and temporary root removed at check time"
+    ]
+  },
+  "prepublication_acceptance": {
+    "version": "v0.1.0-alpha.1.0.20261127122244-283fc010d019",
+    "commit": "283fc010d019e1ed005d0ebfb464aba5ec6d0cf0",
+    "report_in_archive": "prepublication-main/result.json",
+    "scope": "Validates the script before tagging; not alpha.2 publication evidence."
+  },
+  "negative_and_diagnostic_history": [
+    {
+      "report": "legacy-denial-r1/result.json",
+      "expected": "rejected legacy module path",
+      "note": "Earlier script before stdout/stderr separation; source hash preserved."
+    },
+    {
+      "report": "legacy-denial-r2/result.json",
+      "expected": "rejected legacy module path",
+      "note": "Exact frozen script; Go fails on module agentmoor mismatch before checking SDK package absence."
+    },
+    {
+      "report": "focused-r1/result.json",
+      "expected": "harness diagnostic failure",
+      "note": "0.15-second deadline did not let synthetic shell write descendant PID; not SDK failure."
+    },
+    {
+      "report": "focused-r2/result.json",
+      "expected": "harness diagnostic failure",
+      "note": "Sandbox denied process query; not SDK failure."
+    },
+    {
+      "report": "focused-r3/result.json",
+      "expected": "passed focused runner controls",
+      "note": "Split output, real descendant termination on timeout and SIGINT, 2 MiB output bound and owned cache cleanup."
+    }
+  ],
+  "cleanup_observation": {
+    "report": "focused-r3/followup-cleanup.json",
+    "note": "Three exact owned focused-test roots later reappeared with Go telemetry HOME files only; module caches stayed absent. Follow-up cleanup recorded. Immediate root removal is not a permanent absence guarantee; an unrelated unproven directory was left untouched."
+  },
+  "limits": [
+    "Maintainer-written synthetic integration and independent agent rehearsal are not real third-party certification.",
+    "No 1.0 API freeze or fixed compatibility-maintenance window.",
+    "No new vendor CLI, dynamic loading, Hook/RPC, task capability, live-model, or isolation acceptance claim."
+  ],
+  "artifacts": [
+    {
+      "path": "sdk-alpha2-remote-2026-11-28.json",
+      "bytes": 12047,
+      "sha256": "985d6b5c2479b6f9356271a99cccd4bdbe2290eed2e2c6f4b19d41748061895a"
+    },
+    {
+      "path": "sdk-preview-release-raw-2026-11-28.tar.gz",
+      "bytes": 42990,
+      "sha256": "67d5d16e408501050470e8703779ddb449818dc25c9c065c8cb78a9a3c27fb5d"
+    }
+  ],
+  "raw_archive_members": [
+    {
+      "path": "published-alpha2/01-go-environment.log",
+      "bytes": 270,
+      "sha256": "4695364c4ce4cd8097d7f576a1b147cb32c01a5b8f261eef544f0c89e0793a24"
+    },
+    {
+      "path": "published-alpha2/01-go-environment.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "published-alpha2/02-get-published-sdk.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "published-alpha2/02-get-published-sdk.stderr.log",
+      "bytes": 102,
+      "sha256": "1fb17c30697bfbed76cb4f4c758c072beee6687708eec170949e96d629027df9"
+    },
+    {
+      "path": "published-alpha2/03-resolved-module.log",
+      "bytes": 511,
+      "sha256": "dae18ba3df835d2734d45b86d1d444c18d4900b406ceb27b7ac010e016b617e4"
+    },
+    {
+      "path": "published-alpha2/03-resolved-module.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "published-alpha2/04-download-metadata.log",
+      "bytes": 905,
+      "sha256": "e4656e81c037d3a7c6b4d4fa8ee05786a8f760115fbf9ae4df0871d502b29bd5"
+    },
+    {
+      "path": "published-alpha2/04-download-metadata.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "published-alpha2/05-resolved-sdk-package.log",
+      "bytes": 4592,
+      "sha256": "77f6ece7d4298cb50d0ffe6efd71014a88f7e26ec259136f17828e1a948da0a7"
+    },
+    {
+      "path": "published-alpha2/05-resolved-sdk-package.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "published-alpha2/06-core-without-cgo.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "published-alpha2/06-core-without-cgo.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "published-alpha2/07-external-race-contract.log",
+      "bytes": 52256,
+      "sha256": "1c8c2a94c789d30118598039c0153558807612cdd0247b77057956c1b8b9a818"
+    },
+    {
+      "path": "published-alpha2/07-external-race-contract.stderr.log",
+      "bytes": 997,
+      "sha256": "3645377c89d550f89b8211c722c8ea089775b50a0bb15da1a9be5c82986c2c03"
+    },
+    {
+      "path": "published-alpha2/08-final-resolved-module.log",
+      "bytes": 511,
+      "sha256": "dae18ba3df835d2734d45b86d1d444c18d4900b406ceb27b7ac010e016b617e4"
+    },
+    {
+      "path": "published-alpha2/08-final-resolved-module.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "published-alpha2/09-internal-import-denied.log",
+      "bytes": 70,
+      "sha256": "ba65312a7c67e05e86231feb1dd275ffb5149d42554c7c4edf472980c00d5e48"
+    },
+    {
+      "path": "published-alpha2/09-internal-import-denied.stderr.log",
+      "bytes": 211,
+      "sha256": "fbc434009ad1e3c7c1d8f6a4c35b81e501b15bf6c847ebac6bda6605a8c5987b"
+    },
+    {
+      "path": "published-alpha2/10-cleanup-owned-module-cache.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "published-alpha2/10-cleanup-owned-module-cache.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "published-alpha2/consumer-final.go.mod",
+      "bytes": 1096,
+      "sha256": "a4386ef0aedee948da4001147a165bdf2fa334a5d9723265682833e999a24b78"
+    },
+    {
+      "path": "published-alpha2/consumer-final.go.sum",
+      "bytes": 5196,
+      "sha256": "d6a909ee7df88a45b458b7729ebc5bc3c299dc2f84e87197283c8756c5f8762e"
+    },
+    {
+      "path": "published-alpha2/consumer-initial.go.mod",
+      "bytes": 111,
+      "sha256": "a606d46fb7f9a30afc16d4878e1dc21910d8aec0e3b361f942fcc406041d89ff"
+    },
+    {
+      "path": "published-alpha2/result.json",
+      "bytes": 12047,
+      "sha256": "985d6b5c2479b6f9356271a99cccd4bdbe2290eed2e2c6f4b19d41748061895a"
+    },
+    {
+      "path": "prepublication-main/01-go-environment.log",
+      "bytes": 270,
+      "sha256": "7b11ba549a0d3974c0fd90a39a00fc07f91a96e557e028a076b35e330fe55c41"
+    },
+    {
+      "path": "prepublication-main/01-go-environment.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "prepublication-main/02-get-published-sdk.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "prepublication-main/02-get-published-sdk.stderr.log",
+      "bytes": 132,
+      "sha256": "ea27d86d667c8539c0477b3c380d710a106bdf05bd7b4384ffd53387dce9119e"
+    },
+    {
+      "path": "prepublication-main/03-resolved-module.log",
+      "bytes": 601,
+      "sha256": "b39d105255cfae7fc87458c2c30ec0adc692dc16acecc3520ebd8285d7d1bc71"
+    },
+    {
+      "path": "prepublication-main/03-resolved-module.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "prepublication-main/04-download-metadata.log",
+      "bytes": 1018,
+      "sha256": "81e391866398a7fa3cc4390eae722af4f6988152a2bf46327a6013155922eacd"
+    },
+    {
+      "path": "prepublication-main/04-download-metadata.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "prepublication-main/05-resolved-sdk-package.log",
+      "bytes": 4742,
+      "sha256": "fb738b8b9346050915ec0de20adc8addc98ac5dfc61d9130bf15d30a0e8d1957"
+    },
+    {
+      "path": "prepublication-main/05-resolved-sdk-package.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "prepublication-main/06-core-without-cgo.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "prepublication-main/06-core-without-cgo.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "prepublication-main/07-external-race-contract.log",
+      "bytes": 52254,
+      "sha256": "6583fa6b246f7caa8e6097c1cd53ce5672742c007ccfd4161a247cba3f861cc2"
+    },
+    {
+      "path": "prepublication-main/07-external-race-contract.stderr.log",
+      "bytes": 997,
+      "sha256": "3c5e8da9a15d93d3a76afd2862cdca8e9488be62ab701d8977b858123e7bef76"
+    },
+    {
+      "path": "prepublication-main/08-final-resolved-module.log",
+      "bytes": 601,
+      "sha256": "b39d105255cfae7fc87458c2c30ec0adc692dc16acecc3520ebd8285d7d1bc71"
+    },
+    {
+      "path": "prepublication-main/08-final-resolved-module.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "prepublication-main/09-internal-import-denied.log",
+      "bytes": 70,
+      "sha256": "ba65312a7c67e05e86231feb1dd275ffb5149d42554c7c4edf472980c00d5e48"
+    },
+    {
+      "path": "prepublication-main/09-internal-import-denied.stderr.log",
+      "bytes": 211,
+      "sha256": "fbc434009ad1e3c7c1d8f6a4c35b81e501b15bf6c847ebac6bda6605a8c5987b"
+    },
+    {
+      "path": "prepublication-main/10-cleanup-owned-module-cache.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "prepublication-main/10-cleanup-owned-module-cache.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "prepublication-main/consumer-final.go.mod",
+      "bytes": 1126,
+      "sha256": "f0ce470a6c4702d04a3e68ba3fbd6efa0e96f2401cedda32c9b68a27b3a87eb3"
+    },
+    {
+      "path": "prepublication-main/consumer-final.go.sum",
+      "bytes": 5256,
+      "sha256": "7555b752c8f12d70d9eab091a841a3f0397a5c0627d6985bb29a04b35b69fd60"
+    },
+    {
+      "path": "prepublication-main/consumer-initial.go.mod",
+      "bytes": 141,
+      "sha256": "598100a0003cf544da512ffae826393b43a3c751afd6cfaf0b48fd26fecec893"
+    },
+    {
+      "path": "prepublication-main/result.json",
+      "bytes": 12375,
+      "sha256": "81c2d919e96cb995ab9e430a5d9fe7397b4e846897a5403bef539fddf602ecbb"
+    },
+    {
+      "path": "legacy-denial-r1/01-go-environment.log",
+      "bytes": 270,
+      "sha256": "2c81691466b90a8c91eb7bc7864a84d0b39dfd89c5b165b5a98eccf829723adc"
+    },
+    {
+      "path": "legacy-denial-r1/02-get-published-sdk.log",
+      "bytes": 166,
+      "sha256": "58a4de8ed9582fe7eb77dfca30fa28c66b330fec6dea6af1c15c0388fe9dc0a7"
+    },
+    {
+      "path": "legacy-denial-r1/03-cleanup-owned-module-cache.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "legacy-denial-r1/consumer-initial.go.mod",
+      "bytes": 111,
+      "sha256": "5bda4f7f56ff704828158b7d5cecbd35983565af271b11e2edf398d449f0f2c7"
+    },
+    {
+      "path": "legacy-denial-r1/result.json",
+      "bytes": 3715,
+      "sha256": "a0b5da56b111be97a32f02851c13b2769fe160c1b428ef5a51f7a1bef3012527"
+    },
+    {
+      "path": "legacy-denial-r2/01-go-environment.log",
+      "bytes": 270,
+      "sha256": "5c14cbd18ca17cf42835be9b7cf3f5503f5a1e8a062d1b6f2cd0d77dd9670e33"
+    },
+    {
+      "path": "legacy-denial-r2/01-go-environment.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "legacy-denial-r2/02-get-published-sdk.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "legacy-denial-r2/02-get-published-sdk.stderr.log",
+      "bytes": 166,
+      "sha256": "58a4de8ed9582fe7eb77dfca30fa28c66b330fec6dea6af1c15c0388fe9dc0a7"
+    },
+    {
+      "path": "legacy-denial-r2/03-cleanup-owned-module-cache.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "legacy-denial-r2/03-cleanup-owned-module-cache.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "legacy-denial-r2/consumer-initial.go.mod",
+      "bytes": 111,
+      "sha256": "5bda4f7f56ff704828158b7d5cecbd35983565af271b11e2edf398d449f0f2c7"
+    },
+    {
+      "path": "legacy-denial-r2/result.json",
+      "bytes": 4170,
+      "sha256": "44e8bfd03c312598fe7b7f8cda7b452e2aa5729c92e459083a365d75ce57211f"
+    },
+    {
+      "path": "main-lookup/go-list.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "main-lookup/go-list.stdout.log",
+      "bytes": 522,
+      "sha256": "f0db3c6a42e34f541d4d0c79b9a46d7683fc7222033f15ee8e9c5478ce5d25cc"
+    },
+    {
+      "path": "main-lookup/result.json",
+      "bytes": 620,
+      "sha256": "19bfafae7405fe539dad756d97d16bd8888c4f38d6eb78c80b8f8c622b2cf828"
+    },
+    {
+      "path": "focused-r1/01-separated-output.log",
+      "bytes": 15,
+      "sha256": "7b102f30d3c82fa38c499d71e524e478dfec08651aed9064151a8d892510e176"
+    },
+    {
+      "path": "focused-r1/01-separated-output.stderr.log",
+      "bytes": 24,
+      "sha256": "1568ac3bc8dc63a4b3f59803f1228a0252ede16432f60ed6d551fe844266bf20"
+    },
+    {
+      "path": "focused-r1/02-bounded-timeout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused-r1/02-bounded-timeout.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused-r1/03-cleanup-owned-module-cache.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused-r1/03-cleanup-owned-module-cache.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused-r1/harness.py",
+      "bytes": 5022,
+      "sha256": "7eda519e5e995a3575cb865c65d24e78635a4ab18b6776e79c7e9d028497c40b"
+    },
+    {
+      "path": "focused-r1/result.json",
+      "bytes": 3302,
+      "sha256": "422798eff2cb5a5031ec5679b5ac0c65901cc903aa72aa21ab8eb5c0f4513e37"
+    },
+    {
+      "path": "focused-r1/split-go",
+      "bytes": 75,
+      "sha256": "ca7b3863dbf19e51088e2f44b1e06a803eaf80a453d7202777f3ca56c69288da"
+    },
+    {
+      "path": "focused-r1/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused-r1/stdout.log",
+      "bytes": 3302,
+      "sha256": "422798eff2cb5a5031ec5679b5ac0c65901cc903aa72aa21ab8eb5c0f4513e37"
+    },
+    {
+      "path": "focused-r1/timeout-go",
+      "bytes": 111,
+      "sha256": "3559810e5d70bf813b2b3aaa1de4b9e1a41f0ac5e2521236d3966fcf77c972ce"
+    },
+    {
+      "path": "focused-r2/01-separated-output.log",
+      "bytes": 15,
+      "sha256": "7b102f30d3c82fa38c499d71e524e478dfec08651aed9064151a8d892510e176"
+    },
+    {
+      "path": "focused-r2/01-separated-output.stderr.log",
+      "bytes": 24,
+      "sha256": "1568ac3bc8dc63a4b3f59803f1228a0252ede16432f60ed6d551fe844266bf20"
+    },
+    {
+      "path": "focused-r2/02-bounded-timeout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused-r2/02-bounded-timeout.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused-r2/03-cleanup-owned-module-cache.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused-r2/03-cleanup-owned-module-cache.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused-r2/harness.py",
+      "bytes": 5250,
+      "sha256": "4dfd8a846bee4b410e26b947533c560ac2d3a5078d4fb19288bbcdb9025b1a3b"
+    },
+    {
+      "path": "focused-r2/result.json",
+      "bytes": 3299,
+      "sha256": "d3699b67ed21d2c4b60a1dd9ea94e30ff1d699ddc65bb9ecffb5ee14491069da"
+    },
+    {
+      "path": "focused-r2/split-go",
+      "bytes": 75,
+      "sha256": "ca7b3863dbf19e51088e2f44b1e06a803eaf80a453d7202777f3ca56c69288da"
+    },
+    {
+      "path": "focused-r2/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused-r2/stdout.log",
+      "bytes": 3299,
+      "sha256": "d3699b67ed21d2c4b60a1dd9ea94e30ff1d699ddc65bb9ecffb5ee14491069da"
+    },
+    {
+      "path": "focused-r2/timeout-go",
+      "bytes": 114,
+      "sha256": "f8e14be7aeb8f9ec54d8969ea9aacbf6b8cacf02ee72db02a4353aac9ddad826"
+    },
+    {
+      "path": "focused-r2/timeout.pid",
+      "bytes": 6,
+      "sha256": "448d11593ccf1b38dd3b1acdb5ffa9ef8bb2f9e3555682f074703fcce9dc37d8"
+    },
+    {
+      "path": "focused-r3/01-separated-output.log",
+      "bytes": 15,
+      "sha256": "7b102f30d3c82fa38c499d71e524e478dfec08651aed9064151a8d892510e176"
+    },
+    {
+      "path": "focused-r3/01-separated-output.stderr.log",
+      "bytes": 24,
+      "sha256": "1568ac3bc8dc63a4b3f59803f1228a0252ede16432f60ed6d551fe844266bf20"
+    },
+    {
+      "path": "focused-r3/02-bounded-timeout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused-r3/02-bounded-timeout.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused-r3/03-bounded-output.log",
+      "bytes": 2097152,
+      "sha256": "fae79fd4ac5f4259a6950440daa44078909a038f7500e47d0682b352848ab4a1"
+    },
+    {
+      "path": "focused-r3/03-bounded-output.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused-r3/04-interrupted-process.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused-r3/04-interrupted-process.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused-r3/05-cleanup-owned-module-cache.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused-r3/05-cleanup-owned-module-cache.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused-r3/followup-cleanup.json",
+      "bytes": 2185,
+      "sha256": "5ebb594d0cfac376afda078b0685467caa66db45cde6ab798fac18f426c92310"
+    },
+    {
+      "path": "focused-r3/harness.py",
+      "bytes": 5250,
+      "sha256": "4dfd8a846bee4b410e26b947533c560ac2d3a5078d4fb19288bbcdb9025b1a3b"
+    },
+    {
+      "path": "focused-r3/interrupted-go",
+      "bytes": 118,
+      "sha256": "1cae3575cf14580e80445e5b64d0076b56ec9201be1e73137d5bd45fbfe2384a"
+    },
+    {
+      "path": "focused-r3/interrupted.pid",
+      "bytes": 6,
+      "sha256": "e956a941c2c68247ab748bcde12f35ff071129a932a713d4404c1d084f264893"
+    },
+    {
+      "path": "focused-r3/output-go",
+      "bytes": 22,
+      "sha256": "e8479d9798c939c90790582d5faa1677e9d4c982ad3e60a495d010d532362b55"
+    },
+    {
+      "path": "focused-r3/result.json",
+      "bytes": 5082,
+      "sha256": "17d6d687afbbdcad7df8542e9d8017f104cae47685826d01addbcf3d1385ed1d"
+    },
+    {
+      "path": "focused-r3/split-go",
+      "bytes": 75,
+      "sha256": "ca7b3863dbf19e51088e2f44b1e06a803eaf80a453d7202777f3ca56c69288da"
+    },
+    {
+      "path": "focused-r3/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused-r3/stdout.log",
+      "bytes": 5082,
+      "sha256": "17d6d687afbbdcad7df8542e9d8017f104cae47685826d01addbcf3d1385ed1d"
+    },
+    {
+      "path": "focused-r3/timeout-go",
+      "bytes": 114,
+      "sha256": "fdcad6a9599f318051fb65794712e719c7a307955060ab88eb2d0c519d3cfa95"
+    },
+    {
+      "path": "focused-r3/timeout.pid",
+      "bytes": 6,
+      "sha256": "d9b77232fefca118ba8a3182987434d1133f6352e1478991ade78385246dcd34"
+    },
+    {
+      "path": "release/agentmoor-sdk-release-checks-62ffe93-20261128.json",
+      "bytes": 513,
+      "sha256": "27b04feeb80a55bef7bf6fb47a99bbfa21d4d2922d03794bdb73f8feab1076d0"
+    },
+    {
+      "path": "release/agentmoor-sdk-release-checks-62ffe93-20261128.log",
+      "bytes": 22454,
+      "sha256": "605368c0dd034052fddd58eb59d7e5711bde0209c0be35e90a34ff018eec25e5"
+    },
+    {
+      "path": "release/agentmoor-pr32-final-20261128.json",
+      "bytes": 681,
+      "sha256": "f39bc7ca889abf5d40fdf392553efe439312df68fe73eb8d0b57e8911707d533"
+    },
+    {
+      "path": "release/agentmoor-sdk-alpha2-release-20261128.json",
+      "bytes": 281,
+      "sha256": "074e8585b00219740b9defaec9014013c92a242166e269e61c77970b3a20442b"
+    },
+    {
+      "path": "release/agentmoor-sdk-alpha2-tag-refs-20261128.txt",
+      "bytes": 132,
+      "sha256": "5c86a47eea425ea4a4a197414faf0290087588f8be4af3320137c03508119a93"
+    },
+    {
+      "path": "release/agentmoor-alpha2-release-body-20261128.md",
+      "bytes": 2338,
+      "sha256": "561dca0606577ca81876684635fa9e73af83da6366c2e841d261ff5c5b62b653"
+    }
+  ]
+}

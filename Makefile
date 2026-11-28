@@ -10,6 +10,7 @@
 .PHONY: test-k8s-sandbox-persistent
 .PHONY: test-k8s-node-loss
 .PHONY: test-sdk-release
+.PHONY: test-sdk-example
 
 check: test-file-report
 	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/kubernetes -p test_forward.py -v
@@ -24,13 +25,13 @@ check: test-file-report
 	PYTHONDONTWRITEBYTECODE=1 python3 tests/kubernetes/sandbox_persistent_chain.py --help > /dev/null
 	PYTHONDONTWRITEBYTECODE=1 python3 scripts/check-sdk-release.py --help > /dev/null
 	sh tests/check-kind-prereqs.sh
-	@unformatted=$$(gofmt -l cmd internal sdk testdata/sdkconsumer) && test -z "$$unformatted" || { echo "Run make fmt"; exit 1; }
+	@unformatted=$$(gofmt -l cmd internal sdk testdata/sdkconsumer examples/sdk-adapter) && test -z "$$unformatted" || { echo "Run make fmt"; exit 1; }
 	go vet ./...
 	go test -race ./...
 	go build ./...
 
 fmt:
-	gofmt -w cmd internal sdk testdata/sdkconsumer
+	gofmt -w cmd internal sdk testdata/sdkconsumer examples/sdk-adapter
 
 build:
 	go build -o bin/agentmoor ./cmd/agentmoor
@@ -55,6 +56,11 @@ test-report-consumer:
 test-sdk-release:
 	@test -n "$(VERSION)" -a -n "$(SDK_RELEASE_OUTPUT)" || { echo "Set VERSION and a new SDK_RELEASE_OUTPUT directory"; exit 2; }
 	python3 scripts/check-sdk-release.py "$(VERSION)" --output "$(SDK_RELEASE_OUTPUT)"
+
+# Separate module: tests the published preview, while ./sdk tests this checkout.
+test-sdk-example:
+	cd examples/sdk-adapter && GOENV=off GOWORK=off GOTOOLCHAIN=local go list -m -json github.com/intSheep/AgentMoor
+	cd examples/sdk-adapter && GOENV=off GOWORK=off GOTOOLCHAIN=local CGO_ENABLED=1 go test -mod=readonly -race -count=1 -v ./...
 
 test-file-report:
 	python3 tests/codex_file_report.py -v
