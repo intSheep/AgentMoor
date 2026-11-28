@@ -1,8 +1,36 @@
 # Go Adapter SDK 预览
 
-`github.com/intSheep/AgentMoor/sdk` 让仓库外的 Go 模块实现当前 Adapter 接口，不需要直接导入 `internal/`。这是源码预览：先固定一个 checkout，通过本地 `replace` 验证；尚未发布新的 SDK 版本，也未承诺 v1 API 稳定性或兼容维护窗口。
+`github.com/intSheep/AgentMoor/sdk` 让仓库外的 Go 模块实现当前 Adapter 接口，不需要直接导入 `internal/`。首个 SDK 发行版本为 **`v0.1.0-alpha.2`，0.x 预览**；先积累独立接入反馈，再决定何时冻结 1.0。升级前查看[发布说明](releases/v0.1.0-alpha.2.md)，并在自己的模块固定确切版本。
 
-已有 `v0.1.0-alpha.1` 标签保持原样，不能用它或 `@latest` 代表本文的 SDK。本文的本地替换证明使用了指定 checkout，不证明远程版本下载、发布流程或外部工程师接入已经验收。
+已有 `v0.1.0-alpha.1` 标签保持原样，其中没有 SDK，Go 模块路径也不同。不要用旧版本或 `@latest` 代替下面的确切版本。远程下载、本地替换和外部工程师接入分别记录，不能互相代替。
+
+## 安装固定的预览版本
+
+在仓库外的独立目录使用本机 Go `1.27.4` 工具链：
+
+```sh
+go mod init example.com/my-agentmoor-adapter
+GOWORK=off GOTOOLCHAIN=local go get github.com/intSheep/AgentMoor/sdk@v0.1.0-alpha.2
+GOWORK=off GOTOOLCHAIN=local go list -m -json github.com/intSheep/AgentMoor
+```
+
+最后一条输出应包含 `Path: github.com/intSheep/AgentMoor`、`Version: v0.1.0-alpha.2`，且没有 `Replace`。这是根模块内的子包，不是名为 `sdk` 的独立 Go 模块；导入路径仍是 `github.com/intSheep/AgentMoor/sdk`。首次获取需要网络。按下方接口实现后运行 `go test -mod=mod ./...`；需要完整资产验收时再导入 `sdk/contracttest`。
+
+维护者可以从 checkout 重放远程发布验收：
+
+```sh
+python3 scripts/check-sdk-release.py v0.1.0-alpha.2 --output /absolute/new/sdk-release-evidence
+```
+
+该命令使用专属空模块缓存和公共 Go 代理/校验服务，从指定版本下载，不使用本地 `replace` 或工作区。它实际运行仓库外的合成原生适配器契约、无 CGO 核心构建和内部包拒绝反例，留下模块校验和及日志。需要 C 编译器、CGO 和本地 HTTP 监听权限；输出目录必须是新路径。它验收已发布模块的获取与使用，不代表真人第三方接入或新的厂商 CLI 支持。
+
+## 0.x 兼容约定与 1.0 门槛
+
+0.x 期间公开接口仍可能调整，不承诺 v1 API 稳定性或固定兼容维护窗口。每次预览使用新标签，保留旧标签；发布说明列出接口、工具链和行为变化，发生不兼容调整时给出迁移方法。消费者固定版本，升级后重跑自己声明的能力测试。
+
+公开 `sdk` 类型目前是内部类型的别名，内部字段或方法变化也可能改变公开 API，因此必须检查其对 SDK 消费者的影响。`sdk/contracttest` 作为可选测试包同样处于预览阶段。
+
+冻结 1.0 前，需要真实外部接入者仅凭公开文档和已发布模块完成接入，处理其中的阻碍，并明确公开 API、升级方法及兼容维护规则。声明原生任务能力的接入还须通过对应固定 CLI 版本和规定的集群验收。维护者测试与独立 agent 演练用于提前发现问题，不能替代真实第三方接入；当前不预设参与者数量或冻结日期。
 
 ## 两个包各管什么
 
@@ -139,7 +167,7 @@ type SkillInstaller interface {
 
 `Environment` 的目录由受信共用流程分配，`LoadedSkill.Manifest` 指向已校验的私有原生 manifest。`Spec.Output` 是交付文件名；`Execution` 返回文本、真实原生会话 ID 和对应历史目录。继续执行通过 `RestoreHistory` 将固定父版本恢复到新路径；文件执行的 `result` 是新建的工作区相对路径，`session` 在继续执行时传递原会话 ID。`SkillDirectory` 返回该 Skill 在私有 Home 内的原生安装目录。具体调用与状态约定见[任务契约](task-contract.md)。
 
-## 在独立模块使用指定 checkout
+## 开发时使用指定 checkout
 
 在仓库外建立一个目录，将下面的绝对路径换成实际 checkout：
 
@@ -283,4 +311,4 @@ go test -race ./sdk ./sdk/contracttest -count=1 -v
 
 另一个未参与实现的 agent 仅依据公开文档、公开 SDK 与反射信息，新写文件机制适配器 `aurora-notes` 并实际通过公共资产 suite。初次文档未完整展开别名字段/签名，离线 tidy 也触发未缓存的依赖测试；这些诊断与反射辅助均如实保留。本页已据此补全速查及 `-mod=mod` 离线步骤，Go 源码未因此改变。该演练不是真人第三方认证。
 
-[冻结来源、迁移核验、真实拒绝、独立演练及无损日志](evidence/public-go-sdk-2026-11-27.json)。本片没有发布新 tag，没有把当前预览写成旧 alpha 标签或稳定 v1，也没有重标既有真实 CLI、数据库或集群验收。
+[冻结来源、迁移核验、真实拒绝、独立演练及无损日志](evidence/public-go-sdk-2026-11-27.json)。以上 2026-11-27 记录没有发布新 tag；新版本发布按本页开头的流程单独验收，不重标这些历史结果或既有真实 CLI、数据库、集群验收。
