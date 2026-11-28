@@ -12,6 +12,8 @@ For a consumer-side example, see [Import a verified report](examples/report-cons
 
 To implement an adapter in your own Go module, use the [Go Adapter SDK preview](docs/adapter-sdk.md). Pin `github.com/intSheep/AgentMoor/sdk@v0.1.0-alpha.2`; 0.x APIs may change as independent integrations provide feedback. The older `alpha.1` release does not contain the SDK.
 
+Start with the [standalone adapter example](examples/sdk-adapter/README.md) and share actual results through the [integration feedback template](.github/ISSUE_TEMPLATE/adapter-integration.md).
+
 ## Quick start
 
 On macOS or Linux, install Go 1.27.4, a C compiler, Make, and Python 3. Run the local asset recovery demo from the repository root.

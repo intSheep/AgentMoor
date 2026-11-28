@@ -1,0 +1,318 @@
+{
+  "schema": "agentmoor.sdk-release-check.v1",
+  "version": "v0.1.0-alpha.2",
+  "status": "passed",
+  "started_at": "2026-11-28T04:49:53.757628+00:00",
+  "scope": "Maintainer-written synthetic consumer of an actual published module; not independent third-party, vendor CLI, model, or sandbox certification.",
+  "checkout": "/Users/intsheep/Code/AgentMoor",
+  "temporary_root": "/private/tmp/agentmoor-sdk-release-2dln2usw",
+  "consumer_module": "example.invalid/agentmoor-sdk-consumer",
+  "module_cache": "/private/tmp/agentmoor-sdk-release-2dln2usw/module-cache",
+  "module_cache_initially_empty": true,
+  "environment": {
+    "GOENV": "off",
+    "GOWORK": "off",
+    "GOTOOLCHAIN": "local",
+    "GOPROXY": "https://proxy.golang.org",
+    "GOSUMDB": "sum.golang.org",
+    "GONOPROXY": "none",
+    "GONOSUMDB": "none",
+    "GOVCS": "*:off",
+    "GOMODCACHE": "/private/tmp/agentmoor-sdk-release-2dln2usw/module-cache"
+  },
+  "source_hashes": {
+    "scripts/check-sdk-release.py": "23796f89e7ce27c277c24b17142eb8a413d5219500db476dc3678a708b13d34b",
+    "testdata/sdkconsumer/adapter.go": "c42b1314b00290d00f73b46678a04779ea7d9cfa8f658ace6a7c989ef4ffc39b",
+    "testdata/sdkconsumer/consumer_test.go": "0acf08cc505096bd319230903c12e523925e117ef3e62371a36964cdae5009be",
+    "testdata/sdkconsumer/go.mod": "b704b7938e30c4d334b1edacf4cfacec4f6896ecf9191bdd2423df2fc7d9ac50"
+  },
+  "steps": [
+    {
+      "name": "go-environment",
+      "command": [
+        "/Users/intsheep/.local/bin/go",
+        "env",
+        "-json",
+        "GOVERSION",
+        "GOOS",
+        "GOARCH",
+        "GOMODCACHE",
+        "GOWORK",
+        "GOPROXY",
+        "GOSUMDB",
+        "GOENV",
+        "GOTOOLCHAIN"
+      ],
+      "directory": "/private/tmp/agentmoor-sdk-release-2dln2usw/consumer",
+      "cgo_enabled": "1",
+      "log": "01-go-environment.log",
+      "stderr_log": "01-go-environment.stderr.log",
+      "timeout_seconds": 300,
+      "exit_code": 0,
+      "duration_seconds": 0.01,
+      "output_bytes": 270,
+      "log_sha256": "4695364c4ce4cd8097d7f576a1b147cb32c01a5b8f261eef544f0c89e0793a24",
+      "stderr_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "get-published-sdk",
+      "command": [
+        "/Users/intsheep/.local/bin/go",
+        "get",
+        "github.com/intSheep/AgentMoor/sdk@v0.1.0-alpha.2"
+      ],
+      "directory": "/private/tmp/agentmoor-sdk-release-2dln2usw/consumer",
+      "cgo_enabled": "1",
+      "log": "02-get-published-sdk.log",
+      "stderr_log": "02-get-published-sdk.stderr.log",
+      "timeout_seconds": 300,
+      "exit_code": 0,
+      "duration_seconds": 30.03,
+      "output_bytes": 102,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_log_sha256": "1fb17c30697bfbed76cb4f4c758c072beee6687708eec170949e96d629027df9"
+    },
+    {
+      "name": "resolved-module",
+      "command": [
+        "/Users/intsheep/.local/bin/go",
+        "list",
+        "-m",
+        "-json",
+        "github.com/intSheep/AgentMoor"
+      ],
+      "directory": "/private/tmp/agentmoor-sdk-release-2dln2usw/consumer",
+      "cgo_enabled": "1",
+      "log": "03-resolved-module.log",
+      "stderr_log": "03-resolved-module.stderr.log",
+      "timeout_seconds": 300,
+      "exit_code": 0,
+      "duration_seconds": 0.017,
+      "output_bytes": 511,
+      "log_sha256": "dae18ba3df835d2734d45b86d1d444c18d4900b406ceb27b7ac010e016b617e4",
+      "stderr_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "download-metadata",
+      "command": [
+        "/Users/intsheep/.local/bin/go",
+        "mod",
+        "download",
+        "-json",
+        "github.com/intSheep/AgentMoor@v0.1.0-alpha.2"
+      ],
+      "directory": "/private/tmp/agentmoor-sdk-release-2dln2usw/consumer",
+      "cgo_enabled": "1",
+      "log": "04-download-metadata.log",
+      "stderr_log": "04-download-metadata.stderr.log",
+      "timeout_seconds": 300,
+      "exit_code": 0,
+      "duration_seconds": 0.012,
+      "output_bytes": 905,
+      "log_sha256": "e4656e81c037d3a7c6b4d4fa8ee05786a8f760115fbf9ae4df0871d502b29bd5",
+      "stderr_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "resolved-sdk-package",
+      "command": [
+        "/Users/intsheep/.local/bin/go",
+        "list",
+        "-json",
+        "github.com/intSheep/AgentMoor/sdk"
+      ],
+      "directory": "/private/tmp/agentmoor-sdk-release-2dln2usw/consumer",
+      "cgo_enabled": "1",
+      "log": "05-resolved-sdk-package.log",
+      "stderr_log": "05-resolved-sdk-package.stderr.log",
+      "timeout_seconds": 300,
+      "exit_code": 0,
+      "duration_seconds": 1.071,
+      "output_bytes": 4592,
+      "log_sha256": "77f6ece7d4298cb50d0ffe6efd71014a88f7e26ec259136f17828e1a948da0a7",
+      "stderr_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "core-without-cgo",
+      "command": [
+        "/Users/intsheep/.local/bin/go",
+        "build",
+        "github.com/intSheep/AgentMoor/sdk"
+      ],
+      "directory": "/private/tmp/agentmoor-sdk-release-2dln2usw/consumer",
+      "cgo_enabled": "0",
+      "log": "06-core-without-cgo.log",
+      "stderr_log": "06-core-without-cgo.stderr.log",
+      "timeout_seconds": 300,
+      "exit_code": 0,
+      "duration_seconds": 1.486,
+      "output_bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "external-race-contract",
+      "command": [
+        "/Users/intsheep/.local/bin/go",
+        "test",
+        "-json",
+        "-race",
+        "-count=1",
+        "-timeout=120s",
+        "./..."
+      ],
+      "directory": "/private/tmp/agentmoor-sdk-release-2dln2usw/consumer",
+      "cgo_enabled": "1",
+      "log": "07-external-race-contract.log",
+      "stderr_log": "07-external-race-contract.stderr.log",
+      "timeout_seconds": 300,
+      "exit_code": 0,
+      "duration_seconds": 42.41,
+      "output_bytes": 53253,
+      "log_sha256": "1c8c2a94c789d30118598039c0153558807612cdd0247b77057956c1b8b9a818",
+      "stderr_log_sha256": "3645377c89d550f89b8211c722c8ea089775b50a0bb15da1a9be5c82986c2c03"
+    },
+    {
+      "name": "final-resolved-module",
+      "command": [
+        "/Users/intsheep/.local/bin/go",
+        "list",
+        "-m",
+        "-json",
+        "github.com/intSheep/AgentMoor"
+      ],
+      "directory": "/private/tmp/agentmoor-sdk-release-2dln2usw/consumer",
+      "cgo_enabled": "1",
+      "log": "08-final-resolved-module.log",
+      "stderr_log": "08-final-resolved-module.stderr.log",
+      "timeout_seconds": 300,
+      "exit_code": 0,
+      "duration_seconds": 0.008,
+      "output_bytes": 511,
+      "log_sha256": "dae18ba3df835d2734d45b86d1d444c18d4900b406ceb27b7ac010e016b617e4",
+      "stderr_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "internal-import-denied",
+      "command": [
+        "/Users/intsheep/.local/bin/go",
+        "test",
+        "-run=^$",
+        "."
+      ],
+      "directory": "/private/tmp/agentmoor-sdk-release-2dln2usw/denied",
+      "cgo_enabled": "1",
+      "log": "09-internal-import-denied.log",
+      "stderr_log": "09-internal-import-denied.stderr.log",
+      "timeout_seconds": 300,
+      "exit_code": 1,
+      "duration_seconds": 0.027,
+      "output_bytes": 281,
+      "log_sha256": "ba65312a7c67e05e86231feb1dd275ffb5149d42554c7c4edf472980c00d5e48",
+      "stderr_log_sha256": "fbc434009ad1e3c7c1d8f6a4c35b81e501b15bf6c847ebac6bda6605a8c5987b"
+    },
+    {
+      "name": "cleanup-owned-module-cache",
+      "command": [
+        "/Users/intsheep/.local/bin/go",
+        "clean",
+        "-modcache"
+      ],
+      "directory": "/private/tmp/agentmoor-sdk-release-2dln2usw/consumer",
+      "cgo_enabled": "1",
+      "log": "10-cleanup-owned-module-cache.log",
+      "stderr_log": "10-cleanup-owned-module-cache.stderr.log",
+      "timeout_seconds": 60,
+      "exit_code": 0,
+      "duration_seconds": 0.22,
+      "output_bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "go_environment": {
+    "GOARCH": "arm64",
+    "GOENV": "",
+    "GOMODCACHE": "/private/tmp/agentmoor-sdk-release-2dln2usw/module-cache",
+    "GOOS": "darwin",
+    "GOPROXY": "https://proxy.golang.org",
+    "GOSUMDB": "sum.golang.org",
+    "GOTOOLCHAIN": "local",
+    "GOVERSION": "go1.27.4",
+    "GOWORK": "off"
+  },
+  "resolved_module": {
+    "Path": "github.com/intSheep/AgentMoor",
+    "Version": "v0.1.0-alpha.2",
+    "Time": "2026-11-28T04:49:09Z",
+    "Dir": "/private/tmp/agentmoor-sdk-release-2dln2usw/module-cache/github.com/int!sheep/!agent!moor@v0.1.0-alpha.2",
+    "GoMod": "/private/tmp/agentmoor-sdk-release-2dln2usw/module-cache/cache/download/github.com/int!sheep/!agent!moor/@v/v0.1.0-alpha.2.mod",
+    "GoVersion": "1.27.4",
+    "Sum": "h1:9uVyH931f56YjZ8mmZPl/TBhcCG73atBDaLdZHq91cU=",
+    "GoModSum": "h1:DK/7dHc/nEtZBTrERUIkJr8u7RLUMmpt+KDgMcZ/VDg="
+  },
+  "download": {
+    "Path": "github.com/intSheep/AgentMoor",
+    "Version": "v0.1.0-alpha.2",
+    "Info": "/private/tmp/agentmoor-sdk-release-2dln2usw/module-cache/cache/download/github.com/int!sheep/!agent!moor/@v/v0.1.0-alpha.2.info",
+    "GoMod": "/private/tmp/agentmoor-sdk-release-2dln2usw/module-cache/cache/download/github.com/int!sheep/!agent!moor/@v/v0.1.0-alpha.2.mod",
+    "Zip": "/private/tmp/agentmoor-sdk-release-2dln2usw/module-cache/cache/download/github.com/int!sheep/!agent!moor/@v/v0.1.0-alpha.2.zip",
+    "Dir": "/private/tmp/agentmoor-sdk-release-2dln2usw/module-cache/github.com/int!sheep/!agent!moor@v0.1.0-alpha.2",
+    "Sum": "h1:9uVyH931f56YjZ8mmZPl/TBhcCG73atBDaLdZHq91cU=",
+    "GoModSum": "h1:DK/7dHc/nEtZBTrERUIkJr8u7RLUMmpt+KDgMcZ/VDg=",
+    "Origin": {
+      "VCS": "git",
+      "URL": "https://github.com/intSheep/AgentMoor",
+      "Hash": "c6ffc92e3ecc3b641b0843d4e0a17c64064251f6",
+      "Ref": "refs/tags/v0.1.0-alpha.2"
+    }
+  },
+  "download_files": {
+    "Info": {
+      "sha256": "4cc617a9b8888a858facfaa329af8c27f5b4a19851efa55415756b3113a5a525",
+      "bytes": 210
+    },
+    "GoMod": {
+      "sha256": "ce0fc8514f27174dbcbbd52dc6ca88be429dc6193ccfc1352419bc8f6a60c013",
+      "bytes": 962
+    },
+    "Zip": {
+      "sha256": "6add6b8ad7b68ada1d5479c72a32b0a3cbd3216c1407265f2d71df5c758efecd",
+      "bytes": 2123867
+    }
+  },
+  "sdk_package": {
+    "ImportPath": "github.com/intSheep/AgentMoor/sdk",
+    "Dir": "/private/tmp/agentmoor-sdk-release-2dln2usw/module-cache/github.com/int!sheep/!agent!moor@v0.1.0-alpha.2/sdk",
+    "Module": {
+      "Path": "github.com/intSheep/AgentMoor",
+      "Version": "v0.1.0-alpha.2",
+      "Time": "2026-11-28T04:49:09Z",
+      "Dir": "/private/tmp/agentmoor-sdk-release-2dln2usw/module-cache/github.com/int!sheep/!agent!moor@v0.1.0-alpha.2",
+      "GoMod": "/private/tmp/agentmoor-sdk-release-2dln2usw/module-cache/cache/download/github.com/int!sheep/!agent!moor/@v/v0.1.0-alpha.2.mod",
+      "GoVersion": "1.27.4",
+      "Sum": "h1:9uVyH931f56YjZ8mmZPl/TBhcCG73atBDaLdZHq91cU=",
+      "GoModSum": "h1:DK/7dHc/nEtZBTrERUIkJr8u7RLUMmpt+KDgMcZ/VDg="
+    }
+  },
+  "consumer_tests": {
+    "passed": [
+      "TestExternalRegistryAndInspect",
+      "TestExternalNativeConformance",
+      "TestExternalNativeConformance/external-native-custom-commands"
+    ],
+    "package_passed": true,
+    "native_calls_observed": {
+      "List": 3,
+      "Export": 3,
+      "Import": 1
+    }
+  },
+  "internal_import_denied": true,
+  "cleanup": {
+    "module_cache": "/private/tmp/agentmoor-sdk-release-2dln2usw/module-cache",
+    "global_cache_touched": false,
+    "go_clean_succeeded": true,
+    "temporary_root_removed": true
+  },
+  "finished_at": "2026-11-28T04:51:09.278724+00:00"
+}
