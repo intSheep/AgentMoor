@@ -326,3 +326,5 @@ PR32 的两套 CI 通过后合并，`v0.1.0-alpha.2` 已作为 [GitHub prereleas
 发布后，真实公共 Go 代理在专属空缓存中下载了确切 `alpha.2`；模块校验和、标签来源、无 `Replace`、无工作区、无 CGO 核心构建通过。仓库外合成消费者在 race 下实际通过注册与版本观测、原生资产 suite 的具名子 case，观察到 list/dump/load 的 3/3/1 次调用；直接导入内部包得到特定编译拒绝。私有模块缓存清理成功。
 
 发前另用远程 main 的 Go 伪版本跑通脚本；它与发后 `alpha.2` 证据分开。旧 `alpha.1` 的真实拒绝发生在旧 module 名与 canonical 路径不符时，不冒称为 SDK 包缺失诊断。脚本聚焦检查保留了两次 harness 诊断及修正后结果，并记录了 Go telemetry 临时 Home 后台重建与后续清理的观察边界。[发布、校验和、实际输出与完整来源](evidence/sdk-preview-release-2026-11-28.json)。这些仍是维护者的合成验收，真实第三方接入门槛保持开放。
+
+独立起步包在干净源码 `3a689d5` 上通过 `make fmt/check/demo/test-sdk-example`，另将完整目录复制到仓库外，以确切已发布 SDK、无替换和只读依赖文件实际通过 race 测试。原始 Session/Skill 往返、旧版本及大小/路径/取消拒绝均有具名结果；这次示例测试使用已有依赖缓存，不重标为空缓存下载。[源码摘要与完整输出](evidence/sdk-starter-2026-11-28.json)。下一项 [INT-99](https://linear.app/intsheep/issue/INT-99) 收集真实外部接入反馈后，再评审 1.0 冻结。

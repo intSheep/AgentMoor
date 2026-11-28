@@ -1,0 +1,175 @@
+{
+  "schema": "agentmoor.sdk-starter-evidence.v1",
+  "date": "2026-11-28",
+  "linear": "INT-98",
+  "code_commit": "3a689d51f81462e4eba68563ac6a23b02133461e",
+  "scope": "Maintainer-written synthetic filesystem starter using the actual published alpha.2 SDK; not real third-party, vendor CLI, model, task, or isolation certification.",
+  "published_sdk": {
+    "version": "v0.1.0-alpha.2",
+    "sum": "h1:9uVyH931f56YjZ8mmZPl/TBhcCG73atBDaLdZHq91cU=",
+    "go_mod_sum": "h1:DK/7dHc/nEtZBTrERUIkJr8u7RLUMmpt+KDgMcZ/VDg=",
+    "replace": null
+  },
+  "external_copy": {
+    "module": "example.com/agentmoor-notebook-adapter",
+    "physically_outside_checkout": true,
+    "go_workspace": "off",
+    "go_toolchain": "local",
+    "cgo": "1",
+    "go_mod_readonly": true,
+    "uses_existing_dependency_cache": true,
+    "source_files_unchanged": true,
+    "source_sha256": {
+      "go.mod": "0a52d1cb371ebb32126c30f1e42a5a8f6e8a9733be09b33e041de0bd0307ed57",
+      "adapter_test.go": "cb34bbb12918e2c0dc8dde3a0684e9b29e0eb2263bf83b6a1246f03b6db36bdd",
+      "go.sum": "5803f8e1050c2887099ddac2c2e6525a2d588a646a6c21db9a49f6e02379eaa6",
+      "adapter.go": "69c2bc8718f6055b337000525296ea015735aa53688dfae2d2a375636715c619",
+      "README.md": "3b9655a70f18d9e66b2371e9acae105764cc239a45bf1081e15a8ecae84b15cc"
+    },
+    "required_tests_and_package_passed": true,
+    "passed_test_names": [
+      "TestNotebookRegistryAndDiscovery",
+      "TestNotebookAssetContract/notebook-files",
+      "TestNotebookAssetContract",
+      "TestNotebookRejectsInvalidSessions/invalid-id",
+      "TestNotebookRejectsInvalidSessions/oversized",
+      "TestNotebookRejectsInvalidSessions/invalid-json",
+      "TestNotebookRejectsInvalidSessions/missing-id",
+      "TestNotebookRejectsInvalidSessions/inside-symlink",
+      "TestNotebookRejectsInvalidSessions/outside-symlink",
+      "TestNotebookRejectsInvalidSessions/entry-limit",
+      "TestNotebookRejectsInvalidSessions",
+      "TestNotebookCancellation",
+      ""
+    ],
+    "test_seconds": 4.637,
+    "report_in_archive": "external-copy/result.json"
+  },
+  "local_checks": {
+    "source_commit": "3a689d51f81462e4eba68563ac6a23b02133461e",
+    "started_at": "2026-11-28T04:56:08.384831+00:00",
+    "steps": [
+      {
+        "command": [
+          "make",
+          "fmt"
+        ],
+        "exit_code": 0,
+        "duration_seconds": 0.027
+      },
+      {
+        "command": [
+          "make",
+          "check"
+        ],
+        "exit_code": 0,
+        "duration_seconds": 88.184
+      },
+      {
+        "command": [
+          "make",
+          "demo"
+        ],
+        "exit_code": 0,
+        "duration_seconds": 2.394
+      },
+      {
+        "command": [
+          "make",
+          "test-sdk-example"
+        ],
+        "exit_code": 0,
+        "duration_seconds": 2.753
+      }
+    ]
+  },
+  "ci_coverage": "make check tests the checkout SDK; make test-sdk-example separately tests the nested module against published alpha.2. Both run in CI. No new native/runtime/task interface changes.",
+  "review": "Independent agent read-only review accepted source 3a689d5, including release hashes, 116 raw release members, declared scope and nested-module CI coverage.",
+  "release_evidence": "sdk-preview-release-2026-11-28.json",
+  "limits": [
+    "No real external developer integration evidence yet; INT-99 remains open.",
+    "No 1.0 API freeze or compatibility-maintenance commitment."
+  ],
+  "archive": {
+    "path": "sdk-starter-raw-2026-11-28.tar.gz",
+    "bytes": 23516,
+    "sha256": "2e528faa89ffe89771f3ca6307e86e61ed6e210e6f9fcaa418a5fa26de142083"
+  },
+  "raw_archive_members": [
+    {
+      "path": "external-copy/consumer/README.md",
+      "bytes": 4171,
+      "sha256": "3b9655a70f18d9e66b2371e9acae105764cc239a45bf1081e15a8ecae84b15cc"
+    },
+    {
+      "path": "external-copy/consumer/adapter.go",
+      "bytes": 4677,
+      "sha256": "69c2bc8718f6055b337000525296ea015735aa53688dfae2d2a375636715c619"
+    },
+    {
+      "path": "external-copy/consumer/adapter_test.go",
+      "bytes": 4975,
+      "sha256": "cb34bbb12918e2c0dc8dde3a0684e9b29e0eb2263bf83b6a1246f03b6db36bdd"
+    },
+    {
+      "path": "external-copy/consumer/go.mod",
+      "bytes": 1096,
+      "sha256": "0a52d1cb371ebb32126c30f1e42a5a8f6e8a9733be09b33e041de0bd0307ed57"
+    },
+    {
+      "path": "external-copy/consumer/go.sum",
+      "bytes": 5536,
+      "sha256": "5803f8e1050c2887099ddac2c2e6525a2d588a646a6c21db9a49f6e02379eaa6"
+    },
+    {
+      "path": "external-copy/environment.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "external-copy/environment.stdout.log",
+      "bytes": 195,
+      "sha256": "5504ce55a7ff8bc598cf62af04d98cc82a98d1dd28537011badd47fccd9e557c"
+    },
+    {
+      "path": "external-copy/module.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "external-copy/module.stdout.log",
+      "bytes": 451,
+      "sha256": "ea1872b65cc14ed53155755db64ab45aa2b3dbd0b152ff8dec4469d1f4d8fa30"
+    },
+    {
+      "path": "external-copy/result.json",
+      "bytes": 3614,
+      "sha256": "596532379f9254502693014705193a8a110e489d6b7dd92f9821c195dabf8cbb"
+    },
+    {
+      "path": "external-copy/tests.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "external-copy/tests.stdout.log",
+      "bytes": 50249,
+      "sha256": "c4f01d672e8a4d827ad373e84fccb938a23f92a48dc5fb74d998d75eec2dc924"
+    },
+    {
+      "path": "external-copy/verify.py",
+      "bytes": 3720,
+      "sha256": "cc44af70013f7ed147eb95a493ebea58ababc514eb1e3b85e3e2955cd4482dab"
+    },
+    {
+      "path": "checks/agentmoor-sdk-starter-checks-3a689d5-20261128.json",
+      "bytes": 652,
+      "sha256": "2f2a044af627fd311aee7e37b041a26fefa74d1a2522aa837f61d3841e026b7e"
+    },
+    {
+      "path": "checks/agentmoor-sdk-starter-checks-3a689d5-20261128.log",
+      "bytes": 51417,
+      "sha256": "54fc8ca9ff03725a723255d48ead47edfede8fda67552b67a416245f17a95062"
+    }
+  ]
+}
